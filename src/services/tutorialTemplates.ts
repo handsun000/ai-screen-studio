@@ -20,14 +20,16 @@ export const UNIVERSAL_TUTORIAL_TEMPLATES: ScenarioTemplate[] = [
     id: "create-and-submit",
     name: "신규 등록 및 폼 작성 (Create & Submit)",
     icon: "📝",
-    description: "신규 데이터(문서/게시글/일정/상품/업무 등)를 작성하고 등록·상신하는 표준 튜토리얼",
-    promptTemplate: "【목표】: 신규 항목(예: 기안 문서, 일정, 게시글, 회원 등) 등록 및 저장\n【진입 경로】: 메인 대시보드에서 해당 기능 메뉴로 이동\n【조작 순서】: [작성/등록] 버튼 클릭 -> 입력 폼(제목, 분류, 상세내용 등) 순차 입력 -> [저장/상신] 버튼 클릭\n【결과 확인】: 등록 완료 알림창 확인 및 생성된 상세 화면/목록 확인",
+    description: "신규 데이터(문서/기안/게시글/일정/업무 등)의 필수 입력(제목, 조직도/결재선 지정, 본문)을 충족하고 상신·저장하는 엔터프라이즈 표준 튜토리얼",
+    promptTemplate: "【목표】: 신규 항목(기안 문서, 일정, 게시글, 업무 등) 등록 및 저장\n【진입 경로】: 메인 대시보드에서 해당 기능 메뉴로 이동\n【조작 순서】: [작성/등록] 버튼 클릭 -> [필수 1: 제목 입력] -> [필수 2: 결재선/조직도 팝업 열기 및 대상자 선택 적용] -> [필수 3: 본문 내용 작성] -> [저장/상신] 버튼 클릭\n【결과 확인】: 등록 완료 알림창 확인 및 생성된 상세 화면/목록 확인",
     phases: [
       "1단계 [도입]: 메인 화면 전체 뷰 3초간 노출 (시청자 인지)",
       "2단계 [이동]: GNB/사이드바 메뉴 클릭 및 등록 페이지 진입",
-      "3단계 [조작]: [신규 등록] 버튼 클릭 후 입력 폼 필드 순차 입력",
-      "4단계 [실행]: [저장/제출] 버튼 클릭 후 빠른 줌아웃",
-      "5단계 [확인]: 등록 완료 팝업 또는 갱신된 목록 화면 확인"
+      "3단계 [필수1-제목]: [신규 등록] 버튼 클릭 후 제목 필드 포커스 및 타이핑",
+      "4단계 [필수2-결재선]: 조직도/결재선 팝업 열기 -> 부서 트리 확장 -> 대상자 체크 및 적용",
+      "5단계 [필수3-본문]: 본문 에디터 내용 작성",
+      "6단계 [실행]: [저장/상신] 버튼 클릭 후 확인 다이얼로그 승인",
+      "7단계 [확인]: 등록 완료 팝업 또는 갱신된 목록 화면 확인 (아웃트로)"
     ]
   },
   {
@@ -143,20 +145,31 @@ export const MASTER_DIRECTING_GUIDELINES = `
 ### [2] 지능형 UI 셀렉터 추론 원칙 (Robust Selector Heuristics)
 타겟 프로젝트의 소스코드가 없거나 부분적인 경우에도 100% 작동하도록 다음과 같은 **다중 폴백 셀렉터 체인**을 구성하십시오:
 
-1. **텍스트 매칭 기반 셀렉터 (가장 직관적이고 안정적)**:
-   - 메뉴/버튼: \`button:has-text("기안"), a:has-text("결재"), .btn:has-text("등록")\`
+1. **텍스트 매칭 기반 셀렉터 (가장 직관적이고 안정적 - 1순위 사용)**:
+   - 메뉴/버튼: \`button:has-text("기안"), a:has-text("결재"), .btn:has-text("등록"), button:has-text("저장"), button:has-text("확인")\`
+   - 체크박스/라디오: 반드시 눈에 보이는 label 텍스트 매칭을 1순위로 사용하십시오:
+     예: \`label:has-text("예약사용"), text="예약사용", label:has-text("동의"), input[type="checkbox"]\`
+   - 팝업/모달 내 탭/카테고리: \`a:has-text("시설"), a:has-text("회의실"), li:has-text("시설") a\`
+   - 팝업/모달 내 목록 첫 번째 항목: \`.ui-dialog:visible div[class*="lst"] > *:first-child, .ui-dialog:visible ul > li:first-child, .ui-dialog:visible tr:first-child\`
    - CSS 셀렉터와 텍스트 매칭을 쉼표(,)로 결합:
      예: \`#svc_lst a:has-text("결재"), a:has-text("결재"):visible, [title*="결재"]\`
-2. **입력 필드 추론**:
-   - 제목 입력: \`input#_DOC_TITLE_, input[name*="title"], input[placeholder*="제목"], input[type="text"]:visible\`
-   - 내용/본문: \`textarea, div[contenteditable="true"], iframe[name*="editor"]\`
+2. **입력 필드 및 버튼 추론 (충돌 방지 원칙)**:
+   - **[절대 금지: 임의의 가상 ID 생성 금지]**: \`#_USE_RESOURCE_\`, \`#_OPEN_RESOURCE_BTN_\`, \`#_SUBJECT_\`, \`#_CONTENTS_\`, \`#_SAVE_BTN_\` 같은 가상의 대문자 ID를 절대로 생성하지 마십시오. 실제 DOM에 존재하지 않아 100% 녹화가 중단됩니다. 실제 ID를 모르면 항상 한글 텍스트 매칭(\`:has-text(...)\`)과 표준 HTML 태그(\`input\`, \`textarea\`, \`button\`)를 사용하십시오!
+   - **모달/레이어 팝업 내부 요소**: 팝업이나 다이얼로그 안의 요소는 반드시 \`.ui-dialog:visible\`, 특정 form id, 또는 \`:visible\`을 명시하십시오.
+     예: \`.ui-dialog:visible #subject, #reg_schedule_form #subject, #subject:visible\`
+   - **[주의 - 상단 검색창 충돌 방지]**: \`input[placeholder*="제목"]\` 같은 모호한 선택자는 상단 GNB 검색창(\`placeholder="제목, 내용, 첨부파일명"\`)과 매칭되어 다이얼로그 오버레이에 가로막히므로 단독으로 쓰지 마십시오.
+   - 제목 입력: \`#subject:visible, input#subject, input[name*="subject"]:visible\`
+   - 내용/본문: \`#cn:visible, textarea:visible, textarea[placeholder*="내용"], div[contenteditable="true"]\`
    - 검색창: \`input[type="search"], input[name*="search"], input[placeholder*="검색"], .search_box input\`
 3. **iFrame 감지 및 대응**:
    - 그룹웨어, 엔터프라이즈 포털, 에디터는 종종 iFrame을 사용합니다.
    - 전자결재/양식: \`iframe[name*="docBox"], iframe[src*="form"], iframe#subBody\`
    - 에디터: \`iframe[name*="editor"], iframe[src*="editor"]\`
 4. **실패 방지 (Optional Flag)**:
-   - 닫기 팝업, 안내 레이어, 첫 번째 항목 선택 등 화면 상태에 따라 존재하지 않을 수도 있는 단계는 반드시 \`"optional": true\`를 부여하십시오.
+   - 닫기 팝업, 안내 레이어, 첫 번째 항목 선택, 확인 다이얼로그 등 화면 상태에 따라 존재하지 않을 수도 있는 단계는 반드시 \`"optional": true\`를 부여하십시오.
+5. **모달 팝업과 배경 요소 철저 격리 (엄격 금지 규칙)**:
+   - 등록/작성 버튼을 눌러 모달 대화상자(SimpleView, 레이어 팝업)가 열린 후에는, 반드시 팝업 내부의 제목(#subject), 내용(#cn), 저장(#savebtn)만을 조작하십시오.
+   - [절대 금지] 모달 팝업이 열려 있는 상태에서 배경의 달력 툴바(\`.fc-today-button\`, \`.fc-button\`)나 메인 GNB 메뉴를 누르는 액션을 절대로 생성하지 마십시오! 모달 오버레이(ui-widget-overlay)에 가로막혀 브라우저 녹화가 100% 중단됩니다.
 
 ---
 
@@ -168,4 +181,23 @@ export const MASTER_DIRECTING_GUIDELINES = `
 - 영상 엔딩 마무리: \`3000ms\`
 - 뷰포트: \`{ "width": 1920, "height": 1080 }\`
 - 커서 딜레이: \`{ "delayMs": 800, "preClickRestMs": 180 }\`
+
+---
+
+### [4] 🚨 엔터프라이즈 업무 시스템 폼 작성 필수 원칙 (Enterprise Form Validation Rules)
+전자결재, 문서관리, 게시판, 일정, 업무(스마트워크) 등 실제 업무 시스템의 폼 등록 시나리오를 작성할 때:
+1. **절대 폼 진입 직후 저장/상신 버튼을 곧바로 누르지 마십시오.**
+   (필수 입력값이 비어 있으면 자바스크립트 alert("제목을 입력하세요", "결재선을 지정하세요")에 걸려 자동화 녹화가 즉시 중단 및 실패합니다.)
+2. **반드시 다음 5대 필수 시퀀스를 순서대로 모두 포함하십시오**:
+   - **Step A. 제목(Subject) 입력**: 반드시 input selector와 의미 있는 텍스트(\`type\`) 액션을 배치하십시오. (iFrame 양식 내부일 경우 \`iframe\` 속성 필수 지정)
+   - **Step B. 결재선 / 담당자 / 수신처 지정**:
+     - 조직도 또는 결재선 버튼 클릭 (\`button:has(.ico_org)\`, \`button:has-text("결재선")\`, \`button:has-text("조직도")\` 등)
+     - 팝업 로딩 대기 (\`wait: 2000ms\`)
+     - 부서 트리 확장 또는 검색 (\`.dynatree-expander\`, \`.folder\`)
+     - 대상자 체크박스 선택 (\`input[type="checkbox"]\`, \`.dynatree-checkbox\`)
+     - [확인/적용] 버튼 클릭 (\`button:has-text("확인")\`)
+   - **Step C. 본문 내용 작성**: 에디터 영역 클릭 또는 본문 텍스트 타이핑
+   - **Step D. 최종 제출**: [상신], [저장], [등록] 버튼 클릭
+   - **Step E. 확인 다이얼로그 승인**: "상신하시겠습니까?" 또는 "등록되었습니다" 알림창 처리
+3. 폼 등록 시나리오는 최소 15~25단계 이상의 충실한 인터랙션 단계로 구성해야 실제 브라우저 자동화가 100% 성공합니다.
 `;

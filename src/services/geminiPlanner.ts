@@ -5,6 +5,9 @@ import * as dotenv from "dotenv";
 import type { BrowsePlan } from "../types";
 import { getConfig } from "./configManager";
 import { MASTER_DIRECTING_GUIDELINES } from "./tutorialTemplates";
+import { exploreCodebaseForActionSpec, ActionSpecResult } from "./codeExplorerAgent";
+import { getCachedPlan, setCachedPlan } from "./aiCacheManager";
+import { sanitizeBrowsePlan } from "./planSanitizer";
 
 dotenv.config();
 
@@ -18,6 +21,18 @@ export interface GeneratePlanOptions {
   targetProjectPath?: string;
   targetUrl?: string;
   directingStyle?: "standard" | "fast" | "detailed";
+  bypassCache?: boolean;
+  onProgress?: (message: string) => void;
+}
+
+export interface GeneratePlanResult {
+  plan: BrowsePlan;
+  explanation: string;
+  suggestedSlug: string;
+  actionSpecMarkdown?: string;
+  actionSpec?: ActionSpecResult;
+  isFromCache?: boolean;
+  cachedAt?: string;
 }
 
 /**
@@ -70,10 +85,12 @@ export function scanTargetProjectContext(prompt: string, targetPath?: string): s
     } catch {}
   }
 
-  // --- 2. Scan Source Code Directories ---
-  // Detect candidate source root dirs
+  // --- 2. Scan Source Code & JavaScript Controllers ---
+  // Detect candidate source root dirs (including JS resources and JSP)
   const candidateSourceDirs = [
+    path.join(projectRoot, "naon-module-web", "src", "main", "webapp", "resources", "biz"),
     path.join(projectRoot, "naon-module-web", "src", "main", "webapp", "jsp", "biz"),
+    path.join(projectRoot, "src", "main", "webapp", "resources", "biz"),
     path.join(projectRoot, "src", "main", "webapp", "jsp"),
     path.join(projectRoot, "src", "pages"),
     path.join(projectRoot, "src", "app"),
@@ -83,35 +100,69 @@ export function scanTargetProjectContext(prompt: string, targetPath?: string): s
     path.join(projectRoot, "views"),
   ];
 
-  let activeSourceRoot = candidateSourceDirs.find((d) => fs.existsSync(d));
+  const activeSourceRoots = candidateSourceDirs.filter((d) => fs.existsSync(d));
 
-  if (activeSourceRoot) {
+  if (activeSourceRoots.length > 0) {
     try {
-      // Find files matching keywords
+      // Map prompt keywords to Naon/Enterprise modules for direct fast lookup
+      const moduleKeywordMap: Record<string, string[]> = {
+        app: ["결재", "기안", "상신", "전자결재"],
+        doc: ["문서", "문서함", "문서관리"],
+        board: ["게시", "게시판", "게시글"],
+        schedule: ["일정", "캘린더", "일정관리"],
+        work: ["업무", "태스크", "스마트워크"],
+        note: ["쪽지", "메시지"],
+        organization: ["조직도", "사용자", "부서"],
+        project: ["프로젝트"],
+      };
+
+      const matchedModules = Object.entries(moduleKeywordMap)
+        .filter(([_, kws]) => kws.some((kw) => prompt.includes(kw)))
+        .map(([mod]) => mod);
+
+      // Target specific module directories directly for instant lookup
+      const specificModuleDirs: string[] = [];
+      for (const mod of matchedModules) {
+        specificModuleDirs.push(
+          path.join(projectRoot, "naon-module-web", "src", "main", "webapp", "resources", "biz", "gw", mod),
+          path.join(projectRoot, "naon-module-web", "src", "main", "webapp", "jsp", "biz", "gw", mod)
+        );
+      }
+      const existingSpecificDirs = specificModuleDirs.filter((d) => fs.existsSync(d));
+      const rootsToScan = existingSpecificDirs.length > 0 ? existingSpecificDirs : activeSourceRoots.slice(0, 2);
+
+      // Find files matching keywords recursively with limit
       const scanDirRecursively = (dir: string, depth = 0): string[] => {
-        if (depth > 4) return [];
+        if (depth > 3) return [];
         const result: string[] = [];
-        const entries = fs.readdirSync(dir, { withFileTypes: true });
-        for (const entry of entries) {
-          if (entry.name.startsWith(".") || entry.name === "node_modules") continue;
-          const fullPath = path.join(dir, entry.name);
-          if (entry.isDirectory()) {
-            result.push(...scanDirRecursively(fullPath, depth + 1));
-          } else if (
-            entry.isFile() &&
-            (entry.name.endsWith(".jsp") ||
-              entry.name.endsWith(".js") ||
-              entry.name.endsWith(".vue") ||
-              entry.name.endsWith(".tsx") ||
-              entry.name.endsWith(".html"))
-          ) {
-            result.push(fullPath);
+        try {
+          const entries = fs.readdirSync(dir, { withFileTypes: true });
+          for (const entry of entries) {
+            if (result.length >= 25) break;
+            if (entry.name.startsWith(".") || entry.name === "node_modules" || entry.name === "dist") continue;
+            const fullPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+              result.push(...scanDirRecursively(fullPath, depth + 1));
+            } else if (
+              entry.isFile() &&
+              (entry.name.endsWith(".jsp") ||
+                entry.name.endsWith(".js") ||
+                entry.name.endsWith(".vue") ||
+                entry.name.endsWith(".tsx") ||
+                entry.name.endsWith(".html"))
+            ) {
+              result.push(fullPath);
+            }
           }
-        }
+        } catch {}
         return result;
       };
 
-      const allFiles = scanDirRecursively(activeSourceRoot);
+      const allFiles: string[] = [];
+      for (const root of rootsToScan) {
+        allFiles.push(...scanDirRecursively(root));
+        if (allFiles.length >= 25) break;
+      }
 
       // Prioritize files whose path or name contains any keyword
       const matchedFiles = allFiles
@@ -119,35 +170,70 @@ export function scanTargetProjectContext(prompt: string, targetPath?: string): s
           const lower = fp.toLowerCase();
           return promptKeywords.some((kw) => lower.includes(kw.toLowerCase()));
         })
-        .slice(0, 5);
+        .slice(0, 6);
 
-      const filesToInspect =
-        matchedFiles.length > 0 ? matchedFiles : allFiles.slice(0, 3);
+      const filesToInspect = matchedFiles.length > 0 ? matchedFiles : allFiles.slice(0, 3);
+      const validationHints: string[] = [];
 
       for (const filePath of filesToInspect) {
         const content = fs.readFileSync(filePath, "utf-8");
         const relPath = path.relative(projectRoot, filePath);
+        const isJs = filePath.endsWith(".js") || filePath.endsWith(".tsx") || filePath.endsWith(".ts");
 
         const idMatches = content.match(/id=["']([a-zA-Z0-9_\-]+)["']/g) || [];
         const classMatches = content.match(/class=["']([a-zA-Z0-9_\-\s]+)["']/g) || [];
         const btnMatches = content.match(/<button[^>]*>.*?<\/button>/gi) || [];
         const inputMatches = content.match(/<input[^>]*>/gi) || [];
 
+        // Scan JS validation alerts and required checks
+        if (isJs) {
+          const lines = content.split("\n");
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (
+              line.includes("alert") ||
+              line.includes("validate") ||
+              line.includes("chkValid") ||
+              line.includes("checkLine") ||
+              line.includes("required")
+            ) {
+              const trimmed = line.trim();
+              if (
+                trimmed.includes("/*") ||
+                trimmed.includes("//") ||
+                trimmed.toLowerCase().includes("title") ||
+                trimmed.toLowerCase().includes("line") ||
+                trimmed.toLowerCase().includes("subject")
+              ) {
+                validationHints.push(`[${path.basename(filePath)} L${i + 1}] ${trimmed.slice(0, 120)}`);
+                if (validationHints.length >= 8) break;
+              }
+            }
+          }
+        }
+
         const snippet = [
           `[소스 파일: ${relPath}]`,
-          idMatches.length > 0 ? `Key IDs: ${idMatches.slice(0, 10).join(", ")}` : "",
-          classMatches.length > 0 ? `Key Classes: ${classMatches.slice(0, 10).join(", ")}` : "",
+          idMatches.length > 0 ? `Key IDs: ${idMatches.slice(0, 8).join(", ")}` : "",
+          classMatches.length > 0 ? `Key Classes: ${classMatches.slice(0, 8).join(", ")}` : "",
           btnMatches.length > 0
-            ? `Buttons: ${btnMatches.slice(0, 5).join(" | ").replace(/<[^>]+>/g, " ")}`
+            ? `Buttons: ${btnMatches.slice(0, 4).join(" | ").replace(/<[^>]+>/g, " ")}`
             : "",
           inputMatches.length > 0
-            ? `Inputs: ${inputMatches.slice(0, 5).join(" | ").replace(/<[^>]+>/g, " ")}`
+            ? `Inputs: ${inputMatches.slice(0, 4).join(" | ").replace(/<[^>]+>/g, " ")}`
             : "",
         ]
           .filter(Boolean)
           .join("\n");
 
         contextSnippets.push(snippet);
+      }
+
+      if (validationHints.length > 0) {
+        contextSnippets.unshift(
+          `[🚨 감지된 자바스크립트 폼 유효성 검사 및 필수 전제조건 (반드시 시나리오 상신/제출 전에 채울 것)]:\n` +
+            validationHints.join("\n")
+        );
       }
     } catch (e) {
       // Ignore directory scan errors
@@ -161,23 +247,41 @@ export function scanTargetProjectContext(prompt: string, targetPath?: string): s
 
 /**
  * Loads verified examples from data/ directory to provide as few-shot training.
+ * Provides the complete, realistic multi-step sequences so Gemini learns authentic enterprise flows.
  */
 function loadFewShotExamples(): string {
   const dataDir = path.resolve(__dirname, "..", "..", "data");
   const examples: string[] = [];
 
-  const sampleSlugs = ["approval-draft", "menu-guide-and-notification"];
+  const sampleSlugs = ["create-and-submit", "approval-draft", "menu-guide-and-notification"];
   for (const slug of sampleSlugs) {
     const planPath = path.join(dataDir, slug, "browse-plan.json");
     if (fs.existsSync(planPath)) {
       try {
         const content = fs.readFileSync(planPath, "utf-8");
         const parsed = JSON.parse(content);
+        // Clean actions to essential compact form, but preserve ALL workflow steps (no slicing!)
+        const compactActions = (parsed.actions || []).map((a: any) => {
+          const act: Record<string, any> = {
+            type: a.type,
+            description: a.description,
+          };
+          if (a.selector) act.selector = a.selector;
+          if (a.iframe) act.iframe = a.iframe;
+          if (a.text) act.text = a.text;
+          if (a.ms) act.ms = a.ms;
+          if (a.optional) act.optional = a.optional;
+          if (a.deltaY) act.deltaY = a.deltaY;
+          return act;
+        });
+
         const summary = {
           name: slug,
-          sampleActions: (parsed.actions || []).slice(0, 5),
+          totalActions: compactActions.length,
+          note: slug === "approval-draft" ? "전자결재 폼 작성 표준 흐름: 양식선택 -> 제목입력 -> 조직도/결재선 지정 -> 본문작성 -> 상신 및 확인" : "GNB 및 메뉴 알림 투어 흐름",
+          actions: compactActions,
         };
-        examples.push(`[검증된 예시 시나리오: ${slug}]\n` + JSON.stringify(summary, null, 2));
+        examples.push(`[검증된 완전한 레퍼런스 시나리오: ${slug}]\n` + JSON.stringify(summary, null, 2));
       } catch {}
     }
   }
@@ -190,7 +294,7 @@ function loadFewShotExamples(): string {
  */
 export async function generateBrowsePlanWithGemini(
   options: GeneratePlanOptions
-): Promise<{ plan: BrowsePlan; explanation: string; suggestedSlug: string }> {
+): Promise<GeneratePlanResult> {
   const apiKeys = [
     process.env.GEMINI_API_KEY,
     process.env.GEMINI_API_KEY_ALT,
@@ -204,8 +308,46 @@ export async function generateBrowsePlanWithGemini(
   const effectiveTargetPath = options.targetProjectPath || currentConfig.targetProjectPath;
   const effectiveTargetUrl = options.targetUrl || currentConfig.targetBaseUrl;
 
+  // --- Check Smart AI Plan Cache (Token-Saving Layer) ---
+  if (!options.bypassCache) {
+    const cached = getCachedPlan(
+      options.prompt,
+      effectiveTargetPath,
+      effectiveTargetUrl,
+      options.directingStyle
+    );
+    if (cached) {
+      options.onProgress?.(`⚡ [캐시 적중 (Cache Hit)] 동일한 질문에 대한 AI 분석 결과가 보관되어 있습니다. Gemini 호출을 생략하고 0.05초 만에 즉시 불러옵니다! (토큰 소모: 0)`);
+      return {
+        ...cached,
+        suggestedSlug: options.slug || cached.suggestedSlug,
+      };
+    }
+  }
+
+  // --- Stage 1: Autonomous Code Explorer Agent ---
+  let actionSpecResult: ActionSpecResult | null = null;
+  try {
+    options.onProgress?.(`🔍 [1단계: 소스코드 자율 탐색] 프로젝트 소스코드 및 DOM 구조를 분석합니다...`);
+    actionSpecResult = await exploreCodebaseForActionSpec(
+      options.prompt,
+      effectiveTargetPath,
+      options.onProgress
+    );
+    options.onProgress?.(`📝 [1단계 완료] 화면 조작 기획서(Action Spec) 작성 완료. 식별된 셀렉터 ${actionSpecResult.identifiedSelectors.length}개`);
+  } catch (err: any) {
+    options.onProgress?.(`⚠️ [1단계 알림] 자율 탐색 실패/건너뜀 (${err.message}). 기본 정적 스캔으로 대체합니다.`);
+  }
+
+  // --- Stage 2: Video Directing Planner ---
+  options.onProgress?.(`🎬 [2단계: 영상 연출 플래너] 5단계 템포 및 카메라 줌 플랜을 수립 중입니다...`);
+
   const codeContext = scanTargetProjectContext(options.prompt, effectiveTargetPath);
   const fewShotContext = loadFewShotExamples();
+  const actionSpecSection = actionSpecResult?.actionSpecMarkdown
+    ? `### [5] 1단계 코드 탐색 에이전트가 소스코드에서 직접 추출한 [화면 조작 기획서 (Action Spec)]\n아래 기획서에 식별된 실제 DOM 셀렉터, 유효성 검사 alert 방지 조건, 필수 입력 필드를 반드시 반영하여 실행 가능한 Playwright 액션들을 구성하세요:\n\n${actionSpecResult.actionSpecMarkdown}`
+    : `### [5] 타겟 프로젝트에서 실시간 스캔된 컨텍스트\n${codeContext}`;
+
   const systemInstruction = `
 ${MASTER_DIRECTING_GUIDELINES}
 
@@ -215,11 +357,10 @@ ${MASTER_DIRECTING_GUIDELINES}
 - 타겟 서비스 웹 URL: ${effectiveTargetUrl}
 - 타겟 프로젝트 로컬 경로: ${effectiveTargetPath}
 
-### [5] 검증된 레퍼런스 시나리오 패턴 (Verified Reference Examples)
-${fewShotContext}
+${actionSpecSection}
 
-### [6] 타겟 프로젝트에서 실시간 스캔된 컨텍스트 (Scanned Project Context, if any)
-${codeContext}
+### [6] 검증된 레퍼런스 시나리오 패턴 (Verified Reference Examples)
+${fewShotContext}
 `;
 
   const userContent = `
@@ -316,15 +457,38 @@ The response must be valid JSON with this exact schema:
     throw new Error(`Gemini 응답 JSON 파싱 실패: ${responseText.substring(0, 200)}`);
   }
 
+  // --- Stage 3: Intelligent Plan Sanitization & Auto-Correction ---
+  const { plan: sanitizedPlan, report } = sanitizeBrowsePlan(parsed.plan);
+  if (report.fixedActionsCount > 0 || report.removedActionsCount > 0) {
+    options.onProgress?.(`🛡️ [AI 플랜 자동 교정] 위험 요소 ${report.removedActionsCount}개 제거, 셀렉터 ${report.fixedActionsCount}개 모달 스코프 강화 완료!`);
+    report.changes.forEach((c) => options.onProgress?.(`  ${c}`));
+  }
+
   const suggestedSlug =
     options.slug ||
     parsed.suggestedSlug ||
     "scenario-" + Date.now().toString(36);
 
-  return {
-    plan: parsed.plan,
+  const finalResult: GeneratePlanResult = {
+    plan: sanitizedPlan,
     explanation: parsed.explanation || "시나리오가 성공적으로 생성되었습니다.",
     suggestedSlug: suggestedSlug.replace(/[^a-zA-Z0-9_\-]/g, "-").toLowerCase(),
+    actionSpecMarkdown: actionSpecResult?.actionSpecMarkdown,
+    actionSpec: actionSpecResult || undefined,
+    isFromCache: false,
   };
+
+  // Save to cache for future identical requests (token saver)
+  try {
+    setCachedPlan(
+      options.prompt,
+      effectiveTargetPath,
+      effectiveTargetUrl,
+      options.directingStyle,
+      finalResult
+    );
+  } catch {}
+
+  return finalResult;
 }
 

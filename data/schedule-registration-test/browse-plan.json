@@ -1,0 +1,161 @@
+{
+  "url": "https://gwdev.unison.co.kr/",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "requiresLogin": true,
+  "cursor": {
+    "delayMs": 800,
+    "preClickRestMs": 180
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "description": "메인 대시보드 로딩 및 화면 전체 인지 대기",
+      "ms": 3500
+    },
+    {
+      "type": "click",
+      "description": "상단 GNB '일정' 또는 통합 메뉴 버튼 클릭",
+      "selector": "#svc_lst a:has-text(\"일정관리\"), #svc_lst a:has-text(\"일정\"), button.btn_svc_open:visible",
+      "optional": false,
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "일정 관리 메인 화면 로딩 대기",
+      "ms": 3000
+    },
+    {
+      "type": "click",
+      "description": "좌측 메뉴의 '일정 등록' 버튼 클릭하여 팝업 열기",
+      "selector": "#reg_shedule_lefttop, button:has-text(\"일정 등록\")",
+      "optional": false,
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "일정 등록 팝업창 로딩 대기",
+      "ms": 2000
+    },
+    {
+      "type": "click",
+      "description": "캘린더 선택 드롭다운 클릭",
+      "selector": "#detail_calendarListDiv .select_code, .select_code",
+      "optional": false,
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "캘린더 목록 표시 대기",
+      "ms": 1000
+    },
+    {
+      "type": "click",
+      "description": "캘린더 목록에서 첫 번째 캘린더 선택",
+      "selector": "#reg_shedule_calendarlist li:first-child, #reg_shedule_calendarlist a:first-child, .select_code_list li:first-child",
+      "optional": false,
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "캘린더 선택 반영 대기",
+      "ms": 1000
+    },
+    {
+      "type": "type",
+      "description": "제목 입력 필드에 '테스트 일정' 입력",
+      "selector": "#subject, input[name*=\"subject\"]",
+      "text": "테스트 일정",
+      "ms": 1000,
+      "optional": false,
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "제목 입력 완료 확인 대기",
+      "ms": 1000
+    },
+    {
+      "type": "click",
+      "description": "시작일 입력 필드 클릭",
+      "selector": "#startDate1, input[name*=\"startDate\"]",
+      "optional": false,
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "시작일 달력 팝업 대기",
+      "ms": 1000
+    },
+    {
+      "type": "click",
+      "description": "오늘 날짜 선택",
+      "selector": "td.ui-datepicker-today a, .ui-datepicker-calendar td:not(.ui-datepicker-other-month) a:has-text(\"오늘\"), a.ui-state-highlight",
+      "optional": true,
+      "force": false
+    },
+    {
+      "type": "type",
+      "description": "시작 시간 필드에 '09:00' 입력",
+      "selector": "#startHourMinute, input[name*=\"startHour\"]",
+      "text": "09:00",
+      "ms": 800,
+      "optional": false,
+      "force": false
+    },
+    {
+      "type": "click",
+      "description": "종료일 입력 필드 클릭",
+      "selector": "#endDate1, input[name*=\"endDate\"]",
+      "optional": false,
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "종료일 달력 팝업 대기",
+      "ms": 1000
+    },
+    {
+      "type": "click",
+      "description": "오늘 날짜 선택 (종료일)",
+      "selector": "td.ui-datepicker-today a, a.ui-state-highlight",
+      "optional": true,
+      "force": false
+    },
+    {
+      "type": "type",
+      "description": "종료 시간 필드에 '10:00' 입력",
+      "selector": "#endHourMinute, input[name*=\"endHour\"]",
+      "text": "10:00",
+      "ms": 800,
+      "optional": false,
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "모든 일정 입력 사항 최종 검토 대기",
+      "ms": 1500
+    },
+    {
+      "type": "click",
+      "description": "'저장' 버튼 클릭하여 일정 등록 실행",
+      "selector": "#savebtn, button:has-text(\"저장\")",
+      "optional": false,
+      "force": false
+    },
+    {
+      "type": "click",
+      "description": "저장 완료 알림창 확인 버튼 클릭 (표시 시)",
+      "selector": ".ui-dialog:visible button:has-text(\"확인\"), button:has-text(\"확인\"):visible",
+      "optional": true,
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "등록 완료 후 캘린더 화면 와이드 뷰 결과 확인 대기",
+      "ms": 3500
+    }
+  ]
+}

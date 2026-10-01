@@ -12,6 +12,8 @@ export interface ScenarioSummary {
   hasEditPlan: boolean;
   hasVideo: boolean;
   videoSizeBytes?: number;
+  hasRenderedVideo?: boolean;
+  renderedVideoSizeBytes?: number;
   actionsCount: number;
   zoomSegmentsCount: number;
   durationSec?: number;
@@ -62,16 +64,19 @@ export function listScenarios(): ScenarioSummary[] {
     const momentsPath = path.join(dirPath, "moments.json");
     const editPlanPath = path.join(dirPath, "edit-plan.json");
     const videoPath = path.join(dirPath, "recording.mp4");
+    const renderedVideoPath = path.join(path.resolve(__dirname, "..", "..", "output"), `${slug}.mp4`);
 
     const hasBrowsePlan = fs.existsSync(browsePlanPath);
     const hasMoments = fs.existsSync(momentsPath);
     const hasEditPlan = fs.existsSync(editPlanPath);
     const hasVideo = fs.existsSync(videoPath);
+    const hasRenderedVideo = fs.existsSync(renderedVideoPath);
 
     let actionsCount = 0;
     let zoomSegmentsCount = 0;
     let durationSec = 0;
     let videoSizeBytes = 0;
+    let renderedVideoSizeBytes = 0;
     let lastModified = "";
 
     if (hasBrowsePlan) {
@@ -97,6 +102,13 @@ export function listScenarios(): ScenarioSummary[] {
       } catch {}
     }
 
+    if (hasRenderedVideo) {
+      try {
+        const stat = fs.statSync(renderedVideoPath);
+        renderedVideoSizeBytes = stat.size;
+      } catch {}
+    }
+
     list.push({
       slug,
       hasBrowsePlan,
@@ -104,6 +116,8 @@ export function listScenarios(): ScenarioSummary[] {
       hasEditPlan,
       hasVideo,
       videoSizeBytes,
+      hasRenderedVideo,
+      renderedVideoSizeBytes,
       actionsCount,
       zoomSegmentsCount,
       durationSec: Math.round(durationSec * 10) / 10,
@@ -146,6 +160,9 @@ export function getScenarioDetails(slug: string) {
     } catch {}
   }
 
+  const renderedVideoPath = path.join(path.resolve(__dirname, "..", "..", "output"), `${slug}.mp4`);
+  const hasRenderedVideo = fs.existsSync(renderedVideoPath);
+
   return {
     slug,
     browsePlan,
@@ -153,6 +170,9 @@ export function getScenarioDetails(slug: string) {
     editPlan,
     hasVideo: fs.existsSync(videoPath),
     videoUrl: `/api/video/${slug}`,
+    hasRenderedVideo,
+    renderedVideoUrl: hasRenderedVideo ? `/api/rendered-video/${slug}` : null,
+    downloadUrl: hasRenderedVideo ? `/api/download/${slug}` : null,
     isActive: slug === getActiveSlug(),
   };
 }

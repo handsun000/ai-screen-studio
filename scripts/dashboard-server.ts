@@ -12,6 +12,7 @@ import {
   getActiveSlug,
 } from "../src/services/scenarioManager";
 import { recordRunner } from "../src/services/recordRunner";
+import { renderRunner } from "../src/services/renderRunner";
 import { getConfig, updateConfig, analyzeProject } from "../src/services/configManager";
 import { UNIVERSAL_TUTORIAL_TEMPLATES } from "../src/services/tutorialTemplates";
 
@@ -92,17 +93,51 @@ app.get("/api/scenarios", (_req: Request, res: Response) => {
 // 3. Scenario Details API
 app.get("/api/scenarios/:slug", (req: Request, res: Response) => {
   try {
-    const details = getScenarioDetails(req.params.slug);
+    const slug = req.params.slug as string;
+    const details = getScenarioDetails(slug);
     res.json(details);
   } catch (err: any) {
     res.status(404).json({ error: err.message });
   }
 });
 
+let currentAiProgress = "";
+const aiProgressListeners = new Set<(msg: string) => void>();
+
+function notifyAiProgress(msg: string) {
+  currentAiProgress = msg;
+  for (const listener of aiProgressListeners) {
+    try {
+      listener(msg);
+    } catch {}
+  }
+}
+
+// SSE stream for AI generation progress
+app.get("/api/gemini/stream-progress", (req: Request, res: Response) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  if (currentAiProgress) {
+    res.write(`data: ${JSON.stringify({ progress: currentAiProgress })}\n\n`);
+  }
+
+  const listener = (msg: string) => {
+    res.write(`data: ${JSON.stringify({ progress: msg })}\n\n`);
+  };
+
+  aiProgressListeners.add(listener);
+  req.on("close", () => {
+    aiProgressListeners.delete(listener);
+  });
+});
+
 // 4. Gemini AI Plan Generation API (supports dynamic project path, URL overrides, and directing style)
 app.post("/api/scenarios/generate", async (req: Request, res: Response) => {
   try {
-    const { prompt, slug, moduleHint, targetProjectPath, targetUrl, directingStyle } = req.body;
+    const { prompt, slug, moduleHint, targetProjectPath, targetUrl, directingStyle, bypassCache } = req.body;
     if (!prompt) {
       res.status(400).json({ error: "시나리오 설명(prompt)을 입력해주세요." });
       return;
@@ -117,6 +152,9 @@ app.post("/api/scenarios/generate", async (req: Request, res: Response) => {
     console.log(`  - Directing Style: ${directingStyle || "standard"}`);
     console.log(`  - Target Path: ${effectivePath}`);
     console.log(`  - Target URL:  ${effectiveUrl}`);
+    console.log(`  - Bypass Cache: ${!!bypassCache}`);
+
+    notifyAiProgress("🚀 [시작] Gemini 2단계 AI 에이전트 초기화 중...");
 
     const result = await generateBrowsePlanWithGemini({
       prompt,
@@ -125,11 +163,19 @@ app.post("/api/scenarios/generate", async (req: Request, res: Response) => {
       targetProjectPath: effectivePath,
       targetUrl: effectiveUrl,
       directingStyle,
+      bypassCache: !!bypassCache,
+      onProgress: (msg) => {
+        console.log(`[AI Pipeline] ${msg}`);
+        notifyAiProgress(msg);
+        recordRunner.emit("log", { taskId: "ai-pipeline", line: msg });
+      },
     });
 
+    notifyAiProgress("✅ [완료] 브라우징 플랜 및 연출 시퀀스 생성 완료!");
     res.json(result);
   } catch (err: any) {
     console.error("[Dashboard API] Generate error:", err);
+    notifyAiProgress(`❌ [오류] 시나리오 생성 실패: ${err.message}`);
     res.status(500).json({ error: err.message });
   }
 });
@@ -166,15 +212,48 @@ app.post("/api/scenarios/record", (req: Request, res: Response) => {
   }
 });
 
-// Stop current task
+// Stop current task (record or render)
 app.post("/api/scenarios/stop", (_req: Request, res: Response) => {
-  const stopped = recordRunner.stopCurrentTask();
+  const recordStopped = recordRunner.stopCurrentTask();
+  const renderStopped = renderRunner.stopCurrentTask();
+  res.json({ success: recordStopped || renderStopped });
+});
+
+// Render Video with Remotion APIs
+app.post("/api/render/start", (req: Request, res: Response) => {
+  try {
+    const { slug } = req.body;
+    if (!slug) {
+      res.status(400).json({ error: "slug가 필요합니다." });
+      return;
+    }
+
+    const task = renderRunner.startRender(slug);
+    res.json({ success: true, task });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post("/api/render/stop", (_req: Request, res: Response) => {
+  const stopped = renderRunner.stopCurrentTask();
   res.json({ success: stopped });
+});
+
+app.get("/api/render/status", (_req: Request, res: Response) => {
+  const task = renderRunner.getCurrentTask();
+  res.json({ task });
+});
+
+app.get("/api/render/info/:slug", (req: Request, res: Response) => {
+  const slug = req.params.slug as string;
+  const info = renderRunner.getRenderInfo(slug);
+  res.json(info);
 });
 
 // Get current task status
 app.get("/api/record/status", (_req: Request, res: Response) => {
-  const task = recordRunner.getCurrentTask();
+  const task = recordRunner.getCurrentTask() || renderRunner.getCurrentTask();
   res.json({ task });
 });
 
@@ -196,7 +275,7 @@ app.post("/api/record/input", (req: Request, res: Response) => {
   }
 });
 
-// SSE Stream for Live Recording Logs
+// SSE Stream for Live Recording & Rendering Logs
 app.get("/api/record/stream", (req: Request, res: Response) => {
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
@@ -204,7 +283,7 @@ app.get("/api/record/stream", (req: Request, res: Response) => {
   res.flushHeaders();
 
   // Send current task snapshot first
-  const currentTask = recordRunner.getCurrentTask();
+  const currentTask = recordRunner.getCurrentTask() || renderRunner.getCurrentTask();
   if (currentTask) {
     res.write(`data: ${JSON.stringify({ type: "snapshot", task: currentTask })}\n\n`);
   }
@@ -219,10 +298,14 @@ app.get("/api/record/stream", (req: Request, res: Response) => {
 
   recordRunner.on("log", logHandler);
   recordRunner.on("status", statusHandler);
+  renderRunner.on("log", logHandler);
+  renderRunner.on("status", statusHandler);
 
   req.on("close", () => {
     recordRunner.off("log", logHandler);
     recordRunner.off("status", statusHandler);
+    renderRunner.off("log", logHandler);
+    renderRunner.off("status", statusHandler);
   });
 });
 
@@ -241,26 +324,35 @@ app.post("/api/scenarios/activate", (req: Request, res: Response) => {
   }
 });
 
-// 8. Stream Video with HTTP 206 Range Support
-app.get("/api/video/:slug", (req: Request, res: Response) => {
-  const slug = req.params.slug;
-  const videoPath = path.join(DATA_DIR, slug, "recording.mp4");
-
-  if (!fs.existsSync(videoPath)) {
-    res.status(404).send("Video file not found");
+function streamMp4File(filePath: string, req: Request, res: Response) {
+  if (!fs.existsSync(filePath)) {
+    res.status(404).send("비디오 파일을 찾을 수 없습니다.");
     return;
   }
 
-  const stat = fs.statSync(videoPath);
+  const stat = fs.statSync(filePath);
   const fileSize = stat.size;
   const range = req.headers.range;
 
   if (range) {
     const parts = range.replace(/bytes=/, "").split("-");
     const start = parseInt(parts[0], 10);
-    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+    let end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+    if (end >= fileSize) end = fileSize - 1;
+
+    if (isNaN(start) || start >= fileSize || start < 0 || end < start) {
+      res.writeHead(416, {
+        "Content-Range": `bytes */${fileSize}`,
+      });
+      res.end();
+      return;
+    }
+
     const chunksize = end - start + 1;
-    const file = fs.createReadStream(videoPath, { start, end });
+    const file = fs.createReadStream(filePath, { start, end });
+    file.on("error", () => {
+      if (!res.headersSent) res.status(404).end();
+    });
     const head = {
       "Content-Range": `bytes ${start}-${end}/${fileSize}`,
       "Accept-Ranges": "bytes",
@@ -275,8 +367,45 @@ app.get("/api/video/:slug", (req: Request, res: Response) => {
       "Content-Type": "video/mp4",
     };
     res.writeHead(200, head);
-    fs.createReadStream(videoPath).pipe(res);
+    const file = fs.createReadStream(filePath);
+    file.on("error", () => {
+      if (!res.headersSent) res.status(404).end();
+    });
+    file.pipe(res);
   }
+}
+
+// 8. Stream Raw Recording Video
+app.get("/api/video/:slug", (req: Request, res: Response) => {
+  const slug = req.params.slug as string;
+  const videoPath = path.join(DATA_DIR, slug, "recording.mp4");
+  streamMp4File(videoPath, req, res);
+});
+
+// 9. Stream Rendered (Final Composed) Video
+app.get("/api/rendered-video/:slug", (req: Request, res: Response) => {
+  const slug = req.params.slug as string;
+  const renderedPath = path.join(ROOT_DIR, "output", `${slug}.mp4`);
+  streamMp4File(renderedPath, req, res);
+});
+
+// 10. Direct Download Final MP4
+app.get("/api/download/:slug", (req: Request, res: Response) => {
+  const slug = req.params.slug as string;
+  const renderedPath = path.join(ROOT_DIR, "output", `${slug}.mp4`);
+
+  if (!fs.existsSync(renderedPath)) {
+    res.status(404).send(`렌더링된 최종 영상 'output/${slug}.mp4'를 찾을 수 없습니다. 먼저 렌더링을 실행해주세요.`);
+    return;
+  }
+
+  const filename = `${slug}-final.mp4`;
+  res.download(renderedPath, filename, (err) => {
+    if (err) {
+      console.error("다운로드 에러:", err);
+      if (!res.headersSent) res.status(500).send("다운로드 중 오류가 발생했습니다.");
+    }
+  });
 });
 
 // Static frontend serving

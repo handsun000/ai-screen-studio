@@ -16,6 +16,7 @@ auth.json
 scratch/
 tmp/
 temp/
+.cache/
 
 # Build & Render Outputs
 dist/
@@ -55,3 +56,6 @@ Thumbs.db
 *.swo
 .vscode/
 .idea/
+
+# Local Agent Logs
+*.log

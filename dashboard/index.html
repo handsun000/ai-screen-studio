@@ -172,10 +172,14 @@
             </div>
 
             <div class="form-group">
-              <label>녹화 브라우저 실행 옵션</label>
+              <label>녹화 브라우저 및 AI 캐시 옵션</label>
               <div class="toggle-group-row">
-                <label class="toggle-label">
-                  <input type="checkbox" id="headed-toggle">
+                <label class="toggle-label" title="동일한 질문 요청 시 이전에 분석된 플랜을 즉시 불러와 Gemini API 토큰을 절약합니다.">
+                  <input type="checkbox" id="cache-toggle" checked>
+                  <span>⚡ 이전 결과 캐시 사용 (토큰 절약)</span>
+                </label>
+                <label class="toggle-label" title="녹화 중 브라우저 창을 화면에 직접 띄워 실시간 진행 과정을 확인합니다.">
+                  <input type="checkbox" id="headed-toggle" checked>
                   <span>브라우저 화면 직접 보기 (--headed)</span>
                 </label>
                 <label class="toggle-label">
@@ -185,12 +189,16 @@
               </div>
             </div>
 
-            <!-- Submit Button -->
+            <!-- Submit Button & Live Progress -->
             <div class="action-footer">
               <button id="btn-generate" class="btn btn-primary btn-glow">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
                 <span id="generate-btn-text">Gemini로 시나리오 생성</span>
               </button>
+            </div>
+            <div class="ai-progress-bar hidden" id="ai-progress-bar">
+              <div class="spinner-small"></div>
+              <span id="ai-progress-text">🔍 1단계: 소스코드 자율 탐색 에이전트 실행 중...</span>
             </div>
           </div>
 
@@ -202,10 +210,23 @@
                 <p class="card-sub" id="plan-slug-badge">시나리오 미선택</p>
               </div>
               <div class="editor-header-actions">
-                <button class="btn btn-sm btn-secondary" id="btn-add-action">+ 액션 추가</button>
+                <div class="dropdown-preset-blocks">
+                  <button class="btn btn-sm btn-outline dropdown-toggle" id="btn-block-presets" type="button" title="제목, 결재선, 상신 등 필수 묶음 액션을 즉시 삽입">⚡ 필수 블록 삽입 ▾</button>
+                  <div class="dropdown-menu-blocks" id="menu-block-presets">
+                    <button class="dropdown-item-block" type="button" data-preset="title">📝 [문서 제목 입력] 블록</button>
+                    <button class="dropdown-item-block" type="button" data-preset="apprLine">👥 [결재선 / 조직도 지정] 블록</button>
+                    <button class="dropdown-item-block" type="button" data-preset="editorBody">📄 [본문 내용 작성] 블록</button>
+                    <button class="dropdown-item-block" type="button" data-preset="submitConfirm">🚀 [상신 및 알림창 확인] 블록</button>
+                  </div>
+                </div>
+                <button class="btn btn-sm btn-secondary" id="btn-add-action-top" title="플랜 맨 처음에 액션 삽입">+ 맨 위 추가</button>
+                <button class="btn btn-sm btn-secondary" id="btn-add-action" title="플랜 맨 끝에 액션 추가">+ 맨 아래 추가</button>
                 <button class="btn btn-sm btn-outline" id="btn-save-plan">💾 플랜 저장</button>
                 <button class="btn btn-sm btn-success btn-glow" id="btn-run-pipeline">
                   🎥 원클릭 녹화 & 제작
+                </button>
+                <button class="btn btn-sm btn-primary btn-glow" id="btn-render-video" title="마우스 커서와 카메라 줌이 합성된 최종 MP4 비디오를 렌더링(추출)합니다">
+                  🎞️ 최종 영상 추출 (Render)
                 </button>
               </div>
             </div>
@@ -214,6 +235,20 @@
               <div class="info-icon">💡</div>
               <div class="info-content" id="explanation-text">
                 위 입력창에 시나리오를 입력하고 [Gemini로 시나리오 생성]을 누르면, 분석된 액션 리스트가 이곳에 시각화됩니다.
+              </div>
+            </div>
+
+            <!-- Stage 1 Code Explorer Action Spec Viewer -->
+            <div class="action-spec-card hidden" id="action-spec-container">
+              <div class="action-spec-header" id="btn-toggle-action-spec">
+                <div class="spec-header-title">
+                  <span class="spec-icon">🔬</span>
+                  <strong>[1단계 AI 코드 탐색 결과] 소스코드 기반 화면 조작 기획서 (Action Spec)</strong>
+                </div>
+                <span class="spec-toggle-icon" id="spec-toggle-label">▼ 펼쳐보기</span>
+              </div>
+              <div class="action-spec-body hidden" id="action-spec-body">
+                <pre class="action-spec-content" id="action-spec-content"></pre>
               </div>
             </div>
 
@@ -257,7 +292,22 @@
                 <button class="btn btn-sm btn-outline" id="btn-re-record">
                   🔄 다시 녹화
                 </button>
+                <button class="btn btn-sm btn-success btn-glow" id="btn-player-render" title="마우스 커서와 줌이 합성된 최종 MP4 비디오 렌더링">
+                  🎞️ 최종 MP4 렌더링
+                </button>
+                <a class="btn btn-sm btn-download hidden" id="btn-download-video" download title="완성된 최종 MP4 비디오 다운로드">
+                  💾 최종 MP4 다운로드
+                </a>
               </div>
+            </div>
+
+            <!-- Video Player Mode Selector -->
+            <div class="video-mode-container" id="video-mode-container">
+              <div class="video-mode-switch">
+                <button class="video-mode-btn active" id="btn-mode-raw" data-mode="raw">📹 원본 브라우저 녹화본</button>
+                <button class="video-mode-btn" id="btn-mode-rendered" data-mode="rendered">✨ 줌/커서 합성 최종본</button>
+              </div>
+              <span class="video-mode-badge" id="video-mode-badge">원본 녹화 재생 중</span>
             </div>
 
             <!-- Video Player Window -->

@@ -15,8 +15,24 @@ const promptInput = document.getElementById("prompt-input");
 const slugInput = document.getElementById("slug-input");
 const headedToggle = document.getElementById("headed-toggle");
 const loginToggle = document.getElementById("login-toggle");
+
+if (headedToggle) {
+  if (localStorage.getItem("screen_demo_headed") !== null) {
+    headedToggle.checked = localStorage.getItem("screen_demo_headed") === "true";
+  }
+  headedToggle.addEventListener("change", () => {
+    localStorage.setItem("screen_demo_headed", headedToggle.checked);
+  });
+}
 const btnGenerate = document.getElementById("btn-generate");
 const generateBtnText = document.getElementById("generate-btn-text");
+const aiProgressBar = document.getElementById("ai-progress-bar");
+const aiProgressText = document.getElementById("ai-progress-text");
+const actionSpecContainer = document.getElementById("action-spec-container");
+const btnToggleActionSpec = document.getElementById("btn-toggle-action-spec");
+const actionSpecBody = document.getElementById("action-spec-body");
+const actionSpecContent = document.getElementById("action-spec-content");
+const specToggleLabel = document.getElementById("spec-toggle-label");
 
 const targetProjectPathInput = document.getElementById("target-project-path");
 const targetBaseUrlInput = document.getElementById("target-base-url");
@@ -32,8 +48,12 @@ const actionsList = document.getElementById("actions-list");
 const planSlugBadge = document.getElementById("plan-slug-badge");
 const explanationText = document.getElementById("explanation-text");
 const btnAddAction = document.getElementById("btn-add-action");
+const btnAddActionTop = document.getElementById("btn-add-action-top");
+const btnBlockPresets = document.getElementById("btn-block-presets");
+const menuBlockPresets = document.getElementById("menu-block-presets");
 const btnSavePlan = document.getElementById("btn-save-plan");
 const btnRunPipeline = document.getElementById("btn-run-pipeline");
+const btnRenderVideo = document.getElementById("btn-render-video");
 
 const scenarioCardsContainer = document.getElementById("scenario-cards-container");
 const scenariosCount = document.getElementById("scenarios-count");
@@ -43,6 +63,12 @@ const videoPlayer = document.getElementById("demo-video-player");
 const videoEmpty = document.getElementById("video-empty");
 const btnSetActive = document.getElementById("btn-set-active");
 const btnReRecord = document.getElementById("btn-re-record");
+const btnPlayerRender = document.getElementById("btn-player-render");
+const btnDownloadVideo = document.getElementById("btn-download-video");
+const btnModeRaw = document.getElementById("btn-mode-raw");
+const btnModeRendered = document.getElementById("btn-mode-rendered");
+const videoModeBadge = document.getElementById("video-mode-badge");
+let currentVideoMode = "raw"; // "raw" | "rendered"
 const timelineVisualBar = document.getElementById("timeline-visual-bar");
 const timelineStats = document.getElementById("timeline-stats");
 const jsonViewerContent = document.getElementById("json-viewer-content");
@@ -297,7 +323,7 @@ async function fetchScenarios() {
 }
 
 // 6. Select & View Scenario
-async function selectScenario(slug) {
+async function selectScenario(slug, preferMode = null) {
   selectedScenario = slug;
 
   document.querySelectorAll(".scenario-item").forEach((el) => {
@@ -314,20 +340,77 @@ async function selectScenario(slug) {
 
     playerMeta.textContent = `액션 ${details.browsePlan?.actions?.length || 0}개 | 줌 세그먼트 ${details.editPlan?.segments?.length || 0}개`;
 
-    if (details.hasVideo) {
-      videoEmpty.style.display = "none";
-      videoPlayer.style.display = "block";
-      videoPlayer.src = `${details.videoUrl}?t=${Date.now()}`;
-    } else {
-      videoEmpty.style.display = "flex";
-      videoPlayer.style.display = "none";
-      videoPlayer.src = "";
+    // Check Rendered Video Info
+    let renderInfo = { exists: false };
+    try {
+      const renderRes = await fetch(`/api/render/info/${slug}`);
+      if (renderRes.ok) {
+        renderInfo = await renderRes.json();
+      }
+    } catch {}
+
+    if (btnDownloadVideo) {
+      if (renderInfo.exists) {
+        btnDownloadVideo.classList.remove("hidden");
+        btnDownloadVideo.href = renderInfo.downloadUrl;
+        btnDownloadVideo.download = `${slug}-final.mp4`;
+        const sizeMb = ((renderInfo.fileSizeBytes || 0) / (1024 * 1024)).toFixed(1);
+        btnDownloadVideo.innerHTML = `💾 최종 MP4 다운로드 <small>(${sizeMb}MB)</small>`;
+      } else {
+        btnDownloadVideo.classList.add("hidden");
+      }
     }
+
+    // Determine video playback mode
+    const targetMode = preferMode || (renderInfo.exists && currentVideoMode === "rendered" ? "rendered" : "raw");
+    setVideoMode(targetMode, details, renderInfo);
 
     renderTimelineVisual(details);
     updateJsonViewer("browse");
   } catch (err) {
     console.error("selectScenario failed:", err);
+  }
+}
+
+function setVideoMode(mode, details = null, renderInfo = null) {
+  if (!selectedScenario) return;
+  const slug = selectedScenario;
+  const d = details || scenarioDetailsCache[slug] || {};
+
+  currentVideoMode = mode;
+
+  if (btnModeRaw) btnModeRaw.classList.toggle("active", mode === "raw");
+  if (btnModeRendered) btnModeRendered.classList.toggle("active", mode === "rendered");
+
+  if (mode === "rendered") {
+    // Check if rendered video actually exists
+    const hasRendered = renderInfo ? renderInfo.exists : (d.hasRenderedVideo || false);
+    if (!hasRendered) {
+      if (videoModeBadge) videoModeBadge.textContent = "최종 렌더링 파일 없음 (렌더링 필요)";
+      videoPlayer.style.display = "none";
+      videoEmpty.style.display = "flex";
+      videoEmpty.querySelector("p").textContent = "최종 렌더링(합성)된 MP4 비디오가 없습니다.";
+      videoEmpty.querySelector("span").textContent = "[🎞️ 최종 MP4 렌더링] 버튼을 눌러 비디오를 추출하세요.";
+      return;
+    }
+
+    if (videoModeBadge) videoModeBadge.textContent = "✨ 줌/커서 합성 최종본 재생 중";
+    videoEmpty.style.display = "none";
+    videoPlayer.style.display = "block";
+    videoPlayer.src = `/api/rendered-video/${slug}?t=${Date.now()}`;
+  } else {
+    // Raw recording mode
+    if (d.hasVideo) {
+      if (videoModeBadge) videoModeBadge.textContent = "📹 원본 브라우저 녹화본 재생 중";
+      videoEmpty.style.display = "none";
+      videoPlayer.style.display = "block";
+      videoPlayer.src = `${d.videoUrl || `/api/video/${slug}`}?t=${Date.now()}`;
+    } else {
+      if (videoModeBadge) videoModeBadge.textContent = "녹화 비디오 없음";
+      videoEmpty.style.display = "flex";
+      videoPlayer.style.display = "none";
+      videoPlayer.src = "";
+    }
   }
 }
 
@@ -400,7 +483,7 @@ function updateJsonViewer(type) {
   jsonViewerContent.textContent = data ? JSON.stringify(data, null, 2) : "데이터가 없습니다.";
 }
 
-// 9. Generate Browse Plan via Gemini (with dynamic project & URL)
+// 9. Generate Browse Plan via Gemini (with 2-Stage Code Explorer Agent & Video Directing)
 async function handleGeneratePlan() {
   const prompt = promptInput.value.trim();
   if (!prompt) {
@@ -413,11 +496,38 @@ async function handleGeneratePlan() {
   const targetUrl = targetBaseUrlInput.value.trim();
 
   btnGenerate.disabled = true;
-  generateBtnText.textContent = "Gemini 소스코드/문서 분석 및 플랜 생성 중...";
+  generateBtnText.textContent = "AI 코드 분석 및 시나리오 연출 중...";
+
+  if (aiProgressBar) {
+    aiProgressBar.classList.remove("hidden");
+    if (aiProgressText) {
+      aiProgressText.textContent = "🔍 [1단계: 코드 탐색 에이전트] 타겟 프로젝트 소스코드 및 DOM 셀렉터 탐색 시작...";
+    }
+  }
+
+  // Connect SSE for real-time progress updates
+  let progressEventSource = null;
+  try {
+    progressEventSource = new EventSource("/api/gemini/stream-progress");
+    progressEventSource.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload.progress && aiProgressText) {
+          aiProgressText.textContent = payload.progress;
+        }
+      } catch {}
+    };
+  } catch (sseErr) {
+    console.warn("Progress SSE connection failed:", sseErr);
+  }
 
   try {
     const slug = slugInput.value.trim();
+    const directingStyleSelect = document.getElementById("directing-style-select");
     const directingStyle = directingStyleSelect ? directingStyleSelect.value : "standard";
+    const cacheToggle = document.getElementById("cache-toggle");
+    const bypassCache = cacheToggle ? !cacheToggle.checked : false;
+
     const res = await fetch("/api/scenarios/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -427,6 +537,7 @@ async function handleGeneratePlan() {
         targetProjectPath,
         targetUrl,
         directingStyle,
+        bypassCache,
       }),
     });
 
@@ -441,37 +552,273 @@ async function handleGeneratePlan() {
     currentExplanation = data.explanation;
 
     slugInput.value = currentSlug;
-    planSlugBadge.textContent = `시나리오: ${currentSlug}`;
-    explanationText.textContent = currentExplanation;
+
+    if (data.isFromCache) {
+      planSlugBadge.textContent = `시나리오: ${currentSlug} ⚡ (캐시 적중 - 토큰 소모 0)`;
+      explanationText.textContent = `⚡ [캐시 적중] 동일한 시나리오 분석 결과가 캐시에 보관되어 있어 AI API 호출 없이 0.05초 만에 즉시 불러왔습니다.\n\n${currentExplanation}`;
+    } else {
+      planSlugBadge.textContent = `시나리오: ${currentSlug}`;
+      explanationText.textContent = currentExplanation;
+    }
+
+    // Display Action Spec if available
+    if (data.actionSpecMarkdown && actionSpecContainer && actionSpecContent) {
+      actionSpecContainer.classList.remove("hidden");
+      actionSpecContent.textContent = data.actionSpecMarkdown;
+      if (actionSpecBody) actionSpecBody.classList.remove("hidden");
+      if (specToggleLabel) specToggleLabel.textContent = "▲ 접기";
+    }
 
     renderActionCards();
   } catch (err) {
     alert("Gemini 플랜 생성 중 오류: " + err.message);
   } finally {
+    if (progressEventSource) {
+      progressEventSource.close();
+    }
+    if (aiProgressBar) {
+      aiProgressBar.classList.add("hidden");
+    }
     btnGenerate.disabled = false;
     generateBtnText.textContent = "Gemini로 시나리오 생성";
   }
 }
 
-// 10. Render Editable Action Cards
+// 10. Action Manipulation & Rendering
+let draggedActionIndex = null;
+
+const SMART_PRESET_BLOCKS = {
+  title: [
+    { type: "wait", ms: 1200, description: "제목 입력창 포커스 대기" },
+    {
+      type: "type",
+      selector: "input#_DOC_TITLE_, input[name*='title'], input[placeholder*='제목'], [title*='문서제목'] input",
+      text: "2026학년도 대학 업무 개선 계획서",
+      description: "문서 제목 입력 ('2026학년도 대학 업무 개선 계획서')",
+      iframe: "iframe[name*='docBox'], iframe[src*='frmFormletUiFrame']",
+    },
+    { type: "wait", ms: 1000, description: "제목 입력 확인 대기" },
+  ],
+  apprLine: [
+    {
+      type: "click",
+      selector: "button:has(.ico_org), a:has(.ico_org), button:has-text('조직도'), button:has-text('결재선')",
+      description: "결재선 / 조직도 팝업 열기",
+    },
+    { type: "wait", ms: 2500, description: "조직도 팝업 로딩 대기" },
+    {
+      type: "click",
+      selector: ".ui-dialog:visible .dynatree-expander, .ui-dialog:visible .folder, .ui-dialog:visible .dynatree-node:first-child .dynatree-expander",
+      description: "조직도 부서 트리 확장 클릭",
+    },
+    { type: "wait", ms: 1500, description: "하위 조직 구성원 로딩 대기" },
+    {
+      type: "click",
+      selector: ".ui-dialog:visible input[type='checkbox'], .ui-dialog:visible .dynatree-checkbox",
+      description: "조직도에서 결재자 선택 체크",
+    },
+    {
+      type: "click",
+      selector: ".ui-dialog:visible button:has-text('확인'), .ui-dialog:visible button:has-text('적용')",
+      description: "결재선 지정 [확인] 버튼 클릭",
+    },
+    { type: "wait", ms: 1500, description: "결재선 반영 대기" },
+  ],
+  editorBody: [
+    {
+      type: "click",
+      selector: "div[contenteditable='true'], textarea#content, iframe[name*='editor']",
+      description: "본문 에디터 영역 포커스 클릭",
+    },
+    {
+      type: "type",
+      selector: "div[contenteditable='true'], textarea#content",
+      text: "본 계획서에 따른 세부 추진 일정을 검토 후 재가하여 주시기 바랍니다.",
+      description: "본문 내용 작성 ('본 계획서에 따른 세부 추진 일정을...')",
+    },
+    { type: "wait", ms: 1200, description: "본문 입력 완료 대기" },
+  ],
+  submitConfirm: [
+    {
+      type: "click",
+      selector: "button:has-text('상신'):visible, button:has-text('저장'):visible, button:has-text('등록'):visible",
+      description: "기안문 [상신] 버튼 클릭",
+    },
+    { type: "wait", ms: 2000, description: "상신 처리 및 결과 다이얼로그 대기" },
+    {
+      type: "wait",
+      ms: 3000,
+      description: "상신 완료 화면 3초간 와이드 뷰 (아웃트로)",
+    },
+  ],
+};
+
+function insertBlockPreset(presetKey) {
+  const actionsToAdd = SMART_PRESET_BLOCKS[presetKey];
+  if (!actionsToAdd) return;
+  const targetUrl = targetBaseUrlInput.value.trim() || "https://gwdev.bc.ac.kr/";
+  if (!currentPlan) {
+    currentPlan = {
+      url: targetUrl,
+      viewport: { width: 1920, height: 1080 },
+      requiresLogin: true,
+      actions: [],
+    };
+  }
+  const startIndex = currentPlan.actions.length;
+  currentPlan.actions.push(...JSON.parse(JSON.stringify(actionsToAdd)));
+  renderActionCards();
+
+  setTimeout(() => {
+    const cards = actionsList.querySelectorAll(".action-item-card");
+    if (cards[startIndex]) {
+      cards[startIndex].scrollIntoView({ behavior: "smooth", block: "nearest" });
+      cards[startIndex].style.borderColor = "#FBBF24";
+      cards[startIndex].style.boxShadow = "0 0 20px rgba(251, 191, 36, 0.5)";
+      setTimeout(() => {
+        cards[startIndex].style.borderColor = "";
+        cards[startIndex].style.boxShadow = "";
+      }, 1500);
+    }
+  }, 50);
+}
+
+function createDefaultAction(type = "click", description = "새 액션") {
+  return {
+    type,
+    selector: "",
+    description,
+    optional: false,
+    force: false,
+  };
+}
+
+function insertActionAt(targetIndex, actionData = null) {
+  const targetUrl = targetBaseUrlInput.value.trim() || "https://gwdev.bc.ac.kr/";
+  if (!currentPlan) {
+    currentPlan = {
+      url: targetUrl,
+      viewport: { width: 1920, height: 1080 },
+      requiresLogin: true,
+      actions: [],
+    };
+  }
+  const newAction = actionData ? JSON.parse(JSON.stringify(actionData)) : createDefaultAction();
+  const validIndex = Math.max(0, Math.min(targetIndex, currentPlan.actions.length));
+  currentPlan.actions.splice(validIndex, 0, newAction);
+  renderActionCards();
+
+  setTimeout(() => {
+    const cards = actionsList.querySelectorAll(".action-item-card");
+    if (cards[validIndex]) {
+      cards[validIndex].scrollIntoView({ behavior: "smooth", block: "nearest" });
+      const descInput = cards[validIndex].querySelector('[data-field="description"]');
+      if (descInput) descInput.focus();
+      cards[validIndex].style.borderColor = "var(--accent-color)";
+      cards[validIndex].style.boxShadow = "0 0 16px rgba(99, 102, 241, 0.5)";
+      setTimeout(() => {
+        cards[validIndex].style.borderColor = "";
+        cards[validIndex].style.boxShadow = "";
+      }, 1000);
+    }
+  }, 50);
+}
+
+function moveAction(fromIndex, toIndex) {
+  if (!currentPlan || !currentPlan.actions) return;
+  if (toIndex < 0 || toIndex >= currentPlan.actions.length || fromIndex === toIndex) return;
+  const [moved] = currentPlan.actions.splice(fromIndex, 1);
+  currentPlan.actions.splice(toIndex, 0, moved);
+  renderActionCards();
+
+  setTimeout(() => {
+    const cards = actionsList.querySelectorAll(".action-item-card");
+    if (cards[toIndex]) {
+      cards[toIndex].scrollIntoView({ behavior: "smooth", block: "nearest" });
+      cards[toIndex].style.borderColor = "#38BDF8";
+      cards[toIndex].style.boxShadow = "0 0 16px rgba(56, 189, 248, 0.5)";
+      setTimeout(() => {
+        cards[toIndex].style.borderColor = "";
+        cards[toIndex].style.boxShadow = "";
+      }, 1000);
+    }
+  }, 50);
+}
+
+function duplicateAction(index) {
+  if (!currentPlan || !currentPlan.actions || !currentPlan.actions[index]) return;
+  const clone = JSON.parse(JSON.stringify(currentPlan.actions[index]));
+  clone.description = `${clone.description || "액션"} (복제)`;
+  insertActionAt(index + 1, clone);
+}
+
+function deleteAction(index) {
+  if (!currentPlan || !currentPlan.actions) return;
+  currentPlan.actions.splice(index, 1);
+  renderActionCards();
+}
+
+function createInsertDivider(insertIndex) {
+  const divider = document.createElement("div");
+  divider.className = "action-insert-divider";
+  divider.innerHTML = `
+    <button class="btn-insert-inline" type="button" title="이 위치에 새 액션 삽입">
+      <span>+</span> 여기에 액션 삽입
+    </button>
+  `;
+  divider.querySelector("button").addEventListener("click", () => {
+    insertActionAt(insertIndex);
+  });
+  return divider;
+}
+
+function escapeHtmlAttr(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+// Render Editable Action Cards
 function renderActionCards() {
   actionsList.innerHTML = "";
   if (!currentPlan || !currentPlan.actions || currentPlan.actions.length === 0) {
     actionsList.innerHTML = `
       <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
         <p>생성된 액션이 없습니다.</p>
+        <button class="btn btn-sm btn-secondary" style="margin-top: 10px;" id="btn-empty-add-action">+ 첫 번째 액션 추가</button>
       </div>`;
+    const btnEmptyAdd = document.getElementById("btn-empty-add-action");
+    if (btnEmptyAdd) btnEmptyAdd.addEventListener("click", () => insertActionAt(0));
     return;
   }
+
+  // Divider at top (index 0)
+  actionsList.appendChild(createInsertDivider(0));
+
+  const totalActions = currentPlan.actions.length;
 
   currentPlan.actions.forEach((act, idx) => {
     const card = document.createElement("div");
     card.className = "action-item-card";
+    card.draggable = true;
+    card.dataset.index = idx;
 
     const badgeClass = `badge-${act.type}`;
 
     card.innerHTML = `
       <div class="action-top-row">
+        <div class="action-drag-handle" title="드래그하여 순서 변경 (Drag & Drop)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="9" cy="6" r="2"/><circle cx="15" cy="6" r="2"/>
+            <circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/>
+            <circle cx="9" cy="18" r="2"/><circle cx="15" cy="18" r="2"/>
+          </svg>
+        </div>
         <div class="action-badge-group">
           <span class="action-index">#${idx + 1}</span>
           <select class="action-badge ${badgeClass}" data-field="type">
@@ -483,18 +830,24 @@ function renderActionCards() {
             <option value="scroll" ${act.type === "scroll" ? "selected" : ""}>SCROLL</option>
             <option value="navigate" ${act.type === "navigate" ? "selected" : ""}>NAVIGATE</option>
           </select>
-          <input type="text" placeholder="액션 설명 (한글)" value="${act.description || ""}" data-field="description" style="width: 280px; font-weight: 500;">
+          <input type="text" placeholder="액션 설명 (한글)" value="${escapeHtmlAttr(act.description)}" data-field="description" style="width: 250px; font-weight: 500;">
         </div>
-        <button class="action-delete-btn" title="삭제">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
+        <div class="action-card-controls">
+          <button class="action-ctrl-btn action-move-up" title="한 단계 위로 이동" ${idx === 0 ? "disabled" : ""}>▲</button>
+          <button class="action-ctrl-btn action-move-down" title="한 단계 아래로 이동" ${idx === totalActions - 1 ? "disabled" : ""}>▼</button>
+          <button class="action-ctrl-btn action-ctrl-insert action-insert-btn" title="이 액션 바로 아래에 새 액션 삽입">+ 아래 추가</button>
+          <button class="action-ctrl-btn action-ctrl-duplicate action-duplicate-btn" title="이 액션 그대로 복제">복제</button>
+          <button class="action-delete-btn" title="삭제">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
       </div>
 
       <div class="action-inputs-grid">
-        ${act.type !== "wait" ? `<input type="text" placeholder="CSS 셀렉터 (예: #svc_lst a:has-text('결재'))" value="${act.selector || ""}" data-field="selector">` : ""}
+        ${act.type !== "wait" ? `<input type="text" placeholder="CSS 셀렉터 (예: #svc_lst a:has-text('결재'))" value="${escapeHtmlAttr(act.selector)}" data-field="selector">` : ""}
         ${act.type === "wait" ? `<input type="number" placeholder="대기 시간(ms)" value="${act.ms || 2000}" data-field="ms">` : ""}
-        ${act.type === "type" ? `<input type="text" placeholder="입력할 텍스트" value="${act.text || ""}" data-field="text">` : ""}
-        ${act.type !== "wait" ? `<input type="text" placeholder="iFrame 셀렉터 (옵션)" value="${act.iframe || ""}" data-field="iframe">` : ""}
+        ${act.type === "type" ? `<input type="text" placeholder="입력할 텍스트" value="${escapeHtmlAttr(act.text)}" data-field="text">` : ""}
+        ${act.type !== "wait" ? `<input type="text" placeholder="iFrame 셀렉터 (옵션)" value="${escapeHtmlAttr(act.iframe)}" data-field="iframe">` : ""}
       </div>
 
       <div class="action-options-row">
@@ -505,7 +858,7 @@ function renderActionCards() {
 
     // Bind Change Handlers
     card.querySelectorAll("[data-field]").forEach((input) => {
-      input.addEventListener("change", (e) => {
+      input.addEventListener("change", () => {
         const field = input.getAttribute("data-field");
         if (input.type === "checkbox") {
           act[field] = input.checked;
@@ -518,26 +871,64 @@ function renderActionCards() {
       });
     });
 
-    // Delete handler
-    card.querySelector(".action-delete-btn").addEventListener("click", () => {
-      currentPlan.actions.splice(idx, 1);
-      renderActionCards();
+    // Control Button Listeners
+    card.querySelector(".action-move-up").addEventListener("click", () => moveAction(idx, idx - 1));
+    card.querySelector(".action-move-down").addEventListener("click", () => moveAction(idx, idx + 1));
+    card.querySelector(".action-insert-btn").addEventListener("click", () => insertActionAt(idx + 1));
+    card.querySelector(".action-duplicate-btn").addEventListener("click", () => duplicateAction(idx));
+    card.querySelector(".action-delete-btn").addEventListener("click", () => deleteAction(idx));
+
+    // HTML5 Drag & Drop
+    card.addEventListener("dragstart", (e) => {
+      draggedActionIndex = idx;
+      card.classList.add("is-dragging");
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", String(idx));
+    });
+
+    card.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      if (draggedActionIndex !== null && draggedActionIndex !== idx) {
+        card.classList.add("drag-over");
+      }
+    });
+
+    card.addEventListener("dragleave", () => {
+      card.classList.remove("drag-over");
+    });
+
+    card.addEventListener("drop", (e) => {
+      e.preventDefault();
+      card.classList.remove("drag-over");
+      if (draggedActionIndex !== null && draggedActionIndex !== idx) {
+        moveAction(draggedActionIndex, idx);
+      }
+    });
+
+    card.addEventListener("dragend", () => {
+      card.classList.remove("is-dragging");
+      document.querySelectorAll(".action-item-card").forEach((c) => c.classList.remove("drag-over"));
+      draggedActionIndex = null;
     });
 
     actionsList.appendChild(card);
+
+    // Divider after this card (index idx + 1)
+    actionsList.appendChild(createInsertDivider(idx + 1));
   });
 }
 
 // 11. Save Plan
-async function handleSavePlan() {
+async function handleSavePlan(silent = false) {
   const slug = slugInput.value.trim() || currentSlug;
   if (!slug) {
-    alert("시나리오 식별자(Slug)를 입력해주세요.");
-    return;
+    if (!silent) alert("시나리오 식별자(Slug)를 입력해주세요.");
+    return false;
   }
   if (!currentPlan) {
-    alert("저장할 플랜이 없습니다.");
-    return;
+    if (!silent) alert("저장할 플랜이 없습니다.");
+    return false;
   }
 
   try {
@@ -548,12 +939,17 @@ async function handleSavePlan() {
     });
     const data = await res.json();
     if (data.success) {
-      alert(`'${slug}' 브라우징 플랜이 성공적으로 저장되었습니다!`);
+      if (!silent) {
+        alert(`'${slug}' 브라우징 플랜이 성공적으로 저장되었습니다!`);
+      }
       fetchScenarios();
+      return true;
     }
   } catch (err) {
-    alert("저장 실패: " + err.message);
+    if (!silent) alert("저장 실패: " + err.message);
+    return false;
   }
+  return false;
 }
 
 // 12. Run Pipeline (Record & Edit)
@@ -564,8 +960,24 @@ async function handleRunPipeline() {
     return;
   }
 
-  // Auto save first
-  await handleSavePlan();
+  // 1. Fetch latest server browse-plan to ensure we don't overwrite with stale memory state
+  try {
+    const checkRes = await fetch(`/api/scenarios/${slug}`);
+    if (checkRes.ok) {
+      const details = await checkRes.json();
+      if (details && details.browsePlan && (!currentPlan || !currentPlan.actions || currentPlan.actions.length === 0)) {
+        currentPlan = details.browsePlan;
+        renderActionCards();
+      }
+    }
+  } catch (syncErr) {
+    console.warn("Could not sync server plan before run:", syncErr);
+  }
+
+  // 2. Save only if currentPlan is valid
+  if (currentPlan && currentPlan.actions && currentPlan.actions.length > 0) {
+    await handleSavePlan(true);
+  }
 
   switchTab("tab-terminal");
   appendTerminalLog(`🚀 '${slug}' 원클릭 자동 녹화 파이프라인 요청 중...`, "system-line");
@@ -588,6 +1000,41 @@ async function handleRunPipeline() {
     terminalStatusText.textContent = `실행 중 (${slug})`;
   } catch (err) {
     appendTerminalLog(`❌ 파이프라인 시작 실패: ${err.message}`, "log-error");
+  }
+}
+
+// 12-2. Run Video Render (Remotion Composite)
+async function handleRenderVideo(targetSlug = null) {
+  const slug = targetSlug || slugInput.value.trim() || currentSlug || selectedScenario;
+  if (!slug) {
+    alert("렌더링할 시나리오를 선택하거나 Slug를 입력해주세요.");
+    return;
+  }
+
+  // Pre-check scenario details
+  const details = scenarioDetailsCache[slug];
+  if (details && !details.hasVideo) {
+    alert(`'${slug}' 시나리오의 원본 녹화 비디오가 없습니다.\n먼저 [원클릭 녹화 & 제작]을 실행하여 녹화를 완료해주세요.`);
+    return;
+  }
+
+  switchTab("tab-terminal");
+  appendTerminalLog(`🎞️ '${slug}' 최종 MP4 렌더링(비디오 추출) 프로세스 시작 요청 중...`, "system-line");
+
+  try {
+    const res = await fetch("/api/render/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug }),
+    });
+
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.error);
+    }
+    terminalStatusText.textContent = `렌더링 중 (${slug})`;
+  } catch (err) {
+    appendTerminalLog(`❌ 비디오 렌더링 시작 실패: ${err.message}`, "log-error");
   }
 }
 
@@ -626,21 +1073,23 @@ function initSSE() {
             }
           });
           if (data.task.status === "running") {
-            terminalStatusText.textContent = `실행 중 (${data.task.slug})`;
+            const isRender = data.task.id && data.task.id.startsWith("render-");
+            terminalStatusText.textContent = `${isRender ? "렌더링 중" : "실행 중"} (${data.task.slug})`;
           }
         }
       } else if (data.type === "status") {
+        const isRender = data.task.id && data.task.id.startsWith("render-");
         if (data.task.status === "completed") {
-          terminalStatusText.textContent = "녹화 완료";
+          terminalStatusText.textContent = isRender ? "렌더링 완료" : "녹화 완료";
           if (terminalLoginBanner) terminalLoginBanner.style.display = "none";
           fetchScenarios();
           fetchStatus();
           setTimeout(() => {
-            selectScenario(data.task.slug);
+            selectScenario(data.task.slug, isRender ? "rendered" : null);
             switchTab("tab-scenarios");
           }, 1500);
         } else if (data.task.status === "failed") {
-          terminalStatusText.textContent = "녹화 실패";
+          terminalStatusText.textContent = isRender ? "렌더링 실패" : "녹화 실패";
           if (terminalLoginBanner) terminalLoginBanner.style.display = "none";
         } else if (data.task.status === "stopped") {
           terminalStatusText.textContent = "작업 중단됨";
@@ -685,6 +1134,29 @@ function bindEvents() {
   btnGenerate.addEventListener("click", handleGeneratePlan);
   btnSavePlan.addEventListener("click", handleSavePlan);
   btnRunPipeline.addEventListener("click", handleRunPipeline);
+  if (btnRenderVideo) {
+    btnRenderVideo.addEventListener("click", () => handleRenderVideo());
+  }
+  if (btnPlayerRender) {
+    btnPlayerRender.addEventListener("click", () => handleRenderVideo(selectedScenario));
+  }
+  if (btnModeRaw) {
+    btnModeRaw.addEventListener("click", () => setVideoMode("raw"));
+  }
+  if (btnModeRendered) {
+    btnModeRendered.addEventListener("click", () => setVideoMode("rendered"));
+  }
+
+  if (btnToggleActionSpec) {
+    btnToggleActionSpec.addEventListener("click", () => {
+      if (actionSpecBody) {
+        actionSpecBody.classList.toggle("hidden");
+        if (specToggleLabel) {
+          specToggleLabel.textContent = actionSpecBody.classList.contains("hidden") ? "▼ 펼쳐보기" : "▲ 접기";
+        }
+      }
+    });
+  }
 
   if (btnClearPrompt) {
     btnClearPrompt.addEventListener("click", () => {
@@ -700,22 +1172,37 @@ function bindEvents() {
     targetProjectPathInput.select();
   });
 
-  btnAddAction.addEventListener("click", () => {
-    const targetUrl = targetBaseUrlInput.value.trim() || "https://gwdev.bc.ac.kr/";
-    if (!currentPlan) {
-      currentPlan = {
-        url: targetUrl,
-        viewport: { width: 1920, height: 1080 },
-        requiresLogin: true,
-        actions: [],
-      };
-    }
-    currentPlan.actions.push({
-      type: "click",
-      selector: "",
-      description: "새 액션",
+  if (btnAddActionTop) {
+    btnAddActionTop.addEventListener("click", () => {
+      insertActionAt(0);
     });
-    renderActionCards();
+  }
+
+  if (btnBlockPresets && menuBlockPresets) {
+    menuBlockPresets.classList.add("hidden");
+    btnBlockPresets.addEventListener("click", (e) => {
+      e.stopPropagation();
+      menuBlockPresets.classList.toggle("hidden");
+    });
+
+    menuBlockPresets.querySelectorAll("[data-preset]").forEach((item) => {
+      item.addEventListener("click", () => {
+        const preset = item.getAttribute("data-preset");
+        insertBlockPreset(preset);
+        menuBlockPresets.classList.add("hidden");
+      });
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!btnBlockPresets.contains(e.target) && !menuBlockPresets.contains(e.target)) {
+        menuBlockPresets.classList.add("hidden");
+      }
+    });
+  }
+
+  btnAddAction.addEventListener("click", () => {
+    const targetIdx = currentPlan && currentPlan.actions ? currentPlan.actions.length : 0;
+    insertActionAt(targetIdx);
   });
 
   btnClearTerminal.addEventListener("click", () => {
@@ -723,7 +1210,17 @@ function bindEvents() {
   });
 
   btnStopTask.addEventListener("click", async () => {
-    await fetch("/api/scenarios/stop", { method: "POST" });
+    btnStopTask.disabled = true;
+    btnStopTask.textContent = "중단 중...";
+    try {
+      await fetch("/api/scenarios/stop", { method: "POST" });
+      appendTerminalLog("⏹️ 작업 중단 요청이 전송되었습니다.", "system-line");
+    } finally {
+      setTimeout(() => {
+        btnStopTask.disabled = false;
+        btnStopTask.textContent = "⏹️ 작업 중단";
+      }, 1000);
+    }
   });
 
   btnSetActive.addEventListener("click", async () => {

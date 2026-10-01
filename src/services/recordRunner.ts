@@ -1,4 +1,4 @@
-import { spawn, type ChildProcessWithoutNullStreams } from "child_process";
+import { spawn, spawnSync, type ChildProcessWithoutNullStreams } from "child_process";
 import * as path from "path";
 import { EventEmitter } from "events";
 
@@ -21,8 +21,9 @@ class RecordRunner extends EventEmitter {
   }
 
   startRecord(slug: string, options: { headed?: boolean; login?: boolean } = {}): RecordTask {
-    if (this.currentTask && this.currentTask.status === "running") {
-      throw new Error(`이미 '${this.currentTask.slug}' 작업이 실행 중입니다.`);
+    // 1. Forcefully kill any previous running task or child process to prevent zombie duplicates
+    if (this.childProcess || (this.currentTask && this.currentTask.status === "running")) {
+      this.stopCurrentTask();
     }
 
     const taskId = "task-" + Date.now().toString(36);
@@ -34,8 +35,14 @@ class RecordRunner extends EventEmitter {
       startTime: Date.now(),
     };
 
+    // Default to headed mode (visible browser) unless explicitly set to false
+    const isHeaded = options.headed !== false;
     const args = ["scripts/record.ts", slug];
-    if (options.headed) args.push("--headed");
+    if (isHeaded) {
+      args.push("--headed");
+    } else {
+      args.push("--headless");
+    }
     if (options.login) args.push("--login");
 
     const rootDir = path.resolve(__dirname, "..", "..");
@@ -56,11 +63,50 @@ class RecordRunner extends EventEmitter {
 
     child.stderr.on("data", (data) => {
       const text = data.toString("utf-8");
-      this.log(`[ERR] ${text.trimEnd()}`);
+      if (
+        text.includes("ExperimentalWarning") ||
+        text.includes("DeprecationWarning") ||
+        text.includes("Debugger attached") ||
+        text.includes("libva error")
+      ) {
+        return;
+      }
+
+      const lines = text.split("\n");
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line) continue;
+
+        // Categorize stderr lines properly so non-fatal warnings do not show as red errors
+        if (
+          line.includes("[Warn]") ||
+          line.includes("WARNING") ||
+          line.includes("⚠️") ||
+          line.toLowerCase().startsWith("warning:")
+        ) {
+          this.log(`⚠️ ${line}`);
+        } else if (
+          line.includes("[ERR]") ||
+          line.includes("Error:") ||
+          line.includes("❌") ||
+          line.includes("Timeout") ||
+          line.includes("Exception")
+        ) {
+          this.log(line.startsWith("[ERR]") ? line : `[ERR] ${line}`);
+        } else {
+          // Standard info/diagnostic line
+          this.log(line);
+        }
+      }
     });
 
     child.on("close", (code) => {
       if (!this.currentTask) return;
+      if (this.currentTask.status === "stopped") {
+        this.childProcess = null;
+        return;
+      }
+
       this.currentTask.endTime = Date.now();
       const elapsed = ((this.currentTask.endTime - this.currentTask.startTime) / 1000).toFixed(1);
 
@@ -90,12 +136,31 @@ class RecordRunner extends EventEmitter {
   }
 
   stopCurrentTask(): boolean {
-    if (this.childProcess && this.currentTask?.status === "running") {
-      this.childProcess.kill("SIGTERM");
-      this.currentTask.status = "stopped";
-      this.currentTask.endTime = Date.now();
-      this.log("⏹️ 사용자에 의해 녹화 작업이 중단되었습니다.");
-      this.emit("status", this.currentTask);
+    if (this.childProcess || (this.currentTask && this.currentTask.status === "running")) {
+      const pid = this.childProcess?.pid;
+      if (pid) {
+        if (process.platform === "win32") {
+          try {
+            // Forcefully terminate the entire process tree on Windows (/T = tree, /F = forceful)
+            spawnSync("taskkill", ["/pid", pid.toString(), "/T", "/F"], { stdio: "ignore" });
+          } catch (e) {
+            console.error("taskkill error:", e);
+          }
+        } else {
+          try {
+            this.childProcess?.kill("SIGKILL");
+          } catch {}
+        }
+      }
+
+      if (this.currentTask) {
+        this.currentTask.status = "stopped";
+        this.currentTask.endTime = Date.now();
+        this.log("⏹️ 사용자에 의해 녹화 작업이 완전히 중단되었습니다.");
+        this.emit("status", this.currentTask);
+      }
+
+      this.childProcess = null;
       return true;
     }
     return false;

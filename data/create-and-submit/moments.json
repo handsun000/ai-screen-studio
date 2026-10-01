@@ -1,0 +1,243 @@
+{
+  "metadata": {
+    "url": "https://gwdev.unison.co.kr/",
+    "viewportWidth": 1920,
+    "viewportHeight": 1080,
+    "totalDurationMs": 75886,
+    "recordingStart": "2026-10-01T09:29:44.526Z",
+    "cursor": {
+      "delayMs": 800,
+      "preClickRestMs": 180
+    }
+  },
+  "moments": [
+    {
+      "id": 1,
+      "type": "wait",
+      "timestamp": 629,
+      "description": "메인 대시보드 로딩 및 시각적 앵커 대기 (Phase 1)"
+    },
+    {
+      "id": 2,
+      "type": "click",
+      "timestamp": 4210,
+      "description": "상단 GNB '전체메뉴' 버튼 클릭",
+      "cursor": {
+        "x": 1376,
+        "y": 83
+      },
+      "target": {
+        "x": 1354,
+        "y": 60,
+        "width": 45,
+        "height": 45
+      }
+    },
+    {
+      "id": 3,
+      "type": "wait",
+      "timestamp": 5268,
+      "description": "전체메뉴 레이어 펼침 대기"
+    },
+    {
+      "id": 4,
+      "type": "click",
+      "timestamp": 6824,
+      "description": "전체메뉴 내 '일정관리' 메뉴 클릭 (Phase 2)",
+      "cursor": {
+        "x": 1157,
+        "y": 182
+      },
+      "target": {
+        "x": 1069,
+        "y": 167,
+        "width": 177,
+        "height": 30
+      }
+    },
+    {
+      "id": 5,
+      "type": "wait",
+      "timestamp": 7904,
+      "description": "일정관리 화면 로딩 및 대시보드 렌더링 대기"
+    },
+    {
+      "id": 6,
+      "type": "click",
+      "timestamp": 20501,
+      "description": "상단 [일정 등록] 버튼 클릭 (Phase 3)",
+      "cursor": {
+        "x": 1806,
+        "y": 140
+      },
+      "target": {
+        "x": 1788,
+        "y": 122,
+        "width": 36,
+        "height": 36
+      }
+    },
+    {
+      "id": 7,
+      "type": "wait",
+      "timestamp": 21865,
+      "description": "일정 등록 모달창 로딩 대기"
+    },
+    {
+      "id": 8,
+      "type": "type",
+      "timestamp": 37482,
+      "description": "일정 제목에 '주간 부서 회의' 입력",
+      "cursor": {
+        "x": 1652,
+        "y": 140
+      },
+      "target": {
+        "x": 1577,
+        "y": 123,
+        "width": 150,
+        "height": 34
+      },
+      "keys": "주간 부서 회의"
+    },
+    {
+      "id": 9,
+      "type": "wait",
+      "timestamp": 38515,
+      "description": "제목 입력 확인 대기"
+    },
+    {
+      "id": 10,
+      "type": "click",
+      "timestamp": 39580,
+      "description": "조직도 선택 팝업 열기 버튼 클릭",
+      "cursor": {
+        "x": 1188,
+        "y": 290
+      },
+      "target": {
+        "x": 1172,
+        "y": 274,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "id": 11,
+      "type": "wait",
+      "timestamp": 40674,
+      "description": "조직도 팝업 로딩 대기"
+    },
+    {
+      "id": 12,
+      "type": "click",
+      "timestamp": 42730,
+      "description": "조직도 팝업 '확인' 또는 '적용' 버튼 클릭",
+      "cursor": {
+        "x": 788,
+        "y": 101
+      },
+      "target": {
+        "x": 688,
+        "y": 85,
+        "width": 200,
+        "height": 32
+      }
+    },
+    {
+      "id": 13,
+      "type": "wait",
+      "timestamp": 45755,
+      "description": "조직도 반영 대기"
+    },
+    {
+      "id": 14,
+      "type": "type",
+      "timestamp": 47312,
+      "description": "일정 내용 필드에 '이번 주 주요 업무 진행 상황 공유 및 이슈 논의' 입력",
+      "cursor": {
+        "x": 960,
+        "y": 431
+      },
+      "target": {
+        "x": 561,
+        "y": 396,
+        "width": 798,
+        "height": 70
+      },
+      "keys": "이번 주 주요 업무 진행 상황 공유 및 이슈 논의"
+    },
+    {
+      "id": 15,
+      "type": "wait",
+      "timestamp": 49469,
+      "description": "내용 입력 확인 대기"
+    },
+    {
+      "id": 16,
+      "type": "click",
+      "timestamp": 50545,
+      "description": "일정 등록 모달 [저장] 버튼 클릭 (Phase 4)",
+      "cursor": {
+        "x": 930,
+        "y": 531
+      },
+      "target": {
+        "x": 903,
+        "y": 513,
+        "width": 55,
+        "height": 36
+      }
+    },
+    {
+      "id": 17,
+      "type": "wait",
+      "timestamp": 61612,
+      "description": "저장 처리 및 팝업 닫힘 대기"
+    },
+    {
+      "id": 18,
+      "type": "click",
+      "timestamp": 63670,
+      "description": "저장 완료 알림 확인 버튼 클릭 (표시 시)",
+      "cursor": {
+        "x": 930,
+        "y": 531
+      },
+      "target": {
+        "x": 903,
+        "y": 513,
+        "width": 55,
+        "height": 36
+      }
+    },
+    {
+      "id": 19,
+      "type": "wait",
+      "timestamp": 64727,
+      "description": "캘린더 및 일정 목록 반영 대기"
+    },
+    {
+      "id": 20,
+      "type": "click",
+      "timestamp": 67807,
+      "description": "등록된 일정 상세 확인을 위해 캘린더 내 생성된 일정 항목 클릭 (Phase 5)",
+      "cursor": {
+        "x": 1806,
+        "y": 140
+      },
+      "target": {
+        "x": 1788,
+        "y": 122,
+        "width": 36,
+        "height": 36
+      }
+    },
+    {
+      "id": 21,
+      "type": "wait",
+      "timestamp": 68857,
+      "description": "일정 상세 화면 와이드 뷰 확인 및 아웃트로 마무리"
+    }
+  ]
+}

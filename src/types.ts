@@ -53,7 +53,7 @@ export interface BoundingBox {
 
 export interface Moment {
   id: number;
-  type: "navigate" | "click" | "hover" | "scroll" | "wait" | "script" | "drag" | "type" | "key";
+  type: "navigate" | "click" | "dblclick" | "hover" | "scroll" | "wait" | "script" | "drag" | "type" | "key" | "upload";
   timestamp: number;
   url?: string;
   cursor?: CursorPosition;
