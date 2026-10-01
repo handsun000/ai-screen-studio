@@ -1,10 +1,57 @@
+# Dependencies
 node_modules/
+.pnp
+.pnp.js
+
+# Environment Variables & Secrets (CRITICAL)
+.env
+.env.local
+.env.*.local
+
+# Authentication credentials & sessions (CRITICAL)
+auth.json
+**/auth.json
+
+# Scratch & Temporary Testing directories
+scratch/
+tmp/
+temp/
+
+# Build & Render Outputs
 dist/
+out/
 output/
-public/recording.*
-public/sfx/*.mp3
-public/sfx/*.wav
+build/
+.remotion/
+
+# Video & Large Media Files
 *.mp4
 *.mkv
 *.webm
+*.avi
+*.mov
 !assets/*.mp4
+
+# Playwright Temporary Files & Reports
+public/recording.*
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Audio / SFX binaries (unless tracked in assets)
+public/sfx/*.mp3
+public/sfx/*.wav
+
+# Debug Screenshots & Backups
+data/**/debug_*.png
+data/**/recording_error.png
+*.bak
+
+# IDE & OS Files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/

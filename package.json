@@ -4,13 +4,21 @@
   "description": "Open-source screen recording post-production. Automatic zoom-to-click camera animations, sound effects, and polished output powered by Remotion.",
   "license": "MIT",
   "scripts": {
+    "dashboard": "tsx scripts/dashboard-server.ts",
     "start": "remotion studio",
     "render": "remotion render ScreenDemo",
     "record": "tsx scripts/record.ts",
+    "verify-sync": "tsx scripts/verify-sync.ts",
     "session": "python scripts/session.py"
   },
   "dependencies": {
+    "@google/genai": "^2.24.0",
     "@remotion/cli": "4.0.242",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.4",
+    "express": "^5.2.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "remotion": "4.0.242"

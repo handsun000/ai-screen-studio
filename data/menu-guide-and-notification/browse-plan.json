@@ -1,0 +1,150 @@
+{
+  "url": "https://gwdev.bc.ac.kr/",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "requiresLogin": true,
+  "cursor": {
+    "delayMs": -700,
+    "preClickRestMs": 0
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "ms": 3500,
+      "description": "메인 포털 대시보드 로딩 대기"
+    },
+    {
+      "type": "click",
+      "selector": "#svc_lst a:has-text(\"결재\")",
+      "description": "상단 GNB '결재' 메뉴 클릭 (전자결재 이동)"
+    },
+    {
+      "type": "wait",
+      "ms": 2500,
+      "description": "전자결재 화면 로딩 및 확인 대기"
+    },
+    {
+      "type": "click",
+      "selector": "#svc_lst a:has-text(\"전자우편\")",
+      "description": "상단 GNB '전자우편' 메뉴 클릭 (웹메일 이동)"
+    },
+    {
+      "type": "wait",
+      "ms": 2500,
+      "description": "전자우편 화면 로딩 및 확인 대기"
+    },
+    {
+      "type": "click",
+      "selector": "#svc_lst a:has-text(\"게시판\")",
+      "description": "상단 GNB '게시판' 메뉴 클릭 (공지/게시판 이동)"
+    },
+    {
+      "type": "wait",
+      "ms": 2500,
+      "description": "게시판 화면 로딩 및 확인 대기"
+    },
+    {
+      "type": "click",
+      "selector": "button.btn_svc_open:visible, .btn_svc_open:visible",
+      "description": "상단 [전체메뉴] 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "전체메뉴 레이어 펼침 확인 대기"
+    },
+    {
+      "type": "click",
+      "selector": "#svc_box a:has-text(\"일정관리\"), #svc_box a:has-text(\"일정\")",
+      "description": "전체메뉴 내 '일정관리' 클릭 (캘린더 이동)"
+    },
+    {
+      "type": "wait",
+      "ms": 2500,
+      "description": "일정관리 화면 로딩 및 확인 대기"
+    },
+    {
+      "type": "click",
+      "selector": "button.btn_svc_open:visible, .btn_svc_open:visible",
+      "description": "상단 [전체메뉴] 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "전체메뉴 레이어 펼침 확인 대기"
+    },
+    {
+      "type": "click",
+      "selector": "#svc_box a:has-text(\"문서관리\")",
+      "description": "전체메뉴 내 '문서관리' 클릭 (문서관리 이동)"
+    },
+    {
+      "type": "wait",
+      "ms": 2500,
+      "description": "문서관리 화면 로딩 및 확인 대기"
+    },
+    {
+      "type": "click",
+      "selector": "button.btn_svc_open:visible, .btn_svc_open:visible",
+      "description": "상단 [전체메뉴] 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "전체메뉴 레이어 펼침 확인 대기"
+    },
+    {
+      "type": "click",
+      "selector": "#svc_box a:has-text(\"태스크보드\"), #svc_box a:has-text(\"업무보고\")",
+      "description": "전체메뉴 내 '업무/태스크보드' 클릭 (업무 이동)"
+    },
+    {
+      "type": "wait",
+      "ms": 2500,
+      "description": "업무 화면 로딩 및 확인 대기"
+    },
+    {
+      "type": "click",
+      "selector": "button.btn_portal:visible, button._homTab:visible, a.logo:visible, h1 a:visible",
+      "description": "상단 [포탈 화면] 버튼 클릭 (메인 홈 복귀)"
+    },
+    {
+      "type": "wait",
+      "ms": 2000,
+      "description": "메인 포털 홈 복귀 확인 대기"
+    },
+    {
+      "type": "click",
+      "selector": "button.btn_notify:visible, button[name=\"topMenu_notification\"]:visible",
+      "description": "상단 우측 종 모양 [통합알림] 아이콘 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 2000,
+      "description": "통합 알림 레이어 로딩 대기"
+    },
+    {
+      "type": "hover",
+      "selector": "#ntcnNotification_notificationList .noti_box:first-child, #ntcnNotification_notificationList a._aLink:first-child, #ntcnNotification_notificationList li:first-child",
+      "optional": true,
+      "description": "첫 번째 알림 항목 호버 (실시간 결재/게시 알림 확인)"
+    },
+    {
+      "type": "wait",
+      "ms": 2000,
+      "description": "알림 내용 확인 및 시청자 인지 대기"
+    },
+    {
+      "type": "click",
+      "selector": "button.btn_close._close:visible, button._close:visible",
+      "description": "통합 알림 레이어 닫기 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "메인 포털 홈 원복 확인 및 종료"
+    }
+  ]
+}

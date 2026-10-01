@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Screen Demo Studio - AI Video Automation Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Navigation Header -->
+    <header class="top-nav">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="23 7 16 12 23 17 23 7"></polygon>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Screen Demo <span class="accent-text">AI Studio</span></h1>
+          <p class="subtitle">Google AI Studio × Remotion Auto Pipeline</p>
+        </div>
+      </div>
+
+      <!-- Live Environment Status Indicators -->
+      <div class="status-pills">
+        <div class="status-pill" id="pill-ai" title="Google AI Studio Gemini API">
+          <span class="status-dot"></span>
+          <span class="pill-label">Gemini 3.8 Flash</span>
+        </div>
+        <div class="status-pill clickable-pill" id="pill-gw" title="클릭하여 타겟 프로젝트 변경">
+          <span class="status-dot"></span>
+          <span class="pill-label" id="pill-project-name">타겟 프로젝트 로딩...</span>
+        </div>
+        <div class="status-pill active-pill" id="pill-active" title="Currently Active Composition in Remotion">
+          <span class="pill-tag">Active</span>
+          <span class="pill-label" id="current-active-slug">loading...</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="tab-generator">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+        AI 시나리오 생성기
+      </button>
+      <button class="tab-btn" data-tab="tab-scenarios">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 8 6 4-6 4Z"/></svg>
+        시나리오 & 영상 플레이어
+      </button>
+      <button class="tab-btn" data-tab="tab-terminal">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+        실시간 녹화 콘솔
+        <span class="console-indicator" id="console-live-badge">LIVE</span>
+      </button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="content-container">
+
+      <!-- ================= TAB 1: AI GENERATOR ================= -->
+      <section class="tab-pane active" id="tab-generator">
+
+        <!-- Dynamic Target Project & URL Configuration Bar -->
+        <div class="project-config-card" id="project-config-section">
+          <div class="project-config-header">
+            <div class="config-title-group">
+              <span class="config-icon">🎯</span>
+              <div>
+                <h3>타겟 소스 프로젝트 및 서비스 URL 설정 (동적 변경 가능)</h3>
+                <p class="config-subtitle">특정 프로젝트에 종속되지 않고, 원하는 프로젝트 소스 및 URL을 자유롭게 지정하여 시나리오를 자동 추출합니다.</p>
+              </div>
+            </div>
+            <div class="project-status-badge" id="project-status-badge">
+              <span class="status-dot"></span>
+              <span id="project-status-text">프로젝트 확인 중...</span>
+            </div>
+          </div>
+
+          <div class="project-config-inputs">
+            <div class="form-group flex-2">
+              <label for="target-project-path">타겟 소스코드 디렉토리 경로 (로컬 파일시스템)</label>
+              <div class="input-with-action">
+                <input type="text" id="target-project-path" placeholder="예: C:\dev\IdeaProjects\bc2026\bc2026_gw 또는 원하는 프로젝트 경로">
+                <button class="btn btn-sm btn-secondary" id="btn-validate-project">🔍 검증 및 연결</button>
+              </div>
+            </div>
+            <div class="form-group flex-1">
+              <label for="target-base-url">타겟 서비스 URL</label>
+              <input type="text" id="target-base-url" placeholder="예: https://gwdev.bc.ac.kr/ 또는 http://localhost:3000">
+            </div>
+          </div>
+
+          <!-- Project Metadata / Detected Docs tags -->
+          <div class="project-meta-details" id="project-meta-details">
+            <div class="meta-item">
+              <span class="meta-label">감지된 프로젝트:</span>
+              <span class="meta-val" id="meta-project-type">확인 중</span>
+            </div>
+            <div class="meta-item" id="meta-docs-wrapper">
+              <span class="meta-label">시나리오/가이드 문서:</span>
+              <span class="meta-docs-tags" id="meta-docs-tags"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="generator-grid">
+          <!-- Prompt & Setting Box -->
+          <div class="card prompt-card">
+            <div class="card-header">
+              <h2>시나리오 요청 및 소스코드 분석</h2>
+              <span class="card-badge">Google AI Studio</span>
+            </div>
+
+            <p class="description-text">
+              원하는 데모 시나리오를 자유롭게 입력하세요. Gemini 3.8 Flash가
+              현재 연결된 타겟 프로젝트의 문서(명세서) 및 컴포넌트/JSP/JS 셀렉터를 분석하여 고품질의 브라우징 플랜을 생성합니다.
+            </p>
+
+            <!-- Universal Tutorial Scenario Templates -->
+            <div class="presets-section">
+              <div class="template-section-header">
+                <span class="preset-title">🎬 범용 동영상 튜토리얼 표준 양식 (클릭 시 가이드 자동 로드)</span>
+                <span class="template-hint">타겟 프로젝트에 매뉴얼이 없어도 AI가 5단계 영상 연출 기법으로 완벽 구성</span>
+              </div>
+              <div class="template-cards-grid" id="template-cards-grid">
+                <!-- Dynamically populated from /api/templates -->
+              </div>
+            </div>
+
+            <!-- Prompt Textarea -->
+            <div class="form-group">
+              <div class="prompt-label-row">
+                <label for="prompt-input">시나리오 요구사항 (템플릿 기반 또는 자유 입력)</label>
+                <button type="button" class="btn-text-action" id="btn-clear-prompt">입력 지우기</button>
+              </div>
+              <textarea id="prompt-input" rows="4" placeholder="위 템플릿을 선택하거나, 원하는 시나리오를 자유롭게 입력하세요.&#10;예: 상단 메뉴에서 게시판으로 이동하여 신규 공지사항 글을 작성하고 저장하는 시나리오"></textarea>
+            </div>
+
+            <!-- 5-Phase Directing Flow Preview -->
+            <div class="phases-preview-box" id="phases-preview-box">
+              <div class="phases-preview-title">
+                <span>🎥 5단계 동영상 연출 표준 프레임워크 적용:</span>
+              </div>
+              <div class="phases-steps-list" id="phases-steps-list">
+                <span class="phase-chip">1. 도입 와이드뷰 (3s)</span>
+                <span class="phase-chip">2. 메뉴 의도적 이동</span>
+                <span class="phase-chip">3. 폼 줌인 & 입력</span>
+                <span class="phase-chip">4. 완료 실행 & 줌아웃</span>
+                <span class="phase-chip">5. 결과 확인 아웃트로</span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="slug-input">시나리오 식별자 (Slug)</label>
+                <input type="text" id="slug-input" placeholder="예: doc-create-submit (미입력 시 AI 자동 추천)">
+              </div>
+              <div class="form-group flex-1">
+                <label for="directing-style-select">영상 연출 스타일</label>
+                <select id="directing-style-select">
+                  <option value="standard" selected>표준 교육용 (2.5s 대기 + 1.3배 자연스러운 줌)</option>
+                  <option value="fast">빠른 쇼케이스 (1.5s 대기 + 신속한 템포)</option>
+                  <option value="detailed">정밀 매뉴얼 가이드 (3.5s 대기 + 타이핑 여유)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>녹화 브라우저 실행 옵션</label>
+              <div class="toggle-group-row">
+                <label class="toggle-label">
+                  <input type="checkbox" id="headed-toggle">
+                  <span>브라우저 화면 직접 보기 (--headed)</span>
+                </label>
+                <label class="toggle-label">
+                  <input type="checkbox" id="login-toggle">
+                  <span>로그인 세션 다시하기 (--login)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="action-footer">
+              <button id="btn-generate" class="btn btn-primary btn-glow">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                <span id="generate-btn-text">Gemini로 시나리오 생성</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Generated Plan & Action Editor -->
+          <div class="card editor-card">
+            <div class="card-header">
+              <div>
+                <h2>브라우징 플랜 편집기</h2>
+                <p class="card-sub" id="plan-slug-badge">시나리오 미선택</p>
+              </div>
+              <div class="editor-header-actions">
+                <button class="btn btn-sm btn-secondary" id="btn-add-action">+ 액션 추가</button>
+                <button class="btn btn-sm btn-outline" id="btn-save-plan">💾 플랜 저장</button>
+                <button class="btn btn-sm btn-success btn-glow" id="btn-run-pipeline">
+                  🎥 원클릭 녹화 & 제작
+                </button>
+              </div>
+            </div>
+
+            <div class="explanation-box" id="explanation-box">
+              <div class="info-icon">💡</div>
+              <div class="info-content" id="explanation-text">
+                위 입력창에 시나리오를 입력하고 [Gemini로 시나리오 생성]을 누르면, 분석된 액션 리스트가 이곳에 시각화됩니다.
+              </div>
+            </div>
+
+            <!-- Action Timeline List -->
+            <div class="actions-timeline" id="actions-list">
+              <div class="empty-state">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                <p>생성되거나 불러온 액션 플랜이 없습니다.</p>
+                <span>프리셋을 클릭하거나 시나리오 설명을 입력해보세요.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: SCENARIOS & VIDEO PLAYER ================= -->
+      <section class="tab-pane" id="tab-scenarios">
+        <div class="scenarios-grid">
+          <!-- Left Scenario List -->
+          <div class="card scenario-list-card">
+            <div class="card-header">
+              <h2>시나리오 라이브러리</h2>
+              <span class="count-badge" id="scenarios-count">0개</span>
+            </div>
+            <div class="scenarios-container" id="scenario-cards-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Right Video Player & Analytics -->
+          <div class="card player-card">
+            <div class="card-header">
+              <div>
+                <h2 id="player-title">영상 미리보기</h2>
+                <p class="card-sub" id="player-meta">시나리오를 선택해주세요</p>
+              </div>
+              <div class="player-actions">
+                <button class="btn btn-sm btn-primary" id="btn-set-active">
+                  ⭐ Remotion 활성화
+                </button>
+                <button class="btn btn-sm btn-outline" id="btn-re-record">
+                  🔄 다시 녹화
+                </button>
+              </div>
+            </div>
+
+            <!-- Video Player Window -->
+            <div class="video-container">
+              <video id="demo-video-player" controls preload="metadata">
+                <p>브라우저가 HTML5 비디오를 지원하지 않습니다.</p>
+              </video>
+              <div class="video-empty-state" id="video-empty">
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 8 6 4-6 4Z"/></svg>
+                <p>녹화된 비디오 파일이 없습니다.</p>
+                <span>시나리오를 선택하고 [원클릭 녹화 & 제작]을 실행하세요.</span>
+              </div>
+            </div>
+
+            <!-- Timeline Segments Breakdown -->
+            <div class="timeline-visual-section">
+              <div class="timeline-header">
+                <h3>카메라 줌 구간 & 클릭 모멘트</h3>
+                <span id="timeline-stats">0 Segments, 0 Clicks</span>
+              </div>
+              <div class="timeline-bar-wrapper">
+                <div class="timeline-bar" id="timeline-visual-bar"></div>
+              </div>
+              <div class="timeline-legend">
+                <span class="legend-item"><span class="legend-dot zoom-dot"></span> 카메라 줌 구간 (Zoom In/Out)</span>
+                <span class="legend-item"><span class="legend-dot click-dot"></span> 클릭 마커 (Click Moment)</span>
+              </div>
+            </div>
+
+            <!-- Tabs for Raw JSON -->
+            <div class="json-inspector-section">
+              <div class="json-tabs">
+                <button class="json-tab-btn active" data-json="browse">browse-plan.json</button>
+                <button class="json-tab-btn" data-json="edit">edit-plan.json</button>
+                <button class="json-tab-btn" data-json="moments">moments.json</button>
+              </div>
+              <pre class="json-viewer" id="json-viewer-content">JSON 데이터 없음</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: LIVE TERMINAL ================= -->
+      <section class="tab-pane" id="tab-terminal">
+        <div class="card terminal-card">
+          <div class="card-header">
+            <div class="terminal-title-group">
+              <h2>실시간 파이프라인 콘솔</h2>
+              <span class="live-pulse" id="terminal-live-pulse"></span>
+              <span class="terminal-status-text" id="terminal-status-text">대기 중</span>
+            </div>
+            <div class="terminal-actions">
+              <button class="btn btn-sm btn-outline" id="btn-clear-terminal">콘솔 지우기</button>
+              <button class="btn btn-sm btn-danger" id="btn-stop-task">⏹️ 작업 중단</button>
+            </div>
+          </div>
+
+          <!-- Interactive Login / Input Prompt Banner -->
+          <div class="terminal-banner" id="terminal-login-banner" style="display: none;">
+            <div class="banner-content">
+              <span class="banner-icon">👉</span>
+              <div class="banner-text">
+                <strong>브라우저 창에서 로그인을 완료해 주세요.</strong>
+                <span>로그인이 완료되었거나 계속 진행하려면 우측 버튼을 누르거나 키보드 [Enter] 키를 누르세요.</span>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-pulse" id="btn-banner-enter">
+              ⏎ 로그인 완료 & 계속 진행 (Enter)
+            </button>
+          </div>
+
+          <div class="terminal-window" id="terminal-output" tabindex="0" title="터미널 창을 클릭하고 Enter를 누르면 콘솔로 전송됩니다">
+            <div class="terminal-line system-line">[시스템] 대시보드 콘솔이 준비되었습니다. Playwright 녹화 또는 파이프라인 실행 시 실시간 로그가 여기에 출력됩니다.</div>
+          </div>
+
+          <!-- Interactive Terminal Input Bar -->
+          <div class="terminal-input-bar">
+            <span class="terminal-prompt-char">&gt;</span>
+            <input type="text" id="terminal-input-text" placeholder="콘솔에 입력할 텍스트 입력 후 Enter (또는 로그인 완료 시 그냥 Enter 전송)..." autocomplete="off" />
+            <button class="btn btn-primary btn-sm" id="btn-terminal-send">
+              ⏎ Enter 전송
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

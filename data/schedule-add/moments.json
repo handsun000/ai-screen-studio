@@ -1,0 +1,106 @@
+{
+  "metadata": {
+    "url": "https://gw.bc.ac.kr/",
+    "viewportWidth": 1920,
+    "viewportHeight": 1080,
+    "totalDurationMs": 27377,
+    "recordingStart": "2026-09-21T06:19:56.527Z"
+  },
+  "moments": [
+    {
+      "id": 1,
+      "type": "wait",
+      "timestamp": 2163,
+      "description": "메인 대시보드 로딩 대기"
+    },
+    {
+      "id": 2,
+      "type": "click",
+      "timestamp": 5444,
+      "description": "상단/좌측 GNB '일정관리' 메뉴 클릭",
+      "cursor": {
+        "x": 1044,
+        "y": 83
+      },
+      "target": {
+        "x": 987,
+        "y": 55,
+        "width": 113,
+        "height": 55
+      }
+    },
+    {
+      "id": 3,
+      "type": "wait",
+      "timestamp": 6582,
+      "description": "일정관리 화면 로딩 대기"
+    },
+    {
+      "id": 4,
+      "type": "click",
+      "timestamp": 10696,
+      "description": "사이드바 좌측 상단 '일정 등록' 버튼 클릭",
+      "cursor": {
+        "x": 130,
+        "y": 148
+      },
+      "target": {
+        "x": 20,
+        "y": 124,
+        "width": 219,
+        "height": 47
+      }
+    },
+    {
+      "id": 5,
+      "type": "wait",
+      "timestamp": 11732,
+      "description": "일정 등록 상세 뷰 로딩 대기"
+    },
+    {
+      "id": 6,
+      "type": "type",
+      "timestamp": 15236,
+      "description": "일정 제목 입력 ('[주간업무] 주간 정례 회의')",
+      "cursor": {
+        "x": 926,
+        "y": 139
+      },
+      "target": {
+        "x": 686,
+        "y": 123,
+        "width": 480,
+        "height": 32
+      },
+      "keys": "[주간업무] 주간 정례 회의"
+    },
+    {
+      "id": 7,
+      "type": "wait",
+      "timestamp": 18020,
+      "description": "입력 내용 확인 및 시청자 인지 대기"
+    },
+    {
+      "id": 8,
+      "type": "click",
+      "timestamp": 21098,
+      "description": "하단 '저장' 버튼 클릭",
+      "cursor": {
+        "x": 924,
+        "y": 689
+      },
+      "target": {
+        "x": 896,
+        "y": 671,
+        "width": 55,
+        "height": 36
+      }
+    },
+    {
+      "id": 9,
+      "type": "wait",
+      "timestamp": 22135,
+      "description": "일정 저장 완료 및 달력 반영 확인"
+    }
+  ]
+}

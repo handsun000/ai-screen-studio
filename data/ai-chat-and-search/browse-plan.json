@@ -1,0 +1,181 @@
+{
+  "url": "https://gwdev.bc.ac.kr/",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "requiresLogin": true,
+  "cursor": {
+    "delayMs": -700,
+    "preClickRestMs": 0
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "ms": 3500,
+      "description": "1. 포털 메인 홈 로딩 대기"
+    },
+    {
+      "type": "click",
+      "selector": "li.qm_ai button[name=\"topMenu_aiChat\"], button[name=\"topMenu_aiChat\"], button.btn_ai",
+      "description": "2. 우측 상단 퀵메뉴 [AI Chat] 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 3000,
+      "description": "3. AI 대화창 사이드 패널 로딩 대기"
+    },
+    {
+      "type": "click",
+      "iframe": "#chat_iframe",
+      "selector": "button.btn_extend._width, button._width",
+      "description": "3-1. AI 대화창 [너비] 확장 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "3-2. 너비 확장 애니메이션 대기"
+    },
+    {
+      "type": "click",
+      "iframe": "#chat_iframe",
+      "selector": "div.mentiony-content[contenteditable=\"true\"], .mentiony-content",
+      "force": true,
+      "description": "4. AI Chat 질문 입력창 포커스"
+    },
+    {
+      "type": "type",
+      "iframe": "#chat_iframe",
+      "selector": "div.mentiony-content[contenteditable=\"true\"], .mentiony-content",
+      "text": "2026학년도 학사일정 및 규정 안내",
+      "force": true,
+      "description": "5. 질문/검색어 입력"
+    },
+    {
+      "type": "click",
+      "iframe": "#chat_iframe",
+      "selector": "button#cmmAiChat_send, button.btn_send",
+      "description": "6. AI 질문 전송 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 8000,
+      "description": "7. AI 답변 및 요약 내용 생성 확인 (대기 시간 +3초)"
+    },
+    {
+      "type": "click",
+      "iframe": "#chat_iframe",
+      "selector": "button.drop_tgl[title=\"도구\"], button.drop_tgl:has(i.ico_tool)",
+      "description": "8. 도구 메뉴 열기"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "도구 메뉴 드롭다운 대기"
+    },
+    {
+      "type": "click",
+      "iframe": "#chat_iframe",
+      "selector": "button._search[data-service-code=\"MENTION\"], button._search",
+      "description": "9. [에이전트 검색] 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "에이전트 목록 노출 대기"
+    },
+    {
+      "type": "click",
+      "iframe": "#chat_iframe",
+      "selector": "li.mentiony-item[data-item-id=\"01kp2rg9myx17ak0mmcqtj18fn\"], li.mentiony-item:has-text(\"인사 및 복무 에이전트\")",
+      "description": "10. 에이전트 목록에서 [인사 및 복무 에이전트] 선택"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "에이전트 선택 반영 대기"
+    },
+    {
+      "type": "hover",
+      "iframe": "#chat_iframe",
+      "selector": "#cmmAiChat_chatOption, #cmmAiChat_controlDetail",
+      "optional": true,
+      "description": "11. 에이전트 옵션 활성화 확인"
+    },
+    {
+      "type": "type",
+      "iframe": "#chat_iframe",
+      "selector": "div.mentiony-content[contenteditable=\"true\"], .mentiony-content",
+      "text": "교직원 연차 유급휴가 및 특별휴가 부여 기준을 알려줘",
+      "force": true,
+      "description": "12. 인사/복무 규정 질의 프롬프트 입력"
+    },
+    {
+      "type": "click",
+      "iframe": "#chat_iframe",
+      "selector": "button#cmmAiChat_send",
+      "description": "13. AI 질문 전송 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 9000,
+      "description": "14. 인사 및 복무 전문 AI 어시스턴트 답변 생성 확인 (대기 시간 +3초)"
+    },
+    {
+      "type": "click",
+      "iframe": "#chat_iframe",
+      "selector": "button.drop_tgl[title=\"파일 추가 및 기타\"], button.drop_tgl:has(i.ico_plus)",
+      "description": "15. 파일 추가 드롭다운 메뉴 열기"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "파일 추가 메뉴 대기"
+    },
+    {
+      "type": "hover",
+      "iframe": "#chat_iframe",
+      "selector": "li#cmmAiChat_mypc",
+      "optional": true,
+      "description": "16. [사진 및 파일 추가] 메뉴 마우스 호버"
+    },
+    {
+      "type": "upload",
+      "iframe": "#chat_iframe",
+      "selector": "#cmmAiChatFileAttach_file_upload input[type=\"file\"], input[type=\"file\"]",
+      "filePath": "C:\\Users\\sonjinyeong\\Desktop\\부천대학교\\부천대학교 학교소개.pdf",
+      "description": "17. Playwright setInputFiles 파일 업로드 주입"
+    },
+    {
+      "type": "click",
+      "iframe": "#chat_iframe",
+      "selector": "button.drop_tgl[title=\"파일 추가 및 기타\"], button.drop_tgl:has(i.ico_plus)",
+      "optional": true,
+      "description": "17-1. 파일 추가 드롭다운 메뉴 닫기"
+    },
+    {
+      "type": "wait",
+      "ms": 2500,
+      "description": "18. 첨부 파일 태그 노출 확인"
+    },
+    {
+      "type": "type",
+      "iframe": "#chat_iframe",
+      "selector": "div.mentiony-content[contenteditable=\"true\"], .mentiony-content",
+      "text": "첨부한 부천대학교 학교소개 자료의 핵심 비전과 인재상을 3가지로 요약해줘",
+      "force": true,
+      "description": "19. 파일 분석 및 요약 요청 프롬프트 입력"
+    },
+    {
+      "type": "click",
+      "iframe": "#chat_iframe",
+      "selector": "button#cmmAiChat_send, button.btn_send",
+      "description": "20. AI 질문 전송 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 10000,
+      "description": "21. AI 문서 분석 및 요약 답변 생성 확인 (대기 시간 +3초)"
+    }
+  ]
+}

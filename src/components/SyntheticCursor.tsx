@@ -19,53 +19,99 @@ interface SyntheticCursorProps {
   viewportHeight: number;
 }
 
-// How long (ms) the cursor takes to travel between positions.
-// Shorter = snappier, more intentional movement.
-const TRAVEL_DURATION_MS = 450;
+// Default fallback values if not specified in browse-plan/edit-plan
+const DEFAULT_CURSOR_DELAY_MS = -700;
+const DEFAULT_PRE_CLICK_REST_MS = 0;
+
+// Click animation phases
+const CLICK_PRESS_MS = 100;
+const CLICK_RELEASE_MS = 160;
+
+// Dynamic travel duration based on distance (Fitts's Law principle)
+// Slower and smoother travel: min 350ms, max 750ms
+function getTravelDuration(x1: number, y1: number, x2: number, y2: number): number {
+  const d = Math.hypot(x2 - x1, y2 - y1);
+  return Math.min(750, Math.max(350, Math.round(280 + Math.sqrt(d) * 14)));
+}
 
 function getCursorState(
   videoTimeMs: number,
-  moments: Moment[]
+  moments: Moment[],
+  cursorDelayMs: number,
+  preClickRestMs: number
 ): {
   x: number;
   y: number;
   visible: boolean;
   isClick: boolean;
-  clickProgress: number;
+  cursorScale: number;
+  ringOpacity: number;
+  ringScale: number;
 } {
   const cursorMoments = moments.filter(
-    (m) => m.cursor && (m.type === "click" || m.type === "hover" || m.type === "scroll")
+    (m) =>
+      m.cursor &&
+      m.timestamp > 0 &&
+      (m.type === "click" || m.type === "hover" || m.type === "scroll" || m.type === "type")
   );
 
   if (cursorMoments.length === 0) {
-    return { x: 0, y: 0, visible: false, isClick: false, clickProgress: 0 };
+    return {
+      x: 0,
+      y: 0,
+      visible: false,
+      isClick: false,
+      cursorScale: 1,
+      ringOpacity: 0,
+      ringScale: 1,
+    };
   }
 
-  // Show cursor 1200ms before first action
-  const firstTime = cursorMoments[0].timestamp;
-  if (videoTimeMs < firstTime - 1200) {
-    return { x: 0, y: 0, visible: false, isClick: false, clickProgress: 0 };
+  const getMomentTime = (m: Moment) => m.timestamp + cursorDelayMs;
+
+  // Show cursor at lead-in start, giving breathing room at the beginning of the video
+  const firstTime = getMomentTime(cursorMoments[0]);
+  const leadDuration = 900;
+  // If first action is after 2000ms, ensure cursor doesn't start moving before 2000ms
+  const leadStart =
+    firstTime >= 2000
+      ? Math.max(2000, firstTime - leadDuration)
+      : Math.max(0, firstTime - leadDuration);
+
+  if (videoTimeMs < leadStart) {
+    return {
+      x: 0,
+      y: 0,
+      visible: false,
+      isClick: false,
+      cursorScale: 1,
+      ringOpacity: 0,
+      ringScale: 1,
+    };
   }
 
-  // Lead-in: glide from center to first target over 800ms
+  // Lead-in: glide from center to first target over leadDuration
   if (videoTimeMs < firstTime) {
-    const leadDuration = 800;
-    const leadStart = firstTime - leadDuration;
-    if (videoTimeMs < leadStart) {
-      // Before lead-in starts, show at center
-      return { x: 960, y: 540, visible: true, isClick: false, clickProgress: 0 };
-    }
-    const t = (videoTimeMs - leadStart) / leadDuration;
+    const actualLead = Math.max(100, firstTime - leadStart);
+    const t = (videoTimeMs - leadStart) / actualLead;
     const eased = Easing.out(Easing.cubic)(Math.min(1, Math.max(0, t)));
     const x = 960 + (cursorMoments[0].cursor!.x - 960) * eased;
     const y = 540 + (cursorMoments[0].cursor!.y - 540) * eased;
-    return { x, y, visible: true, isClick: false, clickProgress: 0 };
+    return {
+      x,
+      y,
+      visible: true,
+      isClick: false,
+      cursorScale: 1,
+      ringOpacity: 0,
+      ringScale: 1,
+    };
   }
 
   // Find which moment we're at or between
   let currentIdx = 0;
   for (let i = 0; i < cursorMoments.length; i++) {
-    if (cursorMoments[i].timestamp <= videoTimeMs) {
+    if (getMomentTime(cursorMoments[i]) <= videoTimeMs) {
       currentIdx = i;
     }
   }
@@ -81,37 +127,76 @@ function getCursorState(
     x = current.cursor!.x;
     y = current.cursor!.y;
   } else {
-    // Key change: cursor holds at current position, then moves to next
-    // in the last TRAVEL_DURATION_MS before the next moment.
-    const moveStart = next.timestamp - TRAVEL_DURATION_MS;
+    const currentT = getMomentTime(current);
+    const nextT = getMomentTime(next);
+
+    // Distance-adaptive travel and gap-aware pre-click rest
+    const travelMs = getTravelDuration(
+      current.cursor!.x,
+      current.cursor!.y,
+      next.cursor!.x,
+      next.cursor!.y
+    );
+
+    // If next moment is a click, cursor must arrive BEFORE the click press begins
+    const nextActionStart = next.type === "click" ? nextT - CLICK_PRESS_MS : nextT;
+    const availableGap = Math.max(50, nextActionStart - currentT);
+    const restMs = Math.min(preClickRestMs, availableGap * 0.25);
+    const actualTravel = Math.min(travelMs, availableGap - restMs);
+
+    const moveStart = nextActionStart - (actualTravel + restMs);
+    const moveEnd = nextActionStart - restMs;
 
     if (videoTimeMs < moveStart) {
       // Holding at current position
       x = current.cursor!.x;
       y = current.cursor!.y;
-    } else {
+    } else if (videoTimeMs < moveEnd) {
       // Moving toward next position
-      const t = (videoTimeMs - moveStart) / TRAVEL_DURATION_MS;
+      const t = (videoTimeMs - moveStart) / actualTravel;
       const eased = Easing.inOut(Easing.cubic)(Math.min(1, Math.max(0, t)));
       x = current.cursor!.x + (next.cursor!.x - current.cursor!.x) * eased;
       y = current.cursor!.y + (next.cursor!.y - current.cursor!.y) * eased;
+    } else {
+      // Resting on target before the action
+      x = next.cursor!.x;
+      y = next.cursor!.y;
     }
   }
 
-  // Click detection: within 350ms after a click moment
+  // Click animation: centered so that peak click is EXACTLY at m.timestamp
   let isClick = false;
-  let clickProgress = 0;
+  let cursorScale = 1;
+  let ringOpacity = 0;
+  let ringScale = 1;
+
   for (const m of cursorMoments) {
     if (m.type === "click") {
-      const elapsed = videoTimeMs - m.timestamp;
-      if (elapsed >= 0 && elapsed < 350) {
+      const peakTime = getMomentTime(m);
+      const clickStart = peakTime - CLICK_PRESS_MS;
+      const clickEnd = peakTime + CLICK_RELEASE_MS;
+
+      if (videoTimeMs >= clickStart && videoTimeMs < clickEnd) {
         isClick = true;
-        clickProgress = elapsed / 350;
+        if (videoTimeMs < peakTime) {
+          // Press down phase (1.0 -> CLICK_SCALE_MIN)
+          const pressT = (videoTimeMs - clickStart) / CLICK_PRESS_MS;
+          cursorScale = 1 - (1 - CLICK_SCALE_MIN) * pressT;
+          ringOpacity = 0;
+          ringScale = 1;
+        } else {
+          // Release phase (CLICK_SCALE_MIN -> 1.0) & ring expansion
+          const releaseT = (videoTimeMs - peakTime) / CLICK_RELEASE_MS;
+          cursorScale = CLICK_SCALE_MIN + (1 - CLICK_SCALE_MIN) * releaseT;
+          ringOpacity = Math.max(0, 0.7 * (1 - releaseT));
+          ringScale = 1 + releaseT * 2.0;
+        }
+        break;
       }
     }
   }
 
-  return { x, y, visible: true, isClick, clickProgress };
+  return { x, y, visible: true, isClick, cursorScale, ringOpacity, ringScale };
 }
 
 export const SyntheticCursor: React.FC<SyntheticCursorProps> = ({
@@ -126,9 +211,17 @@ export const SyntheticCursor: React.FC<SyntheticCursorProps> = ({
   const videoTimeSec = frameToVideoTime(frame, editPlan);
   const videoTimeMs = videoTimeSec * 1000;
 
-  const { x, y, visible, isClick, clickProgress } = getCursorState(
+  const cursorDelayMs =
+    editPlan.cursor?.delayMs ?? DEFAULT_CURSOR_DELAY_MS;
+
+  const preClickRestMs =
+    editPlan.cursor?.preClickRestMs ?? DEFAULT_PRE_CLICK_REST_MS;
+
+  const { x, y, visible, isClick, cursorScale, ringOpacity, ringScale } = getCursorState(
     videoTimeMs,
-    moments
+    moments,
+    cursorDelayMs,
+    preClickRestMs
   );
 
   if (!visible) return null;
@@ -138,22 +231,6 @@ export const SyntheticCursor: React.FC<SyntheticCursorProps> = ({
   const scaleY = windowHeight / viewportHeight;
   const screenX = x * scaleX;
   const screenY = y * scaleY;
-
-  // Click animation: scale down then up
-  let cursorScale = 1;
-  if (isClick) {
-    if (clickProgress < 0.25) {
-      cursorScale = 1 - (1 - CLICK_SCALE_MIN) * (clickProgress / 0.25);
-    } else if (clickProgress < 0.55) {
-      cursorScale = CLICK_SCALE_MIN;
-    } else {
-      cursorScale = CLICK_SCALE_MIN + (1 - CLICK_SCALE_MIN) * ((clickProgress - 0.55) / 0.45);
-    }
-  }
-
-  // Click ring animation
-  const ringOpacity = isClick ? Math.max(0, 0.6 * (1 - clickProgress)) : 0;
-  const ringScale = isClick ? 1 + clickProgress * 1.5 : 1;
 
   return (
     <div
@@ -190,7 +267,7 @@ export const SyntheticCursor: React.FC<SyntheticCursorProps> = ({
       >
         <path
           d={CURSOR_PATH}
-          fill={isClick && clickProgress < 0.55 ? "#333333" : "#FFFFFF"}
+          fill={isClick && cursorScale < 0.95 ? "#333333" : "#FFFFFF"}
           stroke="#333333"
           strokeWidth={2}
           strokeLinejoin="round"

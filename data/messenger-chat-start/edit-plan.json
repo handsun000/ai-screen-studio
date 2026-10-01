@@ -1,0 +1,109 @@
+{
+  "totalDurationFrames": 2698,
+  "fps": 60,
+  "defaultZoom": 1.0,
+  "segments": [
+    {
+      "momentId": 9,
+      "startFrame": 688,
+      "endFrame": 796,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 1861,
+        "y": 182
+      },
+      "easeInFrames": 25,
+      "easeOutFrames": 25,
+      "description": "Click at (1861, 182)"
+    },
+    {
+      "momentId": 11,
+      "startFrame": 818,
+      "endFrame": 1051,
+      "speed": 1.0,
+      "zoom": 1.4,
+      "zoomTarget": {
+        "x": 1767,
+        "y": 232
+      },
+      "easeInFrames": 25,
+      "easeOutFrames": 25,
+      "description": "Click at (1767, 232) + typing: GW\ud14c\uc2a4\ud2b802 + Click at (1858, 232)"
+    },
+    {
+      "momentId": 16,
+      "startFrame": 1140,
+      "endFrame": 1248,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 1743,
+        "y": 327
+      },
+      "easeInFrames": 25,
+      "easeOutFrames": 25,
+      "description": "Click at (1743, 327)"
+    },
+    {
+      "momentId": 19,
+      "startFrame": 1455,
+      "endFrame": 1630,
+      "speed": 1.0,
+      "zoom": 1.4,
+      "zoomTarget": {
+        "x": 1743,
+        "y": 1011
+      },
+      "easeInFrames": 25,
+      "easeOutFrames": 25,
+      "description": "Click at (1743, 1011) + typing: \uacfc\uc7a5\ub2d8 \uc548\ub155\ud558\uc138\uc694! 2026\ud559\ub144\ub3c4 \ud559\uc0ac \uc6b4\uc601 \ubc0f \uad50\uacfc\ubaa9"
+    },
+    {
+      "momentId": 22,
+      "startFrame": 1800,
+      "endFrame": 1908,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 1628,
+        "y": 1052
+      },
+      "easeInFrames": 25,
+      "easeOutFrames": 25,
+      "description": "Click at (1628, 1052)"
+    },
+    {
+      "momentId": 25,
+      "startFrame": 1998,
+      "endFrame": 2106,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 1616,
+        "y": 902
+      },
+      "easeInFrames": 25,
+      "easeOutFrames": 25,
+      "description": "Click at (1616, 902)"
+    },
+    {
+      "momentId": 32,
+      "startFrame": 2603,
+      "endFrame": 2654,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 1623,
+        "y": 79
+      },
+      "easeInFrames": 25,
+      "easeOutFrames": 25,
+      "description": "Click at (1623, 79)"
+    }
+  ],
+  "cursor": {
+    "delayMs": -700,
+    "preClickRestMs": 0
+  }
+}

@@ -43,9 +43,19 @@ function computeTranslate(
   const centerX = canvasWidth / 2;
   const centerY = canvasHeight / 2;
 
+  let tx = (centerX - targetScreenX) * zoom;
+  let ty = (centerY - targetScreenY) * zoom;
+
+  // Clamp translation so the scaled window edges never pull inside the canvas (eliminates black/grey bars)
+  const maxTx = Math.max(0, (WINDOW_WIDTH * zoom - canvasWidth) / 2);
+  const maxTy = Math.max(0, (WINDOW_HEIGHT * zoom - canvasHeight) / 2);
+
+  tx = Math.max(-maxTx, Math.min(maxTx, tx));
+  ty = Math.max(-maxTy, Math.min(maxTy, ty));
+
   return {
-    translateX: (centerX - targetScreenX) * zoom,
-    translateY: (centerY - targetScreenY) * zoom,
+    translateX: tx,
+    translateY: ty,
   };
 }
 
@@ -68,7 +78,7 @@ function computeZoomTarget(
  * segments is under this threshold, pan directly instead of zooming out
  * and back in. Value is in seconds of wall-clock time.
  */
-const PAN_THRESHOLD_SECONDS = 3.0;
+const PAN_THRESHOLD_SECONDS = 4.0;
 
 /**
  * Check if two zoom segments are close enough to pan between them

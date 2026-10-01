@@ -1,0 +1,157 @@
+{
+  "metadata": {
+    "url": "https://gwdev.bc.ac.kr/",
+    "viewportWidth": 1920,
+    "viewportHeight": 1080,
+    "totalDurationMs": 26546,
+    "recordingStart": "2026-09-22T05:57:52.709Z"
+  },
+  "moments": [
+    {
+      "id": 1,
+      "type": "wait",
+      "timestamp": 577,
+      "description": "로그인 페이지 완전 로딩 대기"
+    },
+    {
+      "id": 2,
+      "type": "type",
+      "timestamp": 5307,
+      "description": "아이디 입력 ('admin')",
+      "cursor": {
+        "x": 961,
+        "y": 97
+      },
+      "target": {
+        "x": 836,
+        "y": 77,
+        "width": 250,
+        "height": 40
+      },
+      "keys": "admin"
+    },
+    {
+      "id": 3,
+      "type": "wait",
+      "timestamp": 6212,
+      "description": "아이디 입력 확인 대기"
+    },
+    {
+      "id": 4,
+      "type": "type",
+      "timestamp": 7075,
+      "description": "비밀번호 입력 ('userage0121')",
+      "cursor": {
+        "x": 961,
+        "y": 142
+      },
+      "target": {
+        "x": 836,
+        "y": 122,
+        "width": 250,
+        "height": 40
+      },
+      "keys": "userage0121"
+    },
+    {
+      "id": 5,
+      "type": "wait",
+      "timestamp": 8279,
+      "description": "비밀번호 입력 확인 대기"
+    },
+    {
+      "id": 6,
+      "type": "click",
+      "timestamp": 9138,
+      "description": "로그인 버튼 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 201
+      },
+      "target": {
+        "x": 795,
+        "y": 175,
+        "width": 330,
+        "height": 52
+      }
+    },
+    {
+      "id": 7,
+      "type": "wait",
+      "timestamp": 10204,
+      "description": "메인 포털 대시보드 로딩 대기"
+    },
+    {
+      "id": 8,
+      "type": "click",
+      "timestamp": 15406,
+      "description": "상단 GNB 우측 [설치프로그램] 메뉴 클릭",
+      "cursor": {
+        "x": 1491,
+        "y": 25
+      },
+      "target": {
+        "x": 1455,
+        "y": 15,
+        "width": 72,
+        "height": 19
+      }
+    },
+    {
+      "id": 9,
+      "type": "wait",
+      "timestamp": 16500,
+      "description": "설치프로그램 레이어 팝업 로딩 대기"
+    },
+    {
+      "id": 10,
+      "type": "hover",
+      "timestamp": 18088,
+      "description": "PC 메신저 Windows 다운로드 링크 호버",
+      "cursor": {
+        "x": 1050,
+        "y": 549
+      },
+      "target": {
+        "x": 1023,
+        "y": 540,
+        "width": 53,
+        "height": 19
+      }
+    },
+    {
+      "id": 11,
+      "type": "wait",
+      "timestamp": 18656,
+      "description": "PC 메신저 Windows 다운로드 링크 확인 대기"
+    },
+    {
+      "id": 13,
+      "type": "wait",
+      "timestamp": 20738,
+      "description": "모바일 앱 다운로드용 QR코드 레이어 표시 대기"
+    },
+    {
+      "id": 14,
+      "type": "click",
+      "timestamp": 22845,
+      "description": "설치프로그램 및 QR코드 레이어 팝업 닫기",
+      "cursor": {
+        "x": 1133,
+        "y": 493
+      },
+      "target": {
+        "x": 1124,
+        "y": 484,
+        "width": 17,
+        "height": 17
+      }
+    },
+    {
+      "id": 15,
+      "type": "wait",
+      "timestamp": 23919,
+      "description": "메인 포털 홈 원복 확인 및 시연 종료 대기"
+    }
+  ]
+}

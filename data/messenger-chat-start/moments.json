@@ -1,0 +1,413 @@
+{
+  "metadata": {
+    "url": "https://gwdev.bc.ac.kr/",
+    "viewportWidth": 1920,
+    "viewportHeight": 1080,
+    "totalDurationMs": 44968,
+    "recordingStart": "2026-09-22T09:17:23.683Z",
+    "cursor": {
+      "delayMs": -700,
+      "preClickRestMs": 0
+    }
+  },
+  "moments": [
+    {
+      "id": 1,
+      "type": "wait",
+      "timestamp": 737,
+      "description": "1. 포털 메인 홈 로딩 대기"
+    },
+    {
+      "id": 2,
+      "type": "hover",
+      "timestamp": 4387,
+      "description": "2. 우측 상단 유틸리티 퀵메뉴 메신저 아이콘 호버",
+      "cursor": {
+        "x": 1623,
+        "y": 79
+      },
+      "target": {
+        "x": 1600,
+        "y": 56,
+        "width": 45,
+        "height": 45
+      }
+    },
+    {
+      "id": 3,
+      "type": "click",
+      "timestamp": 4982,
+      "description": "3. [웹 메신저] 아이콘 클릭",
+      "cursor": {
+        "x": 1623,
+        "y": 79
+      },
+      "target": {
+        "x": 1600,
+        "y": 56,
+        "width": 45,
+        "height": 45
+      }
+    },
+    {
+      "id": 4,
+      "type": "wait",
+      "timestamp": 6037,
+      "description": "4. 웹 메신저 로딩 및 조직도 화면 대기"
+    },
+    {
+      "id": 5,
+      "type": "hover",
+      "timestamp": 9655,
+      "description": "5. 상단 조직도 타이틀 영역 확인",
+      "cursor": {
+        "x": 1600,
+        "y": 403
+      },
+      "target": {
+        "x": 1581,
+        "y": 395,
+        "width": 39,
+        "height": 15
+      }
+    },
+    {
+      "id": 6,
+      "type": "hover",
+      "timestamp": 10282,
+      "description": "6. 조직도 트리 부천대학교 노드 확인",
+      "cursor": {
+        "x": 1632,
+        "y": 438
+      },
+      "target": {
+        "x": 1600,
+        "y": 428,
+        "width": 64,
+        "height": 20
+      }
+    },
+    {
+      "id": 7,
+      "type": "hover",
+      "timestamp": 10875,
+      "description": "7. [그룹웨어TFT] 부서 노드 호버",
+      "cursor": {
+        "x": 1653,
+        "y": 660
+      },
+      "target": {
+        "x": 1615,
+        "y": 650,
+        "width": 77,
+        "height": 20
+      }
+    },
+    {
+      "id": 8,
+      "type": "hover",
+      "timestamp": 11470,
+      "description": "8. 하위 [사업관리] 부서 노드 확인",
+      "cursor": {
+        "x": 1656,
+        "y": 697
+      },
+      "target": {
+        "x": 1630,
+        "y": 687,
+        "width": 52,
+        "height": 20
+      }
+    },
+    {
+      "id": 9,
+      "type": "click",
+      "timestamp": 12062,
+      "description": "9. 상단 검색 토글 버튼 클릭",
+      "cursor": {
+        "x": 1861,
+        "y": 182
+      },
+      "target": {
+        "x": 1848,
+        "y": 169,
+        "width": 25,
+        "height": 25
+      }
+    },
+    {
+      "id": 10,
+      "type": "wait",
+      "timestamp": 13170,
+      "description": "10. 검색바 영역 노출 대기"
+    },
+    {
+      "id": 11,
+      "type": "click",
+      "timestamp": 14225,
+      "description": "11. 검색어 입력창 포커스",
+      "cursor": {
+        "x": 1767,
+        "y": 232
+      },
+      "target": {
+        "x": 1691,
+        "y": 217,
+        "width": 151,
+        "height": 30
+      }
+    },
+    {
+      "id": 12,
+      "type": "type",
+      "timestamp": 15293,
+      "description": "12. 검색할 상대방 이름 입력",
+      "cursor": {
+        "x": 1767,
+        "y": 232
+      },
+      "target": {
+        "x": 1691,
+        "y": 217,
+        "width": 151,
+        "height": 30
+      },
+      "keys": "GW테스트02"
+    },
+    {
+      "id": 13,
+      "type": "click",
+      "timestamp": 16315,
+      "description": "13. 검색 실행 버튼 클릭",
+      "cursor": {
+        "x": 1858,
+        "y": 232
+      },
+      "target": {
+        "x": 1843,
+        "y": 217,
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
+      "id": 14,
+      "type": "wait",
+      "timestamp": 17401,
+      "description": "14. 검색 결과 사용자 목록 렌더링 확인"
+    },
+    {
+      "id": 15,
+      "type": "hover",
+      "timestamp": 18983,
+      "description": "15. 검색된 GW테스트02 과장 정보 마우스 호버",
+      "cursor": {
+        "x": 1771,
+        "y": 328
+      },
+      "target": {
+        "x": 1636,
+        "y": 304,
+        "width": 269,
+        "height": 48
+      }
+    },
+    {
+      "id": 16,
+      "type": "click",
+      "timestamp": 19598,
+      "description": "16. 사용자 항목 클릭 선택",
+      "cursor": {
+        "x": 1743,
+        "y": 327
+      },
+      "target": {
+        "x": 1566,
+        "y": 294,
+        "width": 354,
+        "height": 65
+      }
+    },
+    {
+      "id": 17,
+      "type": "dblclick",
+      "timestamp": 20676,
+      "description": "17. 1:1 대화방 실행 (더블클릭)",
+      "cursor": {
+        "x": 1743,
+        "y": 327
+      },
+      "target": {
+        "x": 1566,
+        "y": 294,
+        "width": 354,
+        "height": 65
+      }
+    },
+    {
+      "id": 18,
+      "type": "wait",
+      "timestamp": 21745,
+      "description": "18. 1:1 대화방 화면 전환 및 에디터 로딩 대기"
+    },
+    {
+      "id": 19,
+      "type": "click",
+      "timestamp": 24857,
+      "description": "19. 대화 입력창(BlockNote 에디터) 포커스",
+      "cursor": {
+        "x": 1743,
+        "y": 1011
+      },
+      "target": {
+        "x": 1566,
+        "y": 998,
+        "width": 354,
+        "height": 26
+      }
+    },
+    {
+      "id": 20,
+      "type": "type",
+      "timestamp": 25968,
+      "description": "20. 업무 협의를 위한 첫 인사 메시지 입력",
+      "cursor": {
+        "x": 1743,
+        "y": 1011
+      },
+      "target": {
+        "x": 1566,
+        "y": 998,
+        "width": 354,
+        "height": 26
+      },
+      "keys": "과장님 안녕하세요! 2026학년도 학사 운영 및 교과목 편성 관련하여 몇 가지 문의드리고자 대화 신청합니다."
+    },
+    {
+      "id": 21,
+      "type": "wait",
+      "timestamp": 29523,
+      "description": "21. 입력된 텍스트 확인"
+    },
+    {
+      "id": 22,
+      "type": "click",
+      "timestamp": 30598,
+      "description": "22. 하단 도구 모음 [이모티콘] 버튼 클릭",
+      "cursor": {
+        "x": 1628,
+        "y": 1052
+      },
+      "target": {
+        "x": 1614,
+        "y": 1038,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "id": 23,
+      "type": "wait",
+      "timestamp": 31701,
+      "description": "23. 이모티콘 선택 상자 오픈 확인"
+    },
+    {
+      "id": 24,
+      "type": "hover",
+      "timestamp": 33291,
+      "description": "24. 알겠습니다 스티커/이모티콘 마우스 호버",
+      "cursor": {
+        "x": 1616,
+        "y": 902
+      },
+      "target": {
+        "x": 1576,
+        "y": 862,
+        "width": 80,
+        "height": 80
+      }
+    },
+    {
+      "id": 25,
+      "type": "click",
+      "timestamp": 33902,
+      "description": "25. 알겠습니다 이모티콘 선택",
+      "cursor": {
+        "x": 1616,
+        "y": 902
+      },
+      "target": {
+        "x": 1576,
+        "y": 862,
+        "width": 80,
+        "height": 80
+      }
+    },
+    {
+      "id": 26,
+      "type": "wait",
+      "timestamp": 34992,
+      "description": "26. 이모티콘 미리보기 확인"
+    },
+    {
+      "id": 27,
+      "type": "click",
+      "timestamp": 36580,
+      "description": "27. 메시지 [보내기] 버튼 클릭",
+      "cursor": {
+        "x": 1892,
+        "y": 823
+      },
+      "target": {
+        "x": 1878,
+        "y": 809,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "id": 28,
+      "type": "wait",
+      "timestamp": 37686,
+      "description": "28. 대화방 말풍선 메시지 및 이모티콘 전송 완료 확인"
+    },
+    {
+      "id": 29,
+      "type": "click",
+      "timestamp": 40794,
+      "description": "29. 대화방 상단 [뒤로가기/목록] 버튼 클릭",
+      "cursor": {
+        "x": 1589,
+        "y": 134
+      },
+      "target": {
+        "x": 1576,
+        "y": 121,
+        "width": 25,
+        "height": 25
+      }
+    },
+    {
+      "id": 30,
+      "type": "wait",
+      "timestamp": 41903,
+      "description": "30. 메인 대화방 목록 렌더링 확인"
+    },
+    {
+      "id": 32,
+      "type": "click",
+      "timestamp": 43990,
+      "description": "32. 웹 메신저 패널 닫기",
+      "cursor": {
+        "x": 1623,
+        "y": 79
+      },
+      "target": {
+        "x": 1600,
+        "y": 56,
+        "width": 45,
+        "height": 45
+      }
+    }
+  ]
+}

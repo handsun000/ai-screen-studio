@@ -29,10 +29,12 @@ if len(sys.argv) < 2:
 
 slug = sys.argv[1]
 fps = 60
-default_zoom = 1.6
-type_zoom = 1.8
+default_zoom = 1.3
+type_zoom = 1.4
 cluster_radius = 300  # px, matches NEIGHBORHOOD_RADIUS in log-inputs.py
 exclude_zones = []  # list of (x, y, w, h) rectangles
+
+keep_last = "--keep-last" in sys.argv
 
 for i, arg in enumerate(sys.argv):
     if arg == "--fps" and i + 1 < len(sys.argv):
@@ -52,7 +54,7 @@ if not moments_path.exists():
     print(f"  ERROR: {moments_path} not found")
     sys.exit(1)
 
-with open(moments_path) as f:
+with open(moments_path, encoding="utf-8") as f:
     moments_data = json.load(f)
 
 moments = moments_data["moments"]
@@ -79,12 +81,13 @@ def in_exclude_zone(cursor):
     return False
 
 
-# Drop the last click (OBS stop recording button)
-for idx in range(len(moments) - 1, -1, -1):
-    if moments[idx]["type"] == "click":
-        dropped = moments.pop(idx)
-        print(f"  Dropped last click: id={dropped['id']} at ({dropped['cursor']['x']},{dropped['cursor']['y']}) (OBS stop button)")
-        break
+# Drop the last click only if OBS mode (not keep_last)
+if not keep_last:
+    for idx in range(len(moments) - 1, -1, -1):
+        if moments[idx]["type"] == "click":
+            dropped = moments.pop(idx)
+            print(f"  Dropped last click: id={dropped['id']} at ({dropped['cursor']['x']},{dropped['cursor']['y']}) (OBS stop button)")
+            break
 
 # Report exclude zones
 if exclude_zones:
@@ -122,7 +125,7 @@ while i < len(moments):
                 if moments[i].get("keys"):
                     all_keys += moments[i]["keys"]
 
-            end_frame = ms_to_frame(type_end) + 30
+            end_frame = ms_to_frame(type_end) + ms_to_frame(1200)
 
             # Try to extend the previous click segment to cover typing
             prev_target = segments[-1]["zoomTarget"] if segments else None
@@ -134,15 +137,17 @@ while i < len(moments):
                 segments[-1]["zoom"] = max(segments[-1]["zoom"], type_zoom)
                 segments[-1]["description"] += f" + typing: {all_keys[:30]}"
             else:
+                raw_start = ms_to_frame(m["timestamp"] - 600)
+                start_frame = max(ms_to_frame(2000), raw_start) if m["timestamp"] >= 2000 else max(0, raw_start)
                 segments.append({
                     "momentId": m["id"],
-                    "startFrame": ms_to_frame(m["timestamp"]),
+                    "startFrame": start_frame,
                     "endFrame": end_frame,
                     "speed": 1.0,
                     "zoom": type_zoom,
                     "zoomTarget": cursor,
-                    "easeInFrames": 20,
-                    "easeOutFrames": 20,
+                    "easeInFrames": 25,
+                    "easeOutFrames": 25,
                     "description": f"Typing: {all_keys[:30]}",
                 })
         i += 1
@@ -196,15 +201,46 @@ while i < len(moments):
         first_cursor = first["cursor"]
         last_cursor = last["cursor"]
 
+        # Give at least 2.0s of full-screen view before zooming
+        raw_start = ms_to_frame(first["timestamp"] - 600)
+        start_frame = max(ms_to_frame(2000), raw_start) if first["timestamp"] >= 2000 else max(0, raw_start)
+
+        # Skip zoom if explicitly marked noZoom
+        if first.get("noZoom"):
+            i = j
+            continue
+
+        # Check if this click causes page navigation (e.g. menu navigation, page change, login, home return)
+        # When navigating to a new page, keep the camera in full wide view (no zoom) so the viewer can recognize the new screen
+        is_page_navigation = False
+        desc = (first.get("description") or "").lower()
+        if any(k in desc for k in ["이동", "페이지", "복귀", "홈", "로그인", "login"]):
+            is_page_navigation = True
+        elif j < len(moments) and moments[j].get("type") == "wait":
+            next_wait = moments[j]
+            if j + 1 < len(moments):
+                wait_span = moments[j + 1]["timestamp"] - next_wait["timestamp"]
+                if wait_span >= 2000:
+                    is_page_navigation = True
+
+        if is_page_navigation:
+            print(f"  [No Zoom] Page navigation click: id={first['id']} ({first.get('description')})")
+            i = j
+            continue
+
+        # For closing/submit clicks, ease out quickly (15 frames = 0.25s)
+        is_closing = any(k in desc for k in ["닫기", "close", "제출", "submit", "저장", "save"])
+        post_click_frames = 15 if is_closing else ms_to_frame(1200)
+
         seg = {
             "momentId": first["id"],
-            "startFrame": ms_to_frame(first["timestamp"]),
-            "endFrame": ms_to_frame(last["timestamp"]) + 30,
+            "startFrame": start_frame,
+            "endFrame": ms_to_frame(last["timestamp"]) + post_click_frames,
             "speed": 1.0,
             "zoom": default_zoom,
             "zoomTarget": first_cursor,
-            "easeInFrames": 20,
-            "easeOutFrames": 20,
+            "easeInFrames": 25,
+            "easeOutFrames": 25,
             "description": f"Click cluster ({len(cluster)} clicks)" if len(cluster) > 1
                 else f"Click at ({first_cursor['x']}, {first_cursor['y']})",
         }
@@ -243,8 +279,11 @@ edit_plan = {
     "segments": merged,
 }
 
+if "cursor" in metadata and metadata["cursor"]:
+    edit_plan["cursor"] = metadata["cursor"]
+
 out_path = data_dir / "edit-plan.json"
-with open(out_path, "w") as f:
+with open(out_path, "w", encoding="utf-8") as f:
     json.dump(edit_plan, f, indent=2)
 
 print(f"\n  Build Edit Plan")

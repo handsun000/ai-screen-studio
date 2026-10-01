@@ -3,9 +3,8 @@ import { Composition } from "remotion";
 import { ScreenDemo } from "./ScreenDemo";
 import type { EditPlan, MomentsFile } from "./types";
 
-// Point these at your recording data
-import editPlanData from "../data/example/edit-plan.json";
-import momentsData from "../data/example/moments.json";
+import editPlanData from "../data/messenger-chat-start/edit-plan.json";
+import momentsData from "../data/messenger-chat-start/moments.json";
 
 const editPlan = editPlanData as EditPlan;
 const moments = momentsData as MomentsFile;
@@ -25,7 +24,7 @@ export const RemotionRoot: React.FC = () => {
           moments,
           videoFileName: "recording.mp4",
           showCursor: true,
-          showSfx: true,
+          showSfx: false,
         }}
       />
     </>

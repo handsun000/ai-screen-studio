@@ -1,0 +1,124 @@
+{
+  "url": "https://gwdev.bc.ac.kr/",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "requiresLogin": true,
+  "cursor": {
+    "delayMs": 800,
+    "preClickRestMs": 180
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "ms": 3500,
+      "description": "Phase 1: 로그인 후 메인 대시보드 와이드 뷰 대기"
+    },
+    {
+      "type": "click",
+      "selector": "#svc_lst a:has-text(\"문서관리\"), a[onclick*=\"doc\"], a:has-text(\"문서\")",
+      "description": "Phase 2: 상단 GNB '문서관리' 메뉴 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 3500,
+      "description": "문서관리 메인 화면 로딩 대기"
+    },
+    {
+      "type": "click",
+      "selector": "#layout_content .dynatree-title:has-text(\"부서 문서함\"), .snb_lst a:has-text(\"부서 문서함\")",
+      "optional": true,
+      "description": "좌측 사이드바 '부서 문서함' 트리 노드 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 2000,
+      "description": "부서 문서함 하위 분류 트리 로딩 대기"
+    },
+    {
+      "type": "click",
+      "selector": "#layout_content .dynatree-title:has-text(\"업무자료함\"), .snb_lst a:has-text(\"업무자료함\")",
+      "optional": true,
+      "description": "좌측 사이드바 '업무자료함' 트리 노드 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 2500,
+      "description": "업무자료함 목록 화면 전환 대기"
+    },
+    {
+      "type": "click",
+      "selector": "button:has-text(\"문서 등록\"), button#docRegBtn, .btn_toolbar button:has-text(\"등록\")",
+      "description": "Phase 3: [문서 등록] 버튼 클릭하여 작성 폼 진입"
+    },
+    {
+      "type": "wait",
+      "ms": 3000,
+      "description": "문서 작성 폼 화면 로딩 대기"
+    },
+    {
+      "type": "type",
+      "selector": "input[name*=\"title\"], input#docTitle, input[type=\"text\"]:visible",
+      "text": "2026학년도 부서 업무 추진 계획서",
+      "ms": 1000,
+      "description": "문서 제목 입력 필드에 추진 계획서 제목 타이핑"
+    },
+    {
+      "type": "type",
+      "selector": "textarea[name*=\"content\"], div[contenteditable=\"true\"], iframe[name*=\"editor\"]",
+      "text": "2026학년도 상반기 부서 주요 업무 추진 계획 및 세부 실행 방안 보고서입니다.",
+      "ms": 1500,
+      "description": "문서 본문 내용 입력"
+    },
+    {
+      "type": "click",
+      "selector": "input[name*=\"openRange\"], input#openScopePub, label:has-text(\"부서원공개\"), label:has-text(\"전체공개\")",
+      "optional": true,
+      "description": "문서 공개 범위 및 열람 권한 설정 체크"
+    },
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "권한 설정 적용 상태 확인 대기"
+    },
+    {
+      "type": "click",
+      "selector": "button:has-text(\"저장\"), button:has-text(\"등록\"), button#docSaveBtn",
+      "description": "Phase 4: 결정적 액션 - [등록/저장] 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 2500,
+      "description": "문서 등록 완료 및 목록 화면 전환 대기"
+    },
+    {
+      "type": "type",
+      "selector": "input[type=\"search\"], input[name*=\"search\"], input[placeholder*=\"검색\"]",
+      "text": "업무 추진 계획서",
+      "ms": 1000,
+      "description": "Phase 5: 문서 목록 상단 검색창에 '업무 추진 계획서' 키워드 입력"
+    },
+    {
+      "type": "click",
+      "selector": "button:has-text(\"검색\"), button.btn_srch, i.ico_srch",
+      "description": "검색 실행 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 2500,
+      "description": "검색 결과 목록 로딩 대기"
+    },
+    {
+      "type": "click",
+      "selector": "#layout_content table tbody tr:first-child a, .list_block a:has-text(\"업무 추진 계획서\")",
+      "optional": true,
+      "description": "검색 결과 목록에서 등록된 문서 상세 팝업 열기"
+    },
+    {
+      "type": "wait",
+      "ms": 3000,
+      "description": "문서 상세 내용 확인 및 아웃트로 와이드 뷰 대기"
+    }
+  ]
+}

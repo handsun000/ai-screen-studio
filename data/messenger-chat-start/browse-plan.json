@@ -1,0 +1,207 @@
+{
+  "url": "https://gwdev.bc.ac.kr/",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "requiresLogin": true,
+  "cursor": {
+    "delayMs": -700,
+    "preClickRestMs": 0
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "ms": 3500,
+      "description": "1. 포털 메인 홈 로딩 대기"
+    },
+    {
+      "type": "hover",
+      "selector": "li.qm_ntalk button[name=\"topMenu_webMessenger\"]:visible, button[name=\"topMenu_webMessenger\"]:visible, .qm_ntalk .btn_ntalk:visible",
+      "description": "2. 우측 상단 유틸리티 퀵메뉴 메신저 아이콘 호버"
+    },
+    {
+      "type": "click",
+      "selector": "li.qm_ntalk button[name=\"topMenu_webMessenger\"]:visible, button[name=\"topMenu_webMessenger\"]:visible, .qm_ntalk .btn_ntalk:visible",
+      "description": "3. [웹 메신저] 아이콘 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 3500,
+      "description": "4. 웹 메신저 로딩 및 조직도 화면 대기"
+    },
+    {
+      "type": "hover",
+      "iframe": "#web_messenger_iframe",
+      "selector": "._orgTreeGroup .tit",
+      "optional": true,
+      "description": "5. 상단 조직도 타이틀 영역 확인"
+    },
+    {
+      "type": "hover",
+      "iframe": "#web_messenger_iframe",
+      "selector": "li#wmOrgList_orgTreeList_C100160111 .dept",
+      "optional": true,
+      "description": "6. 조직도 트리 부천대학교 노드 확인"
+    },
+    {
+      "type": "hover",
+      "iframe": "#web_messenger_iframe",
+      "selector": "li#wmOrgList_orgTreeList_D528753755 .dept",
+      "optional": true,
+      "description": "7. [그룹웨어TFT] 부서 노드 호버"
+    },
+    {
+      "type": "hover",
+      "iframe": "#web_messenger_iframe",
+      "selector": "li#wmOrgList_orgTreeList_D165713483 .dept",
+      "optional": true,
+      "description": "8. 하위 [사업관리] 부서 노드 확인"
+    },
+    {
+      "type": "click",
+      "iframe": "#web_messenger_iframe",
+      "selector": "button#wmOrgList_btnSearch",
+      "description": "9. 상단 검색 토글 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "10. 검색바 영역 노출 대기"
+    },
+    {
+      "type": "click",
+      "iframe": "#web_messenger_iframe",
+      "selector": "input#wmOrgSearch_searchWord",
+      "force": true,
+      "description": "11. 검색어 입력창 포커스"
+    },
+    {
+      "type": "type",
+      "iframe": "#web_messenger_iframe",
+      "selector": "input#wmOrgSearch_searchWord",
+      "text": "GW테스트02",
+      "force": true,
+      "description": "12. 검색할 상대방 이름 입력"
+    },
+    {
+      "type": "click",
+      "iframe": "#web_messenger_iframe",
+      "selector": "button#wmOrgwmMemoList_search_btnSearch",
+      "description": "13. 검색 실행 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "14. 검색 결과 사용자 목록 렌더링 확인"
+    },
+    {
+      "type": "hover",
+      "iframe": "#web_messenger_iframe",
+      "selector": "li[data-key=\"M446105824\"] .info_box, .user_ul li:has-text(\"GW테스트02\") .info_box",
+      "optional": true,
+      "description": "15. 검색된 GW테스트02 과장 정보 마우스 호버"
+    },
+    {
+      "type": "click",
+      "iframe": "#web_messenger_iframe",
+      "selector": "li[data-key=\"M446105824\"], .user_ul li:has-text(\"GW테스트02\")",
+      "description": "16. 사용자 항목 클릭 선택"
+    },
+    {
+      "type": "dblclick",
+      "iframe": "#web_messenger_iframe",
+      "selector": "li[data-key=\"M446105824\"], .user_ul li:has-text(\"GW테스트02\")",
+      "description": "17. 1:1 대화방 실행 (더블클릭)"
+    },
+    {
+      "type": "wait",
+      "ms": 3000,
+      "description": "18. 1:1 대화방 화면 전환 및 에디터 로딩 대기"
+    },
+    {
+      "type": "click",
+      "iframe": "#web_messenger_iframe",
+      "selector": "#wmChat_editor div.tiptap.ProseMirror[contenteditable=\"true\"]",
+      "force": true,
+      "description": "19. 대화 입력창(BlockNote 에디터) 포커스"
+    },
+    {
+      "type": "type",
+      "iframe": "#web_messenger_iframe",
+      "selector": "#wmChat_editor div.tiptap.ProseMirror[contenteditable=\"true\"]",
+      "text": "과장님 안녕하세요! 2026학년도 학사 운영 및 교과목 편성 관련하여 몇 가지 문의드리고자 대화 신청합니다.",
+      "force": true,
+      "description": "20. 업무 협의를 위한 첫 인사 메시지 입력"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "21. 입력된 텍스트 확인"
+    },
+    {
+      "type": "click",
+      "iframe": "#web_messenger_iframe",
+      "selector": "button#wmChat_btnEmoticon",
+      "description": "22. 하단 도구 모음 [이모티콘] 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "23. 이모티콘 선택 상자 오픈 확인"
+    },
+    {
+      "type": "hover",
+      "iframe": "#web_messenger_iframe",
+      "selector": "li[data-name=\":birdy_ok_ani:\"] a[title=\"알겠습니다\"], li[data-name=\":birdy_ok_ani:\"]",
+      "optional": true,
+      "description": "24. 알겠습니다 스티커/이모티콘 마우스 호버"
+    },
+    {
+      "type": "click",
+      "iframe": "#web_messenger_iframe",
+      "selector": "li[data-name=\":birdy_ok_ani:\"] a[title=\"알겠습니다\"], li[data-name=\":birdy_ok_ani:\"]",
+      "description": "25. 알겠습니다 이모티콘 선택"
+    },
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "26. 이모티콘 미리보기 확인"
+    },
+    {
+      "type": "click",
+      "iframe": "#web_messenger_iframe",
+      "selector": "button#wmChat_btnSendMessage",
+      "description": "27. 메시지 [보내기] 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 3000,
+      "description": "28. 대화방 말풍선 메시지 및 이모티콘 전송 완료 확인"
+    },
+    {
+      "type": "click",
+      "iframe": "#web_messenger_iframe",
+      "selector": "button.btn_back, button.btn_prev, button[title=\"목록\"], .btn_room_prev",
+      "optional": true,
+      "description": "29. 대화방 상단 [뒤로가기/목록] 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 2000,
+      "description": "30. 메인 대화방 목록 렌더링 확인"
+    },
+    {
+      "type": "hover",
+      "iframe": "#web_messenger_iframe",
+      "selector": ".user_ul li[data-type=\"G\"]:first-child, .user_ul li:first-child",
+      "optional": true,
+      "description": "31. 방금 대화한 GW테스트02 대화방 항목 호버"
+    },
+    {
+      "type": "click",
+      "selector": "li.qm_ntalk button[name=\"topMenu_webMessenger\"]:visible, button[name=\"topMenu_webMessenger\"]:visible, .qm_ntalk .btn_ntalk:visible",
+      "description": "32. 웹 메신저 패널 닫기"
+    }
+  ]
+}

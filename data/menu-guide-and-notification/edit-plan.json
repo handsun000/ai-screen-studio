@@ -1,0 +1,67 @@
+{
+  "totalDurationFrames": 2804,
+  "fps": 60,
+  "defaultZoom": 1.0,
+  "segments": [
+    {
+      "momentId": 8,
+      "startFrame": 889,
+      "endFrame": 997,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 1366,
+        "y": 79
+      },
+      "easeInFrames": 25,
+      "easeOutFrames": 25,
+      "description": "Click at (1366, 79)"
+    },
+    {
+      "momentId": 12,
+      "startFrame": 1266,
+      "endFrame": 1374,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 1366,
+        "y": 79
+      },
+      "easeInFrames": 25,
+      "easeOutFrames": 25,
+      "description": "Click at (1366, 79)"
+    },
+    {
+      "momentId": 16,
+      "startFrame": 1644,
+      "endFrame": 1752,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 1366,
+        "y": 79
+      },
+      "easeInFrames": 25,
+      "easeOutFrames": 25,
+      "description": "Click at (1366, 79)"
+    },
+    {
+      "momentId": 26,
+      "startFrame": 2568,
+      "endFrame": 2619,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 1715,
+        "y": 127
+      },
+      "easeInFrames": 25,
+      "easeOutFrames": 25,
+      "description": "Click at (1715, 127)"
+    }
+  ],
+  "cursor": {
+    "delayMs": -700,
+    "preClickRestMs": 0
+  }
+}

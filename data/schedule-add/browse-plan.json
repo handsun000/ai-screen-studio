@@ -1,0 +1,56 @@
+{
+  "url": "https://gwdev.bc.ac.kr/",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "requiresLogin": true,
+  "actions": [
+    {
+      "type": "wait",
+      "ms": 2500,
+      "description": "메인 대시보드 로딩 대기"
+    },
+    {
+      "type": "click",
+      "selector": "#svc_lst a[onclick*=\"schedule\"], #svc_lst a[onclick*=\"getMainView\"]",
+      "description": "상단/좌측 GNB '일정관리' 메뉴 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 3500,
+      "description": "일정관리 화면 로딩 대기"
+    },
+    {
+      "type": "click",
+      "selector": "button#reg_shedule_lefttop",
+      "description": "사이드바 좌측 상단 '일정 등록' 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 3000,
+      "description": "일정 등록 상세 뷰 로딩 대기"
+    },
+    {
+      "type": "type",
+      "selector": "input#subject:visible, input#subject",
+      "text": "[주간업무] 주간 정례 회의",
+      "description": "일정 제목 입력 ('[주간업무] 주간 정례 회의')"
+    },
+    {
+      "type": "wait",
+      "ms": 2500,
+      "description": "입력 내용 확인 및 시청자 인지 대기"
+    },
+    {
+      "type": "click",
+      "selector": "button#savebtn:visible, button#savebtn",
+      "description": "하단 '저장' 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 4000,
+      "description": "일정 저장 완료 및 달력 반영 확인"
+    }
+  ]
+}

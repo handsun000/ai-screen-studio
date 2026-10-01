@@ -1,18 +1,30 @@
 // -- Browse Plan (input to record script) --
 
 export interface BrowsePlanAction {
-  type: "navigate" | "click" | "hover" | "scroll" | "wait" | "script";
+  type: "navigate" | "click" | "dblclick" | "hover" | "scroll" | "wait" | "script" | "type" | "upload";
+  filePath?: string;
+  force?: boolean;
   url?: string;
   selector?: string;
+  iframe?: string;
+  text?: string;
+  optional?: boolean;
   deltaY?: number;
   ms?: number;
   js?: string;
   description: string;
 }
 
+export interface CursorSettings {
+  delayMs?: number;
+  preClickRestMs?: number;
+}
+
 export interface BrowsePlan {
   url: string;
   viewport: { width: number; height: number };
+  requiresLogin?: boolean;
+  cursor?: CursorSettings;
   actions: BrowsePlanAction[];
 }
 
@@ -24,6 +36,7 @@ export interface MomentsMetadata {
   viewportHeight: number;
   totalDurationMs: number;
   recordingStart: string;
+  cursor?: CursorSettings;
 }
 
 export interface CursorPosition {
@@ -88,4 +101,5 @@ export interface EditPlan {
   defaultZoom: number;
   timeRegions?: TimeRegion[];
   segments: EditSegment[];
+  cursor?: CursorSettings;
 }

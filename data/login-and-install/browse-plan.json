@@ -1,0 +1,88 @@
+{
+  "url": "https://gwdev.bc.ac.kr/",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "requiresLogin": false,
+  "actions": [
+    {
+      "type": "wait",
+      "ms": 4500,
+      "description": "로그인 페이지 완전 로딩 대기"
+    },
+    {
+      "type": "type",
+      "selector": "input#userId:visible, input#empNo:visible, input[placeholder*=\"ID\"]:visible",
+      "text": "admin",
+      "description": "아이디 입력 ('admin')"
+    },
+    {
+      "type": "wait",
+      "ms": 800,
+      "description": "아이디 입력 확인 대기"
+    },
+    {
+      "type": "type",
+      "selector": "input#password:visible, input#empNoPassword:visible, input[type=\"password\"]:visible",
+      "text": "userage0121",
+      "description": "비밀번호 입력 ('userage0121')"
+    },
+    {
+      "type": "wait",
+      "ms": 800,
+      "description": "비밀번호 입력 확인 대기"
+    },
+    {
+      "type": "click",
+      "selector": "button#btnLogin, button:has-text(\"Login\"), button:has-text(\"로그인\")",
+      "description": "로그인 버튼 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 5000,
+      "description": "메인 포털 대시보드 로딩 대기"
+    },
+    {
+      "type": "click",
+      "selector": "li.mn_down a.mn_down, #svc_lst a:has-text(\"설치프로그램\"), a:has-text(\"설치프로그램\"):visible",
+      "description": "상단 GNB 우측 [설치프로그램] 메뉴 클릭"
+    },
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "설치프로그램 레이어 팝업 로딩 대기"
+    },
+    {
+      "type": "hover",
+      "selector": "#gnb_download_lyr li._TOOLBOX a[href*=\"toolbox\"]:has-text(\"Windows\"), #gnb_download_lyr li._TOOLBOX .fr a:first-child",
+      "description": "PC 메신저 Windows 다운로드 링크 호버"
+    },
+    {
+      "type": "wait",
+      "ms": 2000,
+      "description": "PC 메신저 Windows 다운로드 링크 확인 대기"
+    },
+    {
+      "type": "click",
+      "selector": "#gnb_download_lyr li._APPSTORE_MNG a._qrCodeUrl, #gnb_download_lyr a._qrCodeUrl",
+      "optional": true,
+      "description": "모바일 앱(사설앱스토어) QR코드 버튼 클릭 (표시 시)"
+    },
+    {
+      "type": "wait",
+      "ms": 2000,
+      "description": "모바일 앱 다운로드용 QR코드 레이어 표시 대기"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible .ui-dialog-titlebar-close, button.ui-dialog-titlebar-close:visible",
+      "description": "설치프로그램 및 QR코드 레이어 팝업 닫기"
+    },
+    {
+      "type": "wait",
+      "ms": 2500,
+      "description": "메인 포털 홈 원복 확인 및 시연 종료 대기"
+    }
+  ]
+}

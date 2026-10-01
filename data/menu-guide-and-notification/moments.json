@@ -1,0 +1,307 @@
+{
+  "metadata": {
+    "url": "https://gwdev.bc.ac.kr/",
+    "viewportWidth": 1920,
+    "viewportHeight": 1080,
+    "totalDurationMs": 46741,
+    "recordingStart": "2026-09-22T08:13:08.289Z",
+    "cursor": {
+      "delayMs": -700,
+      "preClickRestMs": 0
+    }
+  },
+  "moments": [
+    {
+      "id": 1,
+      "type": "wait",
+      "timestamp": 809,
+      "description": "메인 포털 대시보드 로딩 대기"
+    },
+    {
+      "id": 2,
+      "type": "click",
+      "timestamp": 4459,
+      "description": "상단 GNB '결재' 메뉴 클릭 (전자결재 이동)",
+      "cursor": {
+        "x": 864,
+        "y": 79
+      },
+      "target": {
+        "x": 823,
+        "y": 51,
+        "width": 81,
+        "height": 55
+      }
+    },
+    {
+      "id": 3,
+      "type": "wait",
+      "timestamp": 5527,
+      "description": "전자결재 화면 로딩 및 확인 대기"
+    },
+    {
+      "id": 4,
+      "type": "click",
+      "timestamp": 8108,
+      "description": "상단 GNB '전자우편' 메뉴 클릭 (웹메일 이동)",
+      "cursor": {
+        "x": 965,
+        "y": 79
+      },
+      "target": {
+        "x": 908,
+        "y": 51,
+        "width": 113,
+        "height": 55
+      }
+    },
+    {
+      "id": 5,
+      "type": "wait",
+      "timestamp": 9185,
+      "description": "전자우편 화면 로딩 및 확인 대기"
+    },
+    {
+      "id": 6,
+      "type": "click",
+      "timestamp": 11772,
+      "description": "상단 GNB '게시판' 메뉴 클릭 (공지/게시판 이동)",
+      "cursor": {
+        "x": 1073,
+        "y": 79
+      },
+      "target": {
+        "x": 1025,
+        "y": 51,
+        "width": 97,
+        "height": 55
+      }
+    },
+    {
+      "id": 7,
+      "type": "wait",
+      "timestamp": 12835,
+      "description": "게시판 화면 로딩 및 확인 대기"
+    },
+    {
+      "id": 8,
+      "type": "click",
+      "timestamp": 15423,
+      "description": "상단 [전체메뉴] 버튼 클릭",
+      "cursor": {
+        "x": 1366,
+        "y": 79
+      },
+      "target": {
+        "x": 1343,
+        "y": 56,
+        "width": 45,
+        "height": 45
+      }
+    },
+    {
+      "id": 9,
+      "type": "wait",
+      "timestamp": 16497,
+      "description": "전체메뉴 레이어 펼침 확인 대기"
+    },
+    {
+      "id": 10,
+      "type": "click",
+      "timestamp": 18053,
+      "description": "전체메뉴 내 '일정관리' 클릭 (캘린더 이동)",
+      "cursor": {
+        "x": 1158,
+        "y": 332
+      },
+      "target": {
+        "x": 1069,
+        "y": 317,
+        "width": 177,
+        "height": 30
+      }
+    },
+    {
+      "id": 11,
+      "type": "wait",
+      "timestamp": 19118,
+      "description": "일정관리 화면 로딩 및 확인 대기"
+    },
+    {
+      "id": 12,
+      "type": "click",
+      "timestamp": 21701,
+      "description": "상단 [전체메뉴] 버튼 클릭",
+      "cursor": {
+        "x": 1366,
+        "y": 79
+      },
+      "target": {
+        "x": 1343,
+        "y": 56,
+        "width": 45,
+        "height": 45
+      }
+    },
+    {
+      "id": 13,
+      "type": "wait",
+      "timestamp": 22768,
+      "description": "전체메뉴 레이어 펼침 확인 대기"
+    },
+    {
+      "id": 14,
+      "type": "click",
+      "timestamp": 24331,
+      "description": "전체메뉴 내 '문서관리' 클릭 (문서관리 이동)",
+      "cursor": {
+        "x": 765,
+        "y": 482
+      },
+      "target": {
+        "x": 677,
+        "y": 467,
+        "width": 177,
+        "height": 30
+      }
+    },
+    {
+      "id": 15,
+      "type": "wait",
+      "timestamp": 25399,
+      "description": "문서관리 화면 로딩 및 확인 대기"
+    },
+    {
+      "id": 16,
+      "type": "click",
+      "timestamp": 27999,
+      "description": "상단 [전체메뉴] 버튼 클릭",
+      "cursor": {
+        "x": 1366,
+        "y": 79
+      },
+      "target": {
+        "x": 1343,
+        "y": 56,
+        "width": 45,
+        "height": 45
+      }
+    },
+    {
+      "id": 17,
+      "type": "wait",
+      "timestamp": 29068,
+      "description": "전체메뉴 레이어 펼침 확인 대기"
+    },
+    {
+      "id": 18,
+      "type": "click",
+      "timestamp": 30633,
+      "description": "전체메뉴 내 '업무/태스크보드' 클릭 (업무 이동)",
+      "cursor": {
+        "x": 765,
+        "y": 332
+      },
+      "target": {
+        "x": 677,
+        "y": 317,
+        "width": 177,
+        "height": 30
+      }
+    },
+    {
+      "id": 19,
+      "type": "wait",
+      "timestamp": 31697,
+      "description": "업무 화면 로딩 및 확인 대기"
+    },
+    {
+      "id": 20,
+      "type": "click",
+      "timestamp": 34298,
+      "description": "상단 [포탈 화면] 버튼 클릭 (메인 홈 복귀)",
+      "cursor": {
+        "x": 95,
+        "y": 12
+      },
+      "target": {
+        "x": 10,
+        "y": 2,
+        "width": 170,
+        "height": 20
+      }
+    },
+    {
+      "id": 21,
+      "type": "wait",
+      "timestamp": 35462,
+      "description": "메인 포털 홈 복귀 확인 대기"
+    },
+    {
+      "id": 22,
+      "type": "click",
+      "timestamp": 37557,
+      "description": "상단 우측 종 모양 [통합알림] 아이콘 클릭",
+      "cursor": {
+        "x": 1713,
+        "y": 79
+      },
+      "target": {
+        "x": 1690,
+        "y": 56,
+        "width": 45,
+        "height": 45
+      }
+    },
+    {
+      "id": 23,
+      "type": "wait",
+      "timestamp": 38626,
+      "description": "통합 알림 레이어 로딩 대기"
+    },
+    {
+      "id": 24,
+      "type": "hover",
+      "timestamp": 40733,
+      "description": "첫 번째 알림 항목 호버 (실시간 결재/게시 알림 확인)",
+      "cursor": {
+        "x": 1439,
+        "y": 397
+      },
+      "target": {
+        "x": 1387,
+        "y": 386,
+        "width": 105,
+        "height": 22
+      }
+    },
+    {
+      "id": 25,
+      "type": "wait",
+      "timestamp": 41307,
+      "description": "알림 내용 확인 및 시청자 인지 대기"
+    },
+    {
+      "id": 26,
+      "type": "click",
+      "timestamp": 43395,
+      "description": "통합 알림 레이어 닫기 버튼 클릭",
+      "cursor": {
+        "x": 1715,
+        "y": 127
+      },
+      "target": {
+        "x": 1705,
+        "y": 117,
+        "width": 19,
+        "height": 19
+      }
+    },
+    {
+      "id": 27,
+      "type": "wait",
+      "timestamp": 44460,
+      "description": "메인 포털 홈 원복 확인 및 종료"
+    }
+  ]
+}
