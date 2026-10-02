@@ -5,11 +5,15 @@ import * as dotenv from "dotenv";
 import type { BrowsePlan } from "../types";
 import { getConfig } from "./configManager";
 import { MASTER_DIRECTING_GUIDELINES } from "./tutorialTemplates";
-import { exploreCodebaseForActionSpec, ActionSpecResult } from "./codeExplorerAgent";
+import {
+  createCodeExplorerTools,
+  codeExplorerToolDeclarations,
+  ActionSpecResult,
+} from "./codeExplorerAgent";
 import { getCachedPlan, setCachedPlan } from "./aiCacheManager";
 import { sanitizeBrowsePlan } from "./planSanitizer";
 
-dotenv.config();
+dotenv.config({ override: true });
 
 const API_KEY = process.env.GEMINI_API_KEY || "";
 const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-3.8-flash";
@@ -114,6 +118,11 @@ export function scanTargetProjectContext(prompt: string, targetPath?: string): s
         note: ["쪽지", "메시지"],
         organization: ["조직도", "사용자", "부서"],
         project: ["프로젝트"],
+        search: ["검색", "통합검색", "조회", "찾기"],
+        mail: ["메일", "웹메일", "편지"],
+        res: ["자원", "예약", "회의실", "시설"],
+        attend: ["근태", "출퇴근", "휴가", "근무"],
+        survey: ["설문", "투표", "조사"],
       };
 
       const matchedModules = Object.entries(moduleKeywordMap)
@@ -290,7 +299,59 @@ function loadFewShotExamples(): string {
 }
 
 /**
- * Generates BrowsePlan using Google AI Studio Gemini API with dynamic project & URL awareness.
+ * Safely parses and repairs JSON from Gemini response (handles markdown fences, unclosed strings/brackets from token limits).
+ */
+export function parseAndRepairJson(raw: string): any {
+  let cleaned = raw.trim();
+
+  // 1. Strip markdown fences if present
+  if (cleaned.startsWith("```")) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+  }
+
+  // 2. Extract outermost JSON object
+  const firstBrace = cleaned.indexOf("{");
+  const lastBrace = cleaned.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    cleaned = cleaned.slice(firstBrace, lastBrace + 1);
+  }
+
+  // 3. First attempt: standard parse
+  try {
+    return JSON.parse(cleaned);
+  } catch (firstErr: any) {
+    // 4. Second attempt: Auto-repair cut-off JSON strings/brackets
+    let repaired = cleaned;
+    const quotes = (repaired.match(/(?<!\\)"/g) || []).length;
+    if (quotes % 2 !== 0) {
+      repaired += '"';
+    }
+
+    let openBrackets = (repaired.match(/\[/g) || []).length;
+    let closeBrackets = (repaired.match(/\]/g) || []).length;
+    while (openBrackets > closeBrackets) {
+      repaired += "]";
+      closeBrackets++;
+    }
+
+    let openBraces = (repaired.match(/\{/g) || []).length;
+    let closeBraces = (repaired.match(/\}/g) || []).length;
+    while (openBraces > closeBraces) {
+      repaired += "}";
+      closeBraces++;
+    }
+
+    try {
+      return JSON.parse(repaired);
+    } catch {
+      throw firstErr;
+    }
+  }
+}
+
+/**
+ * Generates BrowsePlan using Google AI Studio Gemini API with unified, autonomous code exploration.
+ * Inspects source code directly via function calling tools and outputs the final BrowsePlan JSON in a single session.
  */
 export async function generateBrowsePlanWithGemini(
   options: GeneratePlanOptions
@@ -325,30 +386,21 @@ export async function generateBrowsePlanWithGemini(
     }
   }
 
-  // --- Stage 1: Autonomous Code Explorer Agent ---
-  let actionSpecResult: ActionSpecResult | null = null;
-  try {
-    options.onProgress?.(`🔍 [1단계: 소스코드 자율 탐색] 프로젝트 소스코드 및 DOM 구조를 분석합니다...`);
-    actionSpecResult = await exploreCodebaseForActionSpec(
-      options.prompt,
-      effectiveTargetPath,
-      options.onProgress
-    );
-    options.onProgress?.(`📝 [1단계 완료] 화면 조작 기획서(Action Spec) 작성 완료. 식별된 셀렉터 ${actionSpecResult.identifiedSelectors.length}개`);
-  } catch (err: any) {
-    options.onProgress?.(`⚠️ [1단계 알림] 자율 탐색 실패/건너뜀 (${err.message}). 기본 정적 스캔으로 대체합니다.`);
-  }
+  options.onProgress?.(`🚀 [통합 AI 디렉터] 소스코드 역공학 탐색 및 5단계 영상 연출 플랜 수립을 시작합니다...`);
 
-  // --- Stage 2: Video Directing Planner ---
-  options.onProgress?.(`🎬 [2단계: 영상 연출 플래너] 5단계 템포 및 카메라 줌 플랜을 수립 중입니다...`);
+  // --- Initialize Autonomous Code Explorer Tools for Target Project ---
+  const toolExecutors = createCodeExplorerTools(effectiveTargetPath);
+  const toolDeclarations = codeExplorerToolDeclarations;
+  const toolActivityLogs: string[] = [];
 
   const codeContext = scanTargetProjectContext(options.prompt, effectiveTargetPath);
   const fewShotContext = loadFewShotExamples();
-  const actionSpecSection = actionSpecResult?.actionSpecMarkdown
-    ? `### [5] 1단계 코드 탐색 에이전트가 소스코드에서 직접 추출한 [화면 조작 기획서 (Action Spec)]\n아래 기획서에 식별된 실제 DOM 셀렉터, 유효성 검사 alert 방지 조건, 필수 입력 필드를 반드시 반영하여 실행 가능한 Playwright 액션들을 구성하세요:\n\n${actionSpecResult.actionSpecMarkdown}`
-    : `### [5] 타겟 프로젝트에서 실시간 스캔된 컨텍스트\n${codeContext}`;
 
   const systemInstruction = `
+당신은 웹 애플리케이션의 소스코드를 직접 역공학(Reverse Engineering)하여,
+5단계 고품질 비디오 자동화 브라우징 플랜(BrowsePlan JSON)을 기획하는 전문 통합 AI 디렉터입니다.
+웹의 모든 메뉴와 기능(통합검색, 전자결재, 문서관리, 게시판, 메일, 일정관리 등)에 대해 보편적이고 정확한 플랜을 수립해야 합니다.
+
 ${MASTER_DIRECTING_GUIDELINES}
 
 ---
@@ -357,10 +409,33 @@ ${MASTER_DIRECTING_GUIDELINES}
 - 타겟 서비스 웹 URL: ${effectiveTargetUrl}
 - 타겟 프로젝트 로컬 경로: ${effectiveTargetPath}
 
-${actionSpecSection}
+### [5] 타겟 프로젝트 기본 사전 감지 컨텍스트
+${codeContext}
 
 ### [6] 검증된 레퍼런스 시나리오 패턴 (Verified Reference Examples)
 ${fewShotContext}
+
+---
+
+### [7] 🚨 소스코드 정밀 역공학 및 도구(Tools) 활용 원칙
+1. **도구 활용 (searchCodeText, findFiles, readSourceSnippet, extractAlertsAndValidation)**:
+   - 사용자가 요청한 업무 기능(통합검색, 전자결재, 문서관리, 게시판, 메일, 일정관리 등)의 소스코드에서 실제 버튼 ID, 폼 필드 태그, 필수 유효성 검사 alert 조건을 능동적으로 탐색하십시오.
+   - 대상 화면의 트리거 버튼이나 저장/검색 버튼의 정확한 셀렉터를 모를 경우 반드시 searchCodeText 또는 findFiles를 호출하여 확인하십시오.
+2. **다중 버튼 충돌 방지 및 영역 스코핑**:
+   - '저장', '등록', '확인', '닫기', '검색' 등은 화면 여러 곳(헤더, 사이드바, 본문, 팝업 모달)에 동시에 존재할 수 있습니다.
+   - 모달 팝업 내부의 버튼은 반드시 \`.ui-dialog:visible button:has-text('저장')\` 또는 \`.ui-dialog:visible #savebtn\`처럼 모달 범위를 한정하십시오.
+   - 사이드바 버튼은 \`#snb\`, 헤더 버튼은 \`header\` 접두사를 붙여서 특정 버튼을 100% 명확히 가리키십시오.
+3. **가상 ID 절대 금지 및 모르면 비워두기 (Zero-Guessing Policy)**:
+   - 소스코드에 없거나 확인되지 않은 임의의 영어 ID(#search_box_input, #btn_save_dialog 등)를 절대로 지어내지 마십시오!
+   - 한글 텍스트 매칭(예: \`button:has-text("등록"):visible\`)이 확실한 경우는 텍스트 매칭을 사용하십시오.
+   - 텍스트 매칭조차 불확실하거나 소스코드에서 확정할 수 없는 인터랙티브 요소는 **\`"selector": ""\` (빈 문자열)로 비워두십시오!**
+   - 비워둔 항목은 JSON의 \`explanation\` 필드에 사용자가 대시보드 에디터에서 직접 입력해야 하는 항목을 친절히 안내하십시오.
+4. **포탈 전체메뉴(서랍) 내 숨겨진 하위 메뉴 탐색 원칙**:
+   - 엔터프라이즈 포탈 메인 화면에서 세부 업무 메뉴(일정관리, 전자결재, 문서관리, 게시판 등)가 상단 바에 직접 노출되어 있지 않은 경우,
+     반드시 [포탈 전체메뉴(button.btn_svc_open) 클릭] -> [1200ms 펼침 대기] -> [서랍 내 목표 메뉴(#svc_box a:has-text('...')) 클릭] 시퀀스를 준수하십시오.
+   - 단, 상단 헤더에 항상 노출된 범용 기능(예: 상단 통합검색 인풋, 사용자 프로필, 알림 아이콘 등)인 경우 서랍을 열지 않고 곧바로 해당 요소를 조작하십시오.
+5. **최종 출력 규격**:
+   - 소스코드 탐색이 완료되면, 중간 마크다운 설명서 없이 **곧바로 완전하고 유효한 BrowsePlan JSON 형식**으로만 응답하십시오.
 `;
 
   const userContent = `
@@ -368,29 +443,29 @@ User Scenario Request: "${options.prompt}"
 Requested Slug: ${options.slug || "auto-generate"}
 Target URL: ${effectiveTargetUrl}
 Directing Style: ${options.directingStyle || "standard"} (${
-  options.directingStyle === "fast"
-    ? "Fast showcase pacing: 1200ms-1800ms wait intervals"
-    : options.directingStyle === "detailed"
-    ? "Detailed manual pacing: 3500ms-4500ms wait intervals"
-    : "Standard educational pacing: 2500ms-3500ms wait intervals"
-})
+    options.directingStyle === "fast"
+      ? "Fast showcase pacing: 1200ms-1800ms wait intervals"
+      : options.directingStyle === "detailed"
+      ? "Detailed manual pacing: 3500ms-4500ms wait intervals"
+      : "Standard educational pacing: 2500ms-3500ms wait intervals"
+  })
 
 Strictly follow the 5-phase video directing framework (Phase 1 Lead-in -> Phase 2 Intentional Navigation -> Phase 3 Interaction -> Phase 4 Action Execution -> Phase 5 Outcome Review).
+Explore the source code if necessary using tools, then produce the complete BrowsePlan JSON structure that satisfies this scenario.
 
-Generate a complete BrowsePlan JSON structure that satisfies this scenario.
-The response must be valid JSON with this exact schema:
+The final response must be valid JSON with this exact schema:
 {
   "suggestedSlug": "kebab-case-slug-name",
-  "explanation": "Brief Korean explanation of what this scenario covers",
+  "explanation": "한글 시나리오 요약 및 [⚠️ 사용자 직접 입력 필요 항목 안내]",
   "plan": {
     "url": "${effectiveTargetUrl}",
     "viewport": { "width": 1920, "height": 1080 },
     "requiresLogin": true,
-    "cursor": { "delayMs": 800, "preClickRestMs": 180 },
+    "cursor": { "delayMs": 0, "preClickRestMs": 120 },
     "actions": [
       {
         "type": "wait" | "click" | "hover" | "type" | "dblclick" | "scroll" | "navigate",
-        "selector": "css selector string (if applicable)",
+        "selector": "css selector string (leave empty \"\" if unknown, user will input in dashboard)",
         "iframe": "iframe selector string (if applicable)",
         "text": "text to type (if type action)",
         "ms": 2000,
@@ -403,64 +478,151 @@ The response must be valid JSON with this exact schema:
 }
 `;
 
-  const configuredModel = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
+  const configuredModel = process.env.GEMINI_MODEL || "gemini-3.8-flash";
   const candidateModels = Array.from(
     new Set([
       configuredModel,
-      "gemini-3.5-flash-lite",
-      "gemini-2.5-flash-lite",
-      "gemini-flash-latest",
+      "gemini-3.8-flash",
       "gemini-3.5-flash",
-      "gemini-2.5-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-flash-latest",
     ])
   );
 
-  let responseText = "";
+  let parsed: any = null;
   let lastError: any = null;
 
-  outerLoop:
+  modelLoop:
   for (const model of candidateModels) {
     for (const key of apiKeys) {
       try {
-        console.log(`[Gemini] Attempting generation with model "${model}"...`);
+        console.log(`[Unified Gemini Director] Attempting with model "${model}"...`);
         const ai = new GoogleGenAI({ apiKey: key });
-        const response = await ai.models.generateContent({
-          model,
-          contents: userContent,
-          config: {
-            systemInstruction,
-            responseMimeType: "application/json",
-            temperature: 0.2,
+
+        const contents: any[] = [
+          {
+            role: "user",
+            parts: [{ text: userContent }],
           },
-        });
-        if (response.text && response.text.trim().length > 0) {
-          responseText = response.text;
-          console.log(`[Gemini] Successfully generated plan with model "${model}"!`);
-          break outerLoop;
+        ];
+
+        let turn = 0;
+        const maxToolTurns = 3;
+
+        while (turn < maxToolTurns) {
+          turn++;
+          const response = await ai.models.generateContent({
+            model,
+            contents,
+            config: {
+              systemInstruction,
+              tools: [{ functionDeclarations: toolDeclarations as any }],
+              temperature: 0.2,
+              maxOutputTokens: 8192,
+            },
+          });
+
+          const functionCalls = response.functionCalls;
+          if (functionCalls && functionCalls.length > 0) {
+            // Gemini called autonomous code exploration tools
+            contents.push(response.candidates?.[0]?.content);
+
+            for (const call of functionCalls) {
+              const toolName = call.name as keyof typeof toolExecutors;
+              const toolArgs = call.args as any;
+              const logEntry = `🔧 [코드 탐색 ${turn}/${maxToolTurns}] ${toolName}(${JSON.stringify(toolArgs).slice(0, 50)}...)`;
+              toolActivityLogs.push(logEntry);
+              options.onProgress?.(logEntry);
+
+              let toolResult: any;
+              if (toolExecutors[toolName]) {
+                toolResult = (toolExecutors[toolName] as any)(toolArgs);
+              } else {
+                toolResult = { error: `알 수 없는 도구: ${toolName}` };
+              }
+
+              contents.push({
+                role: "user",
+                parts: [
+                  {
+                    functionResponse: {
+                      name: call.name,
+                      response: toolResult,
+                    },
+                  },
+                ],
+              });
+            }
+          } else {
+            // Gemini decided it has enough info and generated the final response directly
+            const text = response.text || "";
+            if (text.trim().length > 0) {
+              try {
+                parsed = parseAndRepairJson(text);
+                console.log(`[Unified Gemini Director] Generated plan with model "${model}" in ${turn} turn(s)!`);
+                break modelLoop;
+              } catch (jsonErr: any) {
+                console.warn(`[Unified Gemini Director] Model "${model}" produced unparseable JSON (${jsonErr.message}).`);
+                lastError = jsonErr;
+              }
+            }
+            break;
+          }
+        }
+
+        // If tool turns completed and we need the final JSON plan
+        if (!parsed) {
+          options.onProgress?.(`🎬 [플랜 합성] 소스코드 탐색 결과를 종합하여 최종 5단계 BrowsePlan JSON을 작성 중입니다...`);
+          contents.push({
+            role: "user",
+            parts: [
+              {
+                text: "소스코드 탐색이 완료되었습니다. 지금까지 탐색하고 확인된 소스코드 요소들을 바탕으로, 더 이상의 도구 호출 없이 최종 BrowsePlan JSON만을 즉시 산출하십시오.",
+              },
+            ],
+          });
+
+          const finalResponse = await ai.models.generateContent({
+            model,
+            contents,
+            config: {
+              systemInstruction,
+              responseMimeType: "application/json",
+              temperature: 0.2,
+              maxOutputTokens: 8192,
+            },
+          });
+
+          const finalText = finalResponse.text || "";
+          if (finalText.trim().length > 0) {
+            try {
+              parsed = parseAndRepairJson(finalText);
+              console.log(`[Unified Gemini Director] Successfully finalized JSON plan with model "${model}"!`);
+              break modelLoop;
+            } catch (jsonErr: any) {
+              console.warn(`[Unified Gemini Director] Final JSON parse failed: ${jsonErr.message}`);
+              lastError = jsonErr;
+            }
+          }
         }
       } catch (err: any) {
         lastError = err;
         const msg = err.message || (typeof err === "string" ? err : JSON.stringify(err));
-        console.warn(`[Gemini] Model "${model}" failed (status: ${err.status || "err"}): ${msg.substring(0, 100)}`);
+        console.warn(`[Unified Gemini Director] Model "${model}" failed (status: ${err.status || "err"}): ${msg.substring(0, 100)}`);
       }
     }
+    if (parsed) break;
   }
 
-  if (!responseText && lastError) {
-    throw new Error(`모든 Gemini 모델 및 API 키 호출이 실패했습니다. (마지막 에러: ${lastError.message || lastError.status || "오류"})`);
+
+  if (!parsed) {
+    throw new Error(`모든 Gemini 모델 및 API 키 호출이 실패했거나 유효한 JSON을 생성하지 못했습니다. (원인: ${lastError?.message || "알 수 없는 오류"})`);
   }
 
-  let parsed: any;
-  try {
-    parsed = JSON.parse(responseText);
-  } catch (err) {
-    throw new Error(`Gemini 응답 JSON 파싱 실패: ${responseText.substring(0, 200)}`);
-  }
-
-  // --- Stage 3: Intelligent Plan Sanitization & Auto-Correction ---
+  // --- Plan Sanitization & Browser Safety Check (Zero Hardcoding) ---
   const { plan: sanitizedPlan, report } = sanitizeBrowsePlan(parsed.plan);
   if (report.fixedActionsCount > 0 || report.removedActionsCount > 0) {
-    options.onProgress?.(`🛡️ [AI 플랜 자동 교정] 위험 요소 ${report.removedActionsCount}개 제거, 셀렉터 ${report.fixedActionsCount}개 모달 스코프 강화 완료!`);
+    options.onProgress?.(`🛡️ [AI 플랜 안전성 점검] 위험 요소 ${report.removedActionsCount}개 제거, 셀렉터 ${report.fixedActionsCount}개 문법/스코프 보정 완료`);
     report.changes.forEach((c) => options.onProgress?.(`  ${c}`));
   }
 
@@ -469,12 +631,30 @@ The response must be valid JSON with this exact schema:
     parsed.suggestedSlug ||
     "scenario-" + Date.now().toString(36);
 
+  // Build a summary for the Dashboard "Action Spec" inspection panel
+  const actionSpecSummary = [
+    `# [화면 조작 기획 및 소스코드 탐색 결과] ${options.prompt}`,
+    "",
+    `## 1. 개요 및 연출 의도`,
+    `- 설명: ${parsed.explanation || "시나리오가 성공적으로 생성되었습니다."}`,
+    `- 총 연출 액션 수: ${sanitizedPlan.actions.length}단계`,
+    "",
+    `## 2. 실시간 소스코드 도구 탐색 내역`,
+    toolActivityLogs.length > 0
+      ? toolActivityLogs.map((l) => `- ${l}`).join("\n")
+      : "- 정적 소스코드 컨텍스트 및 표준 DOM 구조를 기반으로 플랜을 직결 생성했습니다.",
+    "",
+    `## 3. 식별된 핵심 인터랙티브 요소`,
+    ...sanitizedPlan.actions
+      .filter((a) => a.selector)
+      .map((a, idx) => `- 단계 ${idx + 1} (${a.type}): \`${a.selector}\` (${a.description})`),
+  ].join("\n");
+
   const finalResult: GeneratePlanResult = {
     plan: sanitizedPlan,
     explanation: parsed.explanation || "시나리오가 성공적으로 생성되었습니다.",
     suggestedSlug: suggestedSlug.replace(/[^a-zA-Z0-9_\-]/g, "-").toLowerCase(),
-    actionSpecMarkdown: actionSpecResult?.actionSpecMarkdown,
-    actionSpec: actionSpecResult || undefined,
+    actionSpecMarkdown: actionSpecSummary,
     isFromCache: false,
   };
 
@@ -491,4 +671,5 @@ The response must be valid JSON with this exact schema:
 
   return finalResult;
 }
+
 

@@ -347,7 +347,7 @@ async function selectScenario(slug, preferMode = null) {
       if (renderRes.ok) {
         renderInfo = await renderRes.json();
       }
-    } catch {}
+    } catch { }
 
     if (btnDownloadVideo) {
       if (renderInfo.exists) {
@@ -515,7 +515,7 @@ async function handleGeneratePlan() {
         if (payload.progress && aiProgressText) {
           aiProgressText.textContent = payload.progress;
         }
-      } catch {}
+      } catch { }
     };
   } catch (sseErr) {
     console.warn("Progress SSE connection failed:", sseErr);
@@ -592,7 +592,7 @@ const SMART_PRESET_BLOCKS = {
     { type: "wait", ms: 1200, description: "제목 입력창 포커스 대기" },
     {
       type: "type",
-      selector: "input#_DOC_TITLE_, input[name*='title'], input[placeholder*='제목'], [title*='문서제목'] input",
+      selector: "input#docTitle:visible, input[name*='title']:visible, input[placeholder*='제목']:visible, [title*='문서제목'] input",
       text: "2026학년도 대학 업무 개선 계획서",
       description: "문서 제목 입력 ('2026학년도 대학 업무 개선 계획서')",
       iframe: "iframe[name*='docBox'], iframe[src*='frmFormletUiFrame']",
@@ -808,6 +808,11 @@ function renderActionCards() {
     card.draggable = true;
     card.dataset.index = idx;
 
+    const isMissingSelector = act.type !== "wait" && (!act.selector || act.selector.trim() === "");
+    if (isMissingSelector) {
+      card.classList.add("needs-selector");
+    }
+
     const badgeClass = `badge-${act.type}`;
 
     card.innerHTML = `
@@ -830,7 +835,8 @@ function renderActionCards() {
             <option value="scroll" ${act.type === "scroll" ? "selected" : ""}>SCROLL</option>
             <option value="navigate" ${act.type === "navigate" ? "selected" : ""}>NAVIGATE</option>
           </select>
-          <input type="text" placeholder="액션 설명 (한글)" value="${escapeHtmlAttr(act.description)}" data-field="description" style="width: 250px; font-weight: 500;">
+          ${isMissingSelector ? `<span class="badge-needs-input" title="소스코드에서 ID가 불확실하여 비워두었습니다. 직접 셀렉터나 버튼 텍스트를 입력해주세요.">⚠️ 셀렉터 입력 필요</span>` : ""}
+          <input type="text" placeholder="액션 설명 (한글)" value="${escapeHtmlAttr(act.description)}" data-field="description" style="width: 240px; font-weight: 500;">
         </div>
         <div class="action-card-controls">
           <button class="action-ctrl-btn action-move-up" title="한 단계 위로 이동" ${idx === 0 ? "disabled" : ""}>▲</button>
@@ -844,479 +850,804 @@ function renderActionCards() {
       </div>
 
       <div class="action-inputs-grid">
-        ${act.type !== "wait" ? `<input type="text" placeholder="CSS 셀렉터 (예: #svc_lst a:has-text('결재'))" value="${escapeHtmlAttr(act.selector)}" data-field="selector">` : ""}
+        ${act.type !== "wait" ? `
+          <div class="selector-input-wrapper">
+            <input type="text" 
+              class="${isMissingSelector ? "input-needs-attention" : ""}"
+              placeholder="${isMissingSelector ? "⚠️ 셀렉터 직접 입력 또는 우측 [🎯 타겟 도우미]로 간편 생성" : "CSS 셀렉터 (예: button.btn_svc_open 또는 #savebtn)"}" 
+              value="${escapeHtmlAttr(act.selector)}" 
+              data-field="selector">
+            <button type="button" class="btn-open-builder btn-toggle-builder" title="복잡한 CSS 몰라도 클릭 한 번으로 특정 버튼 셀렉터 완성">🎯 타겟 도우미</button>
+          </div>` : ""}
         ${act.type === "wait" ? `<input type="number" placeholder="대기 시간(ms)" value="${act.ms || 2000}" data-field="ms">` : ""}
         ${act.type === "type" ? `<input type="text" placeholder="입력할 텍스트" value="${escapeHtmlAttr(act.text)}" data-field="text">` : ""}
         ${act.type !== "wait" ? `<input type="text" placeholder="iFrame 셀렉터 (옵션)" value="${escapeHtmlAttr(act.iframe)}" data-field="iframe">` : ""}
       </div>
 
+      ${act.type !== "wait" ? `
+      <!-- 실시간 문법 린터 / 자동 교정 칩 컨테이너 -->
+      <div class="linter-container" style="display: none; margin-top: 4px;"></div>
+
+      <!-- 스마트 타겟 빌더 패널 (토글형) -->
+      <div class="smart-target-builder hidden">
+        <div class="builder-header">
+          <span class="builder-title">🎯 스마트 타겟 빌더 (다중 버튼 충돌 방지)</span>
+          <button type="button" class="builder-close-btn" title="닫기">✕</button>
+        </div>
+        
+        <!-- 퀵 엔터프라이즈 프리셋 칩 -->
+        <div class="builder-field-group">
+          <span class="builder-field-label">⚡ 주요 급소 버튼 원클릭 퀵 선택:</span>
+          <div class="builder-scope-chips">
+            <button type="button" class="builder-chip preset-chip" data-preset="portal-menu">🔝 포탈 전체메뉴</button>
+            <button type="button" class="builder-chip preset-chip" data-preset="sched-reg">👈 일정 등록 (사이드바)</button>
+            <button type="button" class="builder-chip preset-chip" data-preset="modal-save">🪟 팝업 저장 (#savebtn)</button>
+            <button type="button" class="builder-chip preset-chip" data-preset="modal-confirm">🪟 팝업 확인</button>
+            <button type="button" class="builder-chip preset-chip" data-preset="appr-submit">📝 기안문 상신</button>
+          </div>
+        </div>
+
+        <div class="builder-field-group">
+          <span class="builder-field-label">📍 대상 버튼이 위치한 화면 영역 (다른 화면/헤더 버튼과 겹침 원천 방지!):</span>
+          <div class="builder-scope-chips scope-selector-chips">
+            <button type="button" class="builder-chip scope-chip active" data-scope="global">🌐 전체화면 (자동)</button>
+            <button type="button" class="builder-chip scope-chip" data-scope="header">🔝 상단 헤더 / GNB</button>
+            <button type="button" class="builder-chip scope-chip" data-scope="sidebar">👈 좌측 사이드바</button>
+            <button type="button" class="builder-chip scope-chip" data-scope="modal">🪟 팝업 / 모달 내부</button>
+            <button type="button" class="builder-chip scope-chip" data-scope="body">📄 본문 / 목록 화면</button>
+          </div>
+        </div>
+
+        <div class="builder-field-group">
+          <span class="builder-field-label">🔍 누를 버튼의 이름 (한글 텍스트 또는 클래스명):</span>
+          <input type="text" class="builder-keyword-input" placeholder="예: 포탈 전체메뉴, 일정 등록, 저장, btn_svc_open" value="${escapeHtmlAttr(act.description ? act.description.replace(/[\[\]]/g, "").split(" ")[0] : "")}">
+        </div>
+
+        <div class="builder-preview-row">
+          <span class="builder-preview-code">...</span>
+          <button type="button" class="btn-apply-builder">✨ 이 셀렉터 적용</button>
+        </div>
+      </div>` : ""}
+
+      ${isMissingSelector ? `
+      <div class="quick-selector-hints">
+        <span class="hint-label">💡 퀵 입력 헬퍼:</span>
+        <button type="button" class="btn-quick-fill" data-fill="button.btn_svc_open, button[title='포탈 전체메뉴'], button:has-text('포탈 전체메뉴')">+ [포탈 전체메뉴] 버튼</button>
+        <button type="button" class="btn-quick-fill" data-fill="button#reg_shedule_lefttop, button:has-text('일정 등록'):visible">+ [일정 등록] 버튼</button>
+        <button type="button" class="btn-quick-fill" data-fill=".ui-dialog:visible #savebtn, .ui-dialog:visible button:has-text('저장')">+ [모달 저장] 버튼</button>
+        <button type="button" class="btn-quick-fill" data-fill=".ui-dialog:visible button:has-text('확인')">+ [모달 확인] 버튼</button>
+      </div>` : ""}
+
       <div class="action-options-row">
-        <label><input type="checkbox" data-field="optional" ${act.optional ? "checked" : ""}> Optional (실패해도 계속)</label>
-        <label><input type="checkbox" data-field="force" ${act.force ? "checked" : ""}> Force Click</label>
+        <div class="action-checkboxes">
+          <label><input type="checkbox" data-field="optional" ${act.optional ? "checked" : ""}> Optional (실패해도 계속)</label>
+          <label><input type="checkbox" data-field="force" ${act.force ? "checked" : ""}> Force Click</label>
+        </div>
+        ${["click", "dblclick", "hover", "type"].includes(act.type) ? `
+        <div class="action-offset-group" title="요소 중심점을 기준으로 마우스 클릭 및 카메라 줌 좌표를 미세 이동합니다 (예: X +10, Y -5)">
+          <span class="offset-label">🎯 커서 오프셋:</span>
+          <label class="offset-input-wrap">X <input type="number" class="offset-input" data-field="cursorOffsetX" placeholder="0" value="${act.cursorOffset?.x ?? ""}">px</label>
+          <label class="offset-input-wrap">Y <input type="number" class="offset-input" data-field="cursorOffsetY" placeholder="0" value="${act.cursorOffset?.y ?? ""}">px</label>
+        </div>` : ""}
       </div>
     `;
 
-    // Bind Change Handlers
-    card.querySelectorAll("[data-field]").forEach((input) => {
-      input.addEventListener("change", () => {
-        const field = input.getAttribute("data-field");
-        if (input.type === "checkbox") {
-          act[field] = input.checked;
-        } else if (input.type === "number") {
-          act[field] = parseInt(input.value, 10);
-        } else {
-          act[field] = input.value;
-          if (field === "type") renderActionCards();
+    // Bind Quick Fill Buttons
+    card.querySelectorAll(".btn-quick-fill").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const fillValue = btn.getAttribute("data-fill");
+        const selectorInput = card.querySelector('[data-field="selector"]');
+        if (selectorInput && fillValue) {
+          selectorInput.value = fillValue;
+          act.selector = fillValue;
+          renderActionCards();
         }
       });
     });
 
-    // Control Button Listeners
-    card.querySelector(".action-move-up").addEventListener("click", () => moveAction(idx, idx - 1));
-    card.querySelector(".action-move-down").addEventListener("click", () => moveAction(idx, idx + 1));
-    card.querySelector(".action-insert-btn").addEventListener("click", () => insertActionAt(idx + 1));
-    card.querySelector(".action-duplicate-btn").addEventListener("click", () => duplicateAction(idx));
-    card.querySelector(".action-delete-btn").addEventListener("click", () => deleteAction(idx));
+    // --- Smart Target Builder & Realtime Linter Logic ---
+      const builderPanel = card.querySelector(".smart-target-builder");
+      const btnToggleBuilder = card.querySelector(".btn-toggle-builder");
+      const builderCloseBtn = card.querySelector(".builder-close-btn");
+      const linterContainer = card.querySelector(".linter-container");
+      const selectorInput = card.querySelector('[data-field="selector"]');
+      const keywordInput = card.querySelector(".builder-keyword-input");
+      const previewCode = card.querySelector(".builder-preview-code");
+      const btnApplyBuilder = card.querySelector(".btn-apply-builder");
+      let currentScope = "global";
 
-    // HTML5 Drag & Drop
-    card.addEventListener("dragstart", (e) => {
-      draggedActionIndex = idx;
-      card.classList.add("is-dragging");
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/plain", String(idx));
-    });
+      function updateBuilderPreview() {
+        if (!keywordInput || !previewCode) return;
+        const kw = keywordInput.value.trim();
+        let generated = "";
 
-    card.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = "move";
-      if (draggedActionIndex !== null && draggedActionIndex !== idx) {
-        card.classList.add("drag-over");
+        if (!kw) {
+          generated = currentScope === "modal" ? ".ui-dialog:visible button" : "button";
+        } else {
+          const isClassLike = kw.startsWith(".") || (/^[a-zA-Z][a-zA-Z0-9_-]+$/.test(kw) && !kw.includes(" "));
+          const baseTarget = isClassLike
+            ? (kw.startsWith(".") ? kw : `.${kw}`)
+            : `button:has-text('${kw}'):visible, a:has-text('${kw}'):visible`;
+
+          switch (currentScope) {
+            case "header":
+              generated = `header ${baseTarget}, #header ${baseTarget}, .gnb ${baseTarget}, ${baseTarget}`;
+              break;
+            case "sidebar":
+              generated = `#snb ${baseTarget}, #left ${baseTarget}, aside ${baseTarget}, ${baseTarget}`;
+              break;
+            case "modal":
+              generated = `.ui-dialog:visible ${baseTarget}, .modal:visible ${baseTarget}`;
+              break;
+            case "body":
+              generated = `#content ${baseTarget}, .list_container ${baseTarget}, ${baseTarget}`;
+              break;
+            default:
+              generated = baseTarget;
+          }
+        }
+        previewCode.textContent = generated;
       }
-    });
 
-    card.addEventListener("dragleave", () => {
-      card.classList.remove("drag-over");
-    });
-
-    card.addEventListener("drop", (e) => {
-      e.preventDefault();
-      card.classList.remove("drag-over");
-      if (draggedActionIndex !== null && draggedActionIndex !== idx) {
-        moveAction(draggedActionIndex, idx);
+      if (btnToggleBuilder && builderPanel) {
+        btnToggleBuilder.addEventListener("click", () => {
+          builderPanel.classList.toggle("hidden");
+          if (!builderPanel.classList.contains("hidden")) {
+            updateBuilderPreview();
+            if (keywordInput) keywordInput.focus();
+          }
+        });
       }
+
+      if (builderCloseBtn && builderPanel) {
+        builderCloseBtn.addEventListener("click", () => builderPanel.classList.add("hidden"));
+      }
+
+      // Scope Chips Selection
+      card.querySelectorAll(".scope-chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          card.querySelectorAll(".scope-chip").forEach((c) => c.classList.remove("active"));
+          chip.classList.add("active");
+          currentScope = chip.getAttribute("data-scope");
+          updateBuilderPreview();
+        });
+      });
+
+      if (keywordInput) {
+        keywordInput.addEventListener("input", updateBuilderPreview);
+      }
+
+      if (btnApplyBuilder && previewCode && selectorInput) {
+        btnApplyBuilder.addEventListener("click", () => {
+          const selVal = previewCode.textContent.trim();
+          if (selVal) {
+            selectorInput.value = selVal;
+            act.selector = selVal;
+            renderActionCards();
+          }
+        });
+      }
+
+      // Presets in Builder
+      const PRESET_SELECTORS = {
+        "portal-menu": "button.btn_svc_open, button[title='포탈 전체메뉴'], button:has-text('포탈 전체메뉴')",
+        "sched-reg": "button#reg_shedule_lefttop, #snb button:has-text('일정 등록'):visible, button:has-text('일정 등록'):visible",
+        "modal-save": ".ui-dialog:visible #savebtn, .ui-dialog:visible button:has-text('저장'), button#savebtn:visible",
+        "modal-confirm": ".ui-dialog:visible button:has-text('확인'), button:has-text('확인'):visible",
+        "appr-submit": "button:has-text('상신'):visible, button:has-text('저장'):visible",
+      };
+
+      card.querySelectorAll(".preset-chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          const key = chip.getAttribute("data-preset");
+          const selVal = PRESET_SELECTORS[key];
+          if (selVal && selectorInput) {
+            selectorInput.value = selVal;
+            act.selector = selVal;
+            renderActionCards();
+          }
+        });
+      });
+
+      // Realtime Syntax Linter
+      function checkSelectorSyntax(val) {
+        if (!linterContainer) return;
+        linterContainer.innerHTML = "";
+        linterContainer.style.display = "none";
+        if (!val) return;
+
+        const trimmed = val.trim();
+        // 1. Detect button:class_name typo
+        const colonClassMatch = trimmed.match(/\b(button|a|div|span|input|li):([a-zA-Z][a-zA-Z0-9_-]*)\b/);
+        if (colonClassMatch) {
+          const [full, tag, cls] = colonClassMatch;
+          const validPseudos = ["has-text", "visible", "first-child", "last-child", "nth-child", "not", "disabled", "checked"];
+          if (!validPseudos.includes(cls)) {
+            const suggested = trimmed.replace(full, `${tag}.${cls}`);
+            linterContainer.style.display = "block";
+            linterContainer.innerHTML = `
+            <div class="syntax-linter-chip" title="클릭하여 즉시 교정">
+              <span>💡 문법 오타 감지: <strong>${full}</strong> ➡️ <strong>${tag}.${cls}</strong> (콜론 대신 점 사용)</span>
+              <span style="text-decoration: underline; font-weight: 700;">[✨ 자동 수정 적용]</span>
+            </div>
+          `;
+            linterContainer.querySelector(".syntax-linter-chip").addEventListener("click", () => {
+              selectorInput.value = suggested;
+              act.selector = suggested;
+              checkSelectorSyntax(suggested);
+            });
+            return;
+          }
+        }
+
+        // 2. Detect bare class without dot
+        if (/^[a-zA-Z][a-zA-Z0-9_-]+$/.test(trimmed) && !["button", "input", "textarea", "a", "select", "div"].includes(trimmed)) {
+          const suggested = `button.${trimmed}, .${trimmed}`;
+          linterContainer.style.display = "block";
+          linterContainer.innerHTML = `
+          <div class="syntax-linter-chip" title="클릭하여 즉시 교정">
+            <span>💡 클래스 점(.) 누락 감지: <strong>${trimmed}</strong> ➡️ <strong>.${trimmed}</strong></span>
+            <span style="text-decoration: underline; font-weight: 700;">[✨ 자동 수정 적용]</span>
+          </div>
+        `;
+          linterContainer.querySelector(".syntax-linter-chip").addEventListener("click", () => {
+            selectorInput.value = suggested;
+            act.selector = suggested;
+            checkSelectorSyntax(suggested);
+          });
+        }
+      }
+
+      if (selectorInput) {
+        selectorInput.addEventListener("input", (e) => checkSelectorSyntax(e.target.value));
+        checkSelectorSyntax(selectorInput.value);
+      }
+
+      // Bind Change Handlers
+      card.querySelectorAll("[data-field]").forEach((input) => {
+        input.addEventListener("input", () => {
+          const field = input.getAttribute("data-field");
+          if (field === "selector") {
+            act.selector = input.value;
+            const trimmed = input.value.trim();
+            if (trimmed.length > 0) {
+              card.classList.remove("needs-selector");
+              input.classList.remove("input-needs-attention");
+              const badge = card.querySelector(".badge-needs-input");
+              if (badge) badge.remove();
+            } else {
+              card.classList.add("needs-selector");
+              input.classList.add("input-needs-attention");
+            }
+          }
+        });
+        input.addEventListener("change", () => {
+          const field = input.getAttribute("data-field");
+          if (input.type === "checkbox") {
+            act[field] = input.checked;
+          } else if (field === "cursorOffsetX" || field === "cursorOffsetY") {
+            if (!act.cursorOffset) act.cursorOffset = { x: 0, y: 0 };
+            const val = input.value === "" ? 0 : parseInt(input.value, 10);
+            if (field === "cursorOffsetX") act.cursorOffset.x = isNaN(val) ? 0 : val;
+            if (field === "cursorOffsetY") act.cursorOffset.y = isNaN(val) ? 0 : val;
+            if (act.cursorOffset.x === 0 && act.cursorOffset.y === 0 && input.value === "") {
+              delete act.cursorOffset;
+            }
+          } else if (input.type === "number") {
+            act[field] = parseInt(input.value, 10);
+          } else {
+            act[field] = input.value;
+            if (field === "type") renderActionCards();
+          }
+        });
+      });
+
+      // Control Button Listeners
+      card.querySelector(".action-move-up").addEventListener("click", () => moveAction(idx, idx - 1));
+      card.querySelector(".action-move-down").addEventListener("click", () => moveAction(idx, idx + 1));
+      card.querySelector(".action-insert-btn").addEventListener("click", () => insertActionAt(idx + 1));
+      card.querySelector(".action-duplicate-btn").addEventListener("click", () => duplicateAction(idx));
+      card.querySelector(".action-delete-btn").addEventListener("click", () => deleteAction(idx));
+
+      // HTML5 Drag & Drop
+      card.addEventListener("dragstart", (e) => {
+        draggedActionIndex = idx;
+        card.classList.add("is-dragging");
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", String(idx));
+      });
+
+      card.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        if (draggedActionIndex !== null && draggedActionIndex !== idx) {
+          card.classList.add("drag-over");
+        }
+      });
+
+      card.addEventListener("dragleave", () => {
+        card.classList.remove("drag-over");
+      });
+
+      card.addEventListener("drop", (e) => {
+        e.preventDefault();
+        card.classList.remove("drag-over");
+        if (draggedActionIndex !== null && draggedActionIndex !== idx) {
+          moveAction(draggedActionIndex, idx);
+        }
+      });
+
+      card.addEventListener("dragend", () => {
+        card.classList.remove("is-dragging");
+        document.querySelectorAll(".action-item-card").forEach((c) => c.classList.remove("drag-over"));
+        draggedActionIndex = null;
+      });
+
+      actionsList.appendChild(card);
+
+      // Divider after this card (index idx + 1)
+      actionsList.appendChild(createInsertDivider(idx + 1));
     });
-
-    card.addEventListener("dragend", () => {
-      card.classList.remove("is-dragging");
-      document.querySelectorAll(".action-item-card").forEach((c) => c.classList.remove("drag-over"));
-      draggedActionIndex = null;
-    });
-
-    actionsList.appendChild(card);
-
-    // Divider after this card (index idx + 1)
-    actionsList.appendChild(createInsertDivider(idx + 1));
-  });
-}
+  }
 
 // 11. Save Plan
 async function handleSavePlan(silent = false) {
-  const slug = slugInput.value.trim() || currentSlug;
-  if (!slug) {
-    if (!silent) alert("시나리오 식별자(Slug)를 입력해주세요.");
-    return false;
-  }
-  if (!currentPlan) {
-    if (!silent) alert("저장할 플랜이 없습니다.");
-    return false;
-  }
-
-  try {
-    const res = await fetch("/api/scenarios/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, plan: currentPlan }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      if (!silent) {
-        alert(`'${slug}' 브라우징 플랜이 성공적으로 저장되었습니다!`);
+      const slug = slugInput.value.trim() || currentSlug;
+      if (!slug) {
+        if (!silent) alert("시나리오 식별자(Slug)를 입력해주세요.");
+        return false;
       }
-      fetchScenarios();
-      return true;
+      if (!currentPlan) {
+        if (!silent) alert("저장할 플랜이 없습니다.");
+        return false;
+      }
+
+      try {
+        const res = await fetch("/api/scenarios/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slug, plan: currentPlan }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (!silent) {
+            alert(`'${slug}' 브라우징 플랜이 성공적으로 저장되었습니다!`);
+          }
+          fetchScenarios();
+          return true;
+        }
+      } catch (err) {
+        if (!silent) alert("저장 실패: " + err.message);
+        return false;
+      }
+      return false;
     }
-  } catch (err) {
-    if (!silent) alert("저장 실패: " + err.message);
-    return false;
-  }
-  return false;
-}
 
 // 12. Run Pipeline (Record & Edit)
 async function handleRunPipeline() {
-  const slug = slugInput.value.trim() || currentSlug;
-  if (!slug) {
-    alert("시나리오 식별자(Slug)를 입력해주세요.");
-    return;
-  }
-
-  // 1. Fetch latest server browse-plan to ensure we don't overwrite with stale memory state
-  try {
-    const checkRes = await fetch(`/api/scenarios/${slug}`);
-    if (checkRes.ok) {
-      const details = await checkRes.json();
-      if (details && details.browsePlan && (!currentPlan || !currentPlan.actions || currentPlan.actions.length === 0)) {
-        currentPlan = details.browsePlan;
-        renderActionCards();
-      }
-    }
-  } catch (syncErr) {
-    console.warn("Could not sync server plan before run:", syncErr);
-  }
-
-  // 2. Save only if currentPlan is valid
-  if (currentPlan && currentPlan.actions && currentPlan.actions.length > 0) {
-    await handleSavePlan(true);
-  }
-
-  switchTab("tab-terminal");
-  appendTerminalLog(`🚀 '${slug}' 원클릭 자동 녹화 파이프라인 요청 중...`, "system-line");
-
-  try {
-    const res = await fetch("/api/scenarios/record", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        slug,
-        headed: headedToggle.checked,
-        login: loginToggle.checked,
-      }),
-    });
-
-    const data = await res.json();
-    if (!data.success) {
-      throw new Error(data.error);
-    }
-    terminalStatusText.textContent = `실행 중 (${slug})`;
-  } catch (err) {
-    appendTerminalLog(`❌ 파이프라인 시작 실패: ${err.message}`, "log-error");
-  }
-}
-
-// 12-2. Run Video Render (Remotion Composite)
-async function handleRenderVideo(targetSlug = null) {
-  const slug = targetSlug || slugInput.value.trim() || currentSlug || selectedScenario;
-  if (!slug) {
-    alert("렌더링할 시나리오를 선택하거나 Slug를 입력해주세요.");
-    return;
-  }
-
-  // Pre-check scenario details
-  const details = scenarioDetailsCache[slug];
-  if (details && !details.hasVideo) {
-    alert(`'${slug}' 시나리오의 원본 녹화 비디오가 없습니다.\n먼저 [원클릭 녹화 & 제작]을 실행하여 녹화를 완료해주세요.`);
-    return;
-  }
-
-  switchTab("tab-terminal");
-  appendTerminalLog(`🎞️ '${slug}' 최종 MP4 렌더링(비디오 추출) 프로세스 시작 요청 중...`, "system-line");
-
-  try {
-    const res = await fetch("/api/render/start", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug }),
-    });
-
-    const data = await res.json();
-    if (!data.success) {
-      throw new Error(data.error);
-    }
-    terminalStatusText.textContent = `렌더링 중 (${slug})`;
-  } catch (err) {
-    appendTerminalLog(`❌ 비디오 렌더링 시작 실패: ${err.message}`, "log-error");
-  }
-}
-
-// 13. SSE for Terminal Logs
-function initSSE() {
-  if (sseSource) sseSource.close();
-  sseSource = new EventSource("/api/record/stream");
-
-  sseSource.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      if (data.type === "log") {
-        let lineClass = "";
-        if (data.line.includes("[ERR]") || data.line.includes("오류") || data.line.includes("FAIL")) {
-          lineClass = "log-error";
-        } else if (data.line.includes("완료") || data.line.includes("SUCCESS")) {
-          lineClass = "log-success";
-        } else if (data.line.includes("[Sync]") || data.line.includes("보정")) {
-          lineClass = "log-sync";
-        } else if (data.line.includes("] click:") || data.line.includes("] type:")) {
-          lineClass = "log-step";
-        }
-        appendTerminalLog(data.line, lineClass);
-
-        if (data.line.includes("[Enter] 키를 눌러주세요") || data.line.includes("로그인을 완료해 주세요")) {
-          if (terminalLoginBanner) terminalLoginBanner.style.display = "flex";
-        }
-      } else if (data.type === "snapshot") {
-        if (data.task && data.task.logs) {
-          data.task.logs.forEach((l) => {
-            appendTerminalLog(l);
-            if (l.includes("[Enter] 키를 눌러주세요") || l.includes("로그인을 완료해 주세요")) {
-              if (data.task.status === "running" && terminalLoginBanner) {
-                terminalLoginBanner.style.display = "flex";
-              }
-            }
-          });
-          if (data.task.status === "running") {
-            const isRender = data.task.id && data.task.id.startsWith("render-");
-            terminalStatusText.textContent = `${isRender ? "렌더링 중" : "실행 중"} (${data.task.slug})`;
-          }
-        }
-      } else if (data.type === "status") {
-        const isRender = data.task.id && data.task.id.startsWith("render-");
-        if (data.task.status === "completed") {
-          terminalStatusText.textContent = isRender ? "렌더링 완료" : "녹화 완료";
-          if (terminalLoginBanner) terminalLoginBanner.style.display = "none";
-          fetchScenarios();
-          fetchStatus();
-          setTimeout(() => {
-            selectScenario(data.task.slug, isRender ? "rendered" : null);
-            switchTab("tab-scenarios");
-          }, 1500);
-        } else if (data.task.status === "failed") {
-          terminalStatusText.textContent = isRender ? "렌더링 실패" : "녹화 실패";
-          if (terminalLoginBanner) terminalLoginBanner.style.display = "none";
-        } else if (data.task.status === "stopped") {
-          terminalStatusText.textContent = "작업 중단됨";
-          if (terminalLoginBanner) terminalLoginBanner.style.display = "none";
-        }
-      }
-    } catch (e) {
-      console.error("SSE parse error:", e);
-    }
-  };
-}
-
-async function sendTerminalInput(input = "\n") {
-  try {
-    const res = await fetch("/api/record/input", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ input }),
-    });
-    const data = await res.json();
-    if (!data.success) {
-      appendTerminalLog(`⚠️ ${data.error || "입력 전송 실패"}`, "log-error");
-    } else {
-      if (terminalLoginBanner) terminalLoginBanner.style.display = "none";
-    }
-  } catch (err) {
-    appendTerminalLog(`⚠️ 서버 통신 오류: ${err.message}`, "log-error");
-  }
-}
-
-function appendTerminalLog(text, className = "") {
-  const line = document.createElement("div");
-  line.className = `terminal-line ${className}`;
-  line.textContent = text;
-  terminalOutput.appendChild(line);
-  terminalOutput.scrollTop = terminalOutput.scrollHeight;
-}
-
-// 14. Event Bindings
-function bindEvents() {
-  btnValidateProject.addEventListener("click", handleSaveConfig);
-  btnGenerate.addEventListener("click", handleGeneratePlan);
-  btnSavePlan.addEventListener("click", handleSavePlan);
-  btnRunPipeline.addEventListener("click", handleRunPipeline);
-  if (btnRenderVideo) {
-    btnRenderVideo.addEventListener("click", () => handleRenderVideo());
-  }
-  if (btnPlayerRender) {
-    btnPlayerRender.addEventListener("click", () => handleRenderVideo(selectedScenario));
-  }
-  if (btnModeRaw) {
-    btnModeRaw.addEventListener("click", () => setVideoMode("raw"));
-  }
-  if (btnModeRendered) {
-    btnModeRendered.addEventListener("click", () => setVideoMode("rendered"));
-  }
-
-  if (btnToggleActionSpec) {
-    btnToggleActionSpec.addEventListener("click", () => {
-      if (actionSpecBody) {
-        actionSpecBody.classList.toggle("hidden");
-        if (specToggleLabel) {
-          specToggleLabel.textContent = actionSpecBody.classList.contains("hidden") ? "▼ 펼쳐보기" : "▲ 접기";
-        }
-      }
-    });
-  }
-
-  if (btnClearPrompt) {
-    btnClearPrompt.addEventListener("click", () => {
-      promptInput.value = "";
-      slugInput.value = "";
-      promptInput.focus();
-    });
-  }
-
-  pillGw.addEventListener("click", () => {
-    switchTab("tab-generator");
-    targetProjectPathInput.focus();
-    targetProjectPathInput.select();
-  });
-
-  if (btnAddActionTop) {
-    btnAddActionTop.addEventListener("click", () => {
-      insertActionAt(0);
-    });
-  }
-
-  if (btnBlockPresets && menuBlockPresets) {
-    menuBlockPresets.classList.add("hidden");
-    btnBlockPresets.addEventListener("click", (e) => {
-      e.stopPropagation();
-      menuBlockPresets.classList.toggle("hidden");
-    });
-
-    menuBlockPresets.querySelectorAll("[data-preset]").forEach((item) => {
-      item.addEventListener("click", () => {
-        const preset = item.getAttribute("data-preset");
-        insertBlockPreset(preset);
-        menuBlockPresets.classList.add("hidden");
-      });
-    });
-
-    document.addEventListener("click", (e) => {
-      if (!btnBlockPresets.contains(e.target) && !menuBlockPresets.contains(e.target)) {
-        menuBlockPresets.classList.add("hidden");
-      }
-    });
-  }
-
-  btnAddAction.addEventListener("click", () => {
-    const targetIdx = currentPlan && currentPlan.actions ? currentPlan.actions.length : 0;
-    insertActionAt(targetIdx);
-  });
-
-  btnClearTerminal.addEventListener("click", () => {
-    terminalOutput.innerHTML = "";
-  });
-
-  btnStopTask.addEventListener("click", async () => {
-    btnStopTask.disabled = true;
-    btnStopTask.textContent = "중단 중...";
-    try {
-      await fetch("/api/scenarios/stop", { method: "POST" });
-      appendTerminalLog("⏹️ 작업 중단 요청이 전송되었습니다.", "system-line");
-    } finally {
-      setTimeout(() => {
-        btnStopTask.disabled = false;
-        btnStopTask.textContent = "⏹️ 작업 중단";
-      }, 1000);
-    }
-  });
-
-  btnSetActive.addEventListener("click", async () => {
-    if (!selectedScenario) return;
-    try {
-      const res = await fetch("/api/scenarios/activate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug: selectedScenario }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert(`'${selectedScenario}'가 Remotion의 활성 컴포지션으로 설정되었습니다!`);
-        fetchStatus();
-        fetchScenarios();
-      }
-    } catch (err) {
-      alert("활성화 실패: " + err.message);
-    }
-  });
-
-  btnReRecord.addEventListener("click", () => {
-    if (!selectedScenario) return;
-    const details = scenarioDetailsCache[selectedScenario];
-    if (details && details.browsePlan) {
-      currentPlan = details.browsePlan;
-      currentSlug = selectedScenario;
-      slugInput.value = currentSlug;
-      planSlugBadge.textContent = `시나리오: ${currentSlug}`;
-      explanationText.textContent = `기존 시나리오 '${selectedScenario}'를 불러왔습니다.`;
-      renderActionCards();
-      switchTab("tab-generator");
-    }
-  });
-
-  jsonTabBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      updateJsonViewer(btn.getAttribute("data-json"));
-    });
-  });
-
-  // Terminal Enter & Interactive Input Bindings
-  if (btnBannerEnter) {
-    btnBannerEnter.addEventListener("click", () => {
-      sendTerminalInput("\n");
-    });
-  }
-
-  if (btnTerminalSend) {
-    btnTerminalSend.addEventListener("click", () => {
-      const val = terminalInputText ? terminalInputText.value : "";
-      if (terminalInputText) terminalInputText.value = "";
-      sendTerminalInput(val ? val + "\n" : "\n");
-    });
-  }
-
-  if (terminalInputText) {
-    terminalInputText.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        const val = terminalInputText.value;
-        terminalInputText.value = "";
-        sendTerminalInput(val ? val + "\n" : "\n");
-      }
-    });
-  }
-
-  if (terminalOutput) {
-    terminalOutput.addEventListener("click", () => {
-      if (terminalInputText) terminalInputText.focus();
-    });
-  }
-
-  // Global Enter Key: if viewing Tab 3 (Terminal), pressing Enter anywhere sends Enter to the process
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      const activeEl = document.activeElement;
-      // If user is actively typing in a form input in another tab, don't intercept
-      if (
-        activeEl &&
-        (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA") &&
-        activeEl !== terminalInputText
-      ) {
+      const slug = slugInput.value.trim() || currentSlug;
+      if (!slug) {
+        alert("시나리오 식별자(Slug)를 입력해주세요.");
         return;
       }
 
-      const terminalTab = document.getElementById("tab-terminal");
-      if (terminalTab && terminalTab.classList.contains("active")) {
-        const isButton = activeEl && activeEl.tagName === "BUTTON";
-        if (!isButton) {
-          e.preventDefault();
+      // 1. Fetch latest server browse-plan to ensure we don't overwrite with stale memory state
+      try {
+        const checkRes = await fetch(`/api/scenarios/${slug}`);
+        if (checkRes.ok) {
+          const details = await checkRes.json();
+          if (details && details.browsePlan && (!currentPlan || !currentPlan.actions || currentPlan.actions.length === 0)) {
+            currentPlan = details.browsePlan;
+            renderActionCards();
+          }
+        }
+      } catch (syncErr) {
+        console.warn("Could not sync server plan before run:", syncErr);
+      }
+
+      // 1.5. Validate if any non-wait action is missing a selector
+      if (currentPlan && currentPlan.actions) {
+        const missingActions = currentPlan.actions
+          .map((a, i) => ({ act: a, index: i + 1 }))
+          .filter(({ act }) => act.type !== "wait" && (!act.selector || act.selector.trim() === ""));
+
+        if (missingActions.length > 0) {
+          const summaryList = missingActions
+            .slice(0, 3)
+            .map(({ index, act }) => `• #${index} [${act.description || act.type}]`)
+            .join("\n");
+          const moreText = missingActions.length > 3 ? ` 외 ${missingActions.length - 3}개` : "";
+
+          const proceed = confirm(
+            `⚠️ 다음 ${missingActions.length}개 액션의 셀렉터가 비어 있습니다:\n\n${summaryList}${moreText}\n\n셀렉터가 비어있어도 화면 텍스트로 자동 추론을 시도하지만, 직접 지정하는 것이 가장 정확합니다.\n\n이대로 계속 녹화를 진행하시겠습니까?`
+          );
+
+          if (!proceed) {
+            // Scroll to the first missing card and focus its selector input
+            const firstMissingIndex = missingActions[0].index - 1;
+            const targetCard = actionsList.querySelector(`[data-index="${firstMissingIndex}"]`);
+            if (targetCard) {
+              targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
+              const selInput = targetCard.querySelector('[data-field="selector"]');
+              if (selInput) {
+                setTimeout(() => selInput.focus(), 300);
+              }
+            }
+            return;
+          }
+        }
+      }
+
+      // 2. Save only if currentPlan is valid
+      if (currentPlan && currentPlan.actions && currentPlan.actions.length > 0) {
+        await handleSavePlan(true);
+      }
+
+      switchTab("tab-terminal");
+      appendTerminalLog(`🚀 '${slug}' 원클릭 자동 녹화 파이프라인 요청 중...`, "system-line");
+
+      try {
+        const res = await fetch("/api/scenarios/record", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            slug,
+            headed: headedToggle.checked,
+            login: loginToggle.checked,
+          }),
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+          throw new Error(data.error);
+        }
+        terminalStatusText.textContent = `실행 중 (${slug})`;
+      } catch (err) {
+        appendTerminalLog(`❌ 파이프라인 시작 실패: ${err.message}`, "log-error");
+      }
+    }
+
+// 12-2. Run Video Render (Remotion Composite)
+async function handleRenderVideo(targetSlug = null) {
+      const slug = targetSlug || slugInput.value.trim() || currentSlug || selectedScenario;
+      if (!slug) {
+        alert("렌더링할 시나리오를 선택하거나 Slug를 입력해주세요.");
+        return;
+      }
+
+      // Pre-check scenario details
+      const details = scenarioDetailsCache[slug];
+      if (details && !details.hasVideo) {
+        alert(`'${slug}' 시나리오의 원본 녹화 비디오가 없습니다.\n먼저 [원클릭 녹화 & 제작]을 실행하여 녹화를 완료해주세요.`);
+        return;
+      }
+
+      switchTab("tab-terminal");
+      const prevLive = terminalOutput.querySelector(".render-live-progress");
+      if (prevLive) prevLive.classList.remove("render-live-progress");
+      appendTerminalLog(`🎞️ '${slug}' 최종 MP4 렌더링(비디오 추출) 프로세스 시작 요청 중...`, "system-line");
+
+      try {
+        const res = await fetch("/api/render/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slug }),
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+          throw new Error(data.error);
+        }
+        terminalStatusText.textContent = `렌더링 중 (${slug})`;
+      } catch (err) {
+        appendTerminalLog(`❌ 비디오 렌더링 시작 실패: ${err.message}`, "log-error");
+      }
+    }
+
+// 13. SSE for Terminal Logs
+function initSSE() {
+      if (sseSource) sseSource.close();
+      sseSource = new EventSource("/api/record/stream");
+
+      sseSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "log") {
+            const isProgress =
+              data.isProgress === true ||
+              data.line.includes("비디오 프레임 렌더링:") ||
+              data.line.includes("렌더링 진행:") ||
+              (data.line.includes("frames)") && data.line.includes("%"));
+
+            if (isProgress) {
+              let liveLine = terminalOutput.querySelector(".render-live-progress");
+              if (!liveLine) {
+                liveLine = document.createElement("div");
+                liveLine.className = "terminal-line log-sync render-live-progress";
+                terminalOutput.appendChild(liveLine);
+              }
+              liveLine.textContent = data.line;
+              terminalOutput.scrollTop = terminalOutput.scrollHeight;
+            } else {
+              // If completion or failure, finalize live progress class
+              if (data.line.includes("완료") || data.line.includes("실패") || data.line.includes("중단")) {
+                const liveLine = terminalOutput.querySelector(".render-live-progress");
+                if (liveLine) {
+                  liveLine.classList.remove("render-live-progress");
+                }
+              }
+
+              let lineClass = "";
+              if (data.line.includes("[ERR]") || data.line.includes("오류") || data.line.includes("FAIL")) {
+                lineClass = "log-error";
+              } else if (data.line.includes("완료") || data.line.includes("SUCCESS")) {
+                lineClass = "log-success";
+              } else if (data.line.includes("[Sync]") || data.line.includes("보정")) {
+                lineClass = "log-sync";
+              } else if (data.line.includes("] click:") || data.line.includes("] type:")) {
+                lineClass = "log-step";
+              }
+              appendTerminalLog(data.line, lineClass);
+            }
+
+            if (data.line.includes("[Enter] 키를 눌러주세요") || data.line.includes("로그인을 완료해 주세요")) {
+              if (terminalLoginBanner) terminalLoginBanner.style.display = "flex";
+            }
+          } else if (data.type === "snapshot") {
+            if (data.task && data.task.logs) {
+              data.task.logs.forEach((l) => {
+                appendTerminalLog(l);
+                if (l.includes("[Enter] 키를 눌러주세요") || l.includes("로그인을 완료해 주세요")) {
+                  if (data.task.status === "running" && terminalLoginBanner) {
+                    terminalLoginBanner.style.display = "flex";
+                  }
+                }
+              });
+              if (data.task.status === "running") {
+                const isRender = data.task.id && data.task.id.startsWith("render-");
+                terminalStatusText.textContent = `${isRender ? "렌더링 중" : "실행 중"} (${data.task.slug})`;
+              }
+            }
+          } else if (data.type === "status") {
+            const isRender = data.task.id && data.task.id.startsWith("render-");
+            if (data.task.status === "completed") {
+              terminalStatusText.textContent = isRender ? "렌더링 완료" : "녹화 완료";
+              if (terminalLoginBanner) terminalLoginBanner.style.display = "none";
+              fetchScenarios();
+              fetchStatus();
+              setTimeout(() => {
+                selectScenario(data.task.slug, isRender ? "rendered" : null);
+                switchTab("tab-scenarios");
+              }, 1500);
+            } else if (data.task.status === "failed") {
+              terminalStatusText.textContent = isRender ? "렌더링 실패" : "녹화 실패";
+              if (terminalLoginBanner) terminalLoginBanner.style.display = "none";
+            } else if (data.task.status === "stopped") {
+              terminalStatusText.textContent = "작업 중단됨";
+              if (terminalLoginBanner) terminalLoginBanner.style.display = "none";
+            }
+          }
+        } catch (e) {
+          console.error("SSE parse error:", e);
+        }
+      };
+    }
+
+async function sendTerminalInput(input = "\n") {
+      try {
+        const res = await fetch("/api/record/input", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ input }),
+        });
+        const data = await res.json();
+        if (!data.success) {
+          appendTerminalLog(`⚠️ ${data.error || "입력 전송 실패"}`, "log-error");
+        } else {
+          if (terminalLoginBanner) terminalLoginBanner.style.display = "none";
+        }
+      } catch (err) {
+        appendTerminalLog(`⚠️ 서버 통신 오류: ${err.message}`, "log-error");
+      }
+    }
+
+function appendTerminalLog(text, className = "") {
+      const line = document.createElement("div");
+      line.className = `terminal-line ${className}`;
+      line.textContent = text;
+      terminalOutput.appendChild(line);
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    }
+
+// 14. Event Bindings
+function bindEvents() {
+      btnValidateProject.addEventListener("click", handleSaveConfig);
+      btnGenerate.addEventListener("click", handleGeneratePlan);
+      btnSavePlan.addEventListener("click", handleSavePlan);
+      btnRunPipeline.addEventListener("click", handleRunPipeline);
+      if (btnRenderVideo) {
+        btnRenderVideo.addEventListener("click", () => handleRenderVideo());
+      }
+      if (btnPlayerRender) {
+        btnPlayerRender.addEventListener("click", () => handleRenderVideo(selectedScenario));
+      }
+      if (btnModeRaw) {
+        btnModeRaw.addEventListener("click", () => setVideoMode("raw"));
+      }
+      if (btnModeRendered) {
+        btnModeRendered.addEventListener("click", () => setVideoMode("rendered"));
+      }
+
+      if (btnToggleActionSpec) {
+        btnToggleActionSpec.addEventListener("click", () => {
+          if (actionSpecBody) {
+            actionSpecBody.classList.toggle("hidden");
+            if (specToggleLabel) {
+              specToggleLabel.textContent = actionSpecBody.classList.contains("hidden") ? "▼ 펼쳐보기" : "▲ 접기";
+            }
+          }
+        });
+      }
+
+      if (btnClearPrompt) {
+        btnClearPrompt.addEventListener("click", () => {
+          promptInput.value = "";
+          slugInput.value = "";
+          promptInput.focus();
+        });
+      }
+
+      pillGw.addEventListener("click", () => {
+        switchTab("tab-generator");
+        targetProjectPathInput.focus();
+        targetProjectPathInput.select();
+      });
+
+      if (btnAddActionTop) {
+        btnAddActionTop.addEventListener("click", () => {
+          insertActionAt(0);
+        });
+      }
+
+      if (btnBlockPresets && menuBlockPresets) {
+        menuBlockPresets.classList.add("hidden");
+        btnBlockPresets.addEventListener("click", (e) => {
+          e.stopPropagation();
+          menuBlockPresets.classList.toggle("hidden");
+        });
+
+        menuBlockPresets.querySelectorAll("[data-preset]").forEach((item) => {
+          item.addEventListener("click", () => {
+            const preset = item.getAttribute("data-preset");
+            insertBlockPreset(preset);
+            menuBlockPresets.classList.add("hidden");
+          });
+        });
+
+        document.addEventListener("click", (e) => {
+          if (!btnBlockPresets.contains(e.target) && !menuBlockPresets.contains(e.target)) {
+            menuBlockPresets.classList.add("hidden");
+          }
+        });
+      }
+
+      btnAddAction.addEventListener("click", () => {
+        const targetIdx = currentPlan && currentPlan.actions ? currentPlan.actions.length : 0;
+        insertActionAt(targetIdx);
+      });
+
+      btnClearTerminal.addEventListener("click", () => {
+        terminalOutput.innerHTML = "";
+      });
+
+      btnStopTask.addEventListener("click", async () => {
+        btnStopTask.disabled = true;
+        btnStopTask.textContent = "중단 중...";
+        try {
+          await fetch("/api/scenarios/stop", { method: "POST" });
+          appendTerminalLog("⏹️ 작업 중단 요청이 전송되었습니다.", "system-line");
+        } finally {
+          setTimeout(() => {
+            btnStopTask.disabled = false;
+            btnStopTask.textContent = "⏹️ 작업 중단";
+          }, 1000);
+        }
+      });
+
+      btnSetActive.addEventListener("click", async () => {
+        if (!selectedScenario) return;
+        try {
+          const res = await fetch("/api/scenarios/activate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ slug: selectedScenario }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            alert(`'${selectedScenario}'가 Remotion의 활성 컴포지션으로 설정되었습니다!`);
+            fetchStatus();
+            fetchScenarios();
+          }
+        } catch (err) {
+          alert("활성화 실패: " + err.message);
+        }
+      });
+
+      btnReRecord.addEventListener("click", () => {
+        if (!selectedScenario) return;
+        const details = scenarioDetailsCache[selectedScenario];
+        if (details && details.browsePlan) {
+          currentPlan = details.browsePlan;
+          currentSlug = selectedScenario;
+          slugInput.value = currentSlug;
+          planSlugBadge.textContent = `시나리오: ${currentSlug}`;
+          explanationText.textContent = `기존 시나리오 '${selectedScenario}'를 불러왔습니다.`;
+          renderActionCards();
+          switchTab("tab-generator");
+        }
+      });
+
+      jsonTabBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          updateJsonViewer(btn.getAttribute("data-json"));
+        });
+      });
+
+      // Terminal Enter & Interactive Input Bindings
+      if (btnBannerEnter) {
+        btnBannerEnter.addEventListener("click", () => {
+          sendTerminalInput("\n");
+        });
+      }
+
+      if (btnTerminalSend) {
+        btnTerminalSend.addEventListener("click", () => {
           const val = terminalInputText ? terminalInputText.value : "";
           if (terminalInputText) terminalInputText.value = "";
           sendTerminalInput(val ? val + "\n" : "\n");
-        }
+        });
       }
+
+      if (terminalInputText) {
+        terminalInputText.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            const val = terminalInputText.value;
+            terminalInputText.value = "";
+            sendTerminalInput(val ? val + "\n" : "\n");
+          }
+        });
+      }
+
+      if (terminalOutput) {
+        terminalOutput.addEventListener("click", () => {
+          if (terminalInputText) terminalInputText.focus();
+        });
+      }
+
+      // Global Enter Key: if viewing Tab 3 (Terminal), pressing Enter anywhere sends Enter to the process
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const activeEl = document.activeElement;
+          // If user is actively typing in a form input in another tab, don't intercept
+          if (
+            activeEl &&
+            (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA") &&
+            activeEl !== terminalInputText
+          ) {
+            return;
+          }
+
+          const terminalTab = document.getElementById("tab-terminal");
+          if (terminalTab && terminalTab.classList.contains("active")) {
+            const isButton = activeEl && activeEl.tagName === "BUTTON";
+            if (!isButton) {
+              e.preventDefault();
+              const val = terminalInputText ? terminalInputText.value : "";
+              if (terminalInputText) terminalInputText.value = "";
+              sendTerminalInput(val ? val + "\n" : "\n");
+            }
+          }
+        }
+      });
     }
-  });
-}

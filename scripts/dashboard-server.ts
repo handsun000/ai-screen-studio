@@ -16,7 +16,7 @@ import { renderRunner } from "../src/services/renderRunner";
 import { getConfig, updateConfig, analyzeProject } from "../src/services/configManager";
 import { UNIVERSAL_TUTORIAL_TEMPLATES } from "../src/services/tutorialTemplates";
 
-dotenv.config();
+dotenv.config({ override: true });
 
 const app = express();
 const PORT = process.env.DASHBOARD_PORT || 3333;

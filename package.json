@@ -4,7 +4,7 @@
   "description": "Open-source screen recording post-production. Automatic zoom-to-click camera animations, sound effects, and polished output powered by Remotion.",
   "license": "MIT",
   "scripts": {
-    "dashboard": "tsx scripts/dashboard-server.ts",
+    "dashboard": "tsx --watch scripts/dashboard-server.ts",
     "start": "remotion studio",
     "render": "remotion render ScreenDemo",
     "record": "tsx scripts/record.ts",

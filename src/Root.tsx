@@ -3,8 +3,8 @@ import { Composition } from "remotion";
 import { ScreenDemo } from "./ScreenDemo";
 import type { EditPlan, MomentsFile } from "./types";
 
-import editPlanData from "../data/create-and-submit/edit-plan.json";
-import momentsData from "../data/create-and-submit/moments.json";
+import editPlanData from "../data/tutorial-draft/edit-plan.json";
+import momentsData from "../data/tutorial-draft/moments.json";
 
 const editPlan = editPlanData as EditPlan;
 const moments = momentsData as MomentsFile;

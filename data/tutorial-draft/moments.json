@@ -1,0 +1,431 @@
+{
+  "metadata": {
+    "url": "https://gwdev.bc.ac.kr",
+    "viewportWidth": 1920,
+    "viewportHeight": 1080,
+    "totalDurationMs": 53410,
+    "recordingStart": "2026-10-02T07:20:44.607Z",
+    "cursor": {
+      "delayMs": 800,
+      "preClickRestMs": 180
+    }
+  },
+  "moments": [
+    {
+      "id": 1,
+      "type": "wait",
+      "timestamp": 0,
+      "description": "메인 대시보드 로딩 및 시각적 앵커 대기 (Phase 1)"
+    },
+    {
+      "id": 2,
+      "type": "click",
+      "timestamp": 1826,
+      "description": "상단 GNB '결재' 메뉴 클릭 (Phase 2)",
+      "cursor": {
+        "x": 864,
+        "y": 79
+      },
+      "target": {
+        "x": 823,
+        "y": 51,
+        "width": 81,
+        "height": 55
+      }
+    },
+    {
+      "id": 3,
+      "type": "wait",
+      "timestamp": 2933,
+      "description": "전자결재 메인 화면 로딩 대기"
+    },
+    {
+      "id": 4,
+      "type": "click",
+      "timestamp": 5375,
+      "description": "좌측 사이드바 상단 '결재작성' 버튼 클릭 (Phase 3)",
+      "cursor": {
+        "x": 130,
+        "y": 148
+      },
+      "target": {
+        "x": 20,
+        "y": 124,
+        "width": 219,
+        "height": 47
+      }
+    },
+    {
+      "id": 5,
+      "type": "wait",
+      "timestamp": 6445,
+      "description": "양식 선택 목록 레이어 로딩 대기"
+    },
+    {
+      "id": 6,
+      "type": "hover",
+      "timestamp": 8250,
+      "description": "기안 양식 '테스트 양식 결재' 항목 호버",
+      "cursor": {
+        "x": 1838,
+        "y": 603
+      },
+      "target": {
+        "x": 1827,
+        "y": 592,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "id": 7,
+      "type": "click",
+      "timestamp": 9026,
+      "description": "선택한 양식의 [결재작성] 버튼 클릭",
+      "cursor": {
+        "x": 844,
+        "y": 681
+      },
+      "target": {
+        "x": 809,
+        "y": 665,
+        "width": 70,
+        "height": 32
+      }
+    },
+    {
+      "id": 8,
+      "type": "wait",
+      "timestamp": 10096,
+      "description": "기안문 작성 화면 로딩 대기"
+    },
+    {
+      "id": 9,
+      "type": "type",
+      "timestamp": 12871,
+      "description": "문서 제목 입력 ('2026 부천대 프로젝트 진행 현황 보고')",
+      "cursor": {
+        "x": 673,
+        "y": 218
+      },
+      "target": {
+        "x": 657,
+        "y": 202,
+        "width": 444,
+        "height": 32
+      },
+      "keys": "2026 부천대 프로젝트 진행 현황 보고"
+    },
+    {
+      "id": 10,
+      "type": "wait",
+      "timestamp": 14578,
+      "description": "제목 입력 확인 대기"
+    },
+    {
+      "id": 11,
+      "type": "click",
+      "timestamp": 15802,
+      "description": "우측 결재선 지정 '조직도' 아이콘 버튼 클릭",
+      "cursor": {
+        "x": 1833,
+        "y": 223
+      },
+      "target": {
+        "x": 1826,
+        "y": 216,
+        "width": 14,
+        "height": 14
+      }
+    },
+    {
+      "id": 12,
+      "type": "wait",
+      "timestamp": 16952,
+      "description": "조직도 팝업 로딩 대기"
+    },
+    {
+      "id": 13,
+      "type": "click",
+      "timestamp": 18679,
+      "description": "조직도 트리에서 '사업관리' 부서 노드 확장",
+      "cursor": {
+        "x": 613,
+        "y": 685
+      },
+      "target": {
+        "x": 605,
+        "y": 677,
+        "width": 17,
+        "height": 16
+      }
+    },
+    {
+      "id": 14,
+      "type": "wait",
+      "timestamp": 19759,
+      "description": "하위 조직원 목록 로딩 대기"
+    },
+    {
+      "id": 15,
+      "type": "scroll",
+      "timestamp": 20997,
+      "description": "조직도 목록 스크롤 다운",
+      "cursor": {
+        "x": 736,
+        "y": 569
+      },
+      "scrollDelta": {
+        "x": 0,
+        "y": 120
+      }
+    },
+    {
+      "id": 16,
+      "type": "click",
+      "timestamp": 21853,
+      "description": "조직도에서 'GW테스트02 과장' 체크박스 선택",
+      "cursor": {
+        "x": 641,
+        "y": 599
+      },
+      "target": {
+        "x": 633,
+        "y": 591,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "id": 17,
+      "type": "click",
+      "timestamp": 23185,
+      "description": "결재선에 '결재' 지정 버튼 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 569
+      },
+      "target": {
+        "x": 910,
+        "y": 554,
+        "width": 100,
+        "height": 31
+      }
+    },
+    {
+      "id": 18,
+      "type": "wait",
+      "timestamp": 24350,
+      "description": "결재자 목록 반영 확인 대기"
+    },
+    {
+      "id": 19,
+      "type": "click",
+      "timestamp": 25571,
+      "description": "결재선 설정 모달 [확인] 버튼 클릭",
+      "cursor": {
+        "x": 908,
+        "y": 818
+      },
+      "target": {
+        "x": 858,
+        "y": 800,
+        "width": 100,
+        "height": 36
+      }
+    },
+    {
+      "id": 20,
+      "type": "wait",
+      "timestamp": 26775,
+      "description": "결재선 반영 대기"
+    },
+    {
+      "id": 21,
+      "type": "click",
+      "timestamp": 28362,
+      "description": "상단 탭 중 '문서 정보' 탭 클릭",
+      "cursor": {
+        "x": 305,
+        "y": 89
+      },
+      "target": {
+        "x": 220,
+        "y": 66,
+        "width": 170,
+        "height": 46
+      }
+    },
+    {
+      "id": 22,
+      "type": "wait",
+      "timestamp": 29511,
+      "description": "문서 정보 탭 폼 로딩 대기"
+    },
+    {
+      "id": 23,
+      "type": "click",
+      "timestamp": 30930,
+      "description": "기록물철 선택 버튼 클릭",
+      "cursor": {
+        "x": 722,
+        "y": 283
+      },
+      "target": {
+        "x": 706,
+        "y": 267,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "id": 24,
+      "type": "wait",
+      "timestamp": 32047,
+      "description": "기록물철 선택 팝업 로딩 대기"
+    },
+    {
+      "id": 25,
+      "type": "type",
+      "timestamp": 33780,
+      "description": "기록물철 검색창에 '테스트' 입력",
+      "cursor": {
+        "x": 802,
+        "y": 392
+      },
+      "target": {
+        "x": 786,
+        "y": 376,
+        "width": 244,
+        "height": 32
+      },
+      "keys": "테스트"
+    },
+    {
+      "id": 26,
+      "type": "click",
+      "timestamp": 34911,
+      "description": "기록물철 검색 버튼 클릭",
+      "cursor": {
+        "x": 1044,
+        "y": 392
+      },
+      "target": {
+        "x": 1030,
+        "y": 376,
+        "width": 30,
+        "height": 32
+      }
+    },
+    {
+      "id": 27,
+      "type": "wait",
+      "timestamp": 36077,
+      "description": "기록물철 검색 결과 대기"
+    },
+    {
+      "id": 28,
+      "type": "click",
+      "timestamp": 37507,
+      "description": "검색 결과 중 '테스트용' 기록물철 항목 선택",
+      "cursor": {
+        "x": 820,
+        "y": 428
+      },
+      "target": {
+        "x": 794,
+        "y": 418,
+        "width": 52,
+        "height": 21
+      }
+    },
+    {
+      "id": 29,
+      "type": "click",
+      "timestamp": 38908,
+      "description": "기록물철 선택 팝업 [확인] 버튼 클릭",
+      "cursor": {
+        "x": 930,
+        "y": 718
+      },
+      "target": {
+        "x": 908,
+        "y": 702,
+        "width": 43,
+        "height": 32
+      }
+    },
+    {
+      "id": 30,
+      "type": "wait",
+      "timestamp": 40079,
+      "description": "기록물철 바인딩 반영 대기"
+    },
+    {
+      "id": 31,
+      "type": "click",
+      "timestamp": 41476,
+      "description": "기안문 최종 '상신' 버튼 클릭 (Phase 4)",
+      "cursor": {
+        "x": 1641,
+        "y": 97
+      },
+      "target": {
+        "x": 1585,
+        "y": 82,
+        "width": 112,
+        "height": 30
+      }
+    },
+    {
+      "id": 32,
+      "type": "wait",
+      "timestamp": 42670,
+      "description": "상신 처리 진행 대기"
+    },
+    {
+      "id": 33,
+      "type": "click",
+      "timestamp": 44382,
+      "description": "좌측 사이드바 '결재현황' 메뉴 클릭 (Phase 5)",
+      "cursor": {
+        "x": 79,
+        "y": 212
+      },
+      "target": {
+        "x": 50,
+        "y": 200,
+        "width": 58,
+        "height": 24
+      }
+    },
+    {
+      "id": 34,
+      "type": "wait",
+      "timestamp": 45473,
+      "description": "결재현황 문서 목록 로딩 대기"
+    },
+    {
+      "id": 35,
+      "type": "click",
+      "timestamp": 47715,
+      "description": "목록 최상단에 상신된 문서 클릭하여 상세 조회",
+      "cursor": {
+        "x": 763,
+        "y": 287
+      },
+      "target": {
+        "x": 654,
+        "y": 276,
+        "width": 218,
+        "height": 21
+      }
+    },
+    {
+      "id": 36,
+      "type": "wait",
+      "timestamp": 48856,
+      "description": "상신된 기안문 본문 및 결재선 확인 와이드 뷰 아웃트로"
+    }
+  ]
+}

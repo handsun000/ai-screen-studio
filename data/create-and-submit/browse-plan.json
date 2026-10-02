@@ -38,7 +38,7 @@
     {
       "type": "click",
       "description": "상단 [일정 등록] 버튼 클릭 (Phase 3)",
-      "selector": "#reg_schedule_form #savebtn, .ui-dialog:visible #savebtn, button#savebtn:visible, button:has-text('저장'):visible, button:has-text('등록'):visible"
+      "selector": "button#reg_shedule_lefttop, #reg_shedule_lefttop, button:has-text('일정 등록'):visible, button:has-text('일정등록'):visible"
     },
     {
       "type": "wait",
@@ -47,9 +47,9 @@
     },
     {
       "type": "type",
-      "description": "일정 제목에 '주간 부서 회의' 입력",
+      "description": "일정 제목에 '프로젝트 주간회의' 입력",
       "selector": "#subject:visible, input#subject, input[name*=\"subject\"]:visible",
-      "text": "주간 부서 회의"
+      "text": "프로젝트 주간회의"
     },
     {
       "type": "wait",
@@ -58,33 +58,64 @@
     },
     {
       "type": "click",
-      "description": "조직도 선택 팝업 열기 버튼 클릭",
-      "selector": "#btn_orgUIselectDialog, button:has-text(\"조직도\"), button:has(.ico_org)",
+      "description": "자원예약 사용 체크박스 선택",
+      "selector": "label:has-text('예약사용'), text='예약사용', label:has-text('예약 사용'), label[for='scd_link_res_chk'], #reg_schedule_form #scd_link_res_chk, input#scd_link_res_chk",
+      "optional": true,
+      "force": true
+    },
+    {
+      "type": "wait",
+      "description": "자원예약 연동 영역 활성화 대기",
+      "ms": 1200,
+      "optional": true
+    },
+    {
+      "type": "click",
+      "description": "자원예약 모달창 호출 버튼 클릭",
+      "selector": "button#scd_link_res_select_button, #scd_link_res_select button, button:has(.ico_plus), button:has-text('자원예약'), button:has-text('예약 선택'), button[title*='추가']",
       "optional": true
     },
     {
       "type": "wait",
-      "description": "조직도 팝업 로딩 대기",
+      "description": "자원예약 모달창 로딩 대기",
       "ms": 2000,
       "optional": true
     },
     {
       "type": "click",
-      "description": "조직도 팝업 '확인' 또는 '적용' 버튼 클릭",
+      "description": "자원예약 팝업 내 '시설' 탭 클릭",
+      "selector": ".ui-dialog:visible a:has-text('시설'), .ui-dialog:visible a:has-text('회의실'), #resSelect_resSelect a:has-text('시설'), a:has-text('시설'):visible",
+      "optional": true
+    },
+    {
+      "type": "wait",
+      "description": "시설 목록 로딩 대기",
+      "ms": 1500,
+      "optional": true
+    },
+    {
+      "type": "click",
+      "description": "시설 목록 중 첫 번째 항목 선택",
+      "selector": ":text('3층 회의실'), div:has-text('3층 회의실'):visible, li:has-text('3층 회의실'), .ui-dialog:visible div[class*='lst'] > *:first-child, .ui-dialog:visible ul > li:first-child, .ui-dialog:visible table tr:first-child",
+      "optional": true
+    },
+    {
+      "type": "click",
+      "description": "자원예약 팝업 [확인] 버튼 클릭",
       "selector": "button#link_res_confirm, .ui-dialog:visible button#link_res_confirm, .ui-dialog:visible button:has-text('확인'), button:has-text('확인'):visible",
       "optional": true
     },
     {
       "type": "wait",
-      "description": "조직도 반영 대기",
+      "description": "자원예약 선택 반영 대기",
       "ms": 1500,
       "optional": true
     },
     {
       "type": "type",
-      "description": "일정 내용 필드에 '이번 주 주요 업무 진행 상황 공유 및 이슈 논의' 입력",
+      "description": "일정 내용 필드에 '금주 주요 개발 일정 및 이슈 공유 회의입니다.' 입력",
       "selector": "#cn:visible, textarea:visible, textarea[placeholder*=\"내용\"]",
-      "text": "이번 주 주요 업무 진행 상황 공유 및 이슈 논의"
+      "text": "금주 주요 개발 일정 및 이슈 공유 회의입니다."
     },
     {
       "type": "wait",
@@ -115,7 +146,7 @@
     {
       "type": "click",
       "description": "등록된 일정 상세 확인을 위해 캘린더 내 생성된 일정 항목 클릭 (Phase 5)",
-      "selector": "#reg_schedule_form #savebtn, .ui-dialog:visible #savebtn, button#savebtn:visible, button:has-text('저장'):visible, button:has-text('등록'):visible",
+      "selector": "button#reg_shedule_lefttop, #reg_shedule_lefttop, button:has-text('일정 등록'):visible, button:has-text('일정등록'):visible",
       "optional": true
     },
     {

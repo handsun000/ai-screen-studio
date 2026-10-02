@@ -13,6 +13,7 @@ export interface BrowsePlanAction {
   ms?: number;
   js?: string;
   description: string;
+  cursorOffset?: { x: number; y: number };
 }
 
 export interface CursorSettings {

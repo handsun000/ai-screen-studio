@@ -9,6 +9,9 @@ export interface RenderTask {
   slug: string;
   status: "running" | "completed" | "failed" | "stopped";
   logs: string[];
+  progressPercent?: number;
+  currentFrame?: number;
+  totalFrames?: number;
   startTime: number;
   endTime?: number;
   outputFile?: string;
@@ -132,9 +135,87 @@ class RenderRunner extends EventEmitter {
 
     this.childProcess = child;
 
+    let isRenderingFrames = false;
+    let lastLoggedPercent = -1;
+    let lastLogTime = 0;
+    let stdoutBuffer = "";
+
     child.stdout.on("data", (data) => {
-      const text = data.toString("utf-8");
-      this.log(text.trimEnd());
+      const rawText = data.toString("utf-8");
+      stdoutBuffer += rawText;
+
+      // Split by newline or carriage return (\r is heavily used by Remotion for in-place CLI progress)
+      const chunks = stdoutBuffer.split(/[\r\n]+/);
+      if (!rawText.endsWith("\n") && !rawText.endsWith("\r")) {
+        stdoutBuffer = chunks.pop() || "";
+      } else {
+        stdoutBuffer = "";
+      }
+
+      for (const rawLine of chunks) {
+        // Strip ANSI escape codes
+        const line = rawLine.replace(/\u001b\[[0-9;]*[a-zA-Z]/g, "").trim();
+        if (!line) continue;
+
+        // Detect transition from bundling to actual video frame rendering
+        if (line.includes("Composition ") || line.includes("Concurrency ") || line.includes("Codec ")) {
+          isRenderingFrames = true;
+          lastLoggedPercent = -1;
+          this.log(line);
+          continue;
+        }
+
+        // Check if line contains frame/percent progress indicators
+        const percentMatch = line.match(/(\d+(?:\.\d+)?)%/);
+        const frameMatch = line.match(/(\d+)\s*(?:\/|of)\s*(\d+)/i);
+
+        if (isRenderingFrames && (frameMatch || percentMatch)) {
+          let percent = 0;
+          let currentFrame = 0;
+          let totalFrames = 0;
+
+          if (frameMatch) {
+            currentFrame = parseInt(frameMatch[1], 10);
+            totalFrames = parseInt(frameMatch[2], 10);
+            if (totalFrames > 0) {
+              percent = Math.round((currentFrame / totalFrames) * 100);
+            }
+          } else if (percentMatch) {
+            percent = Math.round(parseFloat(percentMatch[1]));
+          }
+
+          if (this.currentTask) {
+            this.currentTask.progressPercent = percent;
+            if (currentFrame > 0) this.currentTask.currentFrame = currentFrame;
+            if (totalFrames > 0) this.currentTask.totalFrames = totalFrames;
+          }
+
+          const now = Date.now();
+          // Update in-place single-line progress smoothly: at least 1% change or every 500ms
+          if (
+            percent > lastLoggedPercent ||
+            now - lastLogTime >= 500 ||
+            percent === 100
+          ) {
+            lastLoggedPercent = percent;
+            lastLogTime = now;
+            const filled = Math.min(20, Math.max(0, Math.round((percent / 100) * 20)));
+            const empty = 20 - filled;
+            const bar = `[${"█".repeat(filled)}${"░".repeat(empty)}]`;
+            const frameInfo = totalFrames > 0 ? ` (${currentFrame}/${totalFrames} frames)` : "";
+            this.log(`🎞️ 비디오 프레임 렌더링: ${bar} ${percent}%${frameInfo}`, true);
+          }
+          continue;
+        }
+
+        // Before frame rendering (Webpack bundling progress): ignore raw percent lines to avoid false 100%
+        if (!isRenderingFrames && percentMatch) {
+          continue;
+        }
+
+        // Informational lines (bundling, audio, completion, etc.) are logged normally
+        this.log(line);
+      }
     });
 
     child.stderr.on("data", (data) => {
@@ -184,6 +265,7 @@ class RenderRunner extends EventEmitter {
         const stat = fs.statSync(outputFilePath);
         const sizeMb = (stat.size / (1024 * 1024)).toFixed(2);
         this.currentTask.status = "completed";
+        this.currentTask.progressPercent = 100;
         this.currentTask.outputSizeBytes = stat.size;
         this.log(`\n🎉 [렌더링 완료!] 최종 비디오 파일이 성공적으로 추출되었습니다!`);
         this.log(`  * 파일 경로: ${outputFilePath} (${sizeMb} MB)`);
@@ -241,13 +323,27 @@ class RenderRunner extends EventEmitter {
     return false;
   }
 
-  private log(message: string) {
+  private log(message: string, isProgress = false) {
     if (!this.currentTask) return;
     const lines = message.split("\n");
     for (const line of lines) {
       if (!line.trim()) continue;
-      this.currentTask.logs.push(line);
-      this.emit("log", { taskId: this.currentTask.id, line });
+      if (isProgress) {
+        const lastIdx = this.currentTask.logs.length - 1;
+        if (
+          lastIdx >= 0 &&
+          (this.currentTask.logs[lastIdx].includes("비디오 프레임 렌더링:") ||
+            this.currentTask.logs[lastIdx].includes("렌더링 진행:"))
+        ) {
+          this.currentTask.logs[lastIdx] = line;
+        } else {
+          this.currentTask.logs.push(line);
+        }
+        this.emit("log", { taskId: this.currentTask.id, line, isProgress: true });
+      } else {
+        this.currentTask.logs.push(line);
+        this.emit("log", { taskId: this.currentTask.id, line, isProgress: false });
+      }
     }
   }
 }

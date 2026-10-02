@@ -122,9 +122,15 @@ export const MASTER_DIRECTING_GUIDELINES = `
    - 영상 시작 시 반드시 최소 **2.5초 ~ 3.5초간의 대기('wait')**를 두어 시청자가 "여기가 어디 화면인지" 전체 대시보드를 파악할 시간을 줍니다.
    - 갑자기 0초부터 마우스가 순간이동하거나 줌인이 들어가면 안 됩니다.
 
-2. **메뉴 이동 (Phase 2: Intentional Navigation)**
-   - 목표 화면으로 이동하기 위해 GNB, 사이드바, 또는 바로가기 메뉴를 클릭합니다.
-   - **중요**: 메뉴 클릭으로 새 페이지나 대메뉴가 로딩될 때는, 카메라가 와이드 뷰를 유지할 수 있도록 description에 "이동", "페이지", "메뉴" 등의 키워드를 명시하고, 클릭 직후 **2.5초 ~ 4.0초간의 로딩 대기('wait')**를 부여하십시오.
+2. **메뉴 이동 (Phase 2: Intentional Navigation - 🚨 숨겨진 포탈 전체메뉴 서랍 원칙)**
+   - **엔터프라이즈 포탈 필수 상식**: 포탈/그룹웨어 메인 대시보드에서는 세부 업무 메뉴(일정관리, 전자결재, 문서관리, 게시판, 자원예약, 스마트워크 등)가 상단 GNB 바에 직접 노출되어 있지 않고, **[포탈 전체메뉴](\`button.btn_svc_open\`) 서랍(Drawer) 안에 숨겨져 있습니다.**
+   - 따라서 숨겨진 메뉴를 클릭하기 전에 반드시 **[포탈 전체메뉴] 버튼을 먼저 클릭하여 서랍을 펼쳐야 합니다**:
+     ① \`click\`: \`button.btn_svc_open:visible, button[title='포탈 전체메뉴'], .btn_svc_open:visible\` (상단 '포탈 전체메뉴' 버튼 클릭)
+     ② \`wait\`: \`1000ms ~ 1500ms\` (전체메뉴 서랍 레이어 펼침 대기)
+     ③ \`click\`: \`#svc_box a:has-text("메뉴명"), a:has-text("메뉴명"):visible\` (펼쳐진 서랍 내 목표 메뉴 클릭)
+     ④ \`wait\`: \`2500ms ~ 3500ms\` (목표 화면 전체 로딩 대기)
+   - 🚨 **절대 금지**: [포탈 전체메뉴]를 열지 않고 곧바로 숨겨져 있는 \`a:has-text("일정관리")\`나 \`#svc_lst a:has-text("일정")\`를 단독 클릭하려 하지 마십시오! 메뉴가 화면에 노출되지 않은 상태(display: none)여서 브라우저가 요소를 찾지 못해 100% 타임아웃 오류가 발생합니다!
+   - 메뉴 클릭으로 새 페이지나 대메뉴가 로딩될 때는, 카메라가 와이드 뷰를 유지할 수 있도록 description에 "이동", "페이지", "메뉴" 등의 키워드를 명시하고, 클릭 직후 **2.5초 ~ 4.0초간의 로딩 대기('wait')**를 부여하십시오.
 
 3. **조작 및 폼 입력 (Phase 3: Focused Interaction)**
    - 본문 내 버튼 클릭(예: [신규 작성], [등록]) 후 폼 화면으로 이동합니다.
@@ -153,8 +159,42 @@ export const MASTER_DIRECTING_GUIDELINES = `
    - 팝업/모달 내 목록 첫 번째 항목: \`.ui-dialog:visible div[class*="lst"] > *:first-child, .ui-dialog:visible ul > li:first-child, .ui-dialog:visible tr:first-child\`
    - CSS 셀렉터와 텍스트 매칭을 쉼표(,)로 결합:
      예: \`#svc_lst a:has-text("결재"), a:has-text("결재"):visible, [title*="결재"]\`
-2. **입력 필드 및 버튼 추론 (충돌 방지 원칙)**:
-   - **[절대 금지: 임의의 가상 ID 생성 금지]**: \`#_USE_RESOURCE_\`, \`#_OPEN_RESOURCE_BTN_\`, \`#_SUBJECT_\`, \`#_CONTENTS_\`, \`#_SAVE_BTN_\` 같은 가상의 대문자 ID를 절대로 생성하지 마십시오. 실제 DOM에 존재하지 않아 100% 녹화가 중단됩니다. 실제 ID를 모르면 항상 한글 텍스트 매칭(\`:has-text(...)\`)과 표준 HTML 태그(\`input\`, \`textarea\`, \`button\`)를 사용하십시오!
+
+1-1. **🎯 정밀 말단 셀렉터 원칙 (Atomic Interactive Selector Rule - 마우스 좌표 오차 방지 필수 규칙)**:
+   - 마우스 커서의 이동 및 카메라 줌인 좌표는 Playwright가 측정한 셀렉터의 중심점으로 계산됩니다.
+   - ❌ **[절대 금지: 넓은 부모 컨테이너 셀렉터 지정 금지]**:
+     \`div.btn_area\`, \`div.btn_box\`, \`form#reg_form\`, \`ul.menu_lst\`, \`tr.item\`, \`div#header\`, 넓은 \`label\` 전체
+     (이유: 가로/세로가 넓은 컨테이너 중앙을 잡으면 버튼이 아닌 빈 여백 허공에 마우스가 가서 클릭하는 심각한 오차가 발생합니다!)
+   - ✅ **[필수 준수: 사용자가 손가락으로 누르는 실제 인터랙티브 엘리먼트 지정]**:
+     - 버튼: \`button:has-text("저장")\`, \`button#reg_shedule_lefttop\`, \`button.btn_save\`, \`input[type='submit']\`
+     - 메뉴/링크: \`a:has-text("일정관리")\`, \`a.menu_item\`, \`#svc_box a:has-text("일정관리")\`
+     - 입력 필드: \`input#subject:visible\`, \`textarea#cn:visible\`
+     - 체크박스: \`label:has-text("예약사용")\`, \`input#scd_link_res_chk\`
+     - 팝업/모달 확인: \`.ui-dialog:visible button:has-text("확인")\`
+
+1-2. **엔터프라이즈 그룹웨어 주요 인터랙션 고정밀 셀렉터 퀵 레퍼런스**:
+   - 좌측 일정 등록 버튼: \`button#reg_shedule_lefttop, #reg_shedule_lefttop, #snb button:has-text('일정 등록'):visible, button:has-text('일정 등록'):visible\`
+   - 모달 내 일정 제목: \`#reg_schedule_form #subject, .ui-dialog:visible #subject, input#subject:visible\`
+   - 모달 내 일정 내용: \`textarea:visible, textarea[placeholder*='내용'], #reg_schedule_form #cn, .ui-dialog:visible #cn\`
+   - 모달 내 최종 저장 버튼: \`#reg_schedule_form #savebtn, .ui-dialog:visible #savebtn, button#savebtn:visible, .ui-dialog:visible button:has-text('저장'):visible\`
+   - 조직도/결재선 팝업 호출: \`button:has(.ico_org), button:has-text("조직도"), button:has-text("결재선")\`
+   - 자원예약 사용 체크박스: \`label:has-text("예약사용"), text="예약사용", input#scd_link_res_chk\`
+
+1-3. **🎯 다중 버튼 충돌 방지 및 영역 스코핑 원칙 (Disambiguation by Contextual Scope)**:
+   - 엔터프라이즈 포탈/웹앱에는 동일한 텍스트('저장', '등록', '확인', '닫기')나 아이콘을 가진 버튼이 상단 헤더, 좌측 사이드바, 본문 툴바, 팝업 모달 등 여러 곳에 동시에 존재할 수 있습니다.
+   - 따라서 모호하게 \`button:has-text('저장')\`만 쓰면 엉뚱한 헤더나 배경의 버튼이 클릭될 위험이 있습니다.
+   - **반드시 해당 버튼이 위치한 화면 영역을 접두어로 결합하여 100% 특정하십시오**:
+     - 🪟 팝업/모달 내부 버튼: \`.ui-dialog:visible button:has-text('저장'), .ui-dialog:visible #savebtn, .modal:visible button:has-text('확인')\`
+     - 👈 좌측 사이드바 버튼: \`#snb button:has-text('일정 등록'), #left button:has-text('등록'), aside button:has-text('글작성')\`
+     - 🔝 상단 헤더/GNB 버튼: \`header button.btn_svc_open, .gnb button[title='포탈 전체메뉴']\`
+     - 📄 본문/목록 툴바 버튼: \`#content .btn_area button:has-text('등록'), .list_container button:has-text('삭제')\`
+
+2. **입력 필드 및 버튼 추론 (무추측 & 사용자 입력 가이드 원칙)**:
+   - **[🚨 절대 금지: 임의의 가상 ID 생성 금지]**: \`#_USE_RESOURCE_\`, \`#_OPEN_RESOURCE_BTN_\`, \`#_SUBJECT_\`, \`#_CONTENTS_\`, \`#_SAVE_BTN_\`, \`#_DOC_TITLE_\` 또는 소스코드에 존재하지 않는 \`#btn_orgUIselectDialog\` 같은 가상의 영어 ID를 절대로 생성하지 마십시오. 실제 DOM에 존재하지 않아 10초 타임아웃에 빠지고 전체 녹화가 실패합니다!
+   - **[💡 모르면 솔직하게 비워두거나 텍스트 매칭 사용]**:
+     1) 눈에 보이는 한글 텍스트 매칭을 사용하십시오: 예) \`button:has-text("일정 등록"):visible\`, \`button:has-text("저장"):visible\`, \`label:has-text("예약사용")\`
+     2) 텍스트 매칭도 불확실하거나 소스코드에서 ID를 전혀 찾지 못한 특수 버튼/필드는 **\`"selector": ""\` (빈 문자열)로 비워두십시오!**
+     3) \`selector: ""\`로 비워둔 항목은 \`explanation\`에 "⚠️ [N단계: OO 버튼]의 정확한 셀렉터를 찾지 못해 비워두었으니, 대시보드에서 직접 입력해주세요"라고 친절히 안내하십시오. 대시보드 UI가 해당 액션에 경고 배지와 강조 표시를 달아주므로 사용자가 손쉽게 1초 만에 입력할 수 있습니다!
    - **모달/레이어 팝업 내부 요소**: 팝업이나 다이얼로그 안의 요소는 반드시 \`.ui-dialog:visible\`, 특정 form id, 또는 \`:visible\`을 명시하십시오.
      예: \`.ui-dialog:visible #subject, #reg_schedule_form #subject, #subject:visible\`
    - **[주의 - 상단 검색창 충돌 방지]**: \`input[placeholder*="제목"]\` 같은 모호한 선택자는 상단 GNB 검색창(\`placeholder="제목, 내용, 첨부파일명"\`)과 매칭되어 다이얼로그 오버레이에 가로막히므로 단독으로 쓰지 마십시오.
@@ -180,7 +220,7 @@ export const MASTER_DIRECTING_GUIDELINES = `
 - 버튼 클릭 후 처리 대기: \`1500ms ~ 2500ms\`
 - 영상 엔딩 마무리: \`3000ms\`
 - 뷰포트: \`{ "width": 1920, "height": 1080 }\`
-- 커서 딜레이: \`{ "delayMs": 800, "preClickRestMs": 180 }\`
+- 커서 딜레이: \`{ "delayMs": 0, "preClickRestMs": 120 }\`
 
 ---
 

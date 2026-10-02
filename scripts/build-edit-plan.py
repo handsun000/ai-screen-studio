@@ -280,7 +280,10 @@ edit_plan = {
 }
 
 if "cursor" in metadata and metadata["cursor"]:
-    edit_plan["cursor"] = metadata["cursor"]
+    cursor_cfg = dict(metadata["cursor"])
+    if cursor_cfg.get("delayMs") in (800, -700):
+        cursor_cfg["delayMs"] = 0
+    edit_plan["cursor"] = cursor_cfg
 
 out_path = data_dir / "edit-plan.json"
 with open(out_path, "w", encoding="utf-8") as f:

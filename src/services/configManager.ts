@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ override: true });
 
 const ENV_FILE_PATH = path.resolve(__dirname, "..", "..", ".env");
 

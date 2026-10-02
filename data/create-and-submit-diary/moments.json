@@ -1,0 +1,325 @@
+{
+  "metadata": {
+    "url": "https://gwdev.bc.ac.kr",
+    "viewportWidth": 1920,
+    "viewportHeight": 1080,
+    "totalDurationMs": 58128,
+    "recordingStart": "2026-10-02T04:25:47.316Z",
+    "cursor": {
+      "delayMs": 800,
+      "preClickRestMs": 180
+    }
+  },
+  "moments": [
+    {
+      "id": 1,
+      "type": "wait",
+      "timestamp": 0,
+      "description": "메인 포털 대시보드 진입 및 시각적 앵커 대기 (Phase 1)"
+    },
+    {
+      "id": 2,
+      "type": "click",
+      "timestamp": 213,
+      "description": "전체 메뉴",
+      "cursor": {
+        "x": 1366,
+        "y": 83
+      },
+      "target": {
+        "x": 1343,
+        "y": 60,
+        "width": 45,
+        "height": 45
+      }
+    },
+    {
+      "id": 3,
+      "type": "click",
+      "timestamp": 1583,
+      "description": "상단 GNB '일정관리' 메뉴 클릭 (Phase 2)",
+      "cursor": {
+        "x": 1158,
+        "y": 332
+      },
+      "target": {
+        "x": 1069,
+        "y": 317,
+        "width": 177,
+        "height": 30
+      }
+    },
+    {
+      "id": 4,
+      "type": "wait",
+      "timestamp": 3701,
+      "description": "일정관리 메인 화면 및 캘린더 로딩 대기"
+    },
+    {
+      "id": 5,
+      "type": "click",
+      "timestamp": 5947,
+      "description": "좌측 사이드바 상단 [일정 등록] 버튼 클릭 (Phase 3)",
+      "cursor": {
+        "x": 130,
+        "y": 148
+      },
+      "target": {
+        "x": 20,
+        "y": 124,
+        "width": 219,
+        "height": 47
+      }
+    },
+    {
+      "id": 6,
+      "type": "wait",
+      "timestamp": 7006,
+      "description": "일정 등록 모달 다이얼로그 로딩 대기"
+    },
+    {
+      "id": 7,
+      "type": "type",
+      "timestamp": 8742,
+      "description": "일정 제목 필드에 '프로젝트 주간회의' 입력",
+      "cursor": {
+        "x": 704,
+        "y": 140
+      },
+      "target": {
+        "x": 688,
+        "y": 124,
+        "width": 480,
+        "height": 32
+      },
+      "keys": "프로젝트 주간회의"
+    },
+    {
+      "id": 8,
+      "type": "wait",
+      "timestamp": 9828,
+      "description": "제목 입력 확인 대기"
+    },
+    {
+      "id": 9,
+      "type": "click",
+      "timestamp": 10848,
+      "description": "기간 시작일 기본 설정 확인",
+      "cursor": {
+        "x": 746,
+        "y": 189
+      },
+      "target": {
+        "x": 688,
+        "y": 173,
+        "width": 115,
+        "height": 32
+      }
+    },
+    {
+      "id": 10,
+      "type": "wait",
+      "timestamp": 11994,
+      "description": "기간 필드 확인 대기"
+    },
+    {
+      "id": 11,
+      "type": "click",
+      "timestamp": 13039,
+      "description": "자원예약 [예약사용] 체크박스 선택",
+      "cursor": {
+        "x": 726,
+        "y": 494
+      },
+      "target": {
+        "x": 688,
+        "y": 484,
+        "width": 75,
+        "height": 20
+      }
+    },
+    {
+      "id": 12,
+      "type": "wait",
+      "timestamp": 14098,
+      "description": "자원예약 선택 영역 활성화 대기"
+    },
+    {
+      "id": 13,
+      "type": "click",
+      "timestamp": 15536,
+      "description": "자원 선택 [추가] 버튼 클릭",
+      "cursor": {
+        "x": 1335,
+        "y": 564
+      },
+      "target": {
+        "x": 1319,
+        "y": 548,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "id": 14,
+      "type": "wait",
+      "timestamp": 16652,
+      "description": "자원예약 선택 모달 레이어 로딩 대기"
+    },
+    {
+      "id": 15,
+      "type": "click",
+      "timestamp": 18702,
+      "description": "자원예약 모달 내 '시설' 탭 클릭",
+      "cursor": {
+        "x": 607,
+        "y": 306
+      },
+      "target": {
+        "x": 581,
+        "y": 286,
+        "width": 52,
+        "height": 40
+      }
+    },
+    {
+      "id": 16,
+      "type": "wait",
+      "timestamp": 19798,
+      "description": "시설 자원 목록 로딩 대기"
+    },
+    {
+      "id": 17,
+      "type": "click",
+      "timestamp": 21288,
+      "description": "시설 목록 중 첫 번째 자원 항목 선택",
+      "cursor": {
+        "x": 960,
+        "y": 483
+      },
+      "target": {
+        "x": 531,
+        "y": 442,
+        "width": 858,
+        "height": 81
+      }
+    },
+    {
+      "id": 18,
+      "type": "wait",
+      "timestamp": 22388,
+      "description": "자원 선택 확인 대기"
+    },
+    {
+      "id": 19,
+      "type": "click",
+      "timestamp": 23436,
+      "description": "자원예약 모달 [확인] 버튼 클릭",
+      "cursor": {
+        "x": 1224,
+        "y": 281
+      },
+      "target": {
+        "x": 1208,
+        "y": 265,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "id": 20,
+      "type": "wait",
+      "timestamp": 26473,
+      "description": "자원예약 반영 및 일정 상세 모달 복귀 대기"
+    },
+    {
+      "id": 21,
+      "type": "type",
+      "timestamp": 28212,
+      "description": "일정 내용 필드에 '금주 주요 개발 일정 및 이슈 공유 회의입니다.' 입력",
+      "cursor": {
+        "x": 577,
+        "y": 557
+      },
+      "target": {
+        "x": 561,
+        "y": 522,
+        "width": 798,
+        "height": 70
+      },
+      "keys": "금주 주요 개발 일정 및 이슈 공유 회의입니다."
+    },
+    {
+      "id": 22,
+      "type": "wait",
+      "timestamp": 30079,
+      "description": "내용 입력 확인 대기"
+    },
+    {
+      "id": 23,
+      "type": "click",
+      "timestamp": 31110,
+      "description": "일정 등록 모달 최종 [저장] 버튼 클릭 (Phase 4)",
+      "cursor": {
+        "x": 930,
+        "y": 657
+      },
+      "target": {
+        "x": 902,
+        "y": 639,
+        "width": 56,
+        "height": 36
+      }
+    },
+    {
+      "id": 24,
+      "type": "wait",
+      "timestamp": 42173,
+      "description": "저장 처리 및 데이터 반영 대기"
+    },
+    {
+      "id": 25,
+      "type": "click",
+      "timestamp": 44215,
+      "description": "등록 완료 안내 팝업 [확인] 클릭 (표시 시)",
+      "cursor": {
+        "x": 930,
+        "y": 702
+      },
+      "target": {
+        "x": 902,
+        "y": 684,
+        "width": 56,
+        "height": 36
+      }
+    },
+    {
+      "id": 26,
+      "type": "wait",
+      "timestamp": 47243,
+      "description": "캘린더 메인 화면 갱신 대기"
+    },
+    {
+      "id": 27,
+      "type": "click",
+      "timestamp": 49303,
+      "description": "캘린더 내 등록된 '프로젝트 주간회의' 일정 확인 클릭 (Phase 5)",
+      "cursor": {
+        "x": 130,
+        "y": 148
+      },
+      "target": {
+        "x": 20,
+        "y": 124,
+        "width": 219,
+        "height": 47
+      }
+    },
+    {
+      "id": 28,
+      "type": "wait",
+      "timestamp": 52338,
+      "description": "등록된 일정 결과 확인 및 영상 마무리 아웃트로 대기"
+    }
+  ]
+}

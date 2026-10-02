@@ -1,0 +1,202 @@
+{
+  "url": "https://gwdev.bc.ac.kr",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "requiresLogin": true,
+  "cursor": {
+    "delayMs": 800,
+    "preClickRestMs": 180
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "description": "메인 대시보드 로딩 및 시각적 앵커 대기 (Phase 1)",
+      "ms": 2500
+    },
+    {
+      "type": "click",
+      "description": "상단 GNB '결재' 메뉴 클릭 (Phase 2)",
+      "selector": "#svc_lst a[onclick*=\"gapMain\"], #svc_lst a:has-text(\"결재\"), a:has-text(\"전자결재\"):visible"
+    },
+    {
+      "type": "wait",
+      "description": "전자결재 메인 화면 로딩 대기",
+      "ms": 2000
+    },
+    {
+      "type": "click",
+      "description": "좌측 사이드바 상단 '결재작성' 버튼 클릭 (Phase 3)",
+      "selector": "button#gapLeft_workWriteBtn, #gapLeft_workWriteBtn, button:has-text(\"결재작성\"):visible"
+    },
+    {
+      "type": "wait",
+      "description": "양식 선택 목록 레이어 로딩 대기",
+      "ms": 1500
+    },
+    {
+      "type": "hover",
+      "description": "기안 양식 '테스트 양식 결재' 항목 호버",
+      "selector": "#gapWorkSelect_workList li:has-text(\"테스트 양식 결재\"), li:has-text(\"테스트 양식 결재\")"
+    },
+    {
+      "type": "click",
+      "description": "선택한 양식의 [결재작성] 버튼 클릭",
+      "selector": "#gapWorkSelect_workList li:has-text(\"테스트 양식 결재\") button._writeBtn, #gapWorkSelect_workList li:has-text(\"테스트 양식 결재\") button:has-text(\"작성\")"
+    },
+    {
+      "type": "wait",
+      "description": "기안문 작성 화면 로딩 대기",
+      "ms": 2500
+    },
+    {
+      "type": "type",
+      "description": "문서 제목 입력 ('2026 부천대 프로젝트 진행 현황 보고')",
+      "selector": "input#docTitle:visible, [title*=\"문서제목\"] input, input[name*=\"title\"]:visible, input[placeholder*=\"제목\"]:visible",
+      "iframe": "iframe[name*=\"gapDocReg_docBox\"], iframe[src*=\"frmFormletUiFrame\"]",
+      "text": "2026 부천대 프로젝트 진행 현황 보고"
+    },
+    {
+      "type": "wait",
+      "description": "제목 입력 확인 대기",
+      "ms": 1000
+    },
+    {
+      "type": "click",
+      "description": "우측 결재선 지정 '조직도' 아이콘 버튼 클릭",
+      "selector": "button.has(.ico_org), a.has(.ico_org), .ico_org, button:has-text(\"조직도\"):visible"
+    },
+    {
+      "type": "wait",
+      "description": "조직도 팝업 로딩 대기",
+      "ms": 1500
+    },
+    {
+      "type": "click",
+      "description": "조직도 트리에서 '사업관리' 부서 노드 확장",
+      "selector": ".ui-dialog:visible .dynatree-node:has(a.dynatree-title:has-text(\"사업관리\")) .dynatree-expander, .ui-dialog:visible .dynatree-node:has(a[title*=\"사업관리\"]) .dynatree-expander",
+      "optional": true
+    },
+    {
+      "type": "wait",
+      "description": "하위 조직원 목록 로딩 대기",
+      "ms": 1200
+    },
+    {
+      "type": "scroll",
+      "description": "조직도 목록 스크롤 다운",
+      "selector": ".ui-dialog:visible .dynatree-container",
+      "deltaY": 120,
+      "optional": true
+    },
+    {
+      "type": "click",
+      "description": "조직도에서 'GW테스트02 과장' 체크박스 선택",
+      "selector": ".ui-dialog:visible span.dynatree-node:has(span.name:has-text(\"GW테스트02 과장\")) span.dynatree-checkbox, .ui-dialog:visible span.dynatree-node:has(a.dynatree-title:has-text(\"GW테스트02 과장\")) span.dynatree-checkbox, .ui-dialog:visible label:has-text(\"GW테스트02 과장\")",
+      "force": true
+    },
+    {
+      "type": "click",
+      "description": "결재선에 '결재' 지정 버튼 클릭",
+      "selector": ".ui-dialog:visible button:has-text(\"결재\"):not(:has-text(\"작성\")), .ui-dialog:visible button._addApp"
+    },
+    {
+      "type": "wait",
+      "description": "결재자 목록 반영 확인 대기",
+      "ms": 1000
+    },
+    {
+      "type": "click",
+      "description": "결재선 설정 모달 [확인] 버튼 클릭",
+      "selector": ".ui-dialog:visible button._confirmBtn, .ui-dialog:visible button:has-text(\"확인\")"
+    },
+    {
+      "type": "wait",
+      "description": "결재선 반영 대기",
+      "ms": 1200
+    },
+    {
+      "type": "click",
+      "description": "상단 탭 중 '문서 정보' 탭 클릭",
+      "selector": "#gapDocReg_docInfoTab, a:has-text(\"문서 정보\")"
+    },
+    {
+      "type": "wait",
+      "description": "문서 정보 탭 폼 로딩 대기",
+      "ms": 1200
+    },
+    {
+      "type": "click",
+      "description": "기록물철 선택 버튼 클릭",
+      "selector": "button#gapDocReg_bindBtn, tr:has-text(\"기록물철\") button, #gapDocReg_bindBtn"
+    },
+    {
+      "type": "wait",
+      "description": "기록물철 선택 팝업 로딩 대기",
+      "ms": 1500
+    },
+    {
+      "type": "type",
+      "description": "기록물철 검색창에 '테스트' 입력",
+      "selector": "input#gapBindTree_searchText, .ui-dialog:visible input[placeholder*=\"검색\"], .ui-dialog:visible input.input_txt",
+      "text": "테스트"
+    },
+    {
+      "type": "click",
+      "description": "기록물철 검색 버튼 클릭",
+      "selector": "button#gapBindTree_searchBtn, .ui-dialog:visible button:has-text(\"검색\")"
+    },
+    {
+      "type": "wait",
+      "description": "기록물철 검색 결과 대기",
+      "ms": 1200
+    },
+    {
+      "type": "click",
+      "description": "검색 결과 중 '테스트용' 기록물철 항목 선택",
+      "selector": "#gapBindTree_searchResult a:has-text(\"테스트용\"), .ui-dialog:visible a.bindItem:has-text(\"테스트용\"), .ui-dialog:visible a:has-text(\"테스트용\")"
+    },
+    {
+      "type": "click",
+      "description": "기록물철 선택 팝업 [확인] 버튼 클릭",
+      "selector": "button#gapBindTree_cfrmBtn, .ui-dialog:visible button:has-text(\"확인\"):visible",
+      "optional": true
+    },
+    {
+      "type": "wait",
+      "description": "기록물철 바인딩 반영 대기",
+      "ms": 1200
+    },
+    {
+      "type": "click",
+      "description": "기안문 최종 '상신' 버튼 클릭 (Phase 4)",
+      "selector": "button._draftBtn:visible, button:has-text(\"상신\"):visible"
+    },
+    {
+      "type": "wait",
+      "description": "상신 처리 진행 대기",
+      "ms": 1500
+    },
+    {
+      "type": "click",
+      "description": "좌측 사이드바 '결재현황' 메뉴 클릭 (Phase 5)",
+      "selector": "a.dynatree-title:has-text(\"결재현황\"), #gapLeft_menuTree a:has-text(\"결재현황\"), a:has-text(\"결재현황\"):visible"
+    },
+    {
+      "type": "wait",
+      "description": "결재현황 문서 목록 로딩 대기",
+      "ms": 1800
+    },
+    {
+      "type": "click",
+      "description": "목록 최상단에 상신된 문서 클릭하여 상세 조회",
+      "selector": "table tbody tr:first-child .els a, table tbody tr:first-child a.sub_tp, table tbody tr:first-child .els"
+    },
+    {
+      "type": "wait",
+      "description": "상신된 기안문 본문 및 결재선 확인 와이드 뷰 아웃트로",
+      "ms": 2500
+    }
+  ]
+}

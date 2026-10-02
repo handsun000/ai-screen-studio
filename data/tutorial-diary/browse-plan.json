@@ -1,0 +1,205 @@
+{
+  "url": "https://gwdev.bc.ac.kr",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "requiresLogin": true,
+  "cursor": {
+    "delayMs": 800,
+    "preClickRestMs": 180
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "description": "메인 대시보드 로딩 및 시각적 앵커 대기 (Phase 1)",
+      "ms": 3000
+    },
+    {
+      "type": "click",
+      "description": "상단 GNB 포탈 전체메뉴 서랍 버튼 클릭",
+      "selector": "button.btn_svc_open:visible, .btn_svc_open:visible, button[title='포탈 전체메뉴']"
+    },
+    {
+      "type": "wait",
+      "description": "전체메뉴 레이어 서랍 펼침 대기",
+      "ms": 1200
+    },
+    {
+      "type": "click",
+      "description": "서랍 메뉴 내 '일정관리' 클릭 (Phase 2)",
+      "selector": "#svc_box a:has-text(\"일정관리\"), #svc_box a:has-text(\"일정\"), a:has-text(\"일정관리\"):visible"
+    },
+    {
+      "type": "wait",
+      "description": "일정관리 캘린더 메인 화면 로딩 대기",
+      "ms": 3000
+    },
+    {
+      "type": "click",
+      "description": "좌측 사이드바 상단 [일정 등록] 버튼 클릭 (Phase 3)",
+      "selector": "button#reg_shedule_lefttop, #reg_shedule_lefttop, #snb button:has-text('일정 등록'):visible, button:has-text('일정 등록'):visible",
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "wait",
+      "description": "일정 간편등록 모달창 렌더링 대기",
+      "ms": 1800,
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "click",
+      "description": "일정 제목 입력 필드 포커스",
+      "selector": "#reg_schedule_form #subject, .ui-dialog:visible #subject, input#subject:visible",
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "type",
+      "description": "일정 제목에 '프로젝트 주간회의' 입력",
+      "selector": "#reg_schedule_form #subject, .ui-dialog:visible #subject, input#subject:visible",
+      "iframe": "iframe#subBody",
+      "text": "프로젝트 주간회의"
+    },
+    {
+      "type": "wait",
+      "description": "제목 입력 확인 대기",
+      "ms": 1000,
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "click",
+      "description": "기간 설정 확인 (오늘 날짜 시작일 필드)",
+      "selector": "#reg_schedule_form #startDate1, input#startDate1:visible, input[name='startDate1']:visible",
+      "iframe": "iframe#subBody",
+      "optional": true
+    },
+    {
+      "type": "wait",
+      "description": "기간 설정 확인 대기",
+      "ms": 800,
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "click",
+      "description": "자원예약 사용 체크박스 선택",
+      "selector": "label:has-text('예약사용'), text='예약사용', label:has-text('예약 사용'), label[for='scd_link_res_chk'], #reg_schedule_form #scd_link_res_chk, input#scd_link_res_chk",
+      "iframe": "iframe#subBody",
+      "force": true
+    },
+    {
+      "type": "wait",
+      "description": "자원예약 추가 영역 활성화 대기",
+      "ms": 1200,
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "click",
+      "description": "자원예약 선택 모달창 호출 버튼 클릭",
+      "selector": "button#scd_link_res_select_button, #scd_link_res_select button, button:has-text('자원예약'), button:has-text('예약 선택'), button[title*='추가'], button.has(.ico_plus)",
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "wait",
+      "description": "자원예약 선택 대화상자 로딩 대기",
+      "ms": 1800,
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "click",
+      "description": "자원예약 팝업 내 '시설' 탭 클릭",
+      "selector": ".ui-dialog:visible a:has-text('시설'), .ui-dialog:visible a:has-text('회의실'), #resSelect_resSelect a:has-text('시설'), a:has-text('시설'):visible",
+      "iframe": "iframe#subBody",
+      "optional": true
+    },
+    {
+      "type": "wait",
+      "description": "시설 자원 목록 로딩 대기",
+      "ms": 1200,
+      "iframe": "iframe#subBody",
+      "optional": true
+    },
+    {
+      "type": "click",
+      "description": "자원 목록 중 첫 번째 시설 항목 선택",
+      "selector": ".ui-dialog:visible div[class*='lst'] > *:first-child, .ui-dialog:visible ul > li:first-child, .ui-dialog:visible table tr:first-child, .ui-dialog:visible input[type='checkbox']:first-of-type, .ui-dialog:visible input[type='radio']:first-of-type",
+      "iframe": "iframe#subBody",
+      "force": true
+    },
+    {
+      "type": "wait",
+      "description": "시설 항목 선택 확인 대기",
+      "ms": 800,
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "click",
+      "description": "자원예약 모달창 [확인] 버튼 클릭",
+      "selector": "button#link_res_confirm, .ui-dialog:visible button#link_res_confirm, .ui-dialog:visible button:has-text('확인'), button:has-text('확인'):visible",
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "wait",
+      "description": "선택된 자원 정보 메인 폼 반영 대기",
+      "ms": 1200,
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "click",
+      "description": "일정 내용 텍스트 영역 포커스",
+      "selector": "#reg_schedule_form #cn, .ui-dialog:visible #cn, textarea#cn:visible, textarea:visible",
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "type",
+      "description": "일정 내용 필드에 '금주 주요 개발 일정 및 이슈 공유 회의입니다.' 입력",
+      "selector": "#reg_schedule_form #cn, .ui-dialog:visible #cn, textarea#cn:visible, textarea:visible",
+      "iframe": "iframe#subBody",
+      "text": "금주 주요 개발 일정 및 이슈 공유 회의입니다."
+    },
+    {
+      "type": "wait",
+      "description": "내용 입력 완료 확인 대기",
+      "ms": 1000,
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "click",
+      "description": "일정 등록 모달 [저장] 버튼 클릭 (Phase 4)",
+      "selector": "#reg_schedule_form #savebtn, .ui-dialog:visible #savebtn, button#savebtn:visible, .ui-dialog:visible button:has-text('저장'):visible",
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "wait",
+      "description": "저장 처리 및 확인 팝업 대기",
+      "ms": 1500,
+      "iframe": "iframe#subBody",
+      "optional": true
+    },
+    {
+      "type": "click",
+      "description": "저장 완료 안내 팝업 [확인] 버튼 클릭 (표시 시)",
+      "selector": ".ui-dialog:visible button:has-text('확인'), button:has-text('확인'):visible",
+      "iframe": "iframe#subBody",
+      "optional": true
+    },
+    {
+      "type": "wait",
+      "description": "캘린더 그리드 일정 렌더링 갱신 대기",
+      "ms": 2500,
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "click",
+      "description": "등록된 일정 상세 확인을 위해 캘린더 내 등록된 일정 클릭 (Phase 5)",
+      "selector": ".fc-event:has-text('프로젝트 주간회의'), a:has-text('프로젝트 주간회의'):visible, .fc-event:visible:first-child",
+      "iframe": "iframe#subBody",
+      "optional": true
+    },
+    {
+      "type": "wait",
+      "description": "등록된 일정 상세 및 캘린더 와이드 뷰 확인 후 아웃트로 마무리",
+      "ms": 3000,
+      "iframe": "iframe#subBody"
+    }
+  ]
+}

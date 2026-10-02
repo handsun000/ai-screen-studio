@@ -53,7 +53,7 @@
     {
       "type": "type",
       "iframe": "iframe[name*=\"gapDocReg_docBox\"], iframe[src*=\"frmFormletUiFrame\"]",
-      "selector": "input#_DOC_TITLE_, [title*=\"문서제목\"] input",
+      "selector": "input#docTitle:visible, [title*=\"문서제목\"] input, input[name*=\"title\"]:visible, input[placeholder*=\"제목\"]:visible",
       "text": "테스트 문서",
       "description": "문서제목 입력 ('테스트 문서')"
     },
