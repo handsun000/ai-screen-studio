@@ -5,10 +5,6 @@
     "height": 1080
   },
   "requiresLogin": true,
-  "cursor": {
-    "delayMs": 800,
-    "preClickRestMs": 180
-  },
   "actions": [
     {
       "type": "wait",

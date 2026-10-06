@@ -28,7 +28,6 @@
     {
       "type": "click",
       "selector": "#layout_content .dynatree-title:has-text(\"부서 문서함\"), .snb_lst a:has-text(\"부서 문서함\")",
-      "optional": true,
       "description": "좌측 사이드바 '부서 문서함' 트리 노드 클릭"
     },
     {
@@ -39,7 +38,6 @@
     {
       "type": "click",
       "selector": "#layout_content .dynatree-title:has-text(\"업무자료함\"), .snb_lst a:has-text(\"업무자료함\")",
-      "optional": true,
       "description": "좌측 사이드바 '업무자료함' 트리 노드 클릭"
     },
     {
@@ -74,7 +72,6 @@
     {
       "type": "click",
       "selector": "input[name*=\"openRange\"], input#openScopePub, label:has-text(\"부서원공개\"), label:has-text(\"전체공개\")",
-      "optional": true,
       "description": "문서 공개 범위 및 열람 권한 설정 체크"
     },
     {
@@ -95,9 +92,11 @@
     {
       "type": "type",
       "selector": "input[type=\"search\"], input[name*=\"search\"], input[placeholder*=\"검색\"]",
-      "text": "업무 추진 계획서",
+      "text": "실시간 실제 목록 데이터",
+      "useScraped": "auto",
+      "dynamicStrategy": "first-row-title",
       "ms": 1000,
-      "description": "Phase 5: 문서 목록 상단 검색창에 '업무 추진 계획서' 키워드 입력"
+      "description": "Phase 5: 문서 목록 상단 검색창에 화면 실제 문서 데이터 자동 입력"
     },
     {
       "type": "click",
@@ -111,8 +110,8 @@
     },
     {
       "type": "click",
-      "selector": "#layout_content table tbody tr:first-child a, .list_block a:has-text(\"업무 추진 계획서\")",
-      "optional": true,
+      "selector": "#layout_content table tbody tr:first-child a, .list_block a, table tbody tr:first-child a",
+      "useScraped": "auto",
       "description": "검색 결과 목록에서 등록된 문서 상세 팝업 열기"
     },
     {

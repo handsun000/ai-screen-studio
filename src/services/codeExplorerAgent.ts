@@ -39,15 +39,43 @@ export function createCodeExplorerTools(projectRoot: string) {
       const keyword = (args.keyword || "").trim().toLowerCase();
       const fileType = (args.fileType || "all").trim().toLowerCase();
 
+      // Map common module names to actual enterprise directory names
+      const moduleAliases: Record<string, string[]> = {
+        mail: ["eml", "mail"],
+        email: ["eml", "mail"],
+        eml: ["eml", "mail"],
+        schedule: ["scd", "schedule"],
+        calendar: ["scd", "schedule"],
+        scd: ["scd", "schedule"],
+        note: ["not", "note"],
+        not: ["not", "note"],
+        app: ["app", "eapp", "approval"],
+        approval: ["app", "eapp", "approval"],
+        eapp: ["app", "eapp", "approval"],
+        doc: ["doc", "document"],
+        document: ["doc", "document"],
+        board: ["board", "brd"],
+        brd: ["board", "brd"],
+        work: ["work", "smw", "wor"],
+        smw: ["work", "smw", "wor"],
+        attend: ["attend", "atn"],
+        atn: ["attend", "atn"],
+        res: ["res", "rmg"],
+        rmg: ["res", "rmg"],
+      };
+
       // Priority search roots
       const candidateRoots: string[] = [];
       if (moduleName) {
-        candidateRoots.push(
-          path.join(normalizedRoot, "naon-module-web", "src", "main", "webapp", "resources", "biz", "gw", moduleName),
-          path.join(normalizedRoot, "naon-module-web", "src", "main", "webapp", "jsp", "biz", "gw", moduleName),
-          path.join(normalizedRoot, "src", "main", "webapp", "resources", "biz", "gw", moduleName),
-          path.join(normalizedRoot, "src", "main", "webapp", "jsp", "biz", "gw", moduleName)
-        );
+        const targetMods = moduleAliases[moduleName] || [moduleName];
+        for (const mod of targetMods) {
+          candidateRoots.push(
+            path.join(normalizedRoot, "naon-module-web", "src", "main", "webapp", "resources", "biz", "gw", mod),
+            path.join(normalizedRoot, "naon-module-web", "src", "main", "webapp", "jsp", "biz", "gw", mod),
+            path.join(normalizedRoot, "src", "main", "webapp", "resources", "biz", "gw", mod),
+            path.join(normalizedRoot, "src", "main", "webapp", "jsp", "biz", "gw", mod)
+          );
+        }
       } else {
         candidateRoots.push(
           path.join(normalizedRoot, "naon-module-web", "src", "main", "webapp", "resources", "biz", "gw"),

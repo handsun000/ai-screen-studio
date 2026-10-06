@@ -1,0 +1,161 @@
+{
+  "totalDurationFrames": 2992,
+  "fps": 60,
+  "defaultZoom": 1.0,
+  "segments": [
+    {
+      "momentId": 2,
+      "startFrame": 220,
+      "endFrame": 250,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 965,
+        "y": 79
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (965, 79)"
+    },
+    {
+      "momentId": 4,
+      "startFrame": 415,
+      "endFrame": 445,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 130,
+        "y": 148
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (130, 148)"
+    },
+    {
+      "momentId": 6,
+      "startFrame": 613,
+      "endFrame": 643,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 1860,
+        "y": 184
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (1860, 184)"
+    },
+    {
+      "momentId": 8,
+      "startFrame": 892,
+      "endFrame": 922,
+      "speed": 1.0,
+      "zoom": 1.4,
+      "zoomTarget": {
+        "x": 173,
+        "y": 183
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Typing: GW\ud14c\uc2a4\ud2b802"
+    },
+    {
+      "momentId": 10,
+      "startFrame": 1072,
+      "endFrame": 1102,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 1860,
+        "y": 184
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (1860, 184)"
+    },
+    {
+      "momentId": 12,
+      "startFrame": 1379,
+      "endFrame": 1409,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 1860,
+        "y": 184
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (1860, 184)"
+    },
+    {
+      "momentId": 14,
+      "startFrame": 1532,
+      "endFrame": 1562,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 1139,
+        "y": 115
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (1139, 115)"
+    },
+    {
+      "momentId": 16,
+      "startFrame": 1681,
+      "endFrame": 1711,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 929,
+        "y": 540
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (929, 540)"
+    },
+    {
+      "momentId": 18,
+      "startFrame": 1874,
+      "endFrame": 1904,
+      "speed": 1.0,
+      "zoom": 1.4,
+      "zoomTarget": {
+        "x": 171,
+        "y": 268
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Typing: [\uc5c5\ubb34 \ud611\uc870] \ucc28\uc138\ub300 \uc2dc\uc2a4\ud15c \uad6c\ucd95 \uad00\ub828 \uc77c\uc815 \uc548\ub0b4 \ubc0f "
+    },
+    {
+      "momentId": 20,
+      "startFrame": 2125,
+      "endFrame": 2155,
+      "speed": 1.0,
+      "zoom": 1.4,
+      "zoomTarget": {
+        "x": 0,
+        "y": 151
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Typing: \uc548\ub155\ud558\uc138\uc694, GW\ud14c\uc2a4\ud2b802 \ub2f4\ub2f9\uc790\ub2d8.\n\uae08\uc8fc \uc9c4\ud589 \uc608\uc815\uc778"
+    },
+    {
+      "momentId": 22,
+      "startFrame": 2512,
+      "endFrame": 2542,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 45,
+        "y": 65
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (45, 65)"
+    }
+  ]
+}

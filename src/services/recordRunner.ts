@@ -48,7 +48,8 @@ class RecordRunner extends EventEmitter {
     const rootDir = path.resolve(__dirname, "..", "..");
     this.log(`🚀 [시작] '${slug}' 자동 녹화 및 후가공 파이프라인 시작 (tsx ${args.join(" ")})`);
 
-    const child = spawn("npx", ["tsx", ...args], {
+    const command = `npx tsx ${args.join(" ")}`;
+    const child = spawn(command, {
       cwd: rootDir,
       shell: true,
       env: { ...process.env, FORCE_COLOR: "1" },

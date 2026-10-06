@@ -31,6 +31,12 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
     const desc = action.description || "";
     let sel = action.selector || "";
 
+    // 0. Ensure wait actions do NOT have selectors
+    if (action.type === "wait") {
+      delete action.selector;
+      sel = "";
+    }
+
     // 1. Syntax & Escaping Normalization
     if (action.selector) {
       const original = action.selector;
@@ -58,6 +64,90 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         changes.push(`[문법 교정] 셀렉터 정규화: "${original}" -> "${action.selector}"`);
         fixedActionsCount++;
       }
+
+      // Strip invalid jQuery pseudo-classes :first / :last in CSS (strictly preserving standard :first-child / :last-child)
+      if (action.selector.includes(":first") || action.selector.includes(":last")) {
+        const cleaned = action.selector
+          .replace(/:first(?!\-child|\-of\-type)\b/g, "")
+          .replace(/:last(?!\-child|\-of\-type)\b/g, "")
+          .replace(/,\s*,/g, ",")
+          .trim();
+        if (cleaned !== action.selector) {
+          changes.push(`[문법 교정] jQuery 의사클래스(:first/:last) 제거: "${action.selector}" -> "${cleaned}"`);
+          action.selector = cleaned;
+          fixedActionsCount++;
+        }
+      }
+
+      sel = action.selector;
+    }
+
+    // 1-B. Universal Tree / Folder / Category Selection Dialog Leaf Node Resolution
+    const isModalContext = desc.includes("팝업") || desc.includes("모달") || desc.includes("다이얼로그") || sel.includes(".ui-dialog") || sel.includes(".modal") || isInsideModal;
+    const isSidebarNavigation = desc.includes("좌측") || desc.includes("사이드바") || desc.includes("둘러보기") || sel.includes("#snb") || sel.includes("#left") || sel.includes(".snb");
+
+    if (
+      action.type === "click" &&
+      !desc.includes("확인") &&
+      isModalContext &&
+      !isSidebarNavigation &&
+      (desc.includes("노드") || desc.includes("트리") || desc.includes("폴더") || desc.includes("분류") || desc.includes("문서함") || desc.includes("게시판") || desc.includes("캘린더") || desc.includes("선택"))
+    ) {
+      const original = action.selector;
+      action.selector = ".ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:not(:has(ul)) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:last-child a.dynatree-title:visible, .ui-dialog:visible [class*='tree'] .dynatree-node:not(.dynatree-folder) a:visible, .ui-dialog:visible [class*='tree'] li:last-child a:visible, .ui-dialog:visible .dynatree-container a.dynatree-title:visible";
+      changes.push(`[정제] 트리/폴더 선택 모달 최상위 비등록 폴더 제외 및 말단 리프 노드 셀렉터 보강: "${original}" -> "${action.selector}"`);
+      fixedActionsCount++;
+      sel = action.selector;
+    }
+
+    // 1-B2. Universal Dialog Confirm / Apply Button
+    if (
+      action.type === "click" &&
+      (desc.includes("확인") || desc.includes("선택 완료") || desc.includes("적용")) &&
+      (isModalContext || sel.includes("confirm") || sel.includes("Confirm"))
+    ) {
+      action.selector = ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, button[id*='confirm']:visible, button[id*='Confirm']:visible, .ui-dialog:visible button.btn_pri:visible, .ui-dialog:visible button._confirm:visible";
+      delete action.iframe;
+      sel = action.selector;
+    }
+
+    if (sel.includes("tr-child") || sel.includes("tr:first-child-child")) {
+      action.selector = sel.replace(/tr-child/g, "tr:first-child").replace(/tr:first-child-child/g, "tr:first-child");
+      sel = action.selector;
+    }
+
+    if (sel.includes("li:last-child-child") || sel.includes("li-child") || sel.includes("li:first-child-child")) {
+      action.selector = sel.replace(/li:last-child-child/g, "li:last-child").replace(/li-child/g, "li:last-child").replace(/li:first-child-child/g, "li:first-child");
+      sel = action.selector;
+    }
+
+    if (sel.includes("-child-child")) {
+      action.selector = sel.replace(/:first-child-child/g, ":first-child").replace(/:last-child-child/g, ":last-child");
+      sel = action.selector;
+    }
+
+    // 1-C. Editor Content Body Targeting (Strictly target editable canvas, avoid title inputs and toolbars)
+    if (
+      action.type === "type" &&
+      (desc.includes("내용") || desc.includes("본문") || desc.includes("content") || desc.includes("사유") || desc.includes("메모") || desc.includes("상세")) &&
+      !desc.includes("제목") &&
+      !sel.includes("contenteditable") &&
+      !sel.includes("textarea") &&
+      !sel.includes(".note-editable")
+    ) {
+      action.selector = `${sel} div[contenteditable='true']:visible, ${sel} textarea:visible, div[contenteditable='true']:visible, textarea:visible, .note-editable:visible`;
+      sel = action.selector;
+    }
+
+    // 1-D. Universal List Detail Click Dual Compatibility (Table & Vertical Split View)
+    if (
+      action.type === "click" &&
+      (desc.includes("상세") || desc.includes("조회") || desc.includes("항목") || desc.includes("결과")) &&
+      (desc.includes("클릭") || desc.includes("선택") || desc.includes("열람")) &&
+      !sel.includes("lst_vr") &&
+      !sel.includes("sub_tp")
+    ) {
+      action.selector = `${sel}, table.tbl_lst tbody tr:first-child td.sub a:visible, table tbody tr:first-child td[class*='sub'] a:visible, table tbody tr:first-child a:visible, ul.lst_vr_ul li:first-child a.sub_tp:visible, ul.lst_vr_ul li:first-child .sub a:visible, ul[id*='List'] li:first-child a.sub_tp:visible, ul[class*='lst'] li:first-child a:visible, .lst_type1 li:first-child a:visible`;
       sel = action.selector;
     }
 
@@ -137,13 +227,11 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       action.force = true;
     }
 
-    // 9. Optional confirmation alert handling
-    if (desc.includes("확인") && (desc.includes("팝업") || desc.includes("안내") || desc.includes("알림창") || desc.includes("표시 시"))) {
-      if (!action.optional) {
-        action.optional = true;
-        changes.push(`[안전 강화] 완료 확인 팝업 단계에 optional: true 부여: "${desc}"`);
-        fixedActionsCount++;
-      }
+    // 9. Strip any legacy 'optional' (skip) flag - all actions must be executed without skipping
+    if ((action as any).optional !== undefined) {
+      delete (action as any).optional;
+      changes.push(`[정제] 건너뛰기(optional) 플래그 제거: "${desc}" (전체 단계 필수 실행 보장)`);
+      fixedActionsCount++;
     }
 
     // 10. Clean stray text attribute from non-type actions
@@ -157,6 +245,19 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
     }
 
     sanitizedActions.push(action);
+  }
+
+  // 11. Mandatory Condition Audit for Registration / Creation scenarios
+  const hasSubmitAction = sanitizedActions.some(
+    (a) => a.type === "click" && (a.description?.includes("저장") || a.description?.includes("상신") || a.description?.includes("등록"))
+  );
+  if (hasSubmitAction) {
+    const hasTitleInput = sanitizedActions.some(
+      (a) => a.type === "type" && (a.description?.includes("제목") || a.description?.includes("명칭") || a.selector?.includes("subject") || a.selector?.includes("title"))
+    );
+    if (!hasTitleInput) {
+      changes.push(`[⚠️ 등록 필수 조건 점검] 등록/저장 시나리오에 '제목 입력' 액션이 감지되지 않았습니다. 필수값 유효성 검사 alert 통과를 위해 제목 입력을 추가하십시오.`);
+    }
   }
 
   return {

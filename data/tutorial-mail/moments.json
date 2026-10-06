@@ -1,0 +1,274 @@
+{
+  "metadata": {
+    "url": "https://gwdev.bc.ac.kr",
+    "viewportWidth": 1920,
+    "viewportHeight": 1080,
+    "totalDurationMs": 49863,
+    "recordingStart": "2026-10-05T15:31:53.687Z"
+  },
+  "moments": [
+    {
+      "id": 1,
+      "type": "wait",
+      "timestamp": 1418,
+      "description": "메인 대시보드 로딩 및 앵커 대기 (Phase 1)"
+    },
+    {
+      "id": 2,
+      "type": "click",
+      "timestamp": 3662,
+      "description": "상단 GNB '전자우편' 메뉴 클릭 (Phase 2)",
+      "cursor": {
+        "x": 965,
+        "y": 79
+      },
+      "target": {
+        "x": 908,
+        "y": 51,
+        "width": 113,
+        "height": 55
+      }
+    },
+    {
+      "id": 3,
+      "type": "wait",
+      "timestamp": 4784,
+      "description": "전자우편 메인 화면 로딩 대기"
+    },
+    {
+      "id": 4,
+      "type": "click",
+      "timestamp": 6924,
+      "description": "좌측 사이드바 [편지쓰기] 버튼 클릭 (Phase 3)",
+      "cursor": {
+        "x": 130,
+        "y": 148
+      },
+      "target": {
+        "x": 20,
+        "y": 124,
+        "width": 219,
+        "height": 47
+      }
+    },
+    {
+      "id": 5,
+      "type": "wait",
+      "timestamp": 8209,
+      "description": "메일 작성 화면 로딩 대기"
+    },
+    {
+      "id": 6,
+      "type": "click",
+      "timestamp": 10216,
+      "description": "받는 사람 항목 옆 [조직도] 버튼 클릭",
+      "cursor": {
+        "x": 1860,
+        "y": 184
+      },
+      "target": {
+        "x": 1843,
+        "y": 168,
+        "width": 34,
+        "height": 32
+      }
+    },
+    {
+      "id": 7,
+      "type": "wait",
+      "timestamp": 11597,
+      "description": "조직도 팝업 다이얼로그 표시 대기"
+    },
+    {
+      "id": 8,
+      "type": "type",
+      "timestamp": 14866,
+      "description": "조직도 검색창에 'GW테스트02' 입력",
+      "cursor": {
+        "x": 173,
+        "y": 183
+      },
+      "target": {
+        "x": 157,
+        "y": 171,
+        "width": 470,
+        "height": 23
+      },
+      "keys": "GW테스트02"
+    },
+    {
+      "id": 9,
+      "type": "wait",
+      "timestamp": 16469,
+      "description": "검색어 입력 후 대기"
+    },
+    {
+      "id": 10,
+      "type": "click",
+      "timestamp": 17869,
+      "description": "조직도 검색 버튼 클릭",
+      "cursor": {
+        "x": 1860,
+        "y": 184
+      },
+      "target": {
+        "x": 1843,
+        "y": 168,
+        "width": 34,
+        "height": 32
+      }
+    },
+    {
+      "id": 11,
+      "type": "wait",
+      "timestamp": 18957,
+      "description": "검색 결과 사원 목록 렌더링 대기"
+    },
+    {
+      "id": 12,
+      "type": "click",
+      "timestamp": 22990,
+      "description": "검색 결과에서 'GW테스트02' 사원 체크박스 선택",
+      "cursor": {
+        "x": 1860,
+        "y": 184
+      },
+      "target": {
+        "x": 1843,
+        "y": 168,
+        "width": 34,
+        "height": 32
+      }
+    },
+    {
+      "id": 13,
+      "type": "wait",
+      "timestamp": 24032,
+      "description": "사원 선택 상태 확인 대기"
+    },
+    {
+      "id": 14,
+      "type": "click",
+      "timestamp": 25527,
+      "description": "수신 대상에 [받는사람]으로 추가 버튼 클릭",
+      "cursor": {
+        "x": 1139,
+        "y": 115
+      },
+      "target": {
+        "x": 1113,
+        "y": 102,
+        "width": 52,
+        "height": 26
+      }
+    },
+    {
+      "id": 15,
+      "type": "wait",
+      "timestamp": 26608,
+      "description": "수신 목록 추가 반영 대기"
+    },
+    {
+      "id": 16,
+      "type": "click",
+      "timestamp": 28020,
+      "description": "조직도 팝업 [확인] 버튼 클릭",
+      "cursor": {
+        "x": 929,
+        "y": 540
+      },
+      "target": {
+        "x": 899,
+        "y": 523,
+        "width": 59,
+        "height": 34
+      }
+    },
+    {
+      "id": 17,
+      "type": "wait",
+      "timestamp": 29558,
+      "description": "조직도 팝업 닫힘 및 수신자 태그 반영 대기"
+    },
+    {
+      "id": 18,
+      "type": "type",
+      "timestamp": 31235,
+      "description": "메일 제목 입력",
+      "cursor": {
+        "x": 171,
+        "y": 268
+      },
+      "target": {
+        "x": 155,
+        "y": 252,
+        "width": 1656,
+        "height": 32
+      },
+      "keys": "[업무 협조] 차세대 시스템 구축 관련 일정 안내 및 자료 공유 건"
+    },
+    {
+      "id": 19,
+      "type": "wait",
+      "timestamp": 33860,
+      "description": "제목 입력 확인 대기"
+    },
+    {
+      "id": 20,
+      "type": "type",
+      "timestamp": 35424,
+      "description": "메일 본문 내용 작성",
+      "cursor": {
+        "x": 0,
+        "y": 151
+      },
+      "target": {
+        "x": 0,
+        "y": 0,
+        "width": 302,
+        "height": 302
+      },
+      "keys": "안녕하세요, GW테스트02 담당자님.\n금주 진행 예정인 차세대 시스템 세부 일정 및 사전 검토 자료를 전달드립니다.\n확인 후 피드백 부탁드립니다.\n감사합니다."
+    },
+    {
+      "id": 21,
+      "type": "wait",
+      "timestamp": 40235,
+      "description": "본문 내용 입력 확인 대기"
+    },
+    {
+      "id": 22,
+      "type": "click",
+      "timestamp": 41860,
+      "description": "상단 툴바 [보내기] 버튼 클릭 (Phase 4)",
+      "cursor": {
+        "x": 45,
+        "y": 65
+      },
+      "target": {
+        "x": 10,
+        "y": 50,
+        "width": 70,
+        "height": 30
+      }
+    },
+    {
+      "id": 23,
+      "type": "wait",
+      "timestamp": 42950,
+      "description": "메일 발송 처리 및 완료 대기 (Phase 5)"
+    },
+    {
+      "id": 24,
+      "type": "click",
+      "timestamp": 45713,
+      "description": "발송 완료 알림 팝업 [확인] 클릭 (표시 시)"
+    },
+    {
+      "id": 25,
+      "type": "wait",
+      "timestamp": 46121,
+      "description": "보낸편지함 또는 완료 화면 와이드 뷰 확인 및 아웃트로 마무리"
+    }
+  ]
+}

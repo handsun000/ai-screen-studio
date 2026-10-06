@@ -52,6 +52,7 @@ export const ScreenDemo: React.FC<ScreenDemoProps> = ({
           {showCursor && (
             <SyntheticCursor
               moments={moments.moments}
+              metadata={moments.metadata}
               editPlan={editPlan}
               windowWidth={WINDOW_WIDTH}
               windowHeight={WINDOW_HEIGHT}

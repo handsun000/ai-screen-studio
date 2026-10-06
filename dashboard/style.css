@@ -49,6 +49,11 @@ body {
   flex-direction: column;
 }
 
+/* Utility Classes */
+.hidden {
+  display: none !important;
+}
+
 /* App Container */
 .app-container {
   display: flex;
@@ -1858,6 +1863,11 @@ textarea {
   border-top: 1px solid rgba(14, 165, 233, 0.2);
   max-height: 380px;
   overflow-y: auto;
+}
+
+.action-spec-body.hidden,
+.action-spec-card.hidden {
+  display: none !important;
 }
 
 .action-spec-content {

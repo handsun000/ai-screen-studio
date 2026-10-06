@@ -125,9 +125,10 @@ class RenderRunner extends EventEmitter {
       "--gl=angle",
     ];
 
-    this.log(`  * 실행 커맨드: npx ${args.join(" ")}`);
+    const command = `npx ${args.join(" ")}`;
+    this.log(`  * 실행 커맨드: ${command}`);
 
-    const child = spawn("npx", args, {
+    const child = spawn(command, {
       cwd: rootDir,
       shell: true,
       env: { ...process.env, FORCE_COLOR: "1" },

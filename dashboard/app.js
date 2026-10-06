@@ -688,7 +688,6 @@ function createDefaultAction(type = "click", description = "새 액션") {
     type,
     selector: "",
     description,
-    optional: false,
     force: false,
   };
 }
@@ -920,8 +919,7 @@ function renderActionCards() {
 
       <div class="action-options-row">
         <div class="action-checkboxes">
-          <label><input type="checkbox" data-field="optional" ${act.optional ? "checked" : ""}> Optional (실패해도 계속)</label>
-          <label><input type="checkbox" data-field="force" ${act.force ? "checked" : ""}> Force Click</label>
+          <label><input type="checkbox" data-field="force" ${act.force ? "checked" : ""}> Force Click (강제 클릭)</label>
         </div>
         ${["click", "dblclick", "hover", "type"].includes(act.type) ? `
         <div class="action-offset-group" title="요소 중심점을 기준으로 마우스 클릭 및 카메라 줌 좌표를 미세 이동합니다 (예: X +10, Y -5)">
@@ -1497,11 +1495,13 @@ function bindEvents() {
         });
       }
 
-      pillGw.addEventListener("click", () => {
-        switchTab("tab-generator");
-        targetProjectPathInput.focus();
-        targetProjectPathInput.select();
-      });
+      if (pillGw) {
+        pillGw.addEventListener("click", () => {
+          switchTab("tab-generator");
+          targetProjectPathInput.focus();
+          targetProjectPathInput.select();
+        });
+      }
 
       if (btnAddActionTop) {
         btnAddActionTop.addEventListener("click", () => {

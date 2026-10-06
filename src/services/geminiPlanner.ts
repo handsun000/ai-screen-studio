@@ -111,16 +111,22 @@ export function scanTargetProjectContext(prompt: string, targetPath?: string): s
       // Map prompt keywords to Naon/Enterprise modules for direct fast lookup
       const moduleKeywordMap: Record<string, string[]> = {
         app: ["결재", "기안", "상신", "전자결재"],
+        eapp: ["결재", "기안", "상신", "전자결재"],
         doc: ["문서", "문서함", "문서관리"],
         board: ["게시", "게시판", "게시글"],
         schedule: ["일정", "캘린더", "일정관리"],
+        scd: ["일정", "캘린더", "일정관리"],
         work: ["업무", "태스크", "스마트워크"],
+        smw: ["업무", "태스크", "스마트워크"],
         note: ["쪽지", "메시지"],
+        not: ["쪽지", "메시지"],
         organization: ["조직도", "사용자", "부서"],
         project: ["프로젝트"],
         search: ["검색", "통합검색", "조회", "찾기"],
         mail: ["메일", "웹메일", "편지"],
+        eml: ["메일", "웹메일", "편지"],
         res: ["자원", "예약", "회의실", "시설"],
+        rmg: ["자원", "예약", "회의실", "시설"],
         attend: ["근태", "출퇴근", "휴가", "근무"],
         survey: ["설문", "투표", "조사"],
       };
@@ -433,8 +439,27 @@ ${fewShotContext}
 4. **포탈 전체메뉴(서랍) 내 숨겨진 하위 메뉴 탐색 원칙**:
    - 엔터프라이즈 포탈 메인 화면에서 세부 업무 메뉴(일정관리, 전자결재, 문서관리, 게시판 등)가 상단 바에 직접 노출되어 있지 않은 경우,
      반드시 [포탈 전체메뉴(button.btn_svc_open) 클릭] -> [1200ms 펼침 대기] -> [서랍 내 목표 메뉴(#svc_box a:has-text('...')) 클릭] 시퀀스를 준수하십시오.
-   - 단, 상단 헤더에 항상 노출된 범용 기능(예: 상단 통합검색 인풋, 사용자 프로필, 알림 아이콘 등)인 경우 서랍을 열지 않고 곧바로 해당 요소를 조작하십시오.
-5. **최종 출력 규격**:
+5. **모든 업무 기능(설문, 프로젝트, 주소록, 근태, 문서, 결재, 일정, 예약 등) 등록/작성 고유 필수 조건 전수 충족 지침 (Dynamic Zero-Validation-Failure Policy)**:
+   - 사용자가 요청하는 기능은 문서/결재/일정뿐만 아니라 설문조사 작성, 프로젝트 생성, 주소록 연락처 추가, 근태 연차신청, 시설/자원 예약, 업무일지 등록, 회원 가입, 관리자 설정 등 시스템의 모든 기능이 대상이 됩니다.
+   - 각 기능마다 화면 구조와 필수 조건(Validation Alert)이 완전히 다릅니다. 따라서 어떤 시나리오든 고정된 단계를 억지로 끼워 넣지 말고, **반드시 도구(findFiles, searchCodeText, readSourceSnippet, extractAlertsAndValidation)를 호출하여 해당 기능의 실제 소스코드(JSP/JS)와 유효성 검사 alert 목록을 능동적으로 역공학 탐색**하십시오.
+   - [🚨 절대 금지]: 필수 조건을 생략하고 곧바로 저장 버튼을 누르지 마십시오. (브라우저 유효성 검사 alert 창이 떠서 시연이 중단됩니다.)
+   - 소스코드에 정의된 실제 필수 조건(예: alert("...를 입력하세요", "...를 선택하세요"))을 빠짐없이 확인하고, 그 기능이 요구하는 필수 값들을 시나리오 단계에서 모두 거친 뒤 최종 저장/완료 버튼을 클릭하도록 100% 동적으로 플랜을 수립해야 합니다.
+   - 📄 **문서 등록 (4단계 필수 시퀀스)**: 좌측 [문서 등록] 버튼 클릭 ➔ '문서함 선택' 모달 팝업 열림 대기(1500ms) ➔ 팝업 내 실제 등록 대상 문서함(말단 리프 노드) 클릭(".ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:not(:has(ul)) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:last-child a.dynatree-title:visible") ➔ 팝업 [확인] 버튼 클릭(".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible")하여 모달 닫기 ➔ 본문 등록 폼 렌더링 후 제목 입력 ➔ 본문 내용 작성 ➔ 상단 [저장] 클릭! (절대로 등록 불가한 최상위 부모 폴더 노드를 선택하지 마십시오!)
+   - 모든 필수 조건이 입력/선택된 후에 최종 [저장/상신/등록] 버튼을 클릭하고 브라우저 확인(Confirm) 다이얼로그를 승인해야 합니다.
+6. **실제 DB 데이터 기반 검색 및 조회 연동 (Method 2: Zero-Hallucinated-Data Policy)**:
+   - **[🚨 검색/조회 목적 시나리오에 불필요한 신규 등록 단계 생성 엄격 금지]**:
+     사용자의 요청 의도가 '조회', '검색', '확인', '열람', '상세보기'인 경우, 시나리오 앞부분에 불필요하게 [신규 등록/작성] 버튼을 눌러 가상 제목과 본문을 입력하고 저장하는 등록 단계를 절대로 끼워 넣지 마십시오!
+     시연은 [목표 메뉴 이동] -> [분류/함 선택 및 목록 로딩 대기] -> [화면의 실제 DB 데이터 스크래핑 및 검색창 입력] -> [검색 실행] -> [해당 실제 데이터 클릭 상세 확인]의 순수 조회 파이프라인으로 구성해야 합니다.
+   - **[🚨 가상 검색어/제목 날조 엄격 금지]**:
+     절대로 '2026학년도 대학 혁신지원사업...', '테스트 기안서', '김철수' 같은 임의의 가상 검색어나 제목을 날조하여 고정하지 마십시오!
+   - 검색창 입력('type') 액션에는 반드시:
+     • \`"useScraped": "auto"\`
+     • \`"dynamicStrategy": "first-row-title"\` (사원인 경우 "first-row-user")
+     • \`"description": "화면 목록의 실제 데이터로 검색어 자동 연동 입력"\`
+     • \`"text": "실시간 실제 목록 데이터"\`
+     를 지정하여, Playwright 런타임이 화면에 실제로 렌더링된 첫 번째 글/문서/사원명을 스크래핑하여 타이핑하도록 하십시오.
+   - 검색 결과 클릭 단계에도 \`"useScraped": "auto"\`를 지정하여 스크래핑된 실제 항목을 100% 매칭 클릭하도록 연결하십시오.
+7. **최종 출력 규격**:
    - 소스코드 탐색이 완료되면, 중간 마크다운 설명서 없이 **곧바로 완전하고 유효한 BrowsePlan JSON 형식**으로만 응답하십시오.
 `;
 
@@ -461,7 +486,6 @@ The final response must be valid JSON with this exact schema:
     "url": "${effectiveTargetUrl}",
     "viewport": { "width": 1920, "height": 1080 },
     "requiresLogin": true,
-    "cursor": { "delayMs": 0, "preClickRestMs": 120 },
     "actions": [
       {
         "type": "wait" | "click" | "hover" | "type" | "dblclick" | "scroll" | "navigate",
@@ -470,7 +494,6 @@ The final response must be valid JSON with this exact schema:
         "text": "text to type (if type action)",
         "ms": 2000,
         "description": "한글 설명",
-        "optional": false,
         "force": false
       }
     ]

@@ -1,19 +1,26 @@
 // -- Browse Plan (input to record script) --
 
 export interface BrowsePlanAction {
-  type: "navigate" | "click" | "dblclick" | "hover" | "scroll" | "wait" | "script" | "type" | "upload";
+  type: "navigate" | "click" | "dblclick" | "hover" | "scroll" | "wait" | "script" | "type" | "upload" | "scrape";
   filePath?: string;
   force?: boolean;
   url?: string;
   selector?: string;
   iframe?: string;
   text?: string;
+  /** @deprecated 건너뛰기(optional) 기능 제거됨 - 모든 액션은 100% 실제로 실행되어야 합니다. */
   optional?: boolean;
   deltaY?: number;
   ms?: number;
   js?: string;
   description: string;
   cursorOffset?: { x: number; y: number };
+
+  // Method 2: Dynamic Live Data Scraping & Variable Linking
+  scrapeAs?: string;           // Variable name to store scraped text (e.g. "docTitle", "userName")
+  useScraped?: string;         // Variable name to read text from for typing or matching (or "auto")
+  dynamicFrom?: string;        // Specific selector to directly scrape live text from before typing
+  dynamicStrategy?: "first-row-title" | "first-row-user" | "first-tree-node" | "auto";
 }
 
 export interface CursorSettings {
@@ -54,7 +61,7 @@ export interface BoundingBox {
 
 export interface Moment {
   id: number;
-  type: "navigate" | "click" | "dblclick" | "hover" | "scroll" | "wait" | "script" | "drag" | "type" | "key" | "upload";
+  type: "navigate" | "click" | "dblclick" | "hover" | "scroll" | "wait" | "script" | "drag" | "type" | "key" | "upload" | "scrape";
   timestamp: number;
   url?: string;
   cursor?: CursorPosition;

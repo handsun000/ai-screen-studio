@@ -76,16 +76,18 @@ function computeZoomTarget(
 /**
  * If the total bounce time (ease-out + dead air + ease-in) between two
  * segments is under this threshold, pan directly instead of zooming out
- * and back in. Value is in seconds of wall-clock time.
+ * and back in.
  */
-const PAN_THRESHOLD_SECONDS = 4.0;
+const MAX_PAN_DISTANCE_PX = 800;
 
 /**
  * Check if two zoom segments are close enough to pan between them
  * instead of zooming out to 1x and back in.
  *
- * The bounce would take: easeOut + gap + easeIn frames.
- * If that total is less than PAN_THRESHOLD_SECONDS, pan instead.
+ * Combines spatial proximity (pixel distance) with temporal proximity (bounce time).
+ * - Distant targets (> 800px) always zoom out to 1.0x wide screen to orient the viewer.
+ * - Nearby targets (<= 500px, e.g. within a dialog or form) tolerate natural pauses (up to 4.2s)
+ *   and smoothly glide between elements without the dizzying yo-yo effect.
  */
 function shouldPanBetween(
   prev: EditSegment,
@@ -96,13 +98,25 @@ function shouldPanBetween(
   if (!prev.zoomTarget || !next.zoomTarget) return false;
   if (prev.zoom <= 1 || next.zoom <= 1) return false;
 
+  const dx = prev.zoomTarget.x - next.zoomTarget.x;
+  const dy = prev.zoomTarget.y - next.zoomTarget.y;
+  const dist = Math.hypot(dx, dy);
+
+  // If targets are farther apart than MAX_PAN_DISTANCE_PX (e.g. across screen), zoom out to wide view
+  if (dist > MAX_PAN_DISTANCE_PX) {
+    return false;
+  }
+
   const easeOut = Math.round((prev.easeOutFrames ?? 20) * fpsScale);
   const easeIn = Math.round((next.easeInFrames ?? 15) * fpsScale);
   const gap = next.startFrame - prev.endFrame;
   const totalBounceFrames = easeOut + Math.max(0, gap) + easeIn;
   const totalBounceSeconds = totalBounceFrames / fps;
 
-  return totalBounceSeconds <= PAN_THRESHOLD_SECONDS;
+  // Closer targets tolerate up to 4.2s total bounce (local flow); wider ones up to 3.6s
+  const threshold = dist <= 500 ? 4.2 : 3.6;
+
+  return totalBounceSeconds <= threshold;
 }
 
 function getCameraState(

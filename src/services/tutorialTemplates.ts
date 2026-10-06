@@ -20,16 +20,18 @@ export const UNIVERSAL_TUTORIAL_TEMPLATES: ScenarioTemplate[] = [
     id: "create-and-submit",
     name: "신규 등록 및 폼 작성 (Create & Submit)",
     icon: "📝",
-    description: "신규 데이터(문서/기안/게시글/일정/업무 등)의 필수 입력(제목, 조직도/결재선 지정, 본문)을 충족하고 상신·저장하는 엔터프라이즈 표준 튜토리얼",
-    promptTemplate: "【목표】: 신규 항목(기안 문서, 일정, 게시글, 업무 등) 등록 및 저장\n【진입 경로】: 메인 대시보드에서 해당 기능 메뉴로 이동\n【조작 순서】: [작성/등록] 버튼 클릭 -> [필수 1: 제목 입력] -> [필수 2: 결재선/조직도 팝업 열기 및 대상자 선택 적용] -> [필수 3: 본문 내용 작성] -> [저장/상신] 버튼 클릭\n【결과 확인】: 등록 완료 알림창 확인 및 생성된 상세 화면/목록 확인",
+    description: "신규 데이터(문서/기안/게시글/일정/업무 등)의 6대 필수 조건(분류/문서함/캘린더 선택, 제목 입력, 결재선/조직도 지정, 필수 옵션/보존기간, 본문 작성)을 빠짐없이 전수 충족하고 상신·저장하는 엔터프라이즈 완결형 튜토리얼",
+    promptTemplate: "【목표】: 신규 항목(문서, 기안, 일정, 게시글, 업무 등) 등록 및 저장 (유효성 검사 100% 충족)\n【진입 경로】: 메인 대시보드에서 해당 기능 메뉴로 이동\n【조작 순서】: [작성/등록] 버튼 클릭 -> [필수 1: 분류/문서함/캘린더/양식 선택] -> [필수 2: 제목/명칭 입력] -> [필수 3: 결재선/조직도/참석자 지정] -> [필수 4: 필수 옵션/보존기간/보안등급 설정] -> [필수 5: 본문 에디터 작성] -> [저장/상신] 버튼 클릭 -> [확인 다이얼로그 승인]\n【결과 확인】: 등록 완료 알림창 확인 및 생성된 상세 화면/목록 확인",
     phases: [
       "1단계 [도입]: 메인 화면 전체 뷰 3초간 노출 (시청자 인지)",
-      "2단계 [이동]: GNB/사이드바 메뉴 클릭 및 등록 페이지 진입",
-      "3단계 [필수1-제목]: [신규 등록] 버튼 클릭 후 제목 필드 포커스 및 타이핑",
-      "4단계 [필수2-결재선]: 조직도/결재선 팝업 열기 -> 부서 트리 확장 -> 대상자 체크 및 적용",
-      "5단계 [필수3-본문]: 본문 에디터 내용 작성",
-      "6단계 [실행]: [저장/상신] 버튼 클릭 후 확인 다이얼로그 승인",
-      "7단계 [확인]: 등록 완료 팝업 또는 갱신된 목록 화면 확인 (아웃트로)"
+      "2단계 [이동]: GNB/포탈 전체메뉴(btn_svc_open) 클릭 및 해당 기능 메뉴 진입",
+      "3단계 [필수1-분류선택]: [작성/등록] 진입 후 대상 문서함/캘린더/분류/게시판/양식 선택 (유효성 alert 방지)",
+      "4단계 [필수2-제목입력]: 제목 필드 포커스 및 설명 텍스트 타이핑",
+      "5단계 [필수3-결재선/참석자]: 조직도/결재선 팝업 호출 -> 트리 확장 -> 대상자 체크 및 적용",
+      "6단계 [필수4-옵션설정]: 보존기간/보안등급/일시 등 필수 메타데이터 옵션 선택",
+      "7단계 [필수5-본문작성]: 웹 에디터/본문 텍스트 작성 (iFrame 에디터 대응)",
+      "8단계 [실행]: [저장/상신/등록] 버튼 클릭 후 확인 다이얼로그(Confirm) 승인",
+      "9단계 [확인]: 등록 완료 알림 및 갱신된 상세/목록 화면 와이드 뷰 마무리"
     ]
   },
   {
@@ -172,13 +174,13 @@ export const MASTER_DIRECTING_GUIDELINES = `
      - 체크박스: \`label:has-text("예약사용")\`, \`input#scd_link_res_chk\`
      - 팝업/모달 확인: \`.ui-dialog:visible button:has-text("확인")\`
 
-1-2. **엔터프라이즈 그룹웨어 주요 인터랙션 고정밀 셀렉터 퀵 레퍼런스**:
-   - 좌측 일정 등록 버튼: \`button#reg_shedule_lefttop, #reg_shedule_lefttop, #snb button:has-text('일정 등록'):visible, button:has-text('일정 등록'):visible\`
-   - 모달 내 일정 제목: \`#reg_schedule_form #subject, .ui-dialog:visible #subject, input#subject:visible\`
-   - 모달 내 일정 내용: \`textarea:visible, textarea[placeholder*='내용'], #reg_schedule_form #cn, .ui-dialog:visible #cn\`
-   - 모달 내 최종 저장 버튼: \`#reg_schedule_form #savebtn, .ui-dialog:visible #savebtn, button#savebtn:visible, .ui-dialog:visible button:has-text('저장'):visible\`
+1-2. **엔터프라이즈 그룹웨어 주요 인터랙션 고정밀 셀렉터 퀵 레퍼런스 (범용 모듈 대응)**:
+   - 좌측 작성/등록 버튼: \`button#reg_shedule_lefttop, #snb button:has-text('등록'):visible, #snb button:has-text('작성'):visible, button:has-text('기안'):visible, button:has-text('글작성'):visible\`
+   - 모달/폼 제목 입력: \`.ui-dialog:visible input#subject, input#subject:visible, input[name*='subject']:visible, input[name*='title']:visible, #subject\`
+   - 모달/폼 내용 입력: \`div[contenteditable='true']:visible, textarea:visible, textarea[placeholder*='내용'], .note-editable:visible, #cn\`
+   - 모달/폼 최종 저장/상신 버튼: \`.ui-dialog:visible button:has-text('저장'):visible, button:has-text('상신'):visible, button:has-text('저장'):visible, button#savebtn:visible, button._save:visible\`
    - 조직도/결재선 팝업 호출: \`button:has(.ico_org), button:has-text("조직도"), button:has-text("결재선")\`
-   - 자원예약 사용 체크박스: \`label:has-text("예약사용"), text="예약사용", input#scd_link_res_chk\`
+   - 체크박스/옵션 라디오: \`label:has-text("동의"), label:has-text("공개"), label:has-text("예약사용"), input[type="checkbox"]\`
 
 1-3. **🎯 다중 버튼 충돌 방지 및 영역 스코핑 원칙 (Disambiguation by Contextual Scope)**:
    - 엔터프라이즈 포탈/웹앱에는 동일한 텍스트('저장', '등록', '확인', '닫기')나 아이콘을 가진 버튼이 상단 헤더, 좌측 사이드바, 본문 툴바, 팝업 모달 등 여러 곳에 동시에 존재할 수 있습니다.
@@ -199,14 +201,15 @@ export const MASTER_DIRECTING_GUIDELINES = `
      예: \`.ui-dialog:visible #subject, #reg_schedule_form #subject, #subject:visible\`
    - **[주의 - 상단 검색창 충돌 방지]**: \`input[placeholder*="제목"]\` 같은 모호한 선택자는 상단 GNB 검색창(\`placeholder="제목, 내용, 첨부파일명"\`)과 매칭되어 다이얼로그 오버레이에 가로막히므로 단독으로 쓰지 마십시오.
    - 제목 입력: \`#subject:visible, input#subject, input[name*="subject"]:visible\`
-   - 내용/본문: \`#cn:visible, textarea:visible, textarea[placeholder*="내용"], div[contenteditable="true"]\`
+   - 내용/본문 (웹 에디터): \`div[contenteditable="true"]:visible, textarea:visible, textarea[placeholder*="내용"], .note-editable:visible, .ce-paragraph:visible\` (⚠️ 에디터 상위 div 단독 지정 금지)
+    - 목록 첫 번째 항목/상세 클릭: \`table tbody tr:first-child a:visible, ul.lst_vr_ul li:first-child a:visible, ul[id*='List'] li:first-child a:visible, .lst_type1 li:first-child a:visible\` (가로형 테이블 및 세로 분할 뷰 동시 지원)
    - 검색창: \`input[type="search"], input[name*="search"], input[placeholder*="검색"], .search_box input\`
 3. **iFrame 감지 및 대응**:
    - 그룹웨어, 엔터프라이즈 포털, 에디터는 종종 iFrame을 사용합니다.
    - 전자결재/양식: \`iframe[name*="docBox"], iframe[src*="form"], iframe#subBody\`
    - 에디터: \`iframe[name*="editor"], iframe[src*="editor"]\`
-4. **실패 방지 (Optional Flag)**:
-   - 닫기 팝업, 안내 레이어, 첫 번째 항목 선택, 확인 다이얼로그 등 화면 상태에 따라 존재하지 않을 수도 있는 단계는 반드시 \`"optional": true\`를 부여하십시오.
+4. **건너뛰기(Optional) 엄격 금지 원칙**:
+   - 모든 액션은 영상에서 시청자에게 보여줘야 하는 실제 동작이므로, 임의로 단계를 건너뛰는 \`"optional": true\`를 절대로 부여하지 마십시오. 모든 단계는 100% 실제로 실행되어야 합니다.
 5. **모달 팝업과 배경 요소 철저 격리 (엄격 금지 규칙)**:
    - 등록/작성 버튼을 눌러 모달 대화상자(SimpleView, 레이어 팝업)가 열린 후에는, 반드시 팝업 내부의 제목(#subject), 내용(#cn), 저장(#savebtn)만을 조작하십시오.
    - [절대 금지] 모달 팝업이 열려 있는 상태에서 배경의 달력 툴바(\`.fc-today-button\`, \`.fc-button\`)나 메인 GNB 메뉴를 누르는 액션을 절대로 생성하지 마십시오! 모달 오버레이(ui-widget-overlay)에 가로막혀 브라우저 녹화가 100% 중단됩니다.
@@ -220,24 +223,46 @@ export const MASTER_DIRECTING_GUIDELINES = `
 - 버튼 클릭 후 처리 대기: \`1500ms ~ 2500ms\`
 - 영상 엔딩 마무리: \`3000ms\`
 - 뷰포트: \`{ "width": 1920, "height": 1080 }\`
-- 커서 딜레이: \`{ "delayMs": 0, "preClickRestMs": 120 }\`
 
 ---
 
-### [4] 🚨 엔터프라이즈 업무 시스템 폼 작성 필수 원칙 (Enterprise Form Validation Rules)
-전자결재, 문서관리, 게시판, 일정, 업무(스마트워크) 등 실제 업무 시스템의 폼 등록 시나리오를 작성할 때:
-1. **절대 폼 진입 직후 저장/상신 버튼을 곧바로 누르지 마십시오.**
-   (필수 입력값이 비어 있으면 자바스크립트 alert("제목을 입력하세요", "결재선을 지정하세요")에 걸려 자동화 녹화가 즉시 중단 및 실패합니다.)
-2. **반드시 다음 5대 필수 시퀀스를 순서대로 모두 포함하십시오**:
-   - **Step A. 제목(Subject) 입력**: 반드시 input selector와 의미 있는 텍스트(\`type\`) 액션을 배치하십시오. (iFrame 양식 내부일 경우 \`iframe\` 속성 필수 지정)
-   - **Step B. 결재선 / 담당자 / 수신처 지정**:
-     - 조직도 또는 결재선 버튼 클릭 (\`button:has(.ico_org)\`, \`button:has-text("결재선")\`, \`button:has-text("조직도")\` 등)
-     - 팝업 로딩 대기 (\`wait: 2000ms\`)
-     - 부서 트리 확장 또는 검색 (\`.dynatree-expander\`, \`.folder\`)
-     - 대상자 체크박스 선택 (\`input[type="checkbox"]\`, \`.dynatree-checkbox\`)
-     - [확인/적용] 버튼 클릭 (\`button:has-text("확인")\`)
-   - **Step C. 본문 내용 작성**: 에디터 영역 클릭 또는 본문 텍스트 타이핑
-   - **Step D. 최종 제출**: [상신], [저장], [등록] 버튼 클릭
-   - **Step E. 확인 다이얼로그 승인**: "상신하시겠습니까?" 또는 "등록되었습니다" 알림창 처리
-3. 폼 등록 시나리오는 최소 15~25단계 이상의 충실한 인터랙션 단계로 구성해야 실제 브라우저 자동화가 100% 성공합니다.
+### [4] 🚨 기능별 등록/작성 고유 필수 조건 전수 충족 원칙 (Dynamic Zero-Validation-Failure Policy)
+문서관리(문서등록), 전자결재(기안상신), 일정관리(일정등록), 게시판(게시글작성), 쪽지/메일 등 특정 기능의 '신규 등록/작성' 시나리오를 기획할 때:
+
+1. **[🚨 절대 금지: 필수 조건 누락 후 조기 저장/상신 금지]**:
+   - 폼 진입 직후 제목만 입력하고 곧바로 저장 버튼을 누르는 등, 해당 시스템이 요구하는 필수 선택/입력 조건을 건너뛰지 마십시오.
+   - 브라우저 JavaScript alert(예: "문서함을 선택하세요", "제목을 입력하세요", "결재선을 지정하세요", "일시를 입력하세요")에 걸려 다음 단계로 넘어가지 못하고 전체 시연이 중단됩니다.
+
+2. **[💡 기능별 맞춤 필수 조건 동적 충족 (Feature-Specific Prerequisites)]**:
+   기능마다 시스템이 요구하는 필수 조건이 서로 다르므로, **해당 기능의 실제 화면 구조와 소스코드(extractAlertsAndValidation)에 명시된 유효성 검사 alert 조건**에 맞춰 필요한 단계들을 빠짐없이 순서대로 진행하십시오:
+   - 📄 **문서 등록 (4단계 필수 시퀀스)**: 좌측 [문서 등록] 버튼 클릭 ➔ '문서함 선택' 모달 팝업 열림 대기(1500ms) ➔ 팝업 내 실제 등록 대상 문서함(말단 리프 노드) 클릭(".ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:last-child a.dynatree-title:visible") ➔ 팝업 [확인] 버튼 클릭(".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible")하여 모달 닫기 ➔ 본문 등록 폼 렌더링 후 제목 입력("input#subject:visible, input[name*='subject']:visible") ➔ 본문 내용 작성("div[contenteditable='true']:visible, textarea:visible") ➔ 상단 [저장] 클릭("button:has-text('저장'):visible, button._save:visible")! (절대로 등록 불가한 최상위 부모 폴더 노드를 선택하지 마십시오!)
+   - 📝 **전자결재 기안**: 결재 양식 선택 -> 제목 입력 -> 결재선/조직도 지정 (기안자/결재자) -> 본문 작성 -> 상신 클릭 및 확인
+   - 📅 **일정 등록**: 캘린더 선택 -> 일정 제목 입력 -> 일시/시간 설정 -> (필요 시) 자원예약/참석자 추가 -> 내용 작성 -> 저장 클릭
+   - 📌 **게시글 작성**: 등록할 게시판/말머리 선택 -> 제목 입력 -> 본문 작성 -> 등록 클릭
+   - 💬 **쪽지/메시지**: 수신자(받는 사람) 검색/선택 -> 내용 입력 -> 전송 클릭
+
+3. **[✅ 등록 시퀀스 표준 진행 원칙]**:
+   - Step 1: 대상 기능 진입 및 [작성/등록] 호출
+   - Step 2: **해당 기능의 대상 분류/컨테이너 선택** (문서함, 캘린더, 게시판, 양식 등 미선택 alert 원천 방지)
+   - Step 3: **핵심 명칭/제목 입력** (제목 미입력 alert 방지)
+   - Step 4: **해당 기능의 필수 대상자/옵션 설정** (결재선, 참석자, 수신자, 보존기간 등)
+   - Step 5: **본문/내용 작성** (웹 에디터 또는 텍스트 영역)
+   - Step 6: **최종 저장/상신/등록 버튼 클릭** 후 브라우저 확인(Confirm) 다이얼로그 자동 승인(\`dialog.accept()\`)
+
+4. 폼 등록 시나리오는 해당 기능에 필요한 조건들을 모두 거치도록 충분하고 정교한 인터랙션 단계로 구성해야 실제 브라우저 자동화가 100% 무결점으로 완결됩니다.
+
+---
+
+### [5] 🔍 실시간 실제 DB 데이터 스크래핑 & 검색/조회 연동 원칙 (Method 2: Dynamic Live Data Linking)
+문서함 조회, 게시판 검색, 전자결재 문서 조회, 조직도 사원 검색 등 [검색 및 조회] 시나리오를 작성할 때:
+1. **[🚨 절대 금지: DB에 없는 가상 검색어 날조 금지]**:
+   - 실제 회사 DB에 존재하지 않는 임의의 문서 제목(예: '비밀 프로젝트 추진서')이나 가상의 사원명을 지어내어 검색창에 입력하지 마십시오.
+   - 검색 결과가 0건으로 나와 다음 단계인 [상세 항목 클릭]에서 대상을 찾지 못해 전체 녹화가 실패합니다!
+2. **[💡 실시간 DB 데이터 자동 연동 ("useScraped": "auto")]**:
+   - 검색창 입력(\`type\`) 액션에는 \`"useScraped": "auto"\` 또는 \`"dynamicStrategy": "first-row-title"\` (사원 검색인 경우 \`"first-row-user"\`) 속성을 부여하십시오.
+   - 검색창에 텍스트를 칠 때 Playwright가 화면에 이미 떠 있는 첫 번째 실제 문서/게시글/사원명의 텍스트를 실시간으로 스크래핑하여 검색어로 자동 주입합니다.
+   - 검색 후 결과 클릭 액션에도 \`"useScraped": "auto"\`를 부여하면, 실제 검색어와 일치하는 결과 행을 100% 오차 없이 정확히 클릭하여 상세 화면으로 진입합니다.
+3. **[🚨 검색/조회 목적 시나리오에 불필요한 신규 등록 단계 생성 엄격 금지]**:
+   - 사용자가 '문서 조회', '게시글 검색', '결재문서 확인', '사원 검색' 등 조회/검색을 요청한 경우, 시나리오 앞부분에 불필요하게 [신규 등록/기안] 버튼을 눌러 가상 제목을 입력하고 저장하는 단계를 절대로 끼워 넣지 마십시오.
+   - 시스템에 이미 축적되어 있는 실제 데이터 목록을 탐색하고, 목록의 첫 번째 실제 데이터를 스크래핑하여 검색창에 입력하고, 결과를 클릭하여 상세 내용을 조회하는 순수 조회 파이프라인으로 구성하십시오.
 `;

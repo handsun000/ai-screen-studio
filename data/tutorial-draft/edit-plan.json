@@ -1,137 +1,193 @@
 {
-  "totalDurationFrames": 3205,
+  "totalDurationFrames": 3204,
   "fps": 60,
   "defaultZoom": 1.0,
   "segments": [
     {
+      "momentId": 2,
+      "startFrame": 235,
+      "endFrame": 265,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 864,
+        "y": 79
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (864, 79)"
+    },
+    {
       "momentId": 4,
-      "startFrame": 286,
-      "endFrame": 394,
+      "startFrame": 448,
+      "endFrame": 478,
       "speed": 1.0,
       "zoom": 1.3,
       "zoomTarget": {
         "x": 130,
         "y": 148
       },
-      "easeInFrames": 25,
-      "easeOutFrames": 25,
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
       "description": "Click at (130, 148)"
     },
     {
+      "momentId": 7,
+      "startFrame": 667,
+      "endFrame": 697,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 844,
+        "y": 681
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (844, 681)"
+    },
+    {
       "momentId": 9,
-      "startFrame": 736,
-      "endFrame": 844,
+      "startFrame": 898,
+      "endFrame": 928,
       "speed": 1.0,
       "zoom": 1.4,
       "zoomTarget": {
         "x": 673,
         "y": 218
       },
-      "easeInFrames": 25,
-      "easeOutFrames": 25,
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
       "description": "Typing: 2026 \ubd80\ucc9c\ub300 \ud504\ub85c\uc81d\ud2b8 \uc9c4\ud589 \ud604\ud669 \ubcf4\uace0"
     },
     {
       "momentId": 11,
-      "startFrame": 912,
-      "endFrame": 1020,
+      "startFrame": 1074,
+      "endFrame": 1104,
       "speed": 1.0,
       "zoom": 1.3,
       "zoomTarget": {
         "x": 1833,
         "y": 223
       },
-      "easeInFrames": 25,
-      "easeOutFrames": 25,
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
       "description": "Click at (1833, 223)"
     },
     {
       "momentId": 13,
-      "startFrame": 1085,
-      "endFrame": 1193,
+      "startFrame": 1246,
+      "endFrame": 1276,
       "speed": 1.0,
       "zoom": 1.3,
       "zoomTarget": {
         "x": 613,
         "y": 685
       },
-      "easeInFrames": 25,
-      "easeOutFrames": 25,
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
       "description": "Click at (613, 685)"
     },
     {
       "momentId": 16,
-      "startFrame": 1275,
-      "endFrame": 1463,
+      "startFrame": 1437,
+      "endFrame": 1467,
       "speed": 1.0,
       "zoom": 1.3,
       "zoomTarget": {
         "x": 641,
         "y": 599
       },
-      "easeInFrames": 25,
-      "easeOutFrames": 25,
-      "description": "Click at (641, 599) + Click at (960, 569)"
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (641, 599)"
+    },
+    {
+      "momentId": 17,
+      "startFrame": 1517,
+      "endFrame": 1547,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 960,
+        "y": 569
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (960, 569)"
     },
     {
       "momentId": 19,
-      "startFrame": 1498,
-      "endFrame": 1606,
+      "startFrame": 1660,
+      "endFrame": 1690,
       "speed": 1.0,
       "zoom": 1.3,
       "zoomTarget": {
         "x": 908,
         "y": 818
       },
-      "easeInFrames": 25,
-      "easeOutFrames": 25,
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
       "description": "Click at (908, 818)"
     },
     {
       "momentId": 21,
-      "startFrame": 1666,
-      "endFrame": 1774,
+      "startFrame": 1827,
+      "endFrame": 1857,
       "speed": 1.0,
       "zoom": 1.3,
       "zoomTarget": {
         "x": 305,
         "y": 89
       },
-      "easeInFrames": 25,
-      "easeOutFrames": 25,
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
       "description": "Click at (305, 89)"
     },
     {
       "momentId": 23,
-      "startFrame": 1820,
-      "endFrame": 1928,
+      "startFrame": 1981,
+      "endFrame": 2011,
       "speed": 1.0,
       "zoom": 1.3,
       "zoomTarget": {
         "x": 722,
         "y": 283
       },
-      "easeInFrames": 25,
-      "easeOutFrames": 25,
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
       "description": "Click at (722, 283)"
     },
     {
       "momentId": 25,
-      "startFrame": 1991,
-      "endFrame": 2167,
+      "startFrame": 2152,
+      "endFrame": 2182,
       "speed": 1.0,
       "zoom": 1.4,
       "zoomTarget": {
         "x": 802,
         "y": 392
       },
-      "easeInFrames": 25,
-      "easeOutFrames": 25,
-      "description": "Typing: \ud14c\uc2a4\ud2b8 + Click at (1044, 392)"
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Typing: \ud14c\uc2a4\ud2b8"
+    },
+    {
+      "momentId": 26,
+      "startFrame": 2220,
+      "endFrame": 2250,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 1044,
+        "y": 392
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (1044, 392)"
     },
     {
       "momentId": 28,
-      "startFrame": 2214,
+      "startFrame": 2376,
       "endFrame": 2406,
       "speed": 1.0,
       "zoom": 1.3,
@@ -139,41 +195,65 @@
         "x": 820,
         "y": 428
       },
-      "easeInFrames": 25,
-      "easeOutFrames": 25,
-      "description": "Click at (820, 428) + Click at (930, 718)"
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (820, 428)"
+    },
+    {
+      "momentId": 29,
+      "startFrame": 2460,
+      "endFrame": 2490,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 930,
+        "y": 718
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (930, 718)"
     },
     {
       "momentId": 31,
-      "startFrame": 2453,
-      "endFrame": 2561,
+      "startFrame": 2614,
+      "endFrame": 2644,
       "speed": 1.0,
       "zoom": 1.3,
       "zoomTarget": {
         "x": 1641,
         "y": 97
       },
-      "easeInFrames": 25,
-      "easeOutFrames": 25,
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
       "description": "Click at (1641, 97)"
     },
     {
+      "momentId": 33,
+      "startFrame": 2789,
+      "endFrame": 2819,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 79,
+        "y": 212
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (79, 212)"
+    },
+    {
       "momentId": 35,
-      "startFrame": 2827,
-      "endFrame": 2935,
+      "startFrame": 2989,
+      "endFrame": 3019,
       "speed": 1.0,
       "zoom": 1.3,
       "zoomTarget": {
         "x": 763,
         "y": 287
       },
-      "easeInFrames": 25,
-      "easeOutFrames": 25,
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
       "description": "Click at (763, 287)"
     }
-  ],
-  "cursor": {
-    "delayMs": 800,
-    "preClickRestMs": 180
-  }
+  ]
 }
