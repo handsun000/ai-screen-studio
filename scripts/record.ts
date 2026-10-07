@@ -105,7 +105,7 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
   selector = selector.replace(/,\s*ui-dialog/g, ", .ui-dialog");
 
   // Fix invalid jQuery pseudo-classes like :first and :last (convert to Playwright standard)
-  selector = selector.replace(/:first\b/g, ":first-child").replace(/:last\b/g, ":last-child");
+  selector = selector.replace(/:first(?!\-child|\-of\-type)\b/g, ":first-child").replace(/:last(?!\-child|\-of\-type)\b/g, ":last-child");
   action.selector = selector;
 
   // Build candidate bases: prioritized by action.iframe, but fallback to page and all visible iframes
@@ -865,13 +865,27 @@ async function autoRecoverActiveModals(page: Page, action: BrowsePlanAction): Pr
     });
 
     if (isPureAlertModal) {
+      const txt = await page.evaluate(() => {
+        const dialogs = Array.from(document.querySelectorAll(".ui-dialog, .modal, [role='dialog']")).filter((d) => window.getComputedStyle(d).display !== "none");
+        return dialogs.length > 0 ? (dialogs[dialogs.length - 1].textContent || "").trim() : "";
+      });
+      console.log(`[DEBUG] Detected modal text: "${txt}"`);
+      const isValidationError = txt.includes("입력") || txt.includes("선택") || txt.includes("등록할 수 없습니다") || txt.includes("오류") || txt.includes("필수") || txt.includes("지정");
+
       const alertOkBtn = page.locator(
         "#alert_lyr:visible button, .ui-dialog:visible:not(:has(.dynatree-container)) button:has-text('확인'), .modal:visible:not(:has(.dynatree-container)) button:has-text('확인')"
       ).first();
       if (await alertOkBtn.isVisible().catch(() => false)) {
-        console.log(`\n  [🤖 팝업 자가 복구] 차단 알림 팝업 감지 ➔ [확인] 버튼을 클릭하여 알림을 닫습니다.`);
-        await alertOkBtn.click().catch(() => {});
-        await page.waitForTimeout(600);
+        if (isValidationError) {
+          console.error(`\n  🚨 [치명적 폼 검증 에러 발생] 시스템 알림: "${txt}"`);
+          await alertOkBtn.click().catch(() => {});
+          await page.waitForTimeout(600);
+          throw new Error(`폼 유효성 검증 실패 (Validation Error): ${txt}`);
+        } else {
+          console.log(`\n  [🤖 팝업 자가 복구] 차단 알림 팝업 감지 ➔ [확인] 버튼을 클릭하여 알림을 닫습니다.`);
+          await alertOkBtn.click().catch(() => {});
+          await page.waitForTimeout(600);
+        }
       }
     }
 
@@ -896,8 +910,14 @@ async function autoRecoverActiveModals(page: Page, action: BrowsePlanAction): Pr
       desc.includes("주소록") ||
       desc.includes("모달") ||
       desc.includes("팝업") ||
+      desc.includes("사원") ||
+      desc.includes("결재") ||
+      desc.includes("수신자") ||
+      desc.includes("추가") ||
       sel.includes(".ui-dialog") ||
-      sel.includes("role='dialog'");
+      sel.includes("role='dialog'") ||
+      sel.includes("org_") ||
+      sel.includes("userList");
 
     // If the action is explicitly interacting with the modal, DO NOT auto-close it!
     if (isTreeSelectModal && isActionForModal) {
@@ -920,6 +940,9 @@ async function autoRecoverActiveModals(page: Page, action: BrowsePlanAction): Pr
       return true;
     }
   } catch (err: any) {
+    if (err?.message?.includes("Validation Error")) {
+      throw err; // Re-throw critical validation errors to halt recording
+    }
     console.warn(`  [팝업 자가 복구 알림] 검사 중 무시된 예외: ${err?.message}`);
   }
   return false;
@@ -984,14 +1007,29 @@ async function scrapeLiveText(page: Page, action: BrowsePlanAction): Promise<str
   }
 
   if (strategy === "first-row-user" || strategy === "first-tree-node" || strategy === "auto") {
+    const isUserSearch = action.description && (action.description.includes("사원") || action.description.includes("사용자") || action.description.includes("담당자") || action.description.includes("수신자") || action.description.includes("받는 사람") || action.description.includes("조직도") || action.description.includes("검색"));
+    
+    // Org chart and tree nodes
+    if (!isUserSearch) {
+      candidateSelectors.push(
+        ".dynatree-container:visible li:visible span.dynatree-node:visible .dynatree-title:visible",
+        ".tree_box li:visible span.txt:visible"
+      );
+    }
     candidateSelectors.push(
-      // Org chart and tree nodes
-      ".dynatree-container:visible li:visible span.dynatree-node:visible .dynatree-title:visible",
+      ".lst_type1 li:visible .name:visible",
+      ".lst_type1 li:visible .user:visible",
+      ".lst_type1 li:visible:not(:empty)",
+      ".lst_type1 tbody tr:first-child td:nth-child(2):visible",
+      "table tbody tr:not(:first-child):visible td:nth-child(2):visible",
+      "table tbody tr:not(:first-child):visible td:nth-child(3):visible",
       ".org_tree li:visible a:visible",
       ".user_list li:visible .name:visible",
-      ".tree_box li:visible span.txt:visible",
       ".tbl_lst tbody tr:first-child td[class*='user']:visible",
-      ".tbl_lst tbody tr:first-child td[class*='writer']:visible"
+      ".tbl_lst tbody tr:first-child td[class*='writer']:visible",
+      ".info_box .name:visible",
+      ".user_card .name:visible",
+      ".user_ul li:visible:first-child"
     );
   }
 
@@ -1048,6 +1086,51 @@ async function scrapeLiveText(page: Page, action: BrowsePlanAction): Promise<str
         }
       } catch {}
     }
+  }
+
+  const isUserSearch = action.description && (action.description.includes("사원") || action.description.includes("사용자") || action.description.includes("담당자") || action.description.includes("수신자") || action.description.includes("받는 사람") || action.description.includes("조직도") || action.description.includes("검색"));
+
+  if (isUserSearch) {
+    try {
+      const folderLocators = [
+        page.locator(".dynatree-container:visible li li a.dynatree-title").first(), // sub-folder first
+        page.locator(".dynatree-container:visible li:nth-child(2) a.dynatree-title").first(), // second root folder
+        page.locator(".dynatree-container:visible li:first-child a.dynatree-title").first() // root folder
+      ];
+      
+      let clicked = false;
+      for (const folderBtn of folderLocators) {
+        if (await folderBtn.isVisible().catch(() => false)) {
+          console.log(`  [💡 빈 사원 목록 감지] 스크래핑을 위해 좌측 트리 폴더를 자율적으로 선클릭하여 목록을 활성화합니다...`);
+          await folderBtn.click().catch(() => {});
+          await page.waitForTimeout(1000);
+          clicked = true;
+          
+          // Retry scraping after the list is populated
+          for (const base of candidateBases) {
+            for (const sel of candidateSelectors) {
+              try {
+                const loc = base.locator(sel).first();
+                const count = await loc.count().catch(() => 0);
+                if (count > 0 && (await loc.isVisible().catch(() => false))) {
+                  const raw = (await loc.innerText().catch(() => loc.textContent().catch(() => ""))) || "";
+                  let text = raw.trim();
+                  if (text && text !== "별표하기" && text !== "중요" && text !== "선택" && text !== "보기") {
+                    text = text.replace(/\[[^\]]+\]/g, "").replace(/\([0-9]+\)/g, "").replace(/\s+/g, " ").trim();
+                    if (text.length >= 2) {
+                      const keyword = text.length > 25 ? text.slice(0, 20).trim() : text;
+                      console.log(`  [✨ 자율 활성화 스크래핑 성공] 폴더 클릭 후 렌더링된 사원 목록에서 "${keyword}" 추출 성공!`);
+                      return keyword;
+                    }
+                  }
+                }
+              } catch {}
+            }
+          }
+        }
+        if (clicked) break; // Try next locator only if we didn't click anything
+      }
+    } catch {}
   }
 
   return null;

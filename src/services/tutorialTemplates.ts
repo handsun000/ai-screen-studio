@@ -182,7 +182,14 @@ export const MASTER_DIRECTING_GUIDELINES = `
    - 조직도/결재선 팝업 호출: \`button:has(.ico_org), button:has-text("조직도"), button:has-text("결재선")\`
    - 체크박스/옵션 라디오: \`label:has-text("동의"), label:has-text("공개"), label:has-text("예약사용"), input[type="checkbox"]\`
 
-1-3. **🎯 다중 버튼 충돌 방지 및 영역 스코핑 원칙 (Disambiguation by Contextual Scope)**:
+1-3. **🎯 조직도(Org Chart) 등 동적 모달 UI 철저 분석 원칙**:
+   - 조직도에서 사원을 선택하고 추가하는 방식은 타겟 프로젝트마다 다릅니다. (체크박스 선택 후 화살표 버튼, 리스트 뷰 vs 카드 뷰, 더블 클릭 등)
+   - 타겟 프로젝트의 \`orgDialog.jsp\` 등 관련 소스를 면밀히 분석하여 **실제 존재하는 동작**만을 기획하십시오.
+   - **사원 검색창 타겟팅 주의**: 조직도 팝업에는 보통 '부서 검색창(좌측)'과 '사원 검색창(중앙)' 2개가 존재합니다. 사원을 검색할 때는 막연히 \`input[type='text']:first\`를 쓰지 말고, 반드시 **\`input[placeholder*='이름'], input[placeholder*='사원']\`** 처럼 사원 검색 전용 입력창을 명확히 타겟팅하십시오.
+   - **카드 뷰 vs 리스트 뷰**: 사원 목록이 카드 뷰로 렌더링되어 체크박스가 없다면, 먼저 리스트 뷰로 전환하는 버튼(\`button.btn_lst, .ico_lst\`)을 클릭하는 액션을 기획하거나, 카드를 직접 클릭/더블클릭하는 방식을 소스코드에서 유추하십시오.
+   - **수신자 추가 방식 (매우 중요)**: 조직도 팝업에서 사용자를 체크한 후 우측으로 넘기는 [추가(>)] 화살표 버튼이 **아예 없는 UI**가 많습니다 (체크 후 하단 '확인'만 누르면 끝나는 UI). 소스코드에 \`btn_rgt\`, \`btn_add\` 같은 화살표/추가 버튼이 명확히 존재하지 않는다면 **절대 '추가 버튼 클릭' 액션을 지어내지 마십시오!** 없는 버튼을 기획하면 녹화가 멈춥니다.
+
+1-4. **🎯 다중 버튼 충돌 방지 및 영역 스코핑 원칙 (Disambiguation by Contextual Scope)**:
    - 엔터프라이즈 포탈/웹앱에는 동일한 텍스트('저장', '등록', '확인', '닫기')나 아이콘을 가진 버튼이 상단 헤더, 좌측 사이드바, 본문 툴바, 팝업 모달 등 여러 곳에 동시에 존재할 수 있습니다.
    - 따라서 모호하게 \`button:has-text('저장')\`만 쓰면 엉뚱한 헤더나 배경의 버튼이 클릭될 위험이 있습니다.
    - **반드시 해당 버튼이 위치한 화면 영역을 접두어로 결합하여 100% 특정하십시오**:
@@ -236,10 +243,14 @@ export const MASTER_DIRECTING_GUIDELINES = `
 2. **[💡 기능별 맞춤 필수 조건 동적 충족 (Feature-Specific Prerequisites)]**:
    기능마다 시스템이 요구하는 필수 조건이 서로 다르므로, **해당 기능의 실제 화면 구조와 소스코드(extractAlertsAndValidation)에 명시된 유효성 검사 alert 조건**에 맞춰 필요한 단계들을 빠짐없이 순서대로 진행하십시오:
    - 📄 **문서 등록 (4단계 필수 시퀀스)**: 좌측 [문서 등록] 버튼 클릭 ➔ '문서함 선택' 모달 팝업 열림 대기(1500ms) ➔ 팝업 내 실제 등록 대상 문서함(말단 리프 노드) 클릭(".ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:last-child a.dynatree-title:visible") ➔ 팝업 [확인] 버튼 클릭(".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible")하여 모달 닫기 ➔ 본문 등록 폼 렌더링 후 제목 입력("input#subject:visible, input[name*='subject']:visible") ➔ 본문 내용 작성("div[contenteditable='true']:visible, textarea:visible") ➔ 상단 [저장] 클릭("button:has-text('저장'):visible, button._save:visible")! (절대로 등록 불가한 최상위 부모 폴더 노드를 선택하지 마십시오!)
-   - 📝 **전자결재 기안**: 결재 양식 선택 -> 제목 입력 -> 결재선/조직도 지정 (기안자/결재자) -> 본문 작성 -> 상신 클릭 및 확인
-   - 📅 **일정 등록**: 캘린더 선택 -> 일정 제목 입력 -> 일시/시간 설정 -> (필요 시) 자원예약/참석자 추가 -> 내용 작성 -> 저장 클릭
+   - 📝 **전자결재 기안**: 결재 양식 선택 -> 제목 입력 -> 조직도 트리 부서 클릭 후 사원 지정 -> 본문 작성 -> 상신 클릭 및 확인
+   - 📅 **일정 등록**: 캘린더 선택 -> 일정 제목 입력 -> 일시/시간 설정 -> 조직도 트리 부서 클릭 후 참석자 추가 -> 내용 작성 -> 저장 클릭
    - 📌 **게시글 작성**: 등록할 게시판/말머리 선택 -> 제목 입력 -> 본문 작성 -> 등록 클릭
-   - 💬 **쪽지/메시지**: 수신자(받는 사람) 검색/선택 -> 내용 입력 -> 전송 클릭
+   - 💬 **쪽지/메시지/메일**: 조직도 팝업 호출 -> [🚨검색 금지] 좌측 부서 트리 클릭 -> 우측 사원 목록 첫번째 사원 선택 -> 수신자 추가 -> 내용 입력 -> 전송 클릭
+
+4. **[🚨 조직도/사원 선택 시 검색창 사용 금지 및 트리 탐색 원칙]**:
+   - 가상의 사원명("GW테스트02", "김철수")을 검색창에 입력하면 DB에 존재하지 않아 100% 오류가 발생합니다.
+   - **사원 선택 팝업 시퀀스**: 반드시 좌측 트리의 특정 부서(예: \`.dynatree-container li:first-child a.dynatree-title\`)를 클릭하여 우측 사원 목록을 먼저 활성화한 뒤, 우측 목록의 첫 번째 사원 체크박스(\`.lst_type1 li:first-child input[type='checkbox'], table tbody tr:first-child input[type='checkbox']\`)를 선택하고 [추가/확인] 버튼을 누르는 방식으로 기획하십시오. 절대 검색창 입력 액션을 쓰지 마십시오.
 
 3. **[✅ 등록 시퀀스 표준 진행 원칙]**:
    - Step 1: 대상 기능 진입 및 [작성/등록] 호출
