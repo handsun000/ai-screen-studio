@@ -12,6 +12,7 @@ interface CacheEntry {
   targetPath: string;
   targetUrl: string;
   directingStyle: string;
+  depth: string;
   createdAt: string;
   result: GeneratePlanResult;
 }
@@ -56,14 +57,16 @@ export function computePlanCacheKey(
   prompt: string,
   targetPath?: string,
   targetUrl?: string,
-  directingStyle?: string
+  directingStyle?: string,
+  depth?: string
 ): string {
   const normPrompt = (prompt || "").trim().toLowerCase().replace(/\s+/g, " ");
   const normPath = (targetPath || "").trim().toLowerCase().replace(/\\/g, "/");
   const normUrl = (targetUrl || "").trim().toLowerCase().replace(/\/+$/, "");
   const normStyle = (directingStyle || "standard").trim().toLowerCase();
+  const normDepth = (depth || "standard").trim().toLowerCase();
 
-  const raw = `${normPrompt}|${normPath}|${normUrl}|${normStyle}`;
+  const raw = `${normPrompt}|${normPath}|${normUrl}|${normStyle}|${normDepth}`;
   return crypto.createHash("sha256").update(raw).digest("hex").slice(0, 16);
 }
 
@@ -74,9 +77,10 @@ export function getCachedPlan(
   prompt: string,
   targetPath?: string,
   targetUrl?: string,
-  directingStyle?: string
+  directingStyle?: string,
+  depth?: string
 ): (GeneratePlanResult & { isFromCache: true; cachedAt: string }) | null {
-  const key = computePlanCacheKey(prompt, targetPath, targetUrl, directingStyle);
+  const key = computePlanCacheKey(prompt, targetPath, targetUrl, directingStyle, depth);
   const store = loadCacheStore();
   const entry = store.entries[key];
 
@@ -99,9 +103,10 @@ export function setCachedPlan(
   targetPath: string | undefined,
   targetUrl: string | undefined,
   directingStyle: string | undefined,
+  depth: string | undefined,
   result: GeneratePlanResult
 ): void {
-  const key = computePlanCacheKey(prompt, targetPath, targetUrl, directingStyle);
+  const key = computePlanCacheKey(prompt, targetPath, targetUrl, directingStyle, depth);
   const store = loadCacheStore();
 
   store.entries[key] = {
@@ -110,6 +115,7 @@ export function setCachedPlan(
     targetPath: (targetPath || "").trim(),
     targetUrl: (targetUrl || "").trim(),
     directingStyle: directingStyle || "standard",
+    depth: depth || "standard",
     createdAt: new Date().toISOString(),
     result: {
       plan: result.plan,

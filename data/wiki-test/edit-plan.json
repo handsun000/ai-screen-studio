@@ -1,0 +1,49 @@
+{
+  "totalDurationFrames": 1153,
+  "fps": 60,
+  "defaultZoom": 1.0,
+  "segments": [
+    {
+      "momentId": 2,
+      "startFrame": 183,
+      "endFrame": 213,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 693,
+        "y": 33
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (693, 33)"
+    },
+    {
+      "momentId": 4,
+      "startFrame": 332,
+      "endFrame": 362,
+      "speed": 1.0,
+      "zoom": 1.4,
+      "zoomTarget": {
+        "x": 496,
+        "y": 33
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Typing: \ub300\ud55c\ubbfc\uad6d"
+    },
+    {
+      "momentId": 6,
+      "startFrame": 528,
+      "endFrame": 558,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 930,
+        "y": 33
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (930, 33)"
+    }
+  ]
+}

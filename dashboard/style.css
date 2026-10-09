@@ -412,10 +412,11 @@ body {
 
 /* Grid Layouts */
 .generator-grid {
-  display: grid;
-  grid-template-columns: 1fr 1.35fr;
+  display: flex;
+  flex-direction: column;
   gap: 24px;
-  height: 100%;
+  height: auto;
+  min-height: 100%;
 }
 
 /* Presets & Universal Templates Section */
@@ -586,6 +587,7 @@ body {
 }
 
 input[type="text"],
+input[type="number"],
 textarea,
 select {
   width: 100%;
@@ -597,9 +599,11 @@ select {
   font-family: var(--font-sans);
   font-size: 0.9rem;
   transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
 }
 
 input[type="text"]:focus,
+input[type="number"]:focus,
 textarea:focus,
 select:focus {
   outline: none;
@@ -1279,8 +1283,22 @@ textarea {
 }
 
 .action-inputs-grid input {
-  padding: 6px 10px;
+  padding: 8px 12px;
   font-size: 0.82rem;
+}
+
+.input-with-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.input-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #A5B4FC;
+  padding-left: 2px;
 }
 
 .action-options-row {

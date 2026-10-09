@@ -1,0 +1,124 @@
+{
+  "metadata": {
+    "url": "https://ko.wikipedia.org",
+    "viewportWidth": 1920,
+    "viewportHeight": 1080,
+    "totalDurationMs": 19213,
+    "recordingStart": "2026-10-08T02:44:18.036Z"
+  },
+  "moments": [
+    {
+      "id": 1,
+      "type": "wait",
+      "timestamp": 988,
+      "description": "위키백과 메인 화면 로딩 및 레이아웃 앵커 대기 (Phase 1)"
+    },
+    {
+      "id": 2,
+      "type": "click",
+      "timestamp": 3043,
+      "description": "상단 위키백과 검색창 포커스 (Phase 2)",
+      "cursor": {
+        "x": 693,
+        "y": 33
+      },
+      "target": {
+        "x": 480,
+        "y": 17,
+        "width": 426,
+        "height": 32
+      }
+    },
+    {
+      "id": 3,
+      "type": "wait",
+      "timestamp": 4126,
+      "description": "검색 입력창 활성화 대기"
+    },
+    {
+      "id": 4,
+      "type": "type",
+      "timestamp": 5539,
+      "description": "검색창에 '대한민국' 키워드 입력 (Phase 3)",
+      "cursor": {
+        "x": 496,
+        "y": 33
+      },
+      "target": {
+        "x": 480,
+        "y": 17,
+        "width": 426,
+        "height": 32
+      },
+      "keys": "대한민국"
+    },
+    {
+      "id": 5,
+      "type": "wait",
+      "timestamp": 7068,
+      "description": "실시간 자동완성 검색 결과 레이어 렌더링 대기"
+    },
+    {
+      "id": 6,
+      "type": "click",
+      "timestamp": 8800,
+      "description": "검색 결과 첫 번째 추천 항목 클릭 (Phase 4)",
+      "cursor": {
+        "x": 930,
+        "y": 33
+      },
+      "target": {
+        "x": 905,
+        "y": 17,
+        "width": 49,
+        "height": 32
+      }
+    },
+    {
+      "id": 7,
+      "type": "wait",
+      "timestamp": 10526,
+      "description": "대한민국 상세 문서 페이지 로딩 대기"
+    },
+    {
+      "id": 8,
+      "type": "scroll",
+      "timestamp": 12394,
+      "description": "문서 본문 개요 및 목차 영역으로 스크롤 다운 (Phase 5)",
+      "cursor": {
+        "x": 952,
+        "y": 1080
+      },
+      "scrollDelta": {
+        "x": 0,
+        "y": 600
+      }
+    },
+    {
+      "id": 9,
+      "type": "wait",
+      "timestamp": 13020,
+      "description": "스크롤 이동 후 본문 내용 확인 대기"
+    },
+    {
+      "id": 10,
+      "type": "scroll",
+      "timestamp": 14562,
+      "description": "역사 및 세부 섹션 탐색을 위한 추가 스크롤",
+      "cursor": {
+        "x": 952,
+        "y": 1080
+      },
+      "scrollDelta": {
+        "x": 0,
+        "y": 500
+      }
+    },
+    {
+      "id": 11,
+      "type": "wait",
+      "timestamp": 15186,
+      "description": "문서 상세 내용 확인 및 영상 마무리 대기"
+    }
+  ]
+}

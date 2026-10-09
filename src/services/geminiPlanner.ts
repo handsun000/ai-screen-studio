@@ -25,6 +25,7 @@ export interface GeneratePlanOptions {
   targetProjectPath?: string;
   targetUrl?: string;
   directingStyle?: "standard" | "fast" | "detailed";
+  depth?: "basic" | "standard" | "advanced";
   bypassCache?: boolean;
   onProgress?: (message: string) => void;
 }
@@ -381,7 +382,8 @@ export async function generateBrowsePlanWithGemini(
       options.prompt,
       effectiveTargetPath,
       effectiveTargetUrl,
-      options.directingStyle
+      options.directingStyle,
+      options.depth
     );
     if (cached) {
       options.onProgress?.(`⚡ [캐시 적중 (Cache Hit)] 동일한 질문에 대한 AI 분석 결과가 보관되어 있습니다. Gemini 호출을 생략하고 0.05초 만에 즉시 불러옵니다! (토큰 소모: 0)`);
@@ -473,6 +475,13 @@ Directing Style: ${options.directingStyle || "standard"} (${
       : options.directingStyle === "detailed"
       ? "Detailed manual pacing: 3500ms-4500ms wait intervals"
       : "Standard educational pacing: 2500ms-3500ms wait intervals"
+  })
+Scenario Depth: ${options.depth || "standard"} (${
+    options.depth === "basic"
+      ? "Basic (Summary): Keep it under 1 minute (10-15 actions). Cover ONLY the most essential happy-path flow. Skip optional settings and minor UI elements."
+      : options.depth === "advanced"
+      ? "Advanced (Deep-Dive Masterclass): Make a comprehensive 3-5 minute guide with AT LEAST 40-60 actions! Exhaustively explore all optional settings, toggle advanced menus, switch between tabs, hover over tooltips to explain them, deeply configure options, and thoroughly review the page before finally submitting. Do not take shortcuts!"
+      : "Standard (Normal): Make a 1-2 minute standard guide (20-35 actions). Cover the main flow and one or two important options."
   })
 
 Strictly follow the 5-phase video directing framework (Phase 1 Lead-in -> Phase 2 Intentional Navigation -> Phase 3 Interaction -> Phase 4 Action Execution -> Phase 5 Outcome Review).
@@ -605,27 +614,49 @@ The final response must be valid JSON with this exact schema:
             ],
           });
 
-          const finalResponse = await ai.models.generateContent({
-            model,
-            contents,
-            config: {
-              systemInstruction,
-              responseMimeType: "application/json",
-              temperature: 0.2,
-              maxOutputTokens: 8192,
-            },
-          });
+          let retryCount = 0;
+          while (retryCount < 2) {
+            const finalResponse = await ai.models.generateContent({
+              model,
+              contents,
+              config: {
+                systemInstruction,
+                responseMimeType: "application/json",
+                temperature: 0.2 + (retryCount * 0.2), // Increase temp on retry
+                maxOutputTokens: 8192,
+              },
+            });
 
-          const finalText = finalResponse.text || "";
-          if (finalText.trim().length > 0) {
-            try {
-              parsed = parseAndRepairJson(finalText);
-              console.log(`[Unified Gemini Director] Successfully finalized JSON plan with model "${model}"!`);
-              break modelLoop;
-            } catch (jsonErr: any) {
-              console.warn(`[Unified Gemini Director] Final JSON parse failed: ${jsonErr.message}`);
-              lastError = jsonErr;
+            const finalText = finalResponse.text || "";
+            if (finalText.trim().length > 0) {
+              try {
+                parsed = parseAndRepairJson(finalText);
+                
+                // AI 자가 검증: 파싱은 되었으나 actions 등 필수 구조가 비정상인지 확인
+                if (!parsed || !parsed.plan || !Array.isArray(parsed.plan.actions) || parsed.plan.actions.length === 0) {
+                  throw new Error("생성된 JSON에 actions 배열이 누락되었거나 비어 있습니다. BrowsePlan 스펙에 맞춰 처음부터 다시 작성해주세요.");
+                }
+                
+                // 정제기 통과 여부 검증
+                sanitizeBrowsePlan(parsed.plan);
+
+                console.log(`[Unified Gemini Director] Successfully finalized JSON plan with model "${model}"!`);
+                break modelLoop;
+              } catch (jsonErr: any) {
+                console.warn(`[Unified Gemini Director] JSON parse or validation failed (Attempt ${retryCount + 1}): ${jsonErr.message}`);
+                lastError = jsonErr;
+                parsed = null;
+                
+                // 에러 메시지를 컨텍스트에 추가하여 AI에게 재작성(자가 치유) 지시
+                contents.push({ role: "model", parts: [{ text: finalText }] });
+                contents.push({
+                  role: "user",
+                  parts: [{ text: `🚨 오류 발생: ${jsonErr.message}\n이전 응답의 JSON 형식이 잘못되었거나 필수 항목이 누락되었습니다. 오류를 수정한 완벽한 JSON을 다시 생성하십시오.` }]
+                });
+                options.onProgress?.(`⚠️ AI 시나리오 검증 실패. 원인 분석 후 자동 재시도 중... (${retryCount + 1}/2)`);
+              }
             }
+            retryCount++;
           }
         }
       } catch (err: any) {
@@ -688,6 +719,7 @@ The final response must be valid JSON with this exact schema:
       effectiveTargetPath,
       effectiveTargetUrl,
       options.directingStyle,
+      options.depth,
       finalResult
     );
   } catch {}

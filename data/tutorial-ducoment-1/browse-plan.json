@@ -1,0 +1,289 @@
+{
+  "url": "https://gwdev.bc.ac.kr",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "requiresLogin": true,
+  "actions": [
+    {
+      "type": "wait",
+      "description": "메인 포털 대시보드 접속 및 시각적 앵커 인지 대기 (Phase 1)",
+      "ms": 2500
+    },
+    {
+      "type": "hover",
+      "selector": ".gnb_menu:visible, header .gnb:visible, div#header:visible",
+      "description": "상단 글로벌 네비게이션 바(GNB) 영역 호버 탐색"
+    },
+    {
+      "type": "wait",
+      "description": "GNB 메뉴 구조 확인 대기",
+      "ms": 1200
+    },
+    {
+      "type": "click",
+      "selector": "button.btn_svc_open:visible, button[title='포탈 전체메뉴']:visible, .btn_svc_open:visible",
+      "description": "상단 GNB '포탈 전체메뉴' 버튼 클릭하여 서랍 레이어 열기 (Phase 2)",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "전체메뉴 서랍 레이어 펼침 대기",
+      "ms": 1500
+    },
+    {
+      "type": "hover",
+      "selector": "#svc_box a:has-text(\"문서관리\"), a:has-text(\"문서관리\"):visible",
+      "description": "전체메뉴 서랍 내 '문서관리' 메뉴 항목 포커스"
+    },
+    {
+      "type": "click",
+      "selector": "#svc_box a:has-text(\"문서관리\"), a:has-text(\"문서관리\"):visible",
+      "description": "문서관리 메뉴 클릭하여 서비스 이동",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "문서관리 메인 대시보드 및 사이드바 렌더링 로딩 대기",
+      "ms": 3000
+    },
+    {
+      "type": "hover",
+      "selector": "#snb:visible, .snb:visible, aside:visible",
+      "description": "좌측 문서함 사이드바(SNB) 트리 영역 호버 탐색"
+    },
+    {
+      "type": "wait",
+      "description": "사이드바 구조 시청자 인지 대기",
+      "ms": 1200
+    },
+    {
+      "type": "click",
+      "selector": ".dynatree-node:has(a.dynatree-title:has-text('부서')) .dynatree-expander, .dynatree-node:has(a.dynatree-title:has-text('전체')) .dynatree-expander, .dynatree-expander",
+      "description": "문서함 트리의 상위 폴더 확장 아이콘 클릭",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "하위 문서함 계층 구조 펼침 대기",
+      "ms": 1500
+    },
+    {
+      "type": "click",
+      "selector": ".dynatree-container li a.dynatree-title:visible",
+      "description": "분류 트리 내 기본 부서문서함 클릭하여 목록 이동",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "선택 문서함 목록 데이터 로딩 대기",
+      "ms": 1800
+    },
+    {
+      "type": "hover",
+      "selector": ".box_toolbar:visible, .list_head:visible, table thead:visible",
+      "description": "문서함 목록 상단 툴바 및 컬럼 헤더 영역 호버"
+    },
+    {
+      "type": "scroll",
+      "selector": "#content:visible, .list_container:visible, .doc_list:visible",
+      "deltaY": 200,
+      "description": "문서 목록 스크롤하여 기존 등록 문서들 탐색"
+    },
+    {
+      "type": "wait",
+      "description": "목록 구조 확인 대기",
+      "ms": 1200
+    },
+    {
+      "type": "click",
+      "selector": "button#docLeft_writeAtclBtn:visible, #snb button:has-text('문서 등록'):visible, #snb button:has-text('문서등록'):visible, button:has-text('문서 등록'):visible",
+      "description": "좌측 상단 [문서 등록] 버튼 클릭하여 신규 문서 작성 프로세스 시작 (Phase 3)",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "'문서함 선택' 모달 다이얼로그 팝업 로딩 대기",
+      "ms": 1800
+    },
+    {
+      "type": "hover",
+      "selector": ".ui-dialog:visible .dynatree-container",
+      "description": "문서함 선택 모달 내 분류 트리 영역 호버"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:not(:has(ul)) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:last-child a.dynatree-title:visible, .ui-dialog:visible [class*='tree'] .dynatree-node:not(.dynatree-folder) a:visible, .ui-dialog:visible [class*='tree'] li:last-child a:visible, .ui-dialog:visible .dynatree-container a.dynatree-title:visible",
+      "description": "등록 대상 말단 문서함(리프 노드) 선택 클릭",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "문서함 선택 활성화 상태 대기",
+      "ms": 1200
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, button[id*='confirm']:visible, button[id*='Confirm']:visible, .ui-dialog:visible button.btn_pri:visible, .ui-dialog:visible button._confirm:visible",
+      "description": "문서함 선택 팝업 [확인] 버튼 클릭하여 작성 폼으로 이동",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "문서 등록 상세 입력 폼 로딩 대기",
+      "ms": 2500
+    },
+    {
+      "type": "hover",
+      "selector": "input#atclWrite_title:visible, input#subject:visible, input[name*='subject']:visible",
+      "description": "문서 제목 입력 필드 포커스 안내"
+    },
+    {
+      "type": "type",
+      "selector": "input#atclWrite_title:visible, input#subject:visible, input[name*='subject']:visible",
+      "text": "부천대학교 차세대 그룹웨어 표준 업무 매뉴얼 및 가이드라인",
+      "description": "문서 제목 입력 필드에 가이드 제목 입력"
+    },
+    {
+      "type": "wait",
+      "description": "제목 입력 확인 대기",
+      "ms": 1200
+    },
+    {
+      "type": "hover",
+      "selector": "select#atclWrite_keepTerm:visible, select[name*='keepTerm']:visible, select[name*='keep']:visible, label:has-text('보존기간')",
+      "description": "보존기간 설정 영역 호버 안내"
+    },
+    {
+      "type": "click",
+      "selector": "label:has-text('영구'), label:has-text('5년'), select#atclWrite_keepTerm:visible, select[name*='keepTerm']:visible",
+      "description": "문서 보존기간 기본 옵션 설정",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "보존기간 옵션 적용 대기",
+      "ms": 1200
+    },
+    {
+      "type": "click",
+      "selector": "div[contenteditable='true']:visible, textarea#atclWrite_cn:visible, textarea:visible, .note-editable:visible",
+      "description": "본문 웹 에디터 입력 영역 클릭 포커스",
+      "force": false
+    },
+    {
+      "type": "type",
+      "selector": "div[contenteditable='true']:visible, textarea#atclWrite_cn:visible, textarea:visible, .note-editable:visible",
+      "text": "본 문서는 부천대학교 전 교직원이 활용하는 차세대 그룹웨어 문서관리 시스템의 표준 절차 및 운영 지침서입니다.",
+      "description": "문서 상세 본문 설명 내용 타이핑"
+    },
+    {
+      "type": "wait",
+      "description": "본문 내용 입력 확인 대기",
+      "ms": 1500
+    },
+    {
+      "type": "hover",
+      "selector": "button#atclWrite_saveBtn:visible, button:has-text('저장'):visible, button._save:visible",
+      "description": "상단 폼 툴바 [저장] 버튼 호버"
+    },
+    {
+      "type": "click",
+      "selector": "button#atclWrite_saveBtn:visible, button:has-text('저장'):visible, button._save:visible",
+      "description": "작성된 신규 문서 [저장] 버튼 클릭 (Phase 4)",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "문서 등록 처리 및 목록 화면 리다이렉트 대기",
+      "ms": 2500
+    },
+    {
+      "type": "hover",
+      "selector": "table tbody tr:first-child:visible, ul.lst_vr_ul li:first-child:visible",
+      "description": "등록 완료 후 목록 최상단 신규 등록 문서 호버 확인 (Phase 5)"
+    },
+    {
+      "type": "wait",
+      "description": "신규 생성 문서 항목 확인 대기",
+      "ms": 1200
+    },
+    {
+      "type": "click",
+      "selector": "table tbody tr:first-child a:visible, table tbody tr:first-child .sub_tp:visible, ul.lst_vr_ul li:first-child a:visible",
+      "description": "목록 최상단 등록 문서를 클릭하여 상세 조회 화면 진입",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "문서 상세 본문 및 메타 정보 화면 로딩 대기",
+      "ms": 2500
+    },
+    {
+      "type": "hover",
+      "selector": ".doc_view_info:visible, .view_info:visible, .info_dl:visible",
+      "description": "문서 메타 정보(작성자, 등록일, 보존기간, 문서번호) 영역 호버 탐색"
+    },
+    {
+      "type": "scroll",
+      "selector": "#content:visible, .doc_view_box:visible, .view_content:visible",
+      "deltaY": 250,
+      "description": "문서 본문 및 하단 첨부파일 영역 스크롤 탐색"
+    },
+    {
+      "type": "wait",
+      "description": "문서 본문 상세 내용 확인 대기",
+      "ms": 1500
+    },
+    {
+      "type": "click",
+      "selector": "button:has-text('목록'):visible, button#atclView_listBtn:visible, .btn:has-text('목록'):visible, table.tbl_lst tbody tr:first-child td.sub a:visible, table tbody tr:first-child td[class*='sub'] a:visible, table tbody tr:first-child a:visible, ul.lst_vr_ul li:first-child a.sub_tp:visible, ul.lst_vr_ul li:first-child .sub a:visible, ul[id*='List'] li:first-child a.sub_tp:visible, ul[class*='lst'] li:first-child a:visible, .lst_type1 li:first-child a:visible",
+      "description": "상세 뷰 상단 [목록] 버튼 클릭하여 문서함 목록 복귀",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "문서함 목록 화면 원복 대기",
+      "ms": 1800
+    },
+    {
+      "type": "hover",
+      "selector": "input#atclList_searchWord:visible, input[name*='searchWord']:visible, input[placeholder*='검색']:visible",
+      "description": "문서함 목록 검색 입력창 호버"
+    },
+    {
+      "type": "type",
+      "selector": "input#atclList_searchWord:visible, input[name*='searchWord']:visible, input[placeholder*='검색']:visible",
+      "text": "실시간 실제 목록 데이터",
+      "description": "화면 목록의 실제 데이터로 검색어 자동 연동 입력"
+    },
+    {
+      "type": "wait",
+      "description": "검색어 입력 확인 대기",
+      "ms": 1200
+    },
+    {
+      "type": "click",
+      "selector": "button#atclList_searchBtn:visible, button:has-text('검색'):visible, .btn_search:visible",
+      "description": "문서 [검색] 버튼 클릭 실행",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "검색 결과 필터링 목록 렌더링 대기",
+      "ms": 1800
+    },
+    {
+      "type": "click",
+      "selector": "table tbody tr:first-child a:visible, ul.lst_vr_ul li:first-child a:visible",
+      "description": "검색 결과 일치 문서 항목 클릭하여 최종 상세 조회 검증",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "description": "문서관리 전체 프로세스 학습 완료 및 와이드 뷰 아웃트로 마무리",
+      "ms": 3000
+    }
+  ]
+}

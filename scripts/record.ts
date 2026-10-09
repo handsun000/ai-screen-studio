@@ -79,7 +79,7 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
   selector = selector.replace(
     /\b(button|a|div|span|input|li|tr|p):([a-zA-Z][a-zA-Z0-9_-]*)\b/g,
     (match, tag, cls) => {
-      const validPseudos = ["has-text", "visible", "first-child", "last-child", "nth-child", "not", "disabled", "checked", "focus", "hover"];
+      const validPseudos = ["has", "has-text", "visible", "first-child", "last-child", "nth-child", "not", "disabled", "checked", "focus", "hover", "text", "text-is"];
       if (!validPseudos.includes(cls)) {
         return `${tag}.${cls}`;
       }
@@ -248,6 +248,38 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
       }
     }
   }
+
+  // 3-C. Universal First Item / Detail View Fallback
+  const isFirstItemIntent =
+    (desc.includes("목록") || desc.includes("항목") || desc.includes("문서") || desc.includes("결과") || desc.includes("데이터")) &&
+    (desc.includes("첫") || desc.includes("최상단") || desc.includes("상세") || desc.includes("조회") || desc.includes("상단"));
+
+  if (isFirstItemIntent) {
+    const listSelectors = [
+      "table tbody tr:first-child td.sub a:visible",
+      "table tbody tr:first-child a:visible",
+      "ul.lst_vr_ul li:first-child a.sub_tp:visible",
+      "ul.lst_vr_ul li:first-child .sub a:visible",
+      "ul[id*='List'] li:first-child a.sub_tp:visible",
+      "#atclList_list2 li:first-child a.sub_tp:visible",
+      "ul.lst_vr_ul li:first-child a:visible",
+      "ul[id*='List'] li:first-child a:visible",
+      ".lst_type1 li:first-child a:visible",
+      ".list_box li:first-child a:visible"
+    ];
+    for (const baseObj of candidateBases) {
+      for (const sel of listSelectors) {
+        try {
+          const loc = baseObj.locator(sel).first();
+          if (await loc.isVisible().catch(() => false)) {
+            console.log(`  [🎯 목록 상세 조회 요소 자동 연결] 화면 목록의 첫 번째 유효 항목을 대상(${baseObj.name})으로 연결합니다.`);
+            return loc;
+          }
+        } catch {}
+      }
+    }
+  }
+
 
   // 4. Intelligent Self-Healing for Buttons / Interactive Elements
   // If selector is empty or failed to match, extract button/action names from description and try verified patterns
@@ -568,7 +600,7 @@ async function isSessionValid(
     });
     const checkPage = await checkContext.newPage();
 
-    await checkPage.goto(url, { waitUntil: "domcontentloaded", timeout: 15000 });
+    await checkPage.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
     // Brief sleep to catch client-side URL redirects (e.g. location.href = '/login')
     await checkPage.waitForTimeout(1200);
 
@@ -674,6 +706,9 @@ async function trySelfHealAction(
         return healedLoc;
       } catch {}
     }
+  } else if (healResult && !healResult.success) {
+    console.warn(`  [AI 자가 치유 포기] 💡 사유: ${healResult.reason}`);
+    return null;
   }
 
   console.warn(`  [AI 자가 치유 미완료] 현재 화면에서 적합한 요소를 확정하지 못했습니다.`);
@@ -1469,7 +1504,12 @@ async function main() {
         case "wait": {
           moment.timestamp = Date.now() - recordingStart;
           const ms = action.ms ?? 1000;
-          await page.waitForTimeout(ms);
+          // 모달 애니메이션 대기 후 즉시 복구, 남은 시간 대기
+          await page.waitForTimeout(Math.min(500, ms));
+          await autoRecoverActiveModals(page, action);
+          if (ms > 500) {
+            await page.waitForTimeout(ms - 500);
+          }
           break;
         }
 
@@ -1494,10 +1534,14 @@ async function main() {
             el = await trySelfHealAction(page, action, momentId, plan, dataDir);
           }
           if (!el) {
+            if (action.force === false) {
+              console.log(`  [선택적 액션 스킵] 요소를 찾을 수 없어 스킵합니다: ${action.description}`);
+              break;
+            }
             throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
           }
           try {
-            await el.waitFor({ state: "visible", timeout: 8000 });
+            await el.waitFor({ state: "visible", timeout: 25000 });
           } catch (waitErr) {
             const healed = await trySelfHealAction(page, action, momentId, plan, dataDir);
             if (healed) {
@@ -1541,10 +1585,14 @@ async function main() {
             el = await trySelfHealAction(page, action, momentId, plan, dataDir);
           }
           if (!el) {
+            if (action.force === false) {
+              console.log(`  [선택적 액션 스킵] 요소를 찾을 수 없어 스킵합니다: ${action.description}`);
+              break;
+            }
             throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
           }
           try {
-            await el.waitFor({ state: "visible", timeout: 8000 });
+            await el.waitFor({ state: "visible", timeout: 25000 });
           } catch (waitErr) {
             const healed = await trySelfHealAction(page, action, momentId, plan, dataDir);
             if (healed) {
@@ -1622,21 +1670,7 @@ async function main() {
             }
           }
 
-          // Universal First Item / Detail View Click Fallback (Table & Vertical Split View)
-          const descLowerCheck = (action.description || "").toLowerCase();
-          const isDetailClickAction =
-            (descLowerCheck.includes("상세") || descLowerCheck.includes("조회") || descLowerCheck.includes("항목")) &&
-            (descLowerCheck.includes("클릭") || descLowerCheck.includes("선택"));
-
-          if (isDetailClickAction && !el) {
-            const firstItemFallback = page.locator(
-              "table tbody tr:first-child td.sub a:visible, table tbody tr:first-child a:visible, ul.lst_vr_ul li:first-child a.sub_tp:visible, ul.lst_vr_ul li:first-child .sub a:visible, ul[id*='List'] li:first-child a.sub_tp:visible, #atclList_list2 li:first-child a.sub_tp:visible, ul.lst_vr_ul li:first-child a:visible, ul[id*='List'] li:first-child a:visible, .lst_type1 li:first-child a:visible, .list_box li:first-child a:visible"
-            ).first();
-            if (await firstItemFallback.isVisible().catch(() => false)) {
-              console.log(`  [🎯 목록 상세 조회 요소 자동 연결] 화면 목록의 첫 번째 유효 항목을 클릭 대상으로 연결합니다.`);
-              el = firstItemFallback;
-            }
-          }
+          // Universal First Item / Detail View Click Fallback (Table & Vertical Split View) (Moved to getLocator)
 
           // 🌟 Universal Tree & Folder Node Selection Auto-Refinement
           const descLower = (action.description || "").toLowerCase();
@@ -1697,11 +1731,15 @@ async function main() {
             el = await trySelfHealAction(page, action, momentId, plan, dataDir);
           }
           if (!el) {
+            if (action.force === false) {
+              console.log(`  [선택적 액션 스킵] 요소를 찾을 수 없어 스킵합니다: ${action.description}`);
+              break;
+            }
             throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
           }
 
           // 1. Wait for element to become visible on the screen
-          const waitTimeout = 10000;
+          const waitTimeout = 25000;
           try {
             await el.waitFor({ state: action.force ? "attached" : "visible", timeout: waitTimeout });
           } catch (waitErr) {
@@ -1765,6 +1803,10 @@ async function main() {
             }
 
             if (!resolvedViaLabel) {
+              if (action.force === false) {
+                console.log(`  [선택적 액션 스킵] 요소가 화면에 표시되지 않아 스킵합니다: ${action.description}`);
+                break;
+              }
               throw new Error(`요소가 화면에 표시되지 않습니다 (${waitTimeout}ms 초과): ${action.selector}`);
             }
           }
@@ -1868,10 +1910,14 @@ async function main() {
             el = await trySelfHealAction(page, action, momentId, plan, dataDir);
           }
           if (!el) {
+            if (action.force === false) {
+              console.log(`  [선택적 액션 스킵] 입력 요소를 찾을 수 없어 스킵합니다: ${action.description}`);
+              break;
+            }
             throw new Error(`입력 요소를 찾을 수 없습니다: ${action.selector}`);
           }
 
-          const waitTimeout = 10000;
+          const waitTimeout = 25000;
           try {
             await el.waitFor({ state: "visible", timeout: waitTimeout });
           } catch (waitErr) {

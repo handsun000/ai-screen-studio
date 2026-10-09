@@ -9,7 +9,7 @@
     {
       "type": "wait",
       "description": "메인 대시보드 로딩 및 시각적 앵커 대기 (Phase 1)",
-      "ms": 3000
+      "ms": 2500
     },
     {
       "type": "click",
@@ -18,33 +18,33 @@
     },
     {
       "type": "wait",
-      "description": "전자우편 메인 화면 로딩 대기",
-      "ms": 3500
+      "description": "전자우편 화면 로딩 대기",
+      "ms": 1800
     },
     {
       "type": "click",
       "description": "좌측 메뉴 상단 [메일 쓰기] 버튼 클릭 (Phase 3)",
-      "selector": "#snb button:has-text(\"메일 쓰기\"), button:has-text(\"메일 쓰기\"):visible, button:has-text(\"메일쓰기\"):visible"
+      "selector": "button:has-text(\"메일 쓰기\"):visible, button:has-text(\"메일작성\"):visible, button.btn_write:visible, #snb button:has-text(\"쓰기\")"
     },
     {
       "type": "wait",
-      "description": "메일 작성 폼 렌더링 대기",
-      "ms": 2500
+      "description": "메일 작성 폼 로딩 대기",
+      "ms": 1800
     },
     {
       "type": "click",
       "description": "받는 사람 영역 [조직도] 버튼 클릭",
-      "selector": "button#emlMailReg_toAddressButton, button#emlMailReg_toAddressButton[title='주소록']"
+      "selector": "button#emlMailReg_toAddressButton, button._addressButton[title='주소록']"
     },
     {
       "type": "wait",
       "description": "조직도 팝업 로딩 대기",
-      "ms": 2000
+      "ms": 1500
     },
     {
       "type": "type",
-      "description": "조직도 사원 검색창에 'GW테스트02' 입력",
-      "selector": ".ui-dialog:visible input[placeholder*=\"이름\"], .ui-dialog:visible input[placeholder*=\"사원\"], .ui-dialog:visible input.input_txt:visible",
+      "description": "사원 검색창에 'GW테스트02' 입력",
+      "selector": "input[placeholder*='검색'], input.input_txt, input[type='text']",
       "text": "GW테스트02"
     },
     {
@@ -54,55 +54,39 @@
     },
     {
       "type": "click",
-      "description": "조직도 검색 버튼 클릭",
-      "selector": ".ui-dialog:visible button[title*=\"검색\"], .ui-dialog:visible button.btn_search, .ui-dialog:visible button:has-text(\"검색\")"
+      "description": "조직도 '검색' 버튼 클릭",
+      "selector": ".ui-dialog:visible button:has-text(\"검색\"):visible, .ui-dialog:visible button.btn_srch:visible, .ui-dialog:visible button[title*=\"검색\"]:visible"
     },
     {
       "type": "wait",
-      "description": "사원 검색 결과 로딩 대기",
-      "ms": 1500
+      "description": "검색 결과 로딩 대기",
+      "ms": 1200
     },
     {
       "type": "click",
-      "description": "체크박스 선택을 위한 리스트 뷰 전환 버튼 클릭",
-      "selector": ".ui-dialog:visible button.btn_lst, .ui-dialog:visible button[title*=\"목록\"], .ui-dialog:visible .ico_lst",
+      "description": "검색 결과 사원 항목 선택",
+      "selector": ".ui-dialog:visible li:has-text(\"GW테스트02\") input[type=\"checkbox\"], .ui-dialog:visible tr:has-text(\"GW테스트02\") input[type=\"checkbox\"], .ui-dialog:visible li:has-text(\"GW테스트02\"), .ui-dialog:visible .lst_type1 li:first-child, table.tbl_lst tbody tr:first-child td.sub a:visible, table tbody tr:first-child td[class*='sub'] a:visible, table tbody tr:first-child a:visible, ul.lst_vr_ul li:first-child a.sub_tp:visible, ul.lst_vr_ul li:first-child .sub a:visible, ul[id*='List'] li:first-child a.sub_tp:visible, ul[class*='lst'] li:first-child a:visible, .lst_type1 li:first-child a:visible",
       "force": true
     },
     {
       "type": "wait",
-      "description": "리스트 뷰 전환 대기",
-      "ms": 1000
-    },
-    {
-      "type": "click",
-      "description": "검색된 사원 체크박스 선택",
-      "selector": ".ui-dialog:visible .lst_type1 li:first-child input[type=\"checkbox\"], .ui-dialog:visible table tbody tr:first-child input[type=\"checkbox\"], .ui-dialog:visible input[type=\"checkbox\"]",
-      "force": true
-    },
-    {
-      "type": "wait",
-      "description": "선택 상태 확인 대기",
+      "description": "사원 선택 상태 확인 대기",
       "ms": 800
     },
     {
-      "type": "wait",
-      "description": "수신자 목록 반영 대기",
-      "ms": 1000
-    },
-    {
       "type": "click",
-      "description": "조직도 [확인] 버튼 클릭",
+      "description": "조직도 팝업 하단 [확인] 버튼 클릭",
       "selector": ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, button[id*='confirm']:visible, button[id*='Confirm']:visible, .ui-dialog:visible button.btn_pri:visible, .ui-dialog:visible button._confirm:visible"
     },
     {
       "type": "wait",
-      "description": "조직도 닫힘 및 메일 폼 수신자 반영 대기",
-      "ms": 1500
+      "description": "수신자 지정 및 팝업 닫힘 대기",
+      "ms": 1200
     },
     {
       "type": "type",
       "description": "메일 제목 입력",
-      "selector": "input#mailSubject:visible, input[name*=\"subject\"]:visible, input#subject:visible, input[placeholder*=\"제목\"]:visible",
+      "selector": "input#subject:visible, input[name*=\"subject\"]:visible, input[placeholder*=\"제목\"]:visible",
       "text": "[업무공유] 프로젝트 진행 현황 및 일정 안내"
     },
     {
@@ -113,28 +97,33 @@
     {
       "type": "type",
       "description": "메일 본문 내용 작성",
-      "selector": "div[contenteditable=\"true\"]:visible, textarea:visible, textarea[placeholder*=\"내용\"], .note-editable:visible",
-      "text": "안녕하세요. 차세대 그룹웨어 프로젝트 금주 진행 현황 및 주요 마일스톤 일정을 공유해 드립니다. 세부 사항은 첨부 내역을 확인해 주시기 바랍니다."
+      "selector": "div[contenteditable=\"true\"]:visible, textarea:visible, textarea[placeholder*=\"내용\"]:visible, .note-editable:visible",
+      "text": "안녕하세요. 금주 프로젝트 진행 현황 및 향후 일정 안내드립니다. 상세 내용은 첨부 문서를 확인해 주시기 바랍니다. 감사합니다."
     },
     {
       "type": "wait",
-      "description": "본문 작성 확인 대기",
+      "description": "본문 작성 완료 대기",
       "ms": 1200
     },
     {
       "type": "click",
-      "description": "상단 메일 [보내기] 버튼 클릭 (Phase 4)",
-      "selector": "button._emlMailReg_sendMailButton, button:has-text('발송')"
+      "description": "상단 [보내기] 버튼 클릭 (Phase 4)",
+      "selector": "button:has-text(\"보내기\"):visible, button._sendBtn:visible, button#emlWrite_sendBtn:visible, button:has-text(\"발송\"):visible"
     },
     {
       "type": "wait",
-      "description": "메일 발송 처리 및 완료 대기 (Phase 5)",
-      "ms": 3000
+      "description": "메일 발송 처리 대기",
+      "ms": 1800
+    },
+    {
+      "type": "click",
+      "description": "발송 완료 확인 알림창 클릭 (표시 시)",
+      "selector": ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, button[id*='confirm']:visible, button[id*='Confirm']:visible, .ui-dialog:visible button.btn_pri:visible, .ui-dialog:visible button._confirm:visible"
     },
     {
       "type": "wait",
-      "description": "발송 완료 결과 화면 와이드 뷰 확인 및 아웃트로 마무리",
-      "ms": 3000
+      "description": "메일 발송 완료 화면 및 보낸편지함 확인 대기 (Phase 5)",
+      "ms": 2500
     }
   ]
 }

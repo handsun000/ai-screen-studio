@@ -244,7 +244,7 @@ export const MASTER_DIRECTING_GUIDELINES = `
    기능마다 시스템이 요구하는 필수 조건이 서로 다르므로, **해당 기능의 실제 화면 구조와 소스코드(extractAlertsAndValidation)에 명시된 유효성 검사 alert 조건**에 맞춰 필요한 단계들을 빠짐없이 순서대로 진행하십시오:
    - 📄 **문서 등록 (4단계 필수 시퀀스)**: 좌측 [문서 등록] 버튼 클릭 ➔ '문서함 선택' 모달 팝업 열림 대기(1500ms) ➔ 팝업 내 실제 등록 대상 문서함(말단 리프 노드) 클릭(".ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:last-child a.dynatree-title:visible") ➔ 팝업 [확인] 버튼 클릭(".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible")하여 모달 닫기 ➔ 본문 등록 폼 렌더링 후 제목 입력("input#subject:visible, input[name*='subject']:visible") ➔ 본문 내용 작성("div[contenteditable='true']:visible, textarea:visible") ➔ 상단 [저장] 클릭("button:has-text('저장'):visible, button._save:visible")! (절대로 등록 불가한 최상위 부모 폴더 노드를 선택하지 마십시오!)
    - 📝 **전자결재 기안**: 결재 양식 선택 -> 제목 입력 -> 조직도 트리 부서 클릭 후 사원 지정 -> 본문 작성 -> 상신 클릭 및 확인
-   - 📅 **일정 등록**: 캘린더 선택 -> 일정 제목 입력 -> 일시/시간 설정 -> 조직도 트리 부서 클릭 후 참석자 추가 -> 내용 작성 -> 저장 클릭
+   - 📅 **일정 등록**: 캘린더 선택 -> 일정 제목 입력 -> 일시/시간 설정 -> 조직도 트리 부서 클릭 후 참석자 추가 -> 내용 작성 -> 저장 클릭 (🚨 보편적 주의사항: 웹 UI에는 'A를 켜면 B가 비활성화'되는 상호 배타적 옵션이 흔합니다. 예를 들어 '종일'을 켜면 시간/자원 선택이 막히는 등 예기치 않은 DOM 숨김 현상이 발생할 수 있으므로, 단일 시나리오에서 너무 많은 선택적 토글을 동시에 조작하도록 기획하지 마십시오.)
    - 📌 **게시글 작성**: 등록할 게시판/말머리 선택 -> 제목 입력 -> 본문 작성 -> 등록 클릭
    - 💬 **쪽지/메시지/메일**: 조직도 팝업 호출 -> [🚨검색 금지] 좌측 부서 트리 클릭 -> 우측 사원 목록 첫번째 사원 선택 -> 수신자 추가 -> 내용 입력 -> 전송 클릭
 

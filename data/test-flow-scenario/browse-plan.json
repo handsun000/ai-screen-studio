@@ -1,0 +1,102 @@
+{
+  "url": "https://gwdev.bc.ac.kr",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "requiresLogin": true,
+  "actions": [
+    {
+      "type": "wait",
+      "description": "메인 포털 대시보드 로딩 및 시각적 앵커 인지 대기 (Phase 1)",
+      "ms": 3000
+    },
+    {
+      "type": "click",
+      "description": "상단 GNB '포탈 전체메뉴' 버튼 클릭",
+      "selector": "button.btn_svc_open:visible, button[title='포탈 전체메뉴'], .btn_svc_open:visible"
+    },
+    {
+      "type": "wait",
+      "description": "포탈 전체메뉴 드로어 서랍 레이어 열림 대기",
+      "ms": 1200
+    },
+    {
+      "type": "click",
+      "description": "전체메뉴 서랍 내 '일정관리' 메뉴 클릭 (Phase 2)",
+      "selector": "#svc_box a:has-text(\"일정관리\"), #svc_box a:has-text(\"일정\"), a:has-text(\"일정관리\"):visible"
+    },
+    {
+      "type": "wait",
+      "description": "일정관리 메인 화면(캘린더 대시보드) 전체 로딩 대기",
+      "ms": 3500
+    },
+    {
+      "type": "click",
+      "description": "좌측 사이드바 상단 [일정 등록] 버튼 클릭 (Phase 3)",
+      "selector": "button#reg_shedule_lefttop:visible, #snb button:has-text('일정 등록'):visible, #snb button:has-text('일정등록'):visible, button:has-text('일정 등록'):visible",
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "wait",
+      "description": "일정 등록 모달 팝업(SimpleView) 로딩 대기",
+      "ms": 2000,
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "click",
+      "description": "일정 제목 입력란 선택",
+      "selector": ".ui-dialog:visible input#subject, #reg_schedule_form input#subject, input#subject:visible",
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "type",
+      "description": "일정 제목에 '2026학년도 1학기 학사일정 및 주간 업무회의' 입력",
+      "selector": ".ui-dialog:visible input#subject, #reg_schedule_form input#subject, input#subject:visible",
+      "text": "2026학년도 1학기 학사일정 및 주간 업무회의",
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "wait",
+      "description": "제목 텍스트 타이핑 인지 대기",
+      "ms": 1000,
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "click",
+      "description": "일정 내용 텍스트영역 선택",
+      "selector": ".ui-dialog:visible textarea#cn, #reg_schedule_form textarea#cn, textarea#cn:visible",
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "type",
+      "description": "일정 내용에 세부 회의 안건 입력",
+      "selector": ".ui-dialog:visible textarea#cn, #reg_schedule_form textarea#cn, textarea#cn:visible",
+      "text": "학사운영 계획 검토 및 부서별 주요 추진 현황을 공유합니다.",
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "wait",
+      "description": "내용 작성 완료 인지 대기",
+      "ms": 1000,
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "click",
+      "description": "일정 등록 팝업 하단 [저장] 버튼 클릭 (Phase 4)",
+      "selector": ".ui-dialog:visible #reg_schedule_form button#savebtn, .ui-dialog:visible button#savebtn:visible, button#savebtn:visible, .ui-dialog:visible button:has-text('저장'):visible",
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "wait",
+      "description": "일정 저장 처리 및 캘린더 반영 대기",
+      "ms": 2500,
+      "iframe": "iframe#subBody"
+    },
+    {
+      "type": "wait",
+      "description": "등록 완료된 캘린더 화면 와이드 뷰 확인 및 아웃트로 마무리 (Phase 5)",
+      "ms": 3000
+    }
+  ]
+}

@@ -1,34 +1,30 @@
 {
   "metadata": {
-    "url": "https://gwdev.bc.ac.kr",
+    "url": "https://gwdev.unison.co.kr",
     "viewportWidth": 1920,
     "viewportHeight": 1080,
-    "totalDurationMs": 52726,
-    "recordingStart": "2026-10-02T06:37:10.717Z",
-    "cursor": {
-      "delayMs": 800,
-      "preClickRestMs": 180
-    }
+    "totalDurationMs": 854654,
+    "recordingStart": "2026-10-09T11:44:58.503Z"
   },
   "moments": [
     {
       "id": 1,
       "type": "wait",
-      "timestamp": 0,
-      "description": "메인 대시보드 로딩 및 시각적 앵커 대기 (Phase 1)"
+      "timestamp": 818,
+      "description": "메인 대시보드 로딩 및 시각적 앵커 인지 대기 (Phase 1: Visual Anchor & Landing)"
     },
     {
       "id": 2,
-      "type": "click",
-      "timestamp": 2968,
-      "description": "상단 GNB 포탈 전체메뉴 서랍 버튼 클릭",
+      "type": "hover",
+      "timestamp": 2904,
+      "description": "상단 포털 전체메뉴 버튼 탐색 및 호버 안내",
       "cursor": {
-        "x": 1366,
-        "y": 79
+        "x": 1376,
+        "y": 83
       },
       "target": {
-        "x": 1343,
-        "y": 56,
+        "x": 1354,
+        "y": 60,
         "width": 45,
         "height": 45
       }
@@ -36,36 +32,80 @@
     {
       "id": 3,
       "type": "wait",
-      "timestamp": 4051,
-      "description": "전체메뉴 레이어 서랍 펼침 대기"
+      "timestamp": 3439,
+      "description": "호버 툴팁 인지 대기"
     },
     {
       "id": 4,
       "type": "click",
-      "timestamp": 5785,
-      "description": "서랍 메뉴 내 '일정관리' 클릭 (Phase 2)",
+      "timestamp": 4891,
+      "description": "상단 GNB '포탈 전체메뉴' 버튼 클릭하여 메뉴 서랍 열기",
       "cursor": {
-        "x": 1157,
-        "y": 331
+        "x": 1376,
+        "y": 83
       },
       "target": {
-        "x": 1069,
-        "y": 316,
-        "width": 177,
-        "height": 30
+        "x": 1354,
+        "y": 60,
+        "width": 45,
+        "height": 45
       }
     },
     {
       "id": 5,
       "type": "wait",
-      "timestamp": 6896,
-      "description": "일정관리 캘린더 메인 화면 로딩 대기"
+      "timestamp": 5947,
+      "description": "전체메뉴 서랍 레이어 펼침 대기 (Phase 2)"
     },
     {
       "id": 6,
+      "type": "hover",
+      "timestamp": 7511,
+      "description": "전체메뉴 서랍 내 '일정관리' 아이콘 및 링크 위치 호버 안내",
+      "cursor": {
+        "x": 1158,
+        "y": 182
+      },
+      "target": {
+        "x": 1069,
+        "y": 167,
+        "width": 177,
+        "height": 30
+      }
+    },
+    {
+      "id": 7,
+      "type": "wait",
+      "timestamp": 8056,
+      "description": "일정관리 링크 하이라이트 확인 대기"
+    },
+    {
+      "id": 8,
       "type": "click",
-      "timestamp": 10230,
-      "description": "좌측 사이드바 상단 [일정 등록] 버튼 클릭 (Phase 3)",
+      "timestamp": 9523,
+      "description": "전체메뉴 내 '일정관리' 메뉴 클릭하여 화면 이동",
+      "cursor": {
+        "x": 1158,
+        "y": 182
+      },
+      "target": {
+        "x": 1069,
+        "y": 167,
+        "width": 177,
+        "height": 30
+      }
+    },
+    {
+      "id": 9,
+      "type": "wait",
+      "timestamp": 10596,
+      "description": "일정관리 메인 화면 및 캘린더 전체 로딩 대기"
+    },
+    {
+      "id": 10,
+      "type": "hover",
+      "timestamp": 12679,
+      "description": "좌측 사이드바(SNB) 상단 [일정 등록] 버튼 위치 호버 안내",
       "cursor": {
         "x": 130,
         "y": 148
@@ -78,286 +118,470 @@
       }
     },
     {
-      "id": 7,
-      "type": "wait",
-      "timestamp": 11302,
-      "description": "일정 간편등록 모달창 렌더링 대기"
-    },
-    {
-      "id": 8,
-      "type": "click",
-      "timestamp": 13363,
-      "description": "일정 제목 입력 필드 포커스",
-      "cursor": {
-        "x": 926,
-        "y": 139
-      },
-      "target": {
-        "x": 686,
-        "y": 123,
-        "width": 480,
-        "height": 32
-      }
-    },
-    {
-      "id": 9,
-      "type": "type",
-      "timestamp": 14744,
-      "description": "일정 제목에 '프로젝트 주간회의' 입력",
-      "cursor": {
-        "x": 702,
-        "y": 139
-      },
-      "target": {
-        "x": 686,
-        "y": 123,
-        "width": 480,
-        "height": 32
-      },
-      "keys": "프로젝트 주간회의"
-    },
-    {
-      "id": 10,
-      "type": "wait",
-      "timestamp": 15924,
-      "description": "제목 입력 확인 대기"
-    },
-    {
       "id": 11,
-      "type": "click",
-      "timestamp": 17167,
-      "description": "기간 설정 확인 (오늘 날짜 시작일 필드)",
-      "cursor": {
-        "x": 744,
-        "y": 188
-      },
-      "target": {
-        "x": 686,
-        "y": 172,
-        "width": 115,
-        "height": 32
-      }
+      "type": "wait",
+      "timestamp": 13211,
+      "description": "일정 등록 버튼 포커스 대기"
     },
     {
       "id": 12,
-      "type": "wait",
-      "timestamp": 18323,
-      "description": "기간 설정 확인 대기"
-    },
-    {
-      "id": 13,
       "type": "click",
-      "timestamp": 19364,
-      "description": "자원예약 사용 체크박스 선택",
+      "timestamp": 14606,
+      "description": "좌측 사이드바 [일정 등록] 버튼 클릭하여 등록 모달 호출 (Phase 3)",
       "cursor": {
-        "x": 724,
-        "y": 491
+        "x": 130,
+        "y": 148
       },
       "target": {
-        "x": 686,
-        "y": 481,
-        "width": 75,
-        "height": 20
+        "x": 20,
+        "y": 124,
+        "width": 219,
+        "height": 47
       }
     },
     {
-      "id": 14,
+      "id": 13,
       "type": "wait",
-      "timestamp": 20464,
-      "description": "자원예약 추가 영역 활성화 대기"
+      "timestamp": 15666,
+      "description": "일정 등록 레이어 다이얼로그 로딩 대기"
     },
     {
-      "id": 15,
-      "type": "click",
-      "timestamp": 21882,
-      "description": "자원예약 선택 모달창 호출 버튼 클릭",
+      "id": 14,
+      "type": "hover",
+      "timestamp": 17444,
+      "description": "등록 모달 내 대상 캘린더 선택 영역 호버 안내",
       "cursor": {
-        "x": 1322,
-        "y": 561
+        "x": 1232,
+        "y": 149
       },
       "target": {
-        "x": 1306,
-        "y": 545,
-        "width": 32,
+        "x": 1172,
+        "y": 133,
+        "width": 120,
         "height": 32
       }
     },
     {
-      "id": 16,
+      "id": 15,
       "type": "wait",
-      "timestamp": 23050,
-      "description": "자원예약 선택 대화상자 로딩 대기"
+      "timestamp": 17989,
+      "description": "캘린더 선택 옵션 확인 대기"
+    },
+    {
+      "id": 16,
+      "type": "click",
+      "timestamp": 24694,
+      "description": "일정 제목 입력 필드 클릭하여 포커스",
+      "cursor": {
+        "x": 928,
+        "y": 149
+      },
+      "target": {
+        "x": 688,
+        "y": 133,
+        "width": 480,
+        "height": 32
+      }
     },
     {
       "id": 17,
-      "type": "click",
-      "timestamp": 25068,
-      "description": "자원예약 팝업 내 '시설' 탭 클릭",
+      "type": "type",
+      "timestamp": 25933,
+      "description": "일정 제목 필드에 '2026 상반기 사업 전략 공유 회의' 입력",
       "cursor": {
-        "x": 606,
-        "y": 307
+        "x": 704,
+        "y": 149
       },
       "target": {
-        "x": 580,
-        "y": 286,
-        "width": 51,
-        "height": 40
-      }
+        "x": 688,
+        "y": 133,
+        "width": 480,
+        "height": 32
+      },
+      "keys": "2026 상반기 사업 전략 공유 회의"
     },
     {
       "id": 18,
       "type": "wait",
-      "timestamp": 26280,
-      "description": "시설 자원 목록 로딩 대기"
+      "timestamp": 27505,
+      "description": "제목 입력 상태 시각적 확인 대기"
     },
     {
       "id": 19,
-      "type": "click",
-      "timestamp": 27728,
-      "description": "자원 목록 중 첫 번째 시설 항목 선택",
-      "cursor": {
-        "x": 960,
-        "y": 482
-      },
-      "target": {
-        "x": 531,
-        "y": 442,
-        "width": 858,
-        "height": 81
-      }
+      "type": "wait",
+      "timestamp": 34151
     },
     {
       "id": 20,
       "type": "wait",
-      "timestamp": 28830,
-      "description": "시설 항목 선택 확인 대기"
+      "timestamp": 40643
     },
     {
       "id": 21,
-      "type": "click",
-      "timestamp": 29871,
-      "description": "자원예약 모달창 [확인] 버튼 클릭",
+      "type": "hover",
+      "timestamp": 47507,
+      "description": "공개 여부 설정 옵션 영역 호버 안내",
       "cursor": {
-        "x": 936,
-        "y": 839
+        "x": 1287,
+        "y": 244
       },
       "target": {
-        "x": 915,
-        "y": 823,
-        "width": 43,
-        "height": 32
+        "x": 1248,
+        "y": 231,
+        "width": 78,
+        "height": 26
       }
     },
     {
       "id": 22,
       "type": "wait",
-      "timestamp": 31052,
-      "description": "선택된 자원 정보 메인 폼 반영 대기"
+      "timestamp": 48052,
+      "description": "공개 여부 옵션 확인 대기"
     },
     {
       "id": 23,
       "type": "click",
-      "timestamp": 32813,
-      "description": "일정 내용 텍스트 영역 포커스",
-      "cursor": {
-        "x": 954,
-        "y": 557
-      },
-      "target": {
-        "x": 561,
-        "y": 522,
-        "width": 786,
-        "height": 70
-      }
+      "timestamp": 54571,
+      "description": "중요도 '별표/중요' 표시 또는 상태 확인 클릭"
     },
     {
       "id": 24,
-      "type": "type",
-      "timestamp": 34164,
-      "description": "일정 내용 필드에 '금주 주요 개발 일정 및 이슈 공유 회의입니다.' 입력",
-      "cursor": {
-        "x": 577,
-        "y": 557
-      },
-      "target": {
-        "x": 561,
-        "y": 522,
-        "width": 786,
-        "height": 70
-      },
-      "keys": "금주 주요 개발 일정 및 이슈 공유 회의입니다."
+      "type": "wait",
+      "timestamp": 54987,
+      "description": "중요도 설정 적용 대기"
     },
     {
       "id": 25,
-      "type": "wait",
-      "timestamp": 36459,
-      "description": "내용 입력 완료 확인 대기"
-    },
-    {
-      "id": 26,
-      "type": "click",
-      "timestamp": 37701,
-      "description": "일정 등록 모달 [저장] 버튼 클릭 (Phase 4)",
+      "type": "hover",
+      "timestamp": 61750,
+      "description": "자원예약 연동 체크박스 옵션 위치 호버 안내",
       "cursor": {
-        "x": 924,
-        "y": 657
+        "x": 726,
+        "y": 334
       },
       "target": {
-        "x": 896,
-        "y": 639,
-        "width": 55,
-        "height": 36
+        "x": 688,
+        "y": 324,
+        "width": 75,
+        "height": 20
       }
     },
     {
-      "id": 27,
+      "id": 26,
       "type": "wait",
-      "timestamp": 38824,
-      "description": "저장 처리 및 확인 팝업 대기"
+      "timestamp": 62295,
+      "description": "자원예약 연동 옵션 인지 대기"
+    },
+    {
+      "id": 27,
+      "type": "click",
+      "timestamp": 68998,
+      "description": "'예약사용' 체크박스 클릭하여 시설/자원 예약 필드 활성화",
+      "cursor": {
+        "x": 726,
+        "y": 334
+      },
+      "target": {
+        "x": 688,
+        "y": 324,
+        "width": 75,
+        "height": 20
+      }
     },
     {
       "id": 28,
-      "type": "click",
-      "timestamp": 40541,
-      "description": "저장 완료 안내 팝업 [확인] 버튼 클릭 (표시 시)",
+      "type": "wait",
+      "timestamp": 70019,
+      "description": "자원예약 모달 버튼 활성화 대기"
+    },
+    {
+      "id": 29,
+      "type": "hover",
+      "timestamp": 71578,
+      "description": "자원 선택 팝업 호출 버튼 호버 안내",
       "cursor": {
-        "x": 1222,
-        "y": 143
+        "x": 1335,
+        "y": 404
       },
       "target": {
-        "x": 1206,
-        "y": 127,
+        "x": 1319,
+        "y": 388,
         "width": 32,
         "height": 32
       }
     },
     {
-      "id": 29,
+      "id": 30,
       "type": "wait",
-      "timestamp": 41730,
-      "description": "캘린더 그리드 일정 렌더링 갱신 대기"
+      "timestamp": 72127,
+      "description": "자원 선택 버튼 확인 대기"
     },
     {
-      "id": 30,
+      "id": 31,
       "type": "click",
-      "timestamp": 44511,
-      "description": "등록된 일정 상세 확인을 위해 캘린더 내 등록된 일정 클릭 (Phase 5)",
+      "timestamp": 78793,
+      "description": "자원예약 연동 팝업 호출 버튼 클릭",
       "cursor": {
-        "x": 1329,
+        "x": 1335,
+        "y": 404
+      },
+      "target": {
+        "x": 1319,
+        "y": 388,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "id": 32,
+      "type": "wait",
+      "timestamp": 79855,
+      "description": "자원예약 선택 팝업 레이어 로딩 대기"
+    },
+    {
+      "id": 33,
+      "type": "click",
+      "timestamp": 81812,
+      "description": "자원예약 팝업 탭 중 '시설' 또는 첫 번째 분류 탭 클릭",
+      "cursor": {
+        "x": 607,
+        "y": 306
+      },
+      "target": {
+        "x": 581,
+        "y": 286,
+        "width": 52,
+        "height": 40
+      }
+    },
+    {
+      "id": 34,
+      "type": "wait",
+      "timestamp": 82902,
+      "description": "예약 가능 시설/회의실 목록 로딩 대기"
+    },
+    {
+      "id": 35,
+      "type": "click",
+      "timestamp": 119961,
+      "description": "목록 내 첫 번째 회의실 자원 선택",
+      "cursor": {
+        "x": 654,
         "y": 266
       },
       "target": {
-        "x": 1218,
+        "x": 543,
         "y": 256,
         "width": 222,
         "height": 21
       }
     },
     {
-      "id": 31,
+      "id": 36,
       "type": "wait",
-      "timestamp": 47533,
-      "description": "등록된 일정 상세 및 캘린더 와이드 뷰 확인 후 아웃트로 마무리"
+      "timestamp": 130998,
+      "description": "선택된 회의실 항목 하이라이트 확인 대기"
+    },
+    {
+      "id": 37,
+      "type": "click",
+      "timestamp": 167514,
+      "description": "자원예약 선택 팝업 하단 [확인] 버튼 클릭"
+    },
+    {
+      "id": 38,
+      "type": "wait",
+      "timestamp": 167928,
+      "description": "자원예약 선택 완료 및 등록 모달 반영 대기"
+    },
+    {
+      "id": 39,
+      "type": "hover",
+      "timestamp": 169617,
+      "description": "일정 내용 텍스트에어리어 필드 위치 호버 안내",
+      "cursor": {
+        "x": 960,
+        "y": 508
+      },
+      "target": {
+        "x": 561,
+        "y": 473,
+        "width": 798,
+        "height": 70
+      }
+    },
+    {
+      "id": 40,
+      "type": "wait",
+      "timestamp": 200135,
+      "description": "내용 입력란 인지 대기"
+    },
+    {
+      "id": 41,
+      "type": "click",
+      "timestamp": 236867,
+      "description": "일정 내용 입력 필드 클릭하여 포커스",
+      "cursor": {
+        "x": 960,
+        "y": 508
+      },
+      "target": {
+        "x": 561,
+        "y": 473,
+        "width": 798,
+        "height": 70
+      }
+    },
+    {
+      "id": 42,
+      "type": "type",
+      "timestamp": 248150,
+      "description": "일정 세부 내용 입력",
+      "cursor": {
+        "x": 577,
+        "y": 508
+      },
+      "target": {
+        "x": 561,
+        "y": 473,
+        "width": 798,
+        "height": 70
+      },
+      "keys": "각 본부별 핵심 마일스톤 점검 및 2분기 예산 집행 계획 논의 일정입니다."
+    },
+    {
+      "id": 43,
+      "type": "wait",
+      "timestamp": 250764,
+      "description": "입력 내용 확인 대기"
+    },
+    {
+      "id": 44,
+      "type": "hover",
+      "timestamp": 287566,
+      "description": "등록 모달 하단/상단 [저장] 결정적 액션 버튼 위치 호버 안내 (Phase 4)",
+      "cursor": {
+        "x": 930,
+        "y": 608
+      },
+      "target": {
+        "x": 902,
+        "y": 590,
+        "width": 56,
+        "height": 36
+      }
+    },
+    {
+      "id": 45,
+      "type": "wait",
+      "timestamp": 318087,
+      "description": "최종 저장 전 작성 폼 시각적 검토 대기"
+    },
+    {
+      "id": 46,
+      "type": "click",
+      "timestamp": 355055,
+      "description": "일정 등록 팝업 내 [저장] 버튼 클릭하여 일정 등록 실행",
+      "cursor": {
+        "x": 930,
+        "y": 608
+      },
+      "target": {
+        "x": 902,
+        "y": 590,
+        "width": 56,
+        "height": 36
+      }
+    },
+    {
+      "id": 47,
+      "type": "wait",
+      "timestamp": 366108,
+      "description": "일정 등록 처리 및 모달 닫힘 대기 (Phase 5: Outcome & Wrap-up)"
+    },
+    {
+      "id": 48,
+      "type": "wait",
+      "timestamp": 367928,
+      "description": "캘린더 내 등록된 신규 일정 렌더링 확인 대기"
+    },
+    {
+      "id": 49,
+      "type": "hover",
+      "timestamp": 440199,
+      "description": "등록 완료된 일정 블록 항목 호버하여 등록 결과 확인",
+      "cursor": {
+        "x": 654,
+        "y": 266
+      },
+      "target": {
+        "x": 543,
+        "y": 256,
+        "width": 222,
+        "height": 21
+      }
+    },
+    {
+      "id": 50,
+      "type": "wait",
+      "timestamp": 470729,
+      "description": "등록된 일정 상세 호버 툴팁 확인 대기"
+    },
+    {
+      "id": 51,
+      "type": "click",
+      "timestamp": 507685,
+      "description": "등록된 일정을 클릭하여 상세 조회 레이어 팝업 호출",
+      "cursor": {
+        "x": 654,
+        "y": 266
+      },
+      "target": {
+        "x": 543,
+        "y": 256,
+        "width": 222,
+        "height": 21
+      }
+    },
+    {
+      "id": 52,
+      "type": "wait",
+      "timestamp": 518716,
+      "description": "일정 상세 레이어 팝업 로딩 대기"
+    },
+    {
+      "id": 53,
+      "type": "hover",
+      "timestamp": 702228,
+      "description": "일정 상세 레이어 내 제목, 일시, 자원예약 내용 점검 호버 안내"
+    },
+    {
+      "id": 54,
+      "type": "wait",
+      "timestamp": 732749,
+      "description": "상세 정보 검토 대기"
+    },
+    {
+      "id": 55,
+      "type": "click",
+      "timestamp": 769981,
+      "description": "일정 상세 팝업 닫기 버튼 클릭하여 캘린더 화면 복귀",
+      "cursor": {
+        "x": 990,
+        "y": 608
+      },
+      "target": {
+        "x": 962,
+        "y": 590,
+        "width": 56,
+        "height": 36
+      }
+    },
+    {
+      "id": 56,
+      "type": "wait",
+      "timestamp": 780998,
+      "description": "캘린더 전체 와이드 뷰 아웃트로 화면 유지 및 튜토리얼 종료"
     }
   ]
 }

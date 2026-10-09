@@ -23,11 +23,19 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
   let fixedActionsCount = 0;
   let removedActionsCount = 0;
 
+  let actualPlan = plan;
+  if (actualPlan && (actualPlan as any).plan && (actualPlan as any).plan.actions) {
+    actualPlan = (actualPlan as any).plan;
+  }
+  if (!actualPlan || !Array.isArray(actualPlan.actions)) {
+    throw new Error("BrowsePlan 형식이 올바르지 않거나 actions 배열이 누락되었습니다. 시나리오 JSON 데이터(browse-plan.json)를 확인해주세요.");
+  }
+
   const sanitizedActions: BrowsePlanAction[] = [];
   let isInsideModal = false;
 
-  for (let i = 0; i < plan.actions.length; i++) {
-    const action = { ...plan.actions[i] };
+  for (let i = 0; i < actualPlan.actions.length; i++) {
+    const action = { ...actualPlan.actions[i] };
     const desc = action.description || "";
     let sel = action.selector || "";
 
@@ -55,7 +63,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       action.selector = action.selector.replace(
         /\b(button|a|div|span|input|li):([a-zA-Z][a-zA-Z0-9_-]*)\b/g,
         (match, tag, cls) => {
-          const validPseudos = ["has-text", "visible", "first-child", "last-child", "nth-child", "not", "disabled", "checked"];
+          const validPseudos = ["has", "has-text", "visible", "first-child", "last-child", "nth-child", "not", "disabled", "checked", "text", "text-is"];
           return validPseudos.includes(cls) ? match : `${tag}.${cls}`;
         }
       );
@@ -259,6 +267,8 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       changes.push(`[⚠️ 등록 필수 조건 점검] 등록/저장 시나리오에 '제목 입력' 액션이 감지되지 않았습니다. 필수값 유효성 검사 alert 통과를 위해 제목 입력을 추가하십시오.`);
     }
   }
+
+
 
   return {
     plan: {

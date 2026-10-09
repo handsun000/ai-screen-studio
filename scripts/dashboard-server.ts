@@ -137,7 +137,7 @@ app.get("/api/gemini/stream-progress", (req: Request, res: Response) => {
 // 4. Gemini AI Plan Generation API (supports dynamic project path, URL overrides, and directing style)
 app.post("/api/scenarios/generate", async (req: Request, res: Response) => {
   try {
-    const { prompt, slug, moduleHint, targetProjectPath, targetUrl, directingStyle, bypassCache } = req.body;
+    const { prompt, slug, moduleHint, targetProjectPath, targetUrl, directingStyle, depth, bypassCache } = req.body;
     if (!prompt) {
       res.status(400).json({ error: "시나리오 설명(prompt)을 입력해주세요." });
       return;
@@ -150,6 +150,7 @@ app.post("/api/scenarios/generate", async (req: Request, res: Response) => {
     console.log(`\n[Dashboard API] Generating plan:`);
     console.log(`  - Prompt: "${prompt}"`);
     console.log(`  - Directing Style: ${directingStyle || "standard"}`);
+    console.log(`  - Scenario Depth:  ${depth || "standard"}`);
     console.log(`  - Target Path: ${effectivePath}`);
     console.log(`  - Target URL:  ${effectiveUrl}`);
     console.log(`  - Bypass Cache: ${!!bypassCache}`);
@@ -163,6 +164,7 @@ app.post("/api/scenarios/generate", async (req: Request, res: Response) => {
       targetProjectPath: effectivePath,
       targetUrl: effectiveUrl,
       directingStyle,
+      depth,
       bypassCache: !!bypassCache,
       onProgress: (msg) => {
         console.log(`[AI Pipeline] ${msg}`);

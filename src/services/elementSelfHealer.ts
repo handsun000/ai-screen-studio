@@ -22,6 +22,7 @@ export interface LiveDOMCandidate {
   className?: string;
   type?: string;
   name?: string;
+  value?: string;
   placeholder?: string;
   title?: string;
   ariaLabel?: string;
@@ -49,6 +50,7 @@ export async function extractLiveCandidates(page: Page): Promise<{
         className?: string;
         type?: string;
         name?: string;
+        value?: string;
         placeholder?: string;
         title?: string;
         ariaLabel?: string;
@@ -81,7 +83,7 @@ export async function extractLiveCandidates(page: Page): Promise<{
 
       // Query visible interactive elements
       const query =
-        "button, a, input, select, textarea, [contenteditable='true'], [contenteditable=''], .note-editable, .ce-paragraph, div[role='textbox'], [role='button'], .dynatree-node, .dynatree-checkbox, .dynatree-title, .dynatree-expander, .fancytree-node, .fancytree-expander, .fancytree-title, [class*='expander'], [class*='tree-title'], [class*='node-title'], label[for], li[class*='item'], li[class*='depth'], div[onclick], span[onclick]";
+        "button, a, input, select, textarea, [contenteditable='true'], [contenteditable=''], .note-editable, .ce-paragraph, div[role='textbox'], [role='button'], .dynatree-node, .dynatree-checkbox, .dynatree-title, .dynatree-expander, .fancytree-node, .fancytree-expander, .fancytree-title, [class*='expander'], [class*='tree-title'], [class*='node-title'], label, li[class*='item'], li[class*='depth'], div[onclick], span[onclick]";
       const elements = Array.from(document.querySelectorAll(query));
 
       for (const el of elements) {
@@ -115,6 +117,7 @@ export async function extractLiveCandidates(page: Page): Promise<{
             : undefined;
         const type = (el as HTMLInputElement).type || undefined;
         const name = (el as HTMLInputElement).name || undefined;
+        const value = (el as HTMLInputElement).value || undefined;
         const placeholder =
           (el as HTMLInputElement).placeholder || undefined;
         const title = (el as HTMLElement).title || undefined;
@@ -136,6 +139,8 @@ export async function extractLiveCandidates(page: Page): Promise<{
           suggestedSelector = `${modalPrefix}${tag}#${id}`;
         } else if (text && text.length >= 2 && text.length <= 25) {
           suggestedSelector = `${modalPrefix}${tag}:has-text('${text}')`;
+        } else if (name && value) {
+          suggestedSelector = `${modalPrefix}${tag}[name='${name}'][value='${value}']`;
         } else if (name) {
           suggestedSelector = `${modalPrefix}${tag}[name='${name}']`;
         } else if (placeholder) {
@@ -158,6 +163,7 @@ export async function extractLiveCandidates(page: Page): Promise<{
           className,
           type,
           name,
+          value,
           placeholder,
           title,
           ariaLabel,
@@ -167,7 +173,7 @@ export async function extractLiveCandidates(page: Page): Promise<{
           suggestedSelector,
         });
 
-        if (candidates.length >= 50) break;
+        if (candidates.length >= 200) break;
       }
 
       return {
@@ -195,7 +201,7 @@ export async function extractLiveCandidates(page: Page): Promise<{
       });
 
       for (const iframeSel of iframeSelectors) {
-        if (allCandidates.length >= 75) break;
+        if (allCandidates.length >= 300) break;
         try {
           const frameLocator = page.frameLocator(iframeSel);
           const frameCandidates = await frameLocator
@@ -203,7 +209,7 @@ export async function extractLiveCandidates(page: Page): Promise<{
             .evaluate((body, frameSel) => {
               const list: any[] = [];
               const query =
-                "button, a, input, select, textarea, [contenteditable='true'], [contenteditable=''], .note-editable, .ce-paragraph, body, [role='button'], .dynatree-node, .dynatree-checkbox, .dynatree-title, .dynatree-expander, .fancytree-node, .fancytree-expander, .fancytree-title, [class*='expander'], [class*='tree-title'], [class*='node-title'], label[for], li[class*='item'], li[class*='depth']";
+                "button, a, input, select, textarea, [contenteditable='true'], [contenteditable=''], .note-editable, .ce-paragraph, body, [role='button'], .dynatree-node, .dynatree-checkbox, .dynatree-title, .dynatree-expander, .fancytree-node, .fancytree-expander, .fancytree-title, [class*='expander'], [class*='tree-title'], [class*='node-title'], label, li[class*='item'], li[class*='depth']";
               const elements = Array.from(body.querySelectorAll(query));
 
               for (const el of elements) {
@@ -230,6 +236,7 @@ export async function extractLiveCandidates(page: Page): Promise<{
                     : undefined;
                 const type = (el as HTMLInputElement).type || undefined;
                 const name = (el as HTMLInputElement).name || undefined;
+                const value = (el as HTMLInputElement).value || undefined;
                 const placeholder =
                   (el as HTMLInputElement).placeholder || undefined;
                 const title = (el as HTMLElement).title || undefined;
@@ -239,6 +246,8 @@ export async function extractLiveCandidates(page: Page): Promise<{
                   suggestedSelector = `${tag}#${id}`;
                 } else if (text && text.length >= 2 && text.length <= 25) {
                   suggestedSelector = `${tag}:has-text('${text}')`;
+                } else if (name && value) {
+                  suggestedSelector = `${tag}[name='${name}'][value='${value}']`;
                 } else if (name) {
                   suggestedSelector = `${tag}[name='${name}']`;
                 } else if (placeholder) {
@@ -258,13 +267,14 @@ export async function extractLiveCandidates(page: Page): Promise<{
                   className,
                   type,
                   name,
+                  value,
                   placeholder,
                   title,
                   frame: frameSel,
                   suggestedSelector,
                 });
 
-                if (list.length >= 35) break;
+                if (list.length >= 200) break;
               }
               return list;
             }, iframeSel);
@@ -347,6 +357,9 @@ export async function selfHealElement(
    - 예: ".ui-dialog:visible button#savebtn, .ui-dialog:visible button:has-text('저장')"
    - 예: "button.btn_svc_open, button[title*='전체메뉴']"
    - 예: "iframe#subBody 내의 button#reg_shedule_lefttop, button:has-text('일정 등록')"
+6. 🛑 포기 원칙 (Fail-Fast Policy):
+   - 현재 화면(스크린샷)이 의도한 페이지나 팝업 상태가 아니라서, 사용자가 지시한 "원래 목적(description)"을 수행할 대상 버튼/입력창이 아예 존재하지 않는다고 판단되면 억지로 대체 요소를 찾거나 이전 단계를 대신 누르지 마십시오.
+   - 반드시 "success": false 로 설정하고, selector는 빈 문자열로 반환하여 녹화가 안전하게 중단되도록 하십시오.
 
 ### [응답 포맷 (Strict JSON Only)]
 반드시 아래 JSON 형식으로만 응답하십시오 (마크다운 코드블록이나 불필요한 설명 금지):
@@ -370,7 +383,7 @@ ${action.type === "type" ? `- 입력할 텍스트(value): "${action.text || ""}"
 - 현재 화면에 열린 최상단 팝업/모달 제목: ${activeDialogTitle ? `"${activeDialogTitle}"` : "없음 (일반 페이지)"}
 
 [현재 화면에서 감지된 가시적 인터랙티브 DOM 후보군 (총 ${candidates.length}개)]:
-${JSON.stringify(candidates.slice(0, 50), null, 2)}
+${JSON.stringify(candidates, null, 2)}
 
 [요청 사항]
 위의 실시간 브라우저 스크린샷과 DOM 후보군을 정밀 분석하여,
@@ -432,7 +445,19 @@ ${JSON.stringify(candidates.slice(0, 50), null, 2)}
           console.warn(`  [AI 응답 파싱 경고] (${model}) JSON 파싱 오류: ${jsonErr.message}. 원문: ${rawText.slice(0, 120)}...`);
         }
 
-        if (parsed && parsed.selector) {
+        if (parsed && typeof parsed.success === "boolean") {
+          if (!parsed.success) {
+            console.warn(`  [⚠️ AI 자가 치유 포기] AI가 대상 요소를 화면에서 찾을 수 없다고 판단했습니다. 사유: ${parsed.reason}`);
+            return {
+              success: false,
+              selector: "",
+              iframe: null,
+              confidence: 0,
+              reason: parsed.reason || "화면에 요소가 존재하지 않음",
+            };
+          }
+
+          if (parsed.selector) {
           // Guard: Type actions must NEVER target a button element
           if (action.type === "type") {
             const lowerSel = parsed.selector.toLowerCase();
@@ -488,6 +513,7 @@ ${JSON.stringify(candidates.slice(0, 50), null, 2)}
               parsed.reason ||
               "AI 런타임 화면 분석을 통해 올바른 요소를 감지했습니다.",
           };
+        }
         }
       } catch (err: any) {
         console.warn(`  [AI 자가 치유 호출 경고] 모델 ${model} 호출 오류: ${err.message}`);

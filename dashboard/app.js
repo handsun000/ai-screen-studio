@@ -118,60 +118,7 @@ const directingStyleSelect = document.getElementById("directing-style-select");
 
 // 2. Universal Scenario Templates
 async function fetchTemplates() {
-  try {
-    const res = await fetch("/api/templates");
-    const data = await res.json();
-    const templates = data.templates || [];
-
-    templateCardsGrid.innerHTML = "";
-
-    templates.forEach((tmpl, idx) => {
-      const card = document.createElement("div");
-      card.className = `template-card ${idx === 0 ? "active" : ""}`;
-      card.innerHTML = `
-        <span class="template-icon">${tmpl.icon}</span>
-        <div class="template-card-body">
-          <h4>${tmpl.name.split("(")[0].trim()}</h4>
-          <p title="${tmpl.description}">${tmpl.description}</p>
-        </div>
-      `;
-
-      card.addEventListener("click", () => {
-        document.querySelectorAll(".template-card").forEach((c) => c.classList.remove("active"));
-        card.classList.add("active");
-
-        promptInput.value = tmpl.promptTemplate;
-        slugInput.value = tmpl.id;
-        promptInput.focus();
-
-        // Render phases preview
-        phasesStepsList.innerHTML = "";
-        tmpl.phases.forEach((phase) => {
-          const chip = document.createElement("span");
-          chip.className = "phase-chip";
-          chip.textContent = phase;
-          phasesStepsList.appendChild(chip);
-        });
-      });
-
-      templateCardsGrid.appendChild(card);
-    });
-
-    // Auto-select first template on load
-    if (templates.length > 0 && !promptInput.value) {
-      promptInput.value = templates[0].promptTemplate;
-      slugInput.value = templates[0].id;
-      phasesStepsList.innerHTML = "";
-      templates[0].phases.forEach((phase) => {
-        const chip = document.createElement("span");
-        chip.className = "phase-chip";
-        chip.textContent = phase;
-        phasesStepsList.appendChild(chip);
-      });
-    }
-  } catch (err) {
-    console.error("fetchTemplates failed:", err);
-  }
+  // Removed per user request to simplify UI
 }
 
 // 3. Dynamic Project Config & Status
@@ -525,6 +472,8 @@ async function handleGeneratePlan() {
     const slug = slugInput.value.trim();
     const directingStyleSelect = document.getElementById("directing-style-select");
     const directingStyle = directingStyleSelect ? directingStyleSelect.value : "standard";
+    const depthSelect = document.getElementById("scenario-depth-select");
+    const depth = depthSelect ? depthSelect.value : "standard";
     const cacheToggle = document.getElementById("cache-toggle");
     const bypassCache = cacheToggle ? !cacheToggle.checked : false;
 
@@ -537,6 +486,7 @@ async function handleGeneratePlan() {
         targetProjectPath,
         targetUrl,
         directingStyle,
+        depth,
         bypassCache,
       }),
     });
@@ -850,17 +800,32 @@ function renderActionCards() {
 
       <div class="action-inputs-grid">
         ${act.type !== "wait" ? `
-          <div class="selector-input-wrapper">
-            <input type="text" 
-              class="${isMissingSelector ? "input-needs-attention" : ""}"
-              placeholder="${isMissingSelector ? "⚠️ 셀렉터 직접 입력 또는 우측 [🎯 타겟 도우미]로 간편 생성" : "CSS 셀렉터 (예: button.btn_svc_open 또는 #savebtn)"}" 
-              value="${escapeHtmlAttr(act.selector)}" 
-              data-field="selector">
-            <button type="button" class="btn-open-builder btn-toggle-builder" title="복잡한 CSS 몰라도 클릭 한 번으로 특정 버튼 셀렉터 완성">🎯 타겟 도우미</button>
+          <div class="input-with-label">
+            <span class="input-label">🎯 대상 요소 (CSS 셀렉터)</span>
+            <div class="selector-input-wrapper" style="display:flex; gap:8px; width:100%;">
+              <input type="text" 
+                class="${isMissingSelector ? "input-needs-attention" : ""}"
+                placeholder="${isMissingSelector ? "⚠️ 셀렉터 직접 입력 또는 우측 [🎯 타겟 도우미]로 간편 생성" : "CSS 셀렉터 (예: button.btn_svc_open 또는 #savebtn)"}" 
+                value="${escapeHtmlAttr(act.selector)}" 
+                data-field="selector" style="flex:1;">
+              <button type="button" class="btn-open-builder btn-toggle-builder" title="복잡한 CSS 몰라도 클릭 한 번으로 특정 버튼 셀렉터 완성">🎯 타겟 도우미</button>
+            </div>
           </div>` : ""}
-        ${act.type === "wait" ? `<input type="number" placeholder="대기 시간(ms)" value="${act.ms || 2000}" data-field="ms">` : ""}
-        ${act.type === "type" ? `<input type="text" placeholder="입력할 텍스트" value="${escapeHtmlAttr(act.text)}" data-field="text">` : ""}
-        ${act.type !== "wait" ? `<input type="text" placeholder="iFrame 셀렉터 (옵션)" value="${escapeHtmlAttr(act.iframe)}" data-field="iframe">` : ""}
+        ${act.type === "wait" ? `
+          <div class="input-with-label">
+            <span class="input-label">⏳ 딜레이 대기 시간 (ms)</span>
+            <input type="number" placeholder="대기 시간(ms)" value="${act.ms || 2000}" data-field="ms">
+          </div>` : ""}
+        ${act.type === "type" ? `
+          <div class="input-with-label">
+            <span class="input-label">⌨️ 키보드로 입력할 텍스트</span>
+            <input type="text" placeholder="입력할 텍스트" value="${escapeHtmlAttr(act.text)}" data-field="text">
+          </div>` : ""}
+        ${act.type !== "wait" ? `
+          <div class="input-with-label">
+            <span class="input-label">🪟 내부 iFrame (선택사항)</span>
+            <input type="text" placeholder="iFrame 셀렉터 (옵션)" value="${escapeHtmlAttr(act.iframe)}" data-field="iframe">
+          </div>` : ""}
       </div>
 
       ${act.type !== "wait" ? `

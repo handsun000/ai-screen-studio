@@ -1,0 +1,68 @@
+{
+  "url": "https://ko.wikipedia.org",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "requiresLogin": false,
+  "actions": [
+    {
+      "type": "wait",
+      "description": "위키백과 메인 화면 로딩 및 레이아웃 앵커 대기 (Phase 1)",
+      "ms": 1800
+    },
+    {
+      "type": "click",
+      "description": "상단 위키백과 검색창 포커스 (Phase 2)",
+      "selector": "input.cdx-text-input__input, input[name='search'], #searchInput, input[type='search']:visible"
+    },
+    {
+      "type": "wait",
+      "description": "검색 입력창 활성화 대기",
+      "ms": 1200
+    },
+    {
+      "type": "type",
+      "description": "검색창에 '대한민국' 키워드 입력 (Phase 3)",
+      "selector": "input.cdx-text-input__input, input[name='search'], #searchInput, input[type='search']:visible",
+      "text": "대한민국"
+    },
+    {
+      "type": "wait",
+      "description": "실시간 자동완성 검색 결과 레이어 렌더링 대기",
+      "ms": 1500
+    },
+    {
+      "type": "click",
+      "description": "검색 결과 첫 번째 추천 항목 클릭 (Phase 4)",
+      "selector": ".cdx-menu-item:first-child, .cdx-typeahead-search__menu .cdx-menu-item:first-child, .suggestions-results a:first-child, button.cdx-search-input__end-button, button:has-text('검색'), table.tbl_lst tbody tr:first-child td.sub a:visible, table tbody tr:first-child td[class*='sub'] a:visible, table tbody tr:first-child a:visible, ul.lst_vr_ul li:first-child a.sub_tp:visible, ul.lst_vr_ul li:first-child .sub a:visible, ul[id*='List'] li:first-child a.sub_tp:visible, ul[class*='lst'] li:first-child a:visible, .lst_type1 li:first-child a:visible"
+    },
+    {
+      "type": "wait",
+      "description": "대한민국 상세 문서 페이지 로딩 대기",
+      "ms": 1800
+    },
+    {
+      "type": "scroll",
+      "description": "문서 본문 개요 및 목차 영역으로 스크롤 다운 (Phase 5)",
+      "selector": "#mw-content-text, main, body",
+      "deltaY": 600
+    },
+    {
+      "type": "wait",
+      "description": "스크롤 이동 후 본문 내용 확인 대기",
+      "ms": 1500
+    },
+    {
+      "type": "scroll",
+      "description": "역사 및 세부 섹션 탐색을 위한 추가 스크롤",
+      "selector": "#mw-content-text, main, body",
+      "deltaY": 500
+    },
+    {
+      "type": "wait",
+      "description": "문서 상세 내용 확인 및 영상 마무리 대기",
+      "ms": 1800
+    }
+  ]
+}
