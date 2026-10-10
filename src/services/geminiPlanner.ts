@@ -47,10 +47,15 @@ export interface GeneratePlanResult {
  */
 export function scanTargetProjectContext(prompt: string, targetPath?: string): string {
   const contextSnippets: string[] = [];
-  const projectRoot = (targetPath || getConfig().targetProjectPath).trim().replace(/\\/g, "/");
+  const rawPath = targetPath !== undefined ? targetPath : getConfig().targetProjectPath;
+  const projectRoot = (rawPath || "").trim().replace(/\\/g, "/");
+
+  if (!projectRoot) {
+    return "[실시간 웹 모드] 로컬 소스코드 의존성 없이 대상 서비스 URL 및 표준 웹 인터랙션 명세로 시나리오를 구성합니다.";
+  }
 
   if (!fs.existsSync(projectRoot)) {
-    return `[알림] 타겟 프로젝트 경로를 찾을 수 없습니다: ${projectRoot}`;
+    return `[알림] 지정된 타겟 프로젝트 경로를 찾을 수 없습니다: ${projectRoot}`;
   }
 
   // --- 1. Scan Documentation (agyDocs, docs, root *.md) ---
@@ -394,17 +399,61 @@ export async function generateBrowsePlanWithGemini(
     }
   }
 
-  options.onProgress?.(`🚀 [통합 AI 디렉터] 소스코드 역공학 탐색 및 5단계 영상 연출 플랜 수립을 시작합니다...`);
+  const hasLocalSource = !!(effectiveTargetPath && fs.existsSync(effectiveTargetPath));
+  if (hasLocalSource) {
+    options.onProgress?.(`🚀 [통합 AI 디렉터] 소스코드 역공학 탐색 및 5단계 영상 연출 플랜 수립을 시작합니다...`);
+  } else {
+    options.onProgress?.(`🌐 [실시간 웹 모드] URL(${effectiveTargetUrl}) 기반 5단계 영상 연출 플랜 수립을 시작합니다...`);
+  }
 
-  // --- Initialize Autonomous Code Explorer Tools for Target Project ---
-  const toolExecutors = createCodeExplorerTools(effectiveTargetPath);
-  const toolDeclarations = codeExplorerToolDeclarations;
+  // --- Initialize Autonomous Code Explorer Tools for Target Project (Optional) ---
+  const toolExecutors = hasLocalSource ? createCodeExplorerTools(effectiveTargetPath) : {};
+  const toolDeclarations = hasLocalSource ? codeExplorerToolDeclarations : [];
   const toolActivityLogs: string[] = [];
 
   const codeContext = scanTargetProjectContext(options.prompt, effectiveTargetPath);
   const fewShotContext = loadFewShotExamples();
 
-  const systemInstruction = `
+  const commonDirectingRules = `
+---
+
+### [지침] 🚨 브라우징 플랜 기획 원칙
+1. **다중 버튼 충돌 방지 및 영역 스코핑**:
+   - '저장', '등록', '확인', '닫기', '검색' 등은 화면 여러 곳(헤더, 사이드바, 본문, 팝업 모달)에 동시에 존재할 수 있습니다.
+   - 모달 팝업 내부의 버튼은 반드시 \`.ui-dialog:visible button:has-text('저장')\` 또는 \`.ui-dialog:visible #savebtn\`처럼 모달 범위를 한정하십시오.
+   - 사이드바 버튼은 \`#snb\`, 헤더 버튼은 \`header\` 접두사를 붙여서 특정 버튼을 100% 명확히 가리키십시오.
+2. **가상 ID 절대 금지 및 모르면 비워두기 (Zero-Guessing Policy)**:
+   - 확인되지 않은 임의의 영어 ID(#search_box_input, #btn_save_dialog 등)를 절대로 지어내지 마십시오!
+   - 한글 텍스트 매칭(예: \`button:has-text("등록"):visible\`)이 확실한 경우는 텍스트 매칭을 사용하십시오.
+   - 텍스트 매칭조차 불확실하거나 확정할 수 없는 인터랙티브 요소는 **\`"selector": ""\` (빈 문자열)로 비워두십시오!**
+   - 비워둔 항목은 JSON의 \`explanation\` 필드에 사용자가 대시보드 에디터에서 직접 입력해야 하는 항목을 친절히 안내하십시오.
+3. **포탈 전체메뉴(서랍) 내 숨겨진 하위 메뉴 탐색 원칙**:
+   - 엔터프라이즈 포탈 메인 화면에서 세부 업무 메뉴(일정관리, 전자결재, 문서관리, 게시판 등)가 상단 바에 직접 노출되어 있지 않은 경우,
+     반드시 [포탈 전체메뉴(button.btn_svc_open) 클릭] -> [1200ms 펼침 대기] -> [서랍 내 목표 메뉴(#svc_box a:has-text('...')) 클릭] 시퀀스를 준수하십시오.
+4. **모든 업무 기능(설문, 프로젝트, 주소록, 근태, 문서, 결재, 일정, 예약 등) 등록/작성 고유 필수 조건 전수 충족 지침 (Zero-Validation-Failure Policy)**:
+   - 사용자가 요청하는 기능은 문서/결재/일정뿐만 아니라 설문조사 작성, 프로젝트 생성, 주소록 연락처 추가, 근태 연차신청, 시설/자원 예약, 업무일지 등록, 회원 가입, 관리자 설정 등 시스템의 모든 기능이 대상이 됩니다.
+   - [🚨 절대 금지]: 필수 조건을 생략하고 곧바로 저장 버튼을 누르지 마십시오. (브라우저 유효성 검사 alert 창이 떠서 시연이 중단됩니다.)
+   - 📄 **문서 등록 (4단계 필수 시퀀스)**: 좌측 [문서 등록] 버튼 클릭 ➔ '문서함 선택' 모달 팝업 열림 대기(1500ms) ➔ 팝업 내 실제 등록 대상 문서함(말단 리프 노드) 클릭(".ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:not(:has(ul)) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:last-child a.dynatree-title:visible") ➔ 팝업 [확인] 버튼 클릭(".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible")하여 모달 닫기 ➔ 본문 등록 폼 렌더링 후 제목 입력 ➔ 본문 내용 작성 ➔ 상단 [저장] 클릭! (절대로 등록 불가한 최상위 부모 폴더 노드를 선택하지 마십시오!)
+   - 모든 필수 조건이 입력/선택된 후에 최종 [저장/상신/등록] 버튼을 클릭하고 브라우저 확인(Confirm) 다이얼로그를 승인해야 합니다.
+5. **실제 DB 데이터 기반 검색 및 조회 연동 (Method 2: Zero-Hallucinated-Data Policy)**:
+   - **[🚨 검색/조회 목적 시나리오에 불필요한 신규 등록 단계 생성 엄격 금지]**:
+     사용자의 요청 의도가 '조회', '검색', '확인', '열람', '상세보기'인 경우, 시나리오 앞부분에 불필요하게 [신규 등록/작성] 버튼을 눌러 가상 제목과 본문을 입력하고 저장하는 등록 단계를 절대로 끼워 넣지 마십시오!
+     시연은 [목표 메뉴 이동] -> [분류/함 선택 및 목록 로딩 대기] -> [화면의 실제 DB 데이터 스크래핑 및 검색창 입력] -> [검색 실행] -> [해당 실제 데이터 클릭 상세 확인]의 순수 조회 파이프라인으로 구성해야 합니다.
+   - **[🚨 가상 검색어/제목 날조 엄격 금지]**:
+     절대로 '2026학년도 대학 혁신지원사업...', '테스트 기안서', '김철수' 같은 임의의 가상 검색어나 제목을 날조하여 고정하지 마십시오!
+   - 검색창 입력('type') 액션에는 반드시:
+     • \`"useScraped": "auto"\`
+     • \`"dynamicStrategy": "first-row-title"\` (사원인 경우 "first-row-user")
+     • \`"description": "화면 목록의 실제 데이터로 검색어 자동 연동 입력"\`
+     • \`"text": "실시간 실제 목록 데이터"\`
+     를 지정하여, Playwright 런타임이 화면에 실제로 렌더링된 첫 번째 글/문서/사원명을 스크래핑하여 타이핑하도록 하십시오.
+   - 검색 결과 클릭 단계에도 \`"useScraped": "auto"\`를 지정하여 스크래핑된 실제 항목을 100% 매칭 클릭하도록 연결하십시오.
+6. **최종 출력 규격**:
+   - 중간 마크다운 설명서 없이 **곧바로 완전하고 유효한 BrowsePlan JSON 형식**으로만 응답하십시오.
+`;
+
+  const systemInstruction = hasLocalSource
+    ? `
 당신은 웹 애플리케이션의 소스코드를 직접 역공학(Reverse Engineering)하여,
 5단계 고품질 비디오 자동화 브라우징 플랜(BrowsePlan JSON)을 기획하는 전문 통합 AI 디렉터입니다.
 웹의 모든 메뉴와 기능(통합검색, 전자결재, 문서관리, 게시판, 메일, 일정관리 등)에 대해 보편적이고 정확한 플랜을 수립해야 합니다.
@@ -423,46 +472,27 @@ ${codeContext}
 ### [6] 검증된 레퍼런스 시나리오 패턴 (Verified Reference Examples)
 ${fewShotContext}
 
+### [7] 소스코드 정밀 역공학 및 도구(Tools) 활용
+- 도구 활용 (searchCodeText, findFiles, readSourceSnippet, extractAlertsAndValidation): 대상 화면의 실제 버튼 ID, 폼 필드 태그, 필수 유효성 검사 alert 조건을 적극 탐색하십시오.
+
+${commonDirectingRules}
+`
+    : `
+당신은 웹 애플리케이션의 실시간 서비스 URL(${effectiveTargetUrl})을 기반으로, 브라우저에서 사용자가 실제로 조작하는 흐름에 맞춰 5단계 고품질 비디오 자동화 브라우징 플랜(BrowsePlan JSON)을 기획하는 전문 통합 AI 디렉터입니다.
+로컬 소스코드에 의존하지 않고, 브라우저 화면에 보이는 직관적인 버튼 텍스트(button:has-text), 입력 필드(:visible), 폼 인터랙션, 모달 대화상자(.ui-dialog:visible)를 표준 웹 셀렉터로 정밀하게 기획하십시오.
+
+${MASTER_DIRECTING_GUIDELINES}
+
 ---
 
-### [7] 🚨 소스코드 정밀 역공학 및 도구(Tools) 활용 원칙
-1. **도구 활용 (searchCodeText, findFiles, readSourceSnippet, extractAlertsAndValidation)**:
-   - 사용자가 요청한 업무 기능(통합검색, 전자결재, 문서관리, 게시판, 메일, 일정관리 등)의 소스코드에서 실제 버튼 ID, 폼 필드 태그, 필수 유효성 검사 alert 조건을 능동적으로 탐색하십시오.
-   - 대상 화면의 트리거 버튼이나 저장/검색 버튼의 정확한 셀렉터를 모를 경우 반드시 searchCodeText 또는 findFiles를 호출하여 확인하십시오.
-2. **다중 버튼 충돌 방지 및 영역 스코핑**:
-   - '저장', '등록', '확인', '닫기', '검색' 등은 화면 여러 곳(헤더, 사이드바, 본문, 팝업 모달)에 동시에 존재할 수 있습니다.
-   - 모달 팝업 내부의 버튼은 반드시 \`.ui-dialog:visible button:has-text('저장')\` 또는 \`.ui-dialog:visible #savebtn\`처럼 모달 범위를 한정하십시오.
-   - 사이드바 버튼은 \`#snb\`, 헤더 버튼은 \`header\` 접두사를 붙여서 특정 버튼을 100% 명확히 가리키십시오.
-3. **가상 ID 절대 금지 및 모르면 비워두기 (Zero-Guessing Policy)**:
-   - 소스코드에 없거나 확인되지 않은 임의의 영어 ID(#search_box_input, #btn_save_dialog 등)를 절대로 지어내지 마십시오!
-   - 한글 텍스트 매칭(예: \`button:has-text("등록"):visible\`)이 확실한 경우는 텍스트 매칭을 사용하십시오.
-   - 텍스트 매칭조차 불확실하거나 소스코드에서 확정할 수 없는 인터랙티브 요소는 **\`"selector": ""\` (빈 문자열)로 비워두십시오!**
-   - 비워둔 항목은 JSON의 \`explanation\` 필드에 사용자가 대시보드 에디터에서 직접 입력해야 하는 항목을 친절히 안내하십시오.
-4. **포탈 전체메뉴(서랍) 내 숨겨진 하위 메뉴 탐색 원칙**:
-   - 엔터프라이즈 포탈 메인 화면에서 세부 업무 메뉴(일정관리, 전자결재, 문서관리, 게시판 등)가 상단 바에 직접 노출되어 있지 않은 경우,
-     반드시 [포탈 전체메뉴(button.btn_svc_open) 클릭] -> [1200ms 펼침 대기] -> [서랍 내 목표 메뉴(#svc_box a:has-text('...')) 클릭] 시퀀스를 준수하십시오.
-5. **모든 업무 기능(설문, 프로젝트, 주소록, 근태, 문서, 결재, 일정, 예약 등) 등록/작성 고유 필수 조건 전수 충족 지침 (Dynamic Zero-Validation-Failure Policy)**:
-   - 사용자가 요청하는 기능은 문서/결재/일정뿐만 아니라 설문조사 작성, 프로젝트 생성, 주소록 연락처 추가, 근태 연차신청, 시설/자원 예약, 업무일지 등록, 회원 가입, 관리자 설정 등 시스템의 모든 기능이 대상이 됩니다.
-   - 각 기능마다 화면 구조와 필수 조건(Validation Alert)이 완전히 다릅니다. 따라서 어떤 시나리오든 고정된 단계를 억지로 끼워 넣지 말고, **반드시 도구(findFiles, searchCodeText, readSourceSnippet, extractAlertsAndValidation)를 호출하여 해당 기능의 실제 소스코드(JSP/JS)와 유효성 검사 alert 목록을 능동적으로 역공학 탐색**하십시오.
-   - [🚨 절대 금지]: 필수 조건을 생략하고 곧바로 저장 버튼을 누르지 마십시오. (브라우저 유효성 검사 alert 창이 떠서 시연이 중단됩니다.)
-   - 소스코드에 정의된 실제 필수 조건(예: alert("...를 입력하세요", "...를 선택하세요"))을 빠짐없이 확인하고, 그 기능이 요구하는 필수 값들을 시나리오 단계에서 모두 거친 뒤 최종 저장/완료 버튼을 클릭하도록 100% 동적으로 플랜을 수립해야 합니다.
-   - 📄 **문서 등록 (4단계 필수 시퀀스)**: 좌측 [문서 등록] 버튼 클릭 ➔ '문서함 선택' 모달 팝업 열림 대기(1500ms) ➔ 팝업 내 실제 등록 대상 문서함(말단 리프 노드) 클릭(".ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:not(:has(ul)) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:last-child a.dynatree-title:visible") ➔ 팝업 [확인] 버튼 클릭(".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible")하여 모달 닫기 ➔ 본문 등록 폼 렌더링 후 제목 입력 ➔ 본문 내용 작성 ➔ 상단 [저장] 클릭! (절대로 등록 불가한 최상위 부모 폴더 노드를 선택하지 마십시오!)
-   - 모든 필수 조건이 입력/선택된 후에 최종 [저장/상신/등록] 버튼을 클릭하고 브라우저 확인(Confirm) 다이얼로그를 승인해야 합니다.
-6. **실제 DB 데이터 기반 검색 및 조회 연동 (Method 2: Zero-Hallucinated-Data Policy)**:
-   - **[🚨 검색/조회 목적 시나리오에 불필요한 신규 등록 단계 생성 엄격 금지]**:
-     사용자의 요청 의도가 '조회', '검색', '확인', '열람', '상세보기'인 경우, 시나리오 앞부분에 불필요하게 [신규 등록/작성] 버튼을 눌러 가상 제목과 본문을 입력하고 저장하는 등록 단계를 절대로 끼워 넣지 마십시오!
-     시연은 [목표 메뉴 이동] -> [분류/함 선택 및 목록 로딩 대기] -> [화면의 실제 DB 데이터 스크래핑 및 검색창 입력] -> [검색 실행] -> [해당 실제 데이터 클릭 상세 확인]의 순수 조회 파이프라인으로 구성해야 합니다.
-   - **[🚨 가상 검색어/제목 날조 엄격 금지]**:
-     절대로 '2026학년도 대학 혁신지원사업...', '테스트 기안서', '김철수' 같은 임의의 가상 검색어나 제목을 날조하여 고정하지 마십시오!
-   - 검색창 입력('type') 액션에는 반드시:
-     • \`"useScraped": "auto"\`
-     • \`"dynamicStrategy": "first-row-title"\` (사원인 경우 "first-row-user")
-     • \`"description": "화면 목록의 실제 데이터로 검색어 자동 연동 입력"\`
-     • \`"text": "실시간 실제 목록 데이터"\`
-     를 지정하여, Playwright 런타임이 화면에 실제로 렌더링된 첫 번째 글/문서/사원명을 스크래핑하여 타이핑하도록 하십시오.
-   - 검색 결과 클릭 단계에도 \`"useScraped": "auto"\`를 지정하여 스크래핑된 실제 항목을 100% 매칭 클릭하도록 연결하십시오.
-7. **최종 출력 규격**:
-   - 소스코드 탐색이 완료되면, 중간 마크다운 설명서 없이 **곧바로 완전하고 유효한 BrowsePlan JSON 형식**으로만 응답하십시오.
+### [4] 타겟 실행 환경 정보 (Current Target System Information)
+- 타겟 서비스 웹 URL: ${effectiveTargetUrl}
+- 동작 모드: 실시간 웹 다이렉트 모드 (로컬 소스코드 불필요)
+
+### [5] 검증된 레퍼런스 시나리오 패턴 (Verified Reference Examples)
+${fewShotContext}
+
+${commonDirectingRules}
 `;
 
   const userContent = `
@@ -539,7 +569,7 @@ The final response must be valid JSON with this exact schema:
         ];
 
         let turn = 0;
-        const maxToolTurns = 3;
+        const maxToolTurns = toolDeclarations.length > 0 ? 3 : 1;
 
         while (turn < maxToolTurns) {
           turn++;
@@ -548,7 +578,7 @@ The final response must be valid JSON with this exact schema:
             contents,
             config: {
               systemInstruction,
-              tools: [{ functionDeclarations: toolDeclarations as any }],
+              tools: toolDeclarations.length > 0 ? [{ functionDeclarations: toolDeclarations as any }] : undefined,
               temperature: 0.2,
               maxOutputTokens: 8192,
             },

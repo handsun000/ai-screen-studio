@@ -145,30 +145,39 @@ function updateProjectAnalysisUI(analysis) {
   const dot = projectStatusBadge.querySelector(".status-dot");
 
   if (analysis.exists) {
-    pillProjectName.textContent = `${analysis.projectName} 연동됨`;
-    dot.style.background = "var(--success-color)";
-    dot.style.boxShadow = "0 0 8px var(--success-glow)";
-    projectStatusText.textContent = `${analysis.projectName} (${analysis.projectType})`;
-    metaProjectType.textContent = `${analysis.projectType} - ${analysis.sourceSummary}`;
-
-    metaDocsTags.innerHTML = "";
-    if (analysis.docFiles && analysis.docFiles.length > 0) {
-      analysis.docFiles.forEach((doc) => {
-        const span = document.createElement("span");
-        span.className = "doc-tag";
-        span.textContent = `📄 ${doc}`;
-        metaDocsTags.appendChild(span);
-      });
+    if (!analysis.path) {
+      pillProjectName.textContent = `🌐 Live URL 모드`;
+      dot.style.background = "var(--success-color)";
+      dot.style.boxShadow = "0 0 8px var(--success-glow)";
+      projectStatusText.textContent = `Live Web 모드 (로컬 소스코드 불필요)`;
+      metaProjectType.textContent = `${analysis.projectType} - ${analysis.sourceSummary}`;
+      metaDocsTags.innerHTML = '<span style="color:var(--text-muted)">실시간 브라우저 DOM 자동 탐색 가동</span>';
     } else {
-      metaDocsTags.innerHTML = '<span style="color:var(--text-muted)">문서 파일 없음 (.md)</span>';
+      pillProjectName.textContent = `${analysis.projectName} 연동됨`;
+      dot.style.background = "var(--success-color)";
+      dot.style.boxShadow = "0 0 8px var(--success-glow)";
+      projectStatusText.textContent = `${analysis.projectName} (${analysis.projectType})`;
+      metaProjectType.textContent = `${analysis.projectType} - ${analysis.sourceSummary}`;
+
+      metaDocsTags.innerHTML = "";
+      if (analysis.docFiles && analysis.docFiles.length > 0) {
+        analysis.docFiles.forEach((doc) => {
+          const span = document.createElement("span");
+          span.className = "doc-tag";
+          span.textContent = `📄 ${doc}`;
+          metaDocsTags.appendChild(span);
+        });
+      } else {
+        metaDocsTags.innerHTML = '<span style="color:var(--text-muted)">문서 파일 없음 (.md)</span>';
+      }
     }
   } else {
-    pillProjectName.textContent = "프로젝트 미연결";
+    pillProjectName.textContent = "경로 불일치";
     dot.style.background = "var(--danger-color)";
     dot.style.boxShadow = "0 0 8px rgba(239, 68, 68, 0.4)";
-    projectStatusText.textContent = "경로 확인 필요 (존재하지 않음)";
+    projectStatusText.textContent = "로컬 경로 확인 필요 (비워두면 Live URL 모드로 동작)";
     metaProjectType.textContent = analysis.sourceSummary;
-    metaDocsTags.innerHTML = '<span style="color:var(--danger-color)">경로가 올바르지 않습니다</span>';
+    metaDocsTags.innerHTML = '<span style="color:var(--danger-color)">경로가 올바르지 않습니다 (비워두시면 자동 Live URL 모드로 전환됩니다)</span>';
   }
 }
 
@@ -176,13 +185,13 @@ async function handleSaveConfig() {
   const targetProjectPath = targetProjectPathInput.value.trim();
   const targetBaseUrl = targetBaseUrlInput.value.trim();
 
-  if (!targetProjectPath) {
-    alert("타겟 프로젝트 경로를 입력해주세요.");
+  if (!targetBaseUrl) {
+    alert("접속 대상 서비스 URL(Target Base URL)을 입력해주세요.");
     return;
   }
 
   btnValidateProject.disabled = true;
-  btnValidateProject.textContent = "검증 중...";
+  btnValidateProject.textContent = "저장 중...";
 
   try {
     const res = await fetch("/api/config", {
@@ -194,16 +203,18 @@ async function handleSaveConfig() {
     const data = await res.json();
     updateProjectAnalysisUI(data.analysis);
 
-    if (data.analysis.exists) {
+    if (!targetProjectPath) {
+      alert(`타겟 설정이 저장되었습니다!\n- 접속 URL: ${data.config.targetBaseUrl}\n- 동작 모드: 순수 실시간 웹(Live URL) 모드 (로컬 소스코드 불필요)`);
+    } else if (data.analysis.exists) {
       alert(`타겟 프로젝트가 성공적으로 변경되었습니다!\n- 프로젝트: ${data.analysis.projectName}\n- 경로: ${data.analysis.path}\n- 타입: ${data.analysis.projectType}`);
     } else {
-      alert(`경고: 입력하신 경로가 존재하지 않습니다.\n${targetProjectPath}`);
+      alert(`경고: 입력하신 로컬 경로가 존재하지 않습니다.\n${targetProjectPath}\n(경로를 비워두시면 Live URL 모드로 동작합니다.)`);
     }
   } catch (err) {
     alert("설정 저장 실패: " + err.message);
   } finally {
     btnValidateProject.disabled = false;
-    btnValidateProject.textContent = "🔍 검증 및 연결";
+    btnValidateProject.textContent = "💾 설정 저장";
   }
 }
 
@@ -448,7 +459,11 @@ async function handleGeneratePlan() {
   if (aiProgressBar) {
     aiProgressBar.classList.remove("hidden");
     if (aiProgressText) {
-      aiProgressText.textContent = "🔍 [1단계: 코드 탐색 에이전트] 타겟 프로젝트 소스코드 및 DOM 셀렉터 탐색 시작...";
+      if (targetProjectPath) {
+        aiProgressText.textContent = "🔍 [1단계: 소스코드 역공학] 타겟 프로젝트 코드 및 DOM 셀렉터 탐색 시작...";
+      } else {
+        aiProgressText.textContent = "🌐 [Live Web 모드] 실시간 대상 웹 서비스 URL 기반 5단계 시나리오 연출 중...";
+      }
     }
   }
 
@@ -1463,8 +1478,8 @@ function bindEvents() {
       if (pillGw) {
         pillGw.addEventListener("click", () => {
           switchTab("tab-generator");
-          targetProjectPathInput.focus();
-          targetProjectPathInput.select();
+          targetBaseUrlInput.focus();
+          targetBaseUrlInput.select();
         });
       }
 

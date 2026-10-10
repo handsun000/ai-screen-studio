@@ -62,7 +62,7 @@ app.post("/api/config", (req: Request, res: Response) => {
   try {
     const updated = updateConfig(req.body);
     const analysis = analyzeProject(updated.targetProjectPath);
-    console.log(`[Dashboard Config] 타겟 프로젝트 변경: ${updated.targetProjectPath} (${updated.targetBaseUrl})`);
+    console.log(`[Dashboard Config] 타겟 설정 변경: ${updated.targetProjectPath || '(Live URL 모드)'} (${updated.targetBaseUrl})`);
     res.json({ success: true, config: updated, analysis });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -144,14 +144,14 @@ app.post("/api/scenarios/generate", async (req: Request, res: Response) => {
     }
 
     const currentConfig = getConfig();
-    const effectivePath = targetProjectPath || currentConfig.targetProjectPath;
+    const effectivePath = targetProjectPath !== undefined ? targetProjectPath : currentConfig.targetProjectPath;
     const effectiveUrl = targetUrl || currentConfig.targetBaseUrl;
 
     console.log(`\n[Dashboard API] Generating plan:`);
     console.log(`  - Prompt: "${prompt}"`);
     console.log(`  - Directing Style: ${directingStyle || "standard"}`);
     console.log(`  - Scenario Depth:  ${depth || "standard"}`);
-    console.log(`  - Target Path: ${effectivePath}`);
+    console.log(`  - Target Path: ${effectivePath || "(None - Live URL Direct Mode)"}`);
     console.log(`  - Target URL:  ${effectiveUrl}`);
     console.log(`  - Bypass Cache: ${!!bypassCache}`);
 
@@ -430,7 +430,7 @@ app.listen(PORT, () => {
   console.log(`🎬 Screen Demo AI Studio Web Dashboard Started!`);
   console.log(`👉 http://localhost:${PORT}`);
   console.log(`   - Google AI Studio: ${config.geminiModel} (Connected)`);
-  console.log(`   - Target Project:   ${config.targetProjectPath}`);
+  console.log(`   - Target Project:   ${config.targetProjectPath || '(None - Live URL Direct Mode)'}`);
   console.log(`   - Target URL:       ${config.targetBaseUrl}`);
   console.log(`======================================================\n`);
 });

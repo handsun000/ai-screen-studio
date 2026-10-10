@@ -14,8 +14,8 @@ export interface StudioConfig {
 
 // In-memory runtime config, initialized from .env or defaults
 let currentConfig: StudioConfig = {
-  targetProjectPath: process.env.TARGET_PROJECT_PATH || "C:/dev/IdeaProjects/bc2026/bc2026_gw",
-  targetBaseUrl: process.env.TARGET_BASE_URL || "https://gwdev.bc.ac.kr/",
+  targetProjectPath: process.env.TARGET_PROJECT_PATH || "",
+  targetBaseUrl: process.env.TARGET_BASE_URL || "https://gwdev.unison.co.kr",
   geminiModel: process.env.GEMINI_MODEL || "gemini-3.8-flash",
 };
 
@@ -33,13 +33,13 @@ export function getConfig(): StudioConfig {
 }
 
 export function updateConfig(newConfig: Partial<StudioConfig>): StudioConfig {
-  if (newConfig.targetProjectPath) {
+  if (newConfig.targetProjectPath !== undefined) {
     currentConfig.targetProjectPath = newConfig.targetProjectPath.trim().replace(/\\/g, "/");
   }
-  if (newConfig.targetBaseUrl) {
+  if (newConfig.targetBaseUrl !== undefined) {
     currentConfig.targetBaseUrl = newConfig.targetBaseUrl.trim();
   }
-  if (newConfig.geminiModel) {
+  if (newConfig.geminiModel !== undefined) {
     currentConfig.geminiModel = newConfig.geminiModel.trim();
   }
 
@@ -77,7 +77,18 @@ export function updateConfig(newConfig: Partial<StudioConfig>): StudioConfig {
  * Analyzes any target project path to detect its framework, documentation, and structure.
  */
 export function analyzeProject(targetPath?: string): ProjectAnalysis {
-  const p = (targetPath || currentConfig.targetProjectPath).trim().replace(/\\/g, "/");
+  const p = (targetPath !== undefined ? targetPath : currentConfig.targetProjectPath).trim().replace(/\\/g, "/");
+
+  if (!p) {
+    return {
+      path: "",
+      exists: true,
+      projectName: "Live URL Direct Mode",
+      projectType: "Universal Web Service",
+      docFiles: [],
+      sourceSummary: "로컬 소스코드 의존성 없이 실시간 웹 URL과 자연어 프롬프트만으로 동작합니다.",
+    };
+  }
 
   if (!fs.existsSync(p)) {
     return {
@@ -86,7 +97,7 @@ export function analyzeProject(targetPath?: string): ProjectAnalysis {
       projectName: path.basename(p) || "Unknown",
       projectType: "경로가 존재하지 않음",
       docFiles: [],
-      sourceSummary: "폴더를 찾을 수 없습니다. 경로를 확인해주세요.",
+      sourceSummary: "지정된 폴더를 찾을 수 없습니다. 경로를 확인하거나 비워두세요.",
     };
   }
 
