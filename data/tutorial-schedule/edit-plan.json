@@ -1,12 +1,12 @@
 {
-  "totalDurationFrames": 2928,
+  "totalDurationFrames": 3338,
   "fps": 60,
   "defaultZoom": 1.0,
   "segments": [
     {
       "momentId": 2,
-      "startFrame": 254,
-      "endFrame": 625,
+      "startFrame": 206,
+      "endFrame": 563,
       "speed": 1.0,
       "zoom": 1.3,
       "zoomTarget": {
@@ -23,8 +23,8 @@
     },
     {
       "momentId": 8,
-      "startFrame": 920,
-      "endFrame": 1951,
+      "startFrame": 779,
+      "endFrame": 1939,
       "speed": 1.0,
       "zoom": 1.4,
       "zoomTarget": {
@@ -33,29 +33,39 @@
       },
       "easeInFrames": 20,
       "easeOutFrames": 20,
-      "description": "Click at (130, 148) + Typing: 2026 \uc804\ub7b5\uacfc\uc81c \ucd94\uc9c4 \ud604\ud669 \ubc0f \uae30\uc220 \ub85c\ub4dc\ub9f5 \uacf5\uc720\ud68c + Typing: 09:00 + Typing: 18:00 + Typing: \uae08\uc77c 09\uc2dc\ubd80\ud130 18\uc2dc\uae4c\uc9c0 \uc9c4\ud589\ub418\ub294 2026 \ud575\uc2ec \uacfc\uc81c + Click at (930, 532)",
+      "description": "Click at (130, 148) + Typing: \uc804\ub7b5 \uae30\ud68d \uc6cc\ud06c\uc20d \ubc0f \uc911\uc7a5\uae30 \uacfc\uc81c \ud68c\uc758 + Click at (990, 371) + Typing: 09:00 + Typing: 20:00 + Typing: \ubcf8\uc0ac 10\uce35 \ub300\ud68c\uc758\uc2e4 + Typing: \uae08\uc77c 09:00\ubd80\ud130 20:00\uae4c\uc9c0 \uc9c4\ud589\ub418\ub294 \uc804\uc0ac \uc804\ub7b5 ",
       "zoomTargetEnd": {
-        "x": 930,
-        "y": 532
+        "x": 577,
+        "y": 568
       }
     },
     {
-      "momentId": 22,
-      "startFrame": 2413,
-      "endFrame": 2672,
+      "momentId": 26,
+      "startFrame": 2379,
+      "endFrame": 2499,
       "speed": 1.0,
       "zoom": 1.3,
       "zoomTarget": {
-        "x": 1694,
-        "y": 521
+        "x": 924,
+        "y": 668
       },
       "easeInFrames": 20,
       "easeOutFrames": 20,
-      "description": "Click at (1694, 521) + Click at (1029, 734)",
-      "zoomTargetEnd": {
-        "x": 1029,
-        "y": 734
-      }
+      "description": "Click at (924, 668)"
+    },
+    {
+      "momentId": 32,
+      "startFrame": 2916,
+      "endFrame": 3036,
+      "speed": 1.0,
+      "zoom": 1.3,
+      "zoomTarget": {
+        "x": 1776,
+        "y": 471
+      },
+      "easeInFrames": 20,
+      "easeOutFrames": 20,
+      "description": "Click at (1776, 471)"
     }
   ]
 }

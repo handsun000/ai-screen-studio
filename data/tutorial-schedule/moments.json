@@ -3,21 +3,21 @@
     "url": "https://gwdev.unison.co.kr",
     "viewportWidth": 1920,
     "viewportHeight": 1080,
-    "totalDurationMs": 48796,
-    "recordingStart": "2026-10-10T08:06:31.262Z"
+    "totalDurationMs": 55639,
+    "recordingStart": "2026-10-10T09:47:59.736Z"
   },
   "moments": [
     {
       "id": 1,
       "type": "wait",
-      "timestamp": 901,
-      "description": "메인 대시보드 로딩 및 시각적 앵커 확보 (Phase 1)"
+      "timestamp": 1098,
+      "description": "메인 대시보드 로딩 및 시각적 앵커 대기 (Phase 1)"
     },
     {
       "id": 2,
       "type": "click",
-      "timestamp": 4235,
-      "description": "상단 '포탈 전체메뉴' 서랍 버튼 클릭 (Phase 2)",
+      "timestamp": 3427,
+      "description": "상단 GNB '포탈 전체메뉴' 버튼 클릭 (Phase 2)",
       "cursor": {
         "x": 1376,
         "y": 83
@@ -32,36 +32,36 @@
     {
       "id": 3,
       "type": "wait",
-      "timestamp": 5325,
-      "description": "전체메뉴 서랍 레이어 열림 대기"
+      "timestamp": 4507,
+      "description": "전체메뉴 서랍 레이어 펼침 대기"
     },
     {
       "id": 4,
       "type": "hover",
-      "timestamp": 7300,
-      "description": "전체메뉴 레이어 내 '일정관리' 메뉴 항목 탐색",
+      "timestamp": 6329,
+      "description": "전체메뉴 서랍 내 메뉴 항목 탐색",
       "cursor": {
-        "x": 1158,
-        "y": 182
+        "x": 531,
+        "y": 136
       },
       "target": {
-        "x": 1069,
-        "y": 167,
-        "width": 177,
-        "height": 30
+        "x": 470,
+        "y": 123,
+        "width": 123,
+        "height": 26
       }
     },
     {
       "id": 5,
       "type": "wait",
-      "timestamp": 7867,
-      "description": "메뉴 호버 대기"
+      "timestamp": 6846,
+      "description": "서랍 메뉴 인지 대기"
     },
     {
       "id": 6,
       "type": "click",
-      "timestamp": 9418,
-      "description": "전체메뉴 내 '일정관리' 클릭하여 이동",
+      "timestamp": 8389,
+      "description": "전체메뉴 내 '일정관리' 메뉴 클릭",
       "cursor": {
         "x": 1158,
         "y": 182
@@ -76,13 +76,13 @@
     {
       "id": 7,
       "type": "wait",
-      "timestamp": 11520,
-      "description": "일정관리 메인 화면 및 캘린더 렌더링 대기"
+      "timestamp": 10799,
+      "description": "일정관리 메인 화면 및 캘린더 전체 로딩 대기"
     },
     {
       "id": 8,
       "type": "click",
-      "timestamp": 15326,
+      "timestamp": 12991,
       "description": "좌측 상단 [일정 등록] 버튼 클릭 (Phase 3)",
       "cursor": {
         "x": 130,
@@ -98,14 +98,14 @@
     {
       "id": 9,
       "type": "wait",
-      "timestamp": 16394,
+      "timestamp": 14101,
       "description": "일정 등록 모달 다이얼로그 로딩 대기"
     },
     {
       "id": 10,
       "type": "type",
-      "timestamp": 18606,
-      "description": "일정 제목에 '2026 전략과제 추진 현황 및 기술 로드맵 공유회' 입력",
+      "timestamp": 15935,
+      "description": "일정 제목 필드에 '전략 기획 워크숍 및 중장기 과제 회의' 입력",
       "cursor": {
         "x": 704,
         "y": 149
@@ -116,25 +116,47 @@
         "width": 480,
         "height": 32
       },
-      "keys": "2026 전략과제 추진 현황 및 기술 로드맵 공유회"
+      "keys": "전략 기획 워크숍 및 중장기 과제 회의"
     },
     {
       "id": 11,
       "type": "wait",
-      "timestamp": 20699,
-      "description": "제목 입력 확인 대기"
+      "timestamp": 17550,
+      "description": "일정 제목 입력 확인 대기"
     },
     {
       "id": 12,
-      "type": "type",
-      "timestamp": 22121,
-      "description": "시작 시간에 '09:00' 입력",
+      "type": "click",
+      "timestamp": 19239,
+      "description": "상세 설정 확장 버튼 클릭 (노출 시)",
       "cursor": {
-        "x": 823,
+        "x": 990,
+        "y": 371
+      },
+      "target": {
+        "x": 983,
+        "y": 364,
+        "width": 14,
+        "height": 14
+      }
+    },
+    {
+      "id": 13,
+      "type": "wait",
+      "timestamp": 20330,
+      "description": "상세 입력 항목 로딩 대기"
+    },
+    {
+      "id": 14,
+      "type": "type",
+      "timestamp": 21771,
+      "description": "일정 시작 시간 '09:00' 입력",
+      "cursor": {
+        "x": 821,
         "y": 198
       },
       "target": {
-        "x": 807,
+        "x": 805,
         "y": 182,
         "width": 95,
         "height": 32
@@ -142,144 +164,197 @@
       "keys": "09:00"
     },
     {
-      "id": 13,
-      "type": "wait",
-      "timestamp": 23049,
-      "description": "시작 시간 입력 완료 대기"
-    },
-    {
-      "id": 14,
-      "type": "type",
-      "timestamp": 24469,
-      "description": "종료 시간에 '18:00' 입력",
-      "cursor": {
-        "x": 1050,
-        "y": 198
-      },
-      "target": {
-        "x": 1034,
-        "y": 182,
-        "width": 95,
-        "height": 32
-      },
-      "keys": "18:00"
-    },
-    {
       "id": 15,
       "type": "wait",
-      "timestamp": 25385,
-      "description": "종료 시간 입력 완료 대기"
+      "timestamp": 22761,
+      "description": "시작 시간 설정 반영 대기"
     },
     {
       "id": 16,
       "type": "type",
-      "timestamp": 26813,
-      "description": "일정 상세 내용 작성",
+      "timestamp": 24188,
+      "description": "일정 종료 시간 '20:00' 입력",
       "cursor": {
-        "x": 577,
-        "y": 432
+        "x": 1048,
+        "y": 198
       },
       "target": {
-        "x": 561,
-        "y": 397,
-        "width": 798,
-        "height": 70
+        "x": 1032,
+        "y": 182,
+        "width": 95,
+        "height": 32
       },
-      "keys": "금일 09시부터 18시까지 진행되는 2026 핵심 과제 점검 및 R&D 마일스톤 회의입니다."
+      "keys": "20:00"
     },
     {
       "id": 17,
       "type": "wait",
-      "timestamp": 29870,
-      "description": "일정 내용 입력 완료 대기"
+      "timestamp": 25237,
+      "description": "종료 시간 설정 반영 대기"
     },
     {
       "id": 18,
-      "type": "click",
-      "timestamp": 31518,
-      "description": "일정 등록 모달 [저장] 버튼 클릭 (Phase 4)",
+      "type": "type",
+      "timestamp": 26675,
+      "description": "장소 입력 필드에 '본사 10층 대회의실' 입력",
       "cursor": {
-        "x": 930,
-        "y": 532
+        "x": 702,
+        "y": 410
       },
       "target": {
-        "x": 902,
-        "y": 514,
-        "width": 56,
-        "height": 36
-      }
+        "x": 686,
+        "y": 394,
+        "width": 480,
+        "height": 32
+      },
+      "keys": "본사 10층 대회의실"
     },
     {
       "id": 19,
       "type": "wait",
-      "timestamp": 32595,
-      "description": "저장 처리 및 캘린더 화면 갱신 대기 (Phase 5)"
+      "timestamp": 28188,
+      "description": "장소 입력 확인 대기"
     },
     {
       "id": 20,
-      "type": "hover",
-      "timestamp": 37802,
-      "description": "캘린더 내 등록된 신규 일정 이벤트 블록 호버 검증",
-      "cursor": {
-        "x": 1694,
-        "y": 521
-      },
-      "target": {
-        "x": 1670,
-        "y": 462,
-        "width": 49,
-        "height": 118
-      }
+      "type": "click",
+      "timestamp": 29438,
+      "description": "공개 여부 옵션 확인 및 클릭"
     },
     {
       "id": 21,
       "type": "wait",
-      "timestamp": 38314,
-      "description": "등록 일정 시각적 확인 대기"
+      "timestamp": 29845,
+      "description": "공개 옵션 반영 대기"
     },
     {
       "id": 22,
-      "type": "click",
-      "timestamp": 40220,
-      "description": "등록된 일정 상세 팝업/조회 열기",
+      "type": "type",
+      "timestamp": 31314,
+      "description": "상세 내용 입력 필드에 일정 개요 및 안건 내용 작성",
       "cursor": {
-        "x": 1694,
-        "y": 521
+        "x": 577,
+        "y": 568
       },
       "target": {
-        "x": 1670,
-        "y": 462,
-        "width": 49,
-        "height": 118
-      }
+        "x": 561,
+        "y": 533,
+        "width": 785,
+        "height": 70
+      },
+      "keys": "금일 09:00부터 20:00까지 진행되는 전사 전략 기획 및 중장기 과제 심층 검토 워크숍입니다. (필수 참석 대상자 전원 시간 엄수 요망)"
     },
     {
       "id": 23,
       "type": "wait",
-      "timestamp": 41297,
-      "description": "일정 상세 조회 레이어 로딩 대기"
+      "timestamp": 35812,
+      "description": "상세 내용 입력 확인 대기"
     },
     {
       "id": 24,
-      "type": "click",
-      "timestamp": 43533,
-      "description": "일정 상세 레이어 닫기 버튼 클릭",
+      "type": "hover",
+      "timestamp": 37547,
+      "description": "입력된 전체 폼 내용 최종 점검",
       "cursor": {
-        "x": 1029,
-        "y": 734
+        "x": 786,
+        "y": 100
       },
       "target": {
-        "x": 1001,
-        "y": 716,
-        "width": 56,
-        "height": 36
+        "x": 686,
+        "y": 84,
+        "width": 200,
+        "height": 32
       }
     },
     {
       "id": 25,
       "type": "wait",
-      "timestamp": 44597,
-      "description": "캘린더 메인 화면 복귀 및 아웃트로 마무리"
+      "timestamp": 38070,
+      "description": "저장 전 시각적 검토 대기"
+    },
+    {
+      "id": 26,
+      "type": "click",
+      "timestamp": 39651,
+      "description": "일정 등록 팝업 하단 [저장] 버튼 클릭 (Phase 4)",
+      "cursor": {
+        "x": 924,
+        "y": 668
+      },
+      "target": {
+        "x": 896,
+        "y": 650,
+        "width": 56,
+        "height": 36
+      }
+    },
+    {
+      "id": 27,
+      "type": "wait",
+      "timestamp": 40752,
+      "description": "일정 등록 처리 및 서버 동기화 대기"
+    },
+    {
+      "id": 28,
+      "type": "click",
+      "timestamp": 43433,
+      "description": "저장 완료 안내 팝업 확인 버튼 클릭 (표시 시)"
+    },
+    {
+      "id": 29,
+      "type": "wait",
+      "timestamp": 43844,
+      "description": "등록 모달 닫힘 및 캘린더 그리드 자동 갱신 대기 (Phase 5)"
+    },
+    {
+      "id": 30,
+      "type": "hover",
+      "timestamp": 46102,
+      "description": "캘린더에 방금 등록된 일정 항목 호버",
+      "cursor": {
+        "x": 1776,
+        "y": 471
+      },
+      "target": {
+        "x": 1670,
+        "y": 462,
+        "width": 213,
+        "height": 17
+      }
+    },
+    {
+      "id": 31,
+      "type": "wait",
+      "timestamp": 46621,
+      "description": "등록된 일정 툴팁 및 시각적 등록 완료 확인 대기"
+    },
+    {
+      "id": 32,
+      "type": "click",
+      "timestamp": 48605,
+      "description": "등록된 일정 항목 클릭하여 상세 정보 조회",
+      "cursor": {
+        "x": 1776,
+        "y": 471
+      },
+      "target": {
+        "x": 1670,
+        "y": 462,
+        "width": 213,
+        "height": 17
+      }
+    },
+    {
+      "id": 33,
+      "type": "wait",
+      "timestamp": 49733,
+      "description": "일정 상세 레이어(09:00 ~ 20:00 확인) 표시 대기"
+    },
+    {
+      "id": 34,
+      "type": "wait",
+      "timestamp": 51256,
+      "description": "일정 등록 결과 전체 화면 확인 및 아웃트로 마무리"
     }
   ]
 }

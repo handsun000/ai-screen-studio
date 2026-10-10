@@ -1,0 +1,91 @@
+{
+  "url": "https://gwdev.unison.co.kr",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "requiresLogin": true,
+  "actions": [
+    {
+      "type": "wait",
+      "description": "포탈 메인 대시보드 로딩 및 시각적 앵커 대기 (Phase 1)",
+      "ms": 3500
+    },
+    {
+      "type": "click",
+      "description": "상단 GNB '포탈 전체메뉴' 서랍 열기 버튼 클릭",
+      "selector": "button.btn_svc_open:visible, button[title='포탈 전체메뉴'], .btn_svc_open:visible"
+    },
+    {
+      "type": "wait",
+      "description": "전체메뉴 서랍 레이어 펼침 대기",
+      "ms": 1500
+    },
+    {
+      "type": "click",
+      "description": "전체메뉴 내 '전자결재' 메뉴 클릭 (Phase 2)",
+      "selector": "#svc_box a:has-text(\"결재\"), #svc_box a:has-text(\"전자결재\"), a:has-text(\"결재\"):visible"
+    },
+    {
+      "type": "wait",
+      "description": "전자결재 화면 전체 로딩 대기",
+      "ms": 3500
+    },
+    {
+      "type": "wait",
+      "description": "전자결재 대시보드 구성 확인 대기",
+      "ms": 2500
+    },
+    {
+      "type": "hover",
+      "description": "좌측 사이드바 전자결재 메뉴 영역 확인",
+      "selector": "#gapLeft_menuTree, #left, aside:visible, #snb:visible"
+    },
+    {
+      "type": "wait",
+      "description": "메뉴 목록 시각적 인지 대기",
+      "ms": 1200
+    },
+    {
+      "type": "click",
+      "description": "좌측 메뉴 내 '기안문서함(상신문서함)' 메뉴 클릭 (Phase 3)",
+      "selector": "#gapLeft_menuTree a:has-text(\"기안문서함\"), a.dynatree-title:has-text(\"기안문서함\"), #gapLeft_menuTree a:has-text(\"상신\"), a.dynatree-title:has-text(\"상신\"), a.dynatree-title:has-text(\"결재현황\"), a:has-text(\"기안문서함\"):visible, a:has-text(\"상신문서함\"):visible"
+    },
+    {
+      "type": "wait",
+      "description": "상신/기안 문서 목록 로딩 및 렌더링 대기",
+      "ms": 3500
+    },
+    {
+      "type": "click",
+      "description": "목록 내 첫 번째 상신 문서 클릭하여 상세 조회 (Phase 4)",
+      "selector": "table tbody tr:first-child .els a, table tbody tr:first-child a.sub_tp, table tbody tr:first-child a:visible, table tbody tr:first-child:visible"
+    },
+    {
+      "type": "wait",
+      "description": "상신 문서 상세 내용 및 결재선 로딩 대기",
+      "ms": 3500
+    },
+    {
+      "type": "scroll",
+      "description": "문서 본문 내용 스크롤 열람",
+      "selector": ".doc_view:visible, #content:visible, body",
+      "deltaY": 250
+    },
+    {
+      "type": "wait",
+      "description": "문서 본문 내용 확인 대기",
+      "ms": 2500
+    },
+    {
+      "type": "click",
+      "description": "상단 [목록] 버튼 클릭하여 기안문서함 목록으로 복귀",
+      "selector": "button:has-text(\"목록\"):visible, .btn_area button:has-text(\"목록\"), a:has-text(\"목록\"):visible, button.btn_lst:visible"
+    },
+    {
+      "type": "wait",
+      "description": "상신 문서함 목록 화면 원복 대기",
+      "ms": 3000
+    }
+  ]
+}
