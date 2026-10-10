@@ -80,7 +80,7 @@
       "type": "type",
       "iframe": "#web_messenger_iframe",
       "selector": "input#wmOrgSearch_searchWord",
-      "text": "GW테스트02",
+      "text": "첫번째 검색 결과 사원",
       "force": true,
       "description": "12. 검색할 상대방 이름 입력"
     },
@@ -98,20 +98,20 @@
     {
       "type": "hover",
       "iframe": "#web_messenger_iframe",
-      "selector": "li[data-key=\"M446105824\"] .info_box, .user_ul li:has-text(\"GW테스트02\") .info_box",
+      "selector": "li[data-key=\"M446105824\"] .info_box, .user_ul li:has-text(\"첫번째 검색 결과 사원\") .info_box",
       "optional": true,
-      "description": "15. 검색된 GW테스트02 과장 정보 마우스 호버"
+      "description": "15. 검색된 첫번째 검색 결과 사원 과장 정보 마우스 호버"
     },
     {
       "type": "click",
       "iframe": "#web_messenger_iframe",
-      "selector": "li[data-key=\"M446105824\"], .user_ul li:has-text(\"GW테스트02\")",
+      "selector": "li[data-key=\"M446105824\"], .user_ul li:has-text(\"첫번째 검색 결과 사원\")",
       "description": "16. 사용자 항목 클릭 선택"
     },
     {
       "type": "dblclick",
       "iframe": "#web_messenger_iframe",
-      "selector": "li[data-key=\"M446105824\"], .user_ul li:has-text(\"GW테스트02\")",
+      "selector": "li[data-key=\"M446105824\"], .user_ul li:has-text(\"첫번째 검색 결과 사원\")",
       "description": "17. 1:1 대화방 실행 (더블클릭)"
     },
     {
@@ -196,7 +196,7 @@
       "iframe": "#web_messenger_iframe",
       "selector": ".user_ul li[data-type=\"G\"]:first-child, .user_ul li:first-child",
       "optional": true,
-      "description": "31. 방금 대화한 GW테스트02 대화방 항목 호버"
+      "description": "31. 방금 대화한 첫번째 검색 결과 사원 대화방 항목 호버"
     },
     {
       "type": "click",

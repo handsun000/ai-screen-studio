@@ -83,7 +83,7 @@ export async function extractLiveCandidates(page: Page): Promise<{
 
       // Query visible interactive elements
       const query =
-        "button, a, input, select, textarea, [contenteditable='true'], [contenteditable=''], .note-editable, .ce-paragraph, div[role='textbox'], [role='button'], .dynatree-node, .dynatree-checkbox, .dynatree-title, .dynatree-expander, .fancytree-node, .fancytree-expander, .fancytree-title, [class*='expander'], [class*='tree-title'], [class*='node-title'], label, li[class*='item'], li[class*='depth'], div[onclick], span[onclick]";
+        "button, a, input, select, textarea, [contenteditable='true'], [contenteditable=''], .note-editable, .ce-paragraph, div[role='textbox'], [role='button'], .dynatree-node, .dynatree-checkbox, .dynatree-title, .dynatree-expander, .fancytree-node, .fancytree-expander, .fancytree-title, [class*='expander'], [class*='tree-title'], [class*='node-title'], .fc-event, .fc-title, .fc-content, [class*='fc-event'], [class*='fc-daygrid'], label, li[class*='item'], li[class*='depth'], div[onclick], span[onclick]";
       const elements = Array.from(document.querySelectorAll(query));
 
       for (const el of elements) {

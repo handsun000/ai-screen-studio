@@ -64,11 +64,13 @@ function computeZoomTarget(
   canvasWidth: number,
   canvasHeight: number,
   viewportWidth: number,
-  viewportHeight: number
+  viewportHeight: number,
+  useEnd: boolean = false
 ): { maxTranslateX: number; maxTranslateY: number } {
-  if (!seg.zoomTarget) return { maxTranslateX: 0, maxTranslateY: 0 };
+  const target = (useEnd && seg.zoomTargetEnd) ? seg.zoomTargetEnd : seg.zoomTarget;
+  if (!target) return { maxTranslateX: 0, maxTranslateY: 0 };
   const { translateX, translateY } = computeTranslate(
-    seg.zoomTarget, seg.zoom, canvasWidth, canvasHeight, viewportWidth, viewportHeight
+    target, seg.zoom, canvasWidth, canvasHeight, viewportWidth, viewportHeight
   );
   return { maxTranslateX: translateX, maxTranslateY: translateY };
 }
@@ -78,16 +80,17 @@ function computeZoomTarget(
  * segments is under this threshold, pan directly instead of zooming out
  * and back in.
  */
-const MAX_PAN_DISTANCE_PX = 800;
+const MAX_PAN_DISTANCE_PX = 850;
 
 /**
  * Check if two zoom segments are close enough to pan between them
  * instead of zooming out to 1x and back in.
  *
  * Combines spatial proximity (pixel distance) with temporal proximity (bounce time).
- * - Distant targets (> 800px) always zoom out to 1.0x wide screen to orient the viewer.
- * - Nearby targets (<= 500px, e.g. within a dialog or form) tolerate natural pauses (up to 4.2s)
- *   and smoothly glide between elements without the dizzying yo-yo effect.
+ * - Distant targets (> 850px) zoom out to 1.0x wide screen to re-orient the viewer.
+ * - Nearby targets (<= 750px, e.g. within the same dialog, form, or list) tolerate
+ *   natural reading and typing pauses (up to 10.0s) and smoothly glide between elements
+ *   without the dizzying in-and-out rollercoaster effect.
  */
 function shouldPanBetween(
   prev: EditSegment,
@@ -98,8 +101,10 @@ function shouldPanBetween(
   if (!prev.zoomTarget || !next.zoomTarget) return false;
   if (prev.zoom <= 1 || next.zoom <= 1) return false;
 
-  const dx = prev.zoomTarget.x - next.zoomTarget.x;
-  const dy = prev.zoomTarget.y - next.zoomTarget.y;
+  const prevPoint = prev.zoomTargetEnd || prev.zoomTarget;
+  const nextPoint = next.zoomTarget;
+  const dx = prevPoint.x - nextPoint.x;
+  const dy = prevPoint.y - nextPoint.y;
   const dist = Math.hypot(dx, dy);
 
   // If targets are farther apart than MAX_PAN_DISTANCE_PX (e.g. across screen), zoom out to wide view
@@ -113,8 +118,9 @@ function shouldPanBetween(
   const totalBounceFrames = easeOut + Math.max(0, gap) + easeIn;
   const totalBounceSeconds = totalBounceFrames / fps;
 
-  // Closer targets tolerate up to 4.2s total bounce (local flow); wider ones up to 3.6s
-  const threshold = dist <= 500 ? 4.2 : 3.6;
+  // Nearby targets (within same dialog/form, dist <= 750px) tolerate up to 10.0s of natural flow.
+  // Mid-distance targets (<= 850px) tolerate up to 6.5s.
+  const threshold = dist <= 750 ? 10.0 : 6.5;
 
   return totalBounceSeconds <= threshold;
 }
@@ -152,14 +158,14 @@ function getCameraState(
     // Pan FROM previous segment into this one
     const panFromPrev = prevSeg && shouldPanBetween(prevSeg, seg, editPlan.fps, fpsScale);
     if (panFromPrev) {
-      const PAN_HALF = Math.round(8 * fpsScale);
+      const PAN_HALF = Math.round(10 * fpsScale);
       const boundary = Math.round((prevSeg.endFrame + seg.startFrame) / 2);
       const panStart = boundary - PAN_HALF;
       const panEnd = boundary + PAN_HALF;
 
       if (frame >= panStart && frame <= panEnd) {
         const prevTarget = computeZoomTarget(
-          prevSeg, canvasWidth, canvasHeight, viewportWidth, viewportHeight
+          prevSeg, canvasWidth, canvasHeight, viewportWidth, viewportHeight, true
         );
         const t = interpolate(frame, [panStart, panEnd], [0, 1], {
           extrapolateLeft: "clamp",
@@ -183,7 +189,7 @@ function getCameraState(
 
     // Pan TO next segment instead of easing out
     if (nextSeg && shouldPanBetween(seg, nextSeg, editPlan.fps, fpsScale)) {
-      const PAN_HALF = Math.round(8 * fpsScale);
+      const PAN_HALF = Math.round(10 * fpsScale);
       const boundary = Math.round((seg.endFrame + nextSeg.startFrame) / 2);
       const panStart = boundary - PAN_HALF;
 

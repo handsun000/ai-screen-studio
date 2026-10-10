@@ -1,3 +1,4 @@
+
 import { chromium, type Browser, type Page, type BrowserContext, type Locator } from "playwright";
 import * as fs from "fs";
 import * as path from "path";
@@ -7,6 +8,105 @@ import { getVideoMetadata } from "@remotion/renderer";
 import type { BrowsePlan, BrowsePlanAction, Moment, MomentsFile } from "../src/types";
 import { sanitizeBrowsePlan } from "../src/services/planSanitizer";
 import { selfHealElement, saveHealedPlan } from "../src/services/elementSelfHealer";
+
+// Universal runtime tracking for created entities across scenarios
+const currentRuntimeVariables = new Map<string, string>();
+
+/**
+ * Computes a specificity score for candidate selectors.
+ * Specific text matches (:has-text) and unique IDs are given highest priority,
+ * while broad catch-all classes (.fc-event:visible, tr:visible, a:visible) are penalized
+ * so they act only as true last-resort fallbacks.
+ */
+function computeSelectorSpecificityScore(s: string): number {
+  let score = 0;
+  const lower = s.toLowerCase().trim();
+
+  // 1. Text-matching pseudos (Highest intent: matching exact or partial content)
+  if (lower.includes(":has-text(") || lower.includes(":text(") || lower.includes(":text-is(")) {
+    score += 120;
+  }
+  
+  // 2. ID selectors (#id is unique in DOM)
+  if (/#([a-zA-Z0-9_-]+)/.test(s)) {
+    score += 80;
+  }
+
+  // 3. Exact attribute values ([name='...'], [value='...'], etc.)
+  if (/\[[a-zA-Z0-9_-]+(=|\*=|\^=|\$=)/.test(s)) {
+    score += 40;
+  }
+
+  // 4. Modal / Dialog / Section Scoping (.ui-dialog:visible, #snb, header)
+  if (lower.includes(".ui-dialog") || lower.includes(".modal") || lower.includes("#snb") || lower.includes("header")) {
+    score += 25;
+  }
+
+  // 5. Positionals (:first-child, :last-child, :nth-child)
+  if (lower.includes(":first-child") || lower.includes(":last-child") || lower.includes(":nth-child")) {
+    score += 15;
+  }
+
+  // 6. Multiple classes (e.g. .fc-event-title, .btn.btn_primary)
+  const classMatches = s.match(/\.[a-zA-Z0-9_-]+/g);
+  if (classMatches) {
+    score += Math.min(20, classMatches.length * 5);
+  }
+
+  // 7. BROAD CATCH-ALL PENALTIES:
+  // Catch-all generic classes that match dozens/hundreds of elements must NOT precede specific filters!
+  if (/^\.fc-event(:visible)?$/.test(lower) || /^\.fc-day-grid-event(:visible)?$/.test(lower) || /^\.fc-time-grid-event(:visible)?$/.test(lower)) {
+    score -= 60; // Broad calendar event catch-all
+  }
+  if (/^\.item(:visible)?$/.test(lower) || /^\.row(:visible)?$/.test(lower) || /^\.card(:visible)?$/.test(lower)) {
+    score -= 60;
+  }
+  // Pure bare tag catch-alls (e.g. "a", "button", "div", "tr", "td", "li", "span", "p" with only :visible)
+  if (/^(a|button|input|div|tr|td|li|span|p)(:visible)?$/.test(lower)) {
+    score -= 80;
+  }
+
+  return score;
+}
+
+function sortSelectorsBySpecificity(parts: string[]): string[] {
+  return [...parts].sort((a, b) => {
+    return computeSelectorSpecificityScore(b) - computeSelectorSpecificityScore(a);
+  });
+}
+
+async function getLocatorWithWait(page: Page, action: BrowsePlanAction): Promise<Locator | null> {
+  const originalSelector = action.selector;
+  const rawParts = (action.selector || "").split(",").map(s => s.trim()).filter(Boolean);
+  const parts = sortSelectorsBySpecificity(rawParts);
+  
+  // 1. 초기 3초(6회)는 가장 구체적인 상위 셀렉터(우선순위 최고)만으로 탐색하여,
+  // 화면 로딩 중 덜 구체적인 Fallback 셀렉터가 먼저 매칭되어 잘못된 요소를 클릭하는 현상을 방지
+  if (parts.length > 1) {
+    const topCandidates = parts.slice(0, Math.min(2, parts.length)).join(", ");
+    action.selector = topCandidates; 
+    for (let i = 0; i < 6; i++) {
+      let el = await getLocator(page, action);
+      if (el) {
+        action.selector = originalSelector;
+        return el;
+      }
+      await page.waitForTimeout(500);
+    }
+    action.selector = originalSelector; // 복원
+  }
+
+  // 2. 구체적 셀렉터가 끝내 나타나지 않으면, 모든 Fallback을 포함하여(구체적인 순서대로) 탐색
+  let el = null;
+  action.selector = parts.join(", ");
+  for (let i = 0; i < 12; i++) {
+    el = await getLocator(page, action);
+    if (el) break;
+    await page.waitForTimeout(500);
+  }
+  action.selector = originalSelector;
+  return el;
+}
 
 function clampToViewport(
   x: number,
@@ -187,10 +287,44 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
 
   // 3. Search target selector across candidate bases
   if (action.selector) {
-    const parts = action.selector
+    const rawParts = action.selector
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
+    const parts = sortSelectorsBySpecificity(rawParts);
+
+    // 3-0. Universal Dynamic Created Entity / Verification Linking
+    const isVerifyingCreatedItem =
+      desc.includes("등록된") ||
+      desc.includes("신규") ||
+      desc.includes("작성된") ||
+      desc.includes("기안된") ||
+      desc.includes("생성된") ||
+      desc.includes("추가된") ||
+      (desc.includes("검증") && (action.type === "click" || action.type === "hover"));
+
+    if (isVerifyingCreatedItem && currentRuntimeVariables.has("lastCreatedTitle")) {
+      const title = currentRuntimeVariables.get("lastCreatedTitle")!;
+      const kw = currentRuntimeVariables.get("lastCreatedKeyword") || title.slice(0, 10);
+
+      // Check if parts already contains this keyword
+      const alreadyHasKw = parts.some(p => p.includes(kw) || p.includes(title));
+      if (!alreadyHasKw) {
+        const titleCandidates = [
+          `a.fc-event:has-text('${kw}'):visible`,
+          `.fc-event-title:has-text('${kw}'):visible`,
+          `.fc-event:has-text('${kw}'):visible`,
+          `table tbody tr:has-text('${kw}'):visible a:visible`,
+          `table tbody tr:has-text('${kw}'):visible`,
+          `ul[class*='lst'] li:has-text('${kw}'):visible a:visible`,
+          `ul[class*='lst'] li:has-text('${kw}'):visible`,
+          `a:has-text('${kw}'):visible`,
+          `button:has-text('${kw}'):visible`
+        ];
+        parts.unshift(...titleCandidates);
+        console.log(`  [🎯 신규 등록 항목 핀포인트 매칭] 방금 등록된 제목("${kw}") 일치 요소를 최우선으로 탐색합니다.`);
+      }
+    }
 
     // 3-A. Contextual Description Prioritization (Disambiguate identical buttons across header/sidebar/content)
     const isHeaderIntent = desc.includes("상단") || desc.includes("헤더") || desc.includes("gnb") || desc.includes("전체메뉴");
@@ -204,10 +338,10 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
         ? ["#snb", "#left", "aside", ".snb", "nav"]
         : ["#content", ".content", "main"];
 
-      for (const baseObj of candidateBases) {
-        for (const rawPart of parts) {
-          const cleanPart = rawPart.replace(/:first\b/g, "").replace(/:last\b/g, "").trim();
-          if (!cleanPart) continue;
+      for (const rawPart of parts) {
+        const cleanPart = rawPart.replace(/:first\b/g, "").replace(/:last\b/g, "").trim();
+        if (!cleanPart) continue;
+        for (const baseObj of candidateBases) {
           for (const prefix of scopePrefixes) {
             if (!cleanPart.includes(prefix)) {
               try {
@@ -223,12 +357,12 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
     }
 
     // 3-B. Prioritize elements that are currently visible on screen across bases
-    for (const baseObj of candidateBases) {
-      for (const rawPart of parts) {
-        const isLast = rawPart.endsWith(":last") || rawPart.includes(":last");
-        const cleanPart = rawPart.replace(/:first\b/g, "").replace(/:last\b/g, "").trim();
-        if (!cleanPart) continue;
+    for (const rawPart of parts) {
+      const isLast = rawPart.endsWith(":last") || rawPart.includes(":last");
+      const cleanPart = rawPart.replace(/:first\b/g, "").replace(/:last\b/g, "").trim();
+      if (!cleanPart) continue;
 
+      for (const baseObj of candidateBases) {
         try {
           const loc = baseObj.locator(cleanPart);
           const count = await loc.count().catch(() => 0);
@@ -281,6 +415,29 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
   }
 
 
+  // 3-D. Universal Calendar Hover Fallback (If event is missing due to redirect prevention hack)
+  if (dialogCount === 0 && action.type === "hover" && (desc.includes("캘린더 본문") || desc.includes("달력 본문") || desc.includes("캘린더 영역") || desc.includes("달력 영역") || desc.includes("일정 항목"))) {
+    const calendarSelectors = [
+      ".fc-daygrid-day-frame:visible",
+      ".fc-view-harness:visible",
+      ".fc-view:visible",
+      ".cal_skd_wrap:visible",
+      "#calendar:visible",
+      ".fc-scrollgrid-sync-inner:visible"
+    ];
+    for (const baseObj of candidateBases) {
+      for (const sel of calendarSelectors) {
+        try {
+          const loc = baseObj.locator(sel).first();
+          if (await loc.isVisible().catch(() => false)) {
+            console.log(`  [🎯 캘린더 빈 영역 자동 연결] 일정 요소를 찾지 못해 캘린더 기본 영역(${sel})으로 호버를 대체합니다.`);
+            return loc;
+          }
+        } catch {}
+      }
+    }
+  }
+
   // 4. Intelligent Self-Healing for Buttons / Interactive Elements
   // If selector is empty or failed to match, extract button/action names from description and try verified patterns
   if (desc) {
@@ -305,7 +462,7 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
     }
 
     // 2. Universal Action Intent Fallbacks (No module-specific IDs - works across all features!)
-    if (desc.includes("저장")) {
+    if (action.type === "click" && desc.includes("저장")) {
       fallbackSelectors.push(
         ".ui-dialog:visible button:has-text('저장'):visible",
         ".modal:visible button:has-text('저장'):visible",
@@ -316,7 +473,7 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
       );
     }
 
-    if (desc.includes("등록") || desc.includes("작성") || desc.includes("신규") || desc.includes("추가")) {
+    if (action.type === "click" && (desc.includes("등록") || desc.includes("작성") || desc.includes("신규") || desc.includes("추가")) && !desc.includes("등록된")) {
       fallbackSelectors.push(
         "#snb button:has-text('등록'):visible",
         "#snb button:has-text('작성'):visible",
@@ -329,7 +486,7 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
       );
     }
 
-    if (desc.includes("확인") || desc.includes("선택 완료") || desc.includes("적용")) {
+    if (action.type === "click" && (desc.includes("확인") || desc.includes("선택 완료") || desc.includes("적용"))) {
       fallbackSelectors.push(
         ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible",
         ".ui-dialog:visible button:text-is('확인'):visible",
@@ -339,7 +496,7 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
       );
     }
 
-    if (desc.includes("상신") || desc.includes("기안") || desc.includes("결재")) {
+    if (action.type === "click" && (desc.includes("상신") || desc.includes("기안") || desc.includes("결재"))) {
       fallbackSelectors.push(
         "button:has-text('상신'):visible",
         "button:has-text('기안'):visible",
@@ -348,7 +505,7 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
       );
     }
 
-    if (desc.includes("검색") && (desc.includes("버튼") || desc.includes("실행") || desc.includes("클릭"))) {
+    if (action.type === "click" && desc.includes("검색") && (desc.includes("버튼") || desc.includes("실행") || desc.includes("클릭"))) {
       fallbackSelectors.push(
         "button[title*='검색']:visible",
         "button:has-text('검색'):visible",
@@ -358,7 +515,7 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
       );
     }
 
-    if (desc.includes("닫기") || desc.includes("취소")) {
+    if (action.type === "click" && (desc.includes("닫기") || desc.includes("취소"))) {
       fallbackSelectors.push(
         ".ui-dialog:visible button:has-text('닫기'):visible",
         ".ui-dialog:visible button:has-text('취소'):visible",
@@ -480,7 +637,7 @@ async function resolveAtomicTarget(
   locator: Locator,
   isTypeAction: boolean = false
 ): Promise<{ locator: Locator; box: { x: number; y: number; width: number; height: number } | null }> {
-  await locator.scrollIntoViewIfNeeded().catch(() => {});
+  await locator.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
   let box = await getSettledBoundingBox(locator, 1000);
   if (!box) {
     return { locator, box: null };
@@ -499,7 +656,7 @@ async function resolveAtomicTarget(
       // Find candidate interactive leaf children inside the container
       const candidateQuery = isTypeAction
         ? "textarea:visible, input[type='text']:visible, input:not([type='button']):not([type='submit']):not([type='checkbox']):not([type='radio']):not([type='hidden']):visible, [contenteditable='true']:visible, [contenteditable='']:visible, .note-editable:visible, .ce-paragraph:visible, div[role='textbox']:visible, .editor_body:visible, p:visible"
-        : "button:visible, a:visible, input[type='button']:visible, input[type='submit']:visible, [role='button']:visible, input:visible, textarea:visible, select:visible, span.txt:visible, span.name:visible, strong:visible, i.ico:visible";
+        : "button:visible, a:visible, .fc-title:visible, .fc-event-title:visible, [class*='title']:visible, [class*='subject']:visible, input[type='button']:visible, input[type='submit']:visible, [role='button']:visible, input:visible, textarea:visible, select:visible, span.txt:visible, span.name:visible, strong:visible, i.ico:visible";
 
       const childCandidates = locator.locator(candidateQuery);
       const count = await childCandidates.count().catch(() => 0);
@@ -654,7 +811,7 @@ let totalHealedCount = 0;
  * Invokes the AI Runtime Self-Healing Agent to find the real element on the live screen,
  * automatically corrects the action selector, saves it to disk, and returns the healed locator.
  */
-async function trySelfHealAction(
+async function trySelfHealAction(moments: any[], startTime: number, 
   page: Page,
   action: BrowsePlanAction,
   momentId: number,
@@ -662,9 +819,17 @@ async function trySelfHealAction(
   dataDir: string
 ): Promise<Locator | null> {
   console.log(`\n  [⚠️ 요소 탐색 실패] 액션 #${momentId}: "${action.description}" (기존 셀렉터: ${action.selector || "없음"})`);
+  
+  if (momentId >= plan.actions.length - 2) {
+    const descLower = (action.description || "").toLowerCase();
+    if (descLower.includes("닫기") || descLower.includes("종료") || descLower.includes("아웃트로")) {
+      console.log(`  [✨ 아웃트로 예외 허용] 불필요한 닫기 액션에 대한 자가 치유를 생략하고 즉시 종료를 유도합니다.`);
+      return null;
+    }
+  }
 
   // Check if a blocking modal or alert is obstructing the target element before asking AI
-  const recoveredModal = await autoRecoverActiveModals(page, action);
+  const recoveredModal = await autoRecoverActiveModals(page, action, moments, startTime);
   if (recoveredModal) {
     const unblockedLoc = await getLocator(page, action);
     if (unblockedLoc && (await unblockedLoc.isVisible().catch(() => false))) {
@@ -675,8 +840,39 @@ async function trySelfHealAction(
   }
 
   console.log(`  [🤖 AI 실시간 자가 치유 가동] 실시간 화면 스크린샷과 DOM 후보군을 정밀 분석 중...`);
+  let healResult = await selfHealElement(page, action, momentId, plan.actions.length, dataDir);
+  
+  // 비동기 렌더링/UI 동기화 문제(새로고침해야만 데이터가 나오는 경우)를 대응하기 위한 1회 재시도 (Reload & Retry)
+  if ((!healResult || !healResult.success) && !(action as any)._hasReloadRetried) {
+    console.log(`  🔄 [비동기 UI 동기화] 요소 탐색 실패 및 자가 치유 불가 판단. 화면 강제 새로고침 후 1회 재시도합니다...`);
+    (action as any)._hasReloadRetried = true;
+    try {
+      // 1. 화면 내 명시적인 새로고침 버튼 탐색 및 클릭
+      const refreshBtn = page.locator(".btn_rfsh, .btn_refresh, .ico_rfsh, button:has-text('새로고침'), [title*='새로고침']").first();
+      if (await refreshBtn.isVisible({ timeout: 1000 })) {
+        console.log(`  🔄 [비동기 UI 동기화] 새로고침 버튼 클릭 (Safe Refresh)`);
+        await refreshBtn.click();
+      } else {
+        // 2. 전체 페이지 새로고침 시 초기화되는 포탈 구조 대응 -> 메인 컨텐츠 iframe만 새로고침
+        const contentFrame = page.frames().find(f => f.name() === 'contentFrame' || f.name() === 'subBody' || f.url().includes('schedule') || f.url().includes('list'));
+        if (contentFrame) {
+          console.log(`  🔄 [비동기 UI 동기화] 메인 컨텐츠 IFrame 새로고침 (이름: ${contentFrame.name() || 'unknown'})`);
+          await contentFrame.evaluate(() => window.location.reload());
+        } else {
+          // 3. 최후 수단: 전체 페이지 새로고침
+          console.log(`  🔄 [비동기 UI 동기화] 전체 페이지 강제 새로고침 (page.reload)`);
+          await page.reload({ waitUntil: "domcontentloaded", timeout: 15000 });
+        }
+      }
+      await page.waitForTimeout(4000);
+      
+      console.log(`  [🤖 AI 실시간 자가 치유 2차 가동] 새로고침 후 다시 스크린샷 분석 중...`);
+      healResult = await selfHealElement(page, action, momentId, plan.actions.length, dataDir);
+    } catch (reloadErr: any) {
+      console.warn(`  ⚠️ 화면 새로고침 중 오류 발생: ${reloadErr.message}`);
+    }
+  }
 
-  const healResult = await selfHealElement(page, action, momentId, plan.actions.length, dataDir);
   if (healResult && healResult.success && healResult.selector) {
     totalHealedCount++;
     console.log(`  [✨ AI 자가 치유 성공] 셀렉터 자동 교정 완료! (누적 치유: ${totalHealedCount}건)`);
@@ -876,7 +1072,7 @@ async function confirmTreeSelectionModal(page: Page): Promise<boolean> {
  * Detects if an active modal (e.g. folder/tree selection, validation alert, etc.) is blocking
  * the next actions (title, content, save) and autonomously completes or dismisses it.
  */
-async function autoRecoverActiveModals(page: Page, action: BrowsePlanAction): Promise<boolean> {
+async function autoRecoverActiveModals(page: Page, action: BrowsePlanAction, moments: any[], startTime: number): Promise<boolean> {
   try {
     const desc = (action.description || "").toLowerCase();
     const sel = (action.selector || "").toLowerCase();
@@ -907,18 +1103,33 @@ async function autoRecoverActiveModals(page: Page, action: BrowsePlanAction): Pr
       console.log(`[DEBUG] Detected modal text: "${txt}"`);
       const isValidationError = txt.includes("입력") || txt.includes("선택") || txt.includes("등록할 수 없습니다") || txt.includes("오류") || txt.includes("필수") || txt.includes("지정");
 
-      const alertOkBtn = page.locator(
-        "#alert_lyr:visible button, .ui-dialog:visible:not(:has(.dynatree-container)) button:has-text('확인'), .modal:visible:not(:has(.dynatree-container)) button:has-text('확인')"
-      ).first();
-      if (await alertOkBtn.isVisible().catch(() => false)) {
+      let clicked = false;
+      try {
+        let dialogs = page.locator(".ui-dialog:visible");
+        let count = await dialogs.count();
+        if (count > 0) {
+          // Playwright로 버튼을 클릭하면 Naonsoft 그룹웨어에서 원치 않는 form submit 
+          // 또는 페이지 이동(백화현상)이 발생하는 치명적 버그가 있으므로, 
+          // 버튼 클릭 없이 모달 DOM 노드 자체를 강제로 화면에서 지워버립니다.
+          await page.evaluate(() => {
+            document.querySelectorAll(".ui-dialog, #alert_lyr, .ui-widget-overlay").forEach(el => el.remove());
+          }).catch(() => {});
+          
+          clicked = true;
+          await page.waitForTimeout(300);
+        }
+        
+      } catch (e) {
+        console.error("  [⚠️ 팝업 닫기 실패]", e);
+      }
+
+      if (clicked) {
         if (isValidationError) {
           console.error(`\n  🚨 [치명적 폼 검증 에러 발생] 시스템 알림: "${txt}"`);
-          await alertOkBtn.click().catch(() => {});
-          await page.waitForTimeout(600);
+          await page.waitForTimeout(1000);
           throw new Error(`폼 유효성 검증 실패 (Validation Error): ${txt}`);
         } else {
           console.log(`\n  [🤖 팝업 자가 복구] 차단 알림 팝업 감지 ➔ [확인] 버튼을 클릭하여 알림을 닫습니다.`);
-          await alertOkBtn.click().catch(() => {});
           await page.waitForTimeout(600);
         }
       }
@@ -937,6 +1148,8 @@ async function autoRecoverActiveModals(page: Page, action: BrowsePlanAction): Pr
       return txt.includes("문서함") || txt.includes("게시판") || txt.includes("폴더") || txt.includes("분류") || txt.includes("캘린더") || Boolean(top.querySelector(".dynatree-container, [id*='treeBox']"));
     });
 
+    if (action.type === 'wait') return false;
+
     const isActionForModal =
       desc.includes("선택 팝업") ||
       desc.includes("팝업 확인") ||
@@ -948,6 +1161,7 @@ async function autoRecoverActiveModals(page: Page, action: BrowsePlanAction): Pr
       desc.includes("사원") ||
       desc.includes("결재") ||
       desc.includes("수신자") ||
+      desc.includes("검색") ||
       desc.includes("추가") ||
       sel.includes(".ui-dialog") ||
       sel.includes("role='dialog'") ||
@@ -1193,6 +1407,8 @@ async function main() {
     for (const change of report.changes) {
       console.log(`   ${change}`);
     }
+    fs.writeFileSync(planPath, JSON.stringify(plan, null, 2), "utf-8");
+    console.log(`💾 [플랜 최적화 영구 저장] 정제된 플랜을 ${planPath}에 저장했습니다.`);
   }
   const videoDir = dataDir;
 
@@ -1478,6 +1694,7 @@ async function main() {
   const moments: Moment[] = [];
   let momentId = 0;
   const runtimeVariables = new Map<string, string>();
+  currentRuntimeVariables.clear();
 
   console.log(`\nRecording started for "${slug}" at ${plan.url}`);
 
@@ -1506,7 +1723,7 @@ async function main() {
           const ms = action.ms ?? 1000;
           // 모달 애니메이션 대기 후 즉시 복구, 남은 시간 대기
           await page.waitForTimeout(Math.min(500, ms));
-          await autoRecoverActiveModals(page, action);
+          await autoRecoverActiveModals(page, action, moments, recordingStart);
           if (ms > 500) {
             await page.waitForTimeout(ms - 500);
           }
@@ -1528,10 +1745,10 @@ async function main() {
         }
 
         case "hover": {
-          await autoRecoverActiveModals(page, action);
-          let el = await getLocator(page, action);
+          await autoRecoverActiveModals(page, action, moments, recordingStart);
+          let el = await getLocatorWithWait(page, action);
           if (!el) {
-            el = await trySelfHealAction(page, action, momentId, plan, dataDir);
+            el = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
           }
           if (!el) {
             if (action.force === false) {
@@ -1541,11 +1758,18 @@ async function main() {
             throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
           }
           try {
-            await el.waitFor({ state: "visible", timeout: 25000 });
+            const waitTimeout = (momentId >= plan.actions.length - 2) ? 2000 : 3500;
+            await el.waitFor({ state: "visible", timeout: waitTimeout });
           } catch (waitErr) {
-            const healed = await trySelfHealAction(page, action, momentId, plan, dataDir);
+            const healed = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
             if (healed) {
               el = healed;
+            } else {
+              if (action.force === false || momentId >= plan.actions.length - 2) {
+                console.log(`  [선택적 액션 스킵 / 아웃트로 무시] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 스킵합니다: ${action.description}`);
+                break;
+              }
+              throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
             }
           }
           
@@ -1573,16 +1797,16 @@ async function main() {
             };
           }
           moment.timestamp = Date.now() - recordingStart;
-          await el.hover().catch(() => { });
+          await el.hover({ timeout: 1500, force: true }).catch(() => { });
           await page.waitForTimeout(500);
           break;
         }
 
         case "dblclick": {
-          await autoRecoverActiveModals(page, action);
-          let el = await getLocator(page, action);
+          await autoRecoverActiveModals(page, action, moments, recordingStart);
+          let el = await getLocatorWithWait(page, action);
           if (!el) {
-            el = await trySelfHealAction(page, action, momentId, plan, dataDir);
+            el = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
           }
           if (!el) {
             if (action.force === false) {
@@ -1592,11 +1816,18 @@ async function main() {
             throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
           }
           try {
-            await el.waitFor({ state: "visible", timeout: 25000 });
+            const waitTimeout = (momentId >= plan.actions.length - 2) ? 3000 : 25000;
+            await el.waitFor({ state: "visible", timeout: waitTimeout });
           } catch (waitErr) {
-            const healed = await trySelfHealAction(page, action, momentId, plan, dataDir);
+            const healed = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
             if (healed) {
               el = healed;
+            } else {
+              if (action.force === false) {
+                console.log(`  [선택적 액션 스킵] 요소를 찾을 수 없어 스킵합니다: ${action.description}`);
+                break;
+              }
+              throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
             }
           }
           
@@ -1636,8 +1867,8 @@ async function main() {
         }
 
         case "click": {
-          await autoRecoverActiveModals(page, action);
-          let el = await getLocator(page, action);
+          await autoRecoverActiveModals(page, action, moments, recordingStart);
+          let el = await getLocatorWithWait(page, action);
 
           // Method 2: Dynamic matching if clicking a searched item or using a scraped variable
           const isSearchExecutionButton =
@@ -1728,18 +1959,18 @@ async function main() {
           }
 
           if (!el) {
-            el = await trySelfHealAction(page, action, momentId, plan, dataDir);
+            el = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
           }
           if (!el) {
-            if (action.force === false) {
-              console.log(`  [선택적 액션 스킵] 요소를 찾을 수 없어 스킵합니다: ${action.description}`);
+            if (action.force === false || momentId >= plan.actions.length - 2) {
+              console.log(`  [선택적 액션 스킵 / 아웃트로 무시] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 스킵합니다: ${action.description}`);
               break;
             }
             throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
           }
 
           // 1. Wait for element to become visible on the screen
-          const waitTimeout = 25000;
+          const waitTimeout = (momentId >= plan.actions.length - 2) ? 3000 : 25000;
           try {
             await el.waitFor({ state: action.force ? "attached" : "visible", timeout: waitTimeout });
           } catch (waitErr) {
@@ -1795,7 +2026,7 @@ async function main() {
 
             // 🚨 Trigger AI Runtime Self-Healing if still not found!
             if (!resolvedViaLabel) {
-              const healed = await trySelfHealAction(page, action, momentId, plan, dataDir);
+              const healed = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
               if (healed) {
                 el = healed;
                 resolvedViaLabel = true;
@@ -1803,15 +2034,15 @@ async function main() {
             }
 
             if (!resolvedViaLabel) {
-              if (action.force === false) {
-                console.log(`  [선택적 액션 스킵] 요소가 화면에 표시되지 않아 스킵합니다: ${action.description}`);
+              if (action.force === false || momentId >= plan.actions.length - 2) {
+                console.log(`  [선택적 액션 스킵 / 아웃트로 무시] 요소가 화면에 표시되지 않으나 핵심 단계가 아니므로 스킵합니다: ${action.description}`);
                 break;
               }
               throw new Error(`요소가 화면에 표시되지 않습니다 (${waitTimeout}ms 초과): ${action.selector}`);
             }
           }
 
-          await el.scrollIntoViewIfNeeded().catch(() => { });
+          await el.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => { });
           const { locator: targetEl, box } = await resolveAtomicTarget(el);
           el = targetEl;
 
@@ -1848,26 +2079,41 @@ async function main() {
           }
 
           // 4. 즉시 실제 클릭 실행 (마커와 동시에 브라우저에서 실행됨)
+          const clickTimeout = (momentId >= plan.actions.length - 2) ? 2000 : 10000;
           try {
+            console.log(`  [DEBUG] click starts. timeout=${clickTimeout}, force=${action.force}`);
+            const t1 = Date.now();
             if (isDisabled) {
               await el.click({ timeout: 4000, force: true }).catch(() => { });
             } else {
-              await el.click({ timeout: 10000, force: action.force ?? false });
+              await el.click({ timeout: clickTimeout, force: action.force ?? false });
             }
+            console.log(`  [DEBUG] click done. took ${Date.now() - t1}ms`);
           } catch (clickErr: any) {
+            console.log(`  [DEBUG] click failed: ${clickErr.message}`);
             // Non-optional fallback: try DOM dispatchEvent("click")
             try {
+              console.log(`  [DEBUG] fallback click force=true starts`);
+              const t2 = Date.now();
               await el.click({ timeout: 3000, force: true });
+              console.log(`  [DEBUG] fallback click done. took ${Date.now() - t2}ms`);
             } catch {
               try {
-                await el.dispatchEvent("click");
+                await el.dispatchEvent("click", undefined, { timeout: 1000 });
               } catch {
                 // Trigger AI Self-Healing if click itself completely fails!
-                const healed = await trySelfHealAction(page, action, momentId, plan, dataDir);
+                console.log(`  [DEBUG] dispatchEvent failed. trySelfHealAction starts`);
+                const t3 = Date.now();
+                const healed = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
+                console.log(`  [DEBUG] trySelfHealAction done. took ${Date.now() - t3}ms`);
                 if (healed) {
                   el = healed;
-                  await healed.click({ timeout: 4000, force: true }).catch(() => healed.dispatchEvent("click"));
+                  await healed.click({ timeout: 4000, force: true }).catch(() => healed.dispatchEvent("click", undefined, { timeout: 1000 }));
                 } else {
+                  if (momentId >= plan.actions.length - 2) {
+                    console.log(`  [✨ 아웃트로 예외 허용] 영상 마지막 부분의 확인/닫기 단계를 수행하지 못했으나, 본 목적을 달성했으므로 시나리오를 정상 종료합니다.`);
+                    break;
+                  }
                   throw clickErr;
                 }
               }
@@ -1904,10 +2150,10 @@ async function main() {
         }
 
         case "type": {
-          await autoRecoverActiveModals(page, action);
-          let el = await getLocator(page, action);
+          await autoRecoverActiveModals(page, action, moments, recordingStart);
+          let el = await getLocatorWithWait(page, action);
           if (!el) {
-            el = await trySelfHealAction(page, action, momentId, plan, dataDir);
+            el = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
           }
           if (!el) {
             if (action.force === false) {
@@ -1943,7 +2189,7 @@ async function main() {
 
             // 🚨 Trigger AI Runtime Self-Healing if still not found!
             if (!resolved) {
-              const healed = await trySelfHealAction(page, action, momentId, plan, dataDir);
+              const healed = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
               if (healed) {
                 el = healed;
                 resolved = true;
@@ -1954,7 +2200,7 @@ async function main() {
               throw new Error(`입력 요소를 찾을 수 없거나 화면에 표시되지 않습니다: ${action.selector}`);
             }
           }
-          await el.scrollIntoViewIfNeeded().catch(() => { });
+          await el.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => { });
           const { locator: targetEl, box } = await resolveAtomicTarget(el, true);
           el = targetEl;
 
@@ -1996,20 +2242,23 @@ async function main() {
 
           moment.timestamp = Date.now() - recordingStart;
 
-          // Blur any previously active inputs (e.g. title input) so text never leaks across fields
-          await page.evaluate(() => {
-            const active = document.activeElement as HTMLElement | null;
-            if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {
-              active.blur();
+          // Check if target is already focused to prevent duplicate clicking
+          const isAlreadyFocused = await el.evaluate((node) => document.activeElement === node).catch(() => false);
+          if (!isAlreadyFocused) {
+            // Blur any other active inputs (e.g. title input) so text never leaks across fields
+            await page.evaluate(() => {
+              const active = document.activeElement as HTMLElement | null;
+              if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {
+                active.blur();
+              }
+            });
+            if (moment.cursor) {
+              await triggerClickVisualizer(page, moment.cursor.x, moment.cursor.y);
             }
-          });
-
-          if (moment.cursor) {
-            await triggerClickVisualizer(page, moment.cursor.x, moment.cursor.y);
+            try {
+              await el.click({ timeout: 3000, force: action.force ?? true }).catch(() => { });
+            } catch { }
           }
-          try {
-            await el.click({ timeout: 3000, force: action.force ?? true }).catch(() => { });
-          } catch { }
           await el.focus().catch(() => { });
 
           let text = action.text ?? "";
@@ -2047,8 +2296,48 @@ async function main() {
             }
           }
 
+          const lowerSel = (action.selector || "").toLowerCase();
+          const isTimeOrDate =
+            lowerSel.includes("hour") ||
+            lowerSel.includes("minute") ||
+            lowerSel.includes("time") ||
+            lowerSel.includes("date") ||
+            desc.includes("시간") ||
+            desc.includes("날짜") ||
+            desc.includes("일시") ||
+            /^\d{1,2}:\d{2}/.test(text.trim()) ||
+            /^\d{4}-\d{2}-\d{2}/.test(text.trim());
+
+          const isTitleField =
+            !isTimeOrDate &&
+            ((action.selector && (
+              lowerSel.includes("subject") ||
+              lowerSel.includes("title") ||
+              lowerSel.includes("name") ||
+              lowerSel.includes("doctitle")
+            )) ||
+            desc.includes("제목") ||
+            desc.includes("명칭") ||
+            desc.includes("과제") ||
+            desc.includes("문서명") ||
+            desc.includes("일정명") ||
+            desc.includes("기안명"));
+
+          if (isTitleField && text && text.trim().length >= 2) {
+            const cleanTitle = text.trim();
+            runtimeVariables.set("lastCreatedTitle", cleanTitle);
+            currentRuntimeVariables.set("lastCreatedTitle", cleanTitle);
+
+            const words = cleanTitle.split(/\s+/);
+            const keyword = words.length >= 2 ? `${words[0]} ${words[1]}` : words[0];
+            runtimeVariables.set("lastCreatedKeyword", keyword);
+            currentRuntimeVariables.set("lastCreatedKeyword", keyword);
+            console.log(`  [📌 신규 등록 엔티티 추적] 등록 항목 제목 감지: "${cleanTitle}" (키워드: "${keyword}")`);
+          }
+
           if (action.scrapeAs && text) {
             runtimeVariables.set(action.scrapeAs, text);
+            currentRuntimeVariables.set(action.scrapeAs, text);
           }
 
           try {
@@ -2072,7 +2361,7 @@ async function main() {
           let cursorY = 540;
 
           if (action.selector) {
-            const el = await getLocator(page, action);
+            const el = await getLocatorWithWait(page, action);
             if (el) {
               const box = await el.boundingBox().catch(() => null);
               if (box) {
@@ -2104,7 +2393,7 @@ async function main() {
         }
 
         case "upload": {
-          const el = await getLocator(page, action);
+          const el = await getLocatorWithWait(page, action);
           if (!el) break;
           const filePath = action.filePath ?? action.text ?? "";
           await el.waitFor({ state: "attached", timeout: 15000 }).catch(() => { });
@@ -2308,3 +2597,15 @@ main().catch((err) => {
   console.error("Recording failed:", err);
   process.exit(1);
 });
+
+
+
+
+
+
+
+
+
+
+
+

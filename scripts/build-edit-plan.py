@@ -125,7 +125,7 @@ while i < len(moments):
                 if moments[i].get("keys"):
                     all_keys += moments[i]["keys"]
 
-            end_frame = ms_to_frame(type_end) + 30
+            end_frame = ms_to_frame(type_end) + round(1.0 * fps)
 
             # Try to extend the previous click segment to cover typing
             prev_target = segments[-1]["zoomTarget"] if segments else None
@@ -204,10 +204,11 @@ while i < len(moments):
             i = j
             continue
 
+        HOLD_FRAMES = round(1.0 * fps)
         seg = {
             "momentId": first["id"],
             "startFrame": ms_to_frame(first["timestamp"]),
-            "endFrame": ms_to_frame(last["timestamp"]) + 30,
+            "endFrame": ms_to_frame(last["timestamp"]) + HOLD_FRAMES,
             "speed": 1.0,
             "zoom": default_zoom,
             "zoomTarget": first_cursor,
@@ -229,18 +230,36 @@ while i < len(moments):
 
     i += 1
 
-# Step 2: Merge overlapping segments
+# Step 2: Merge overlapping or spatially cohesive segments
 merged = []
+HOLD_FRAMES = round(1.0 * fps)
 for seg in sorted(segments, key=lambda s: s["startFrame"]):
-    if merged and seg["startFrame"] <= merged[-1]["endFrame"]:
-        # Extend the previous segment
-        prev = merged[-1]
+    prev = merged[-1] if merged else None
+    
+    # Check if this segment should be merged into the previous one:
+    # 1. Close temporal proximity (within 3.5s)
+    # 2. Or cohesive workflow targets in same work area (dist <= 750px) within 6.0s
+    should_merge = False
+    if prev:
+        gap_frames = seg["startFrame"] - prev["endFrame"]
+        if gap_frames <= round(3.5 * fps):
+            should_merge = True
+        elif gap_frames <= round(6.0 * fps):
+            prev_pos = prev.get("zoomTargetEnd") or prev["zoomTarget"]
+            seg_pos = seg["zoomTarget"]
+            if dist(prev_pos, seg_pos) <= 750:
+                should_merge = True
+
+    if should_merge:
         prev["endFrame"] = max(prev["endFrame"], seg["endFrame"])
         if seg.get("zoomTargetEnd"):
             prev["zoomTargetEnd"] = seg["zoomTargetEnd"]
+        else:
+            prev["zoomTargetEnd"] = seg["zoomTarget"]
         prev["zoom"] = max(prev["zoom"], seg["zoom"])
         prev["description"] += f" + {seg['description']}"
     else:
+        seg["endFrame"] += HOLD_FRAMES
         merged.append(seg)
 
 # Step 3: Output

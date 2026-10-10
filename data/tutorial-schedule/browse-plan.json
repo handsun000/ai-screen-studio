@@ -1,0 +1,139 @@
+{
+  "url": "https://gwdev.unison.co.kr",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "requiresLogin": true,
+  "actions": [
+    {
+      "type": "wait",
+      "description": "메인 대시보드 로딩 및 시각적 앵커 확보 (Phase 1)",
+      "ms": 3000
+    },
+    {
+      "type": "click",
+      "description": "상단 '포탈 전체메뉴' 서랍 버튼 클릭 (Phase 2)",
+      "selector": "button.btn_svc_open:visible, button[title='포탈 전체메뉴']:visible, .btn_svc_open:visible"
+    },
+    {
+      "type": "wait",
+      "description": "전체메뉴 서랍 레이어 열림 대기",
+      "ms": 1500
+    },
+    {
+      "type": "hover",
+      "description": "전체메뉴 레이어 내 '일정관리' 메뉴 항목 탐색",
+      "selector": "#svc_box a:has-text('일정관리'), #svc_box a:has-text('일정'), a:has-text('일정관리'):visible"
+    },
+    {
+      "type": "wait",
+      "description": "메뉴 호버 대기",
+      "ms": 1200
+    },
+    {
+      "type": "click",
+      "description": "전체메뉴 내 '일정관리' 클릭하여 이동",
+      "selector": "#svc_box a:has-text('일정관리'), #svc_box a:has-text('일정'), a:has-text('일정관리'):visible"
+    },
+    {
+      "type": "wait",
+      "description": "일정관리 메인 화면 및 캘린더 렌더링 대기",
+      "ms": 3500
+    },
+    {
+      "type": "click",
+      "description": "좌측 상단 [일정 등록] 버튼 클릭 (Phase 3)",
+      "selector": "button#reg_shedule_lefttop:visible, #snb button:has-text('일정 등록'):visible, #snb button:has-text('일정등록'):visible, button:has-text('일정 등록'):visible"
+    },
+    {
+      "type": "wait",
+      "description": "일정 등록 모달 다이얼로그 로딩 대기",
+      "ms": 2000
+    },
+    {
+      "type": "type",
+      "description": "일정 제목에 '2026 전략과제 추진 현황 및 기술 로드맵 공유회' 입력",
+      "selector": ".ui-dialog:visible input#subject, input#subject:visible, input[name*='subject']:visible",
+      "text": "2026 전략과제 추진 현황 및 기술 로드맵 공유회"
+    },
+    {
+      "type": "wait",
+      "description": "제목 입력 확인 대기",
+      "ms": 1200
+    },
+    {
+      "type": "type",
+      "description": "시작 시간에 '09:00' 입력",
+      "selector": ".ui-dialog:visible input#startHourMinute:visible, .ui-dialog:visible input[name*='startHour']:visible, .ui-dialog:visible input.timepicker:first-of-type",
+      "text": "09:00"
+    },
+    {
+      "type": "wait",
+      "description": "시작 시간 입력 완료 대기",
+      "ms": 1200
+    },
+    {
+      "type": "type",
+      "description": "종료 시간에 '18:00' 입력",
+      "selector": ".ui-dialog:visible input#endHourMinute:visible, .ui-dialog:visible input[name*='endHour']:visible, .ui-dialog:visible input.timepicker:last-of-type",
+      "text": "18:00"
+    },
+    {
+      "type": "wait",
+      "description": "종료 시간 입력 완료 대기",
+      "ms": 1200
+    },
+    {
+      "type": "type",
+      "description": "일정 상세 내용 작성",
+      "selector": ".ui-dialog:visible textarea#cn:visible, .ui-dialog:visible textarea:visible, .ui-dialog:visible div[contenteditable='true']:visible, #cn",
+      "text": "금일 09시부터 18시까지 진행되는 2026 핵심 과제 점검 및 R&D 마일스톤 회의입니다."
+    },
+    {
+      "type": "wait",
+      "description": "일정 내용 입력 완료 대기",
+      "ms": 1400
+    },
+    {
+      "type": "click",
+      "description": "일정 등록 모달 [저장] 버튼 클릭 (Phase 4)",
+      "selector": ".ui-dialog:visible button#savebtn:visible, .ui-dialog:visible button:has-text('저장'):visible, .ui-dialog:visible #reg_schedule_form button#savebtn"
+    },
+    {
+      "type": "wait",
+      "description": "저장 처리 및 캘린더 화면 갱신 대기 (Phase 5)",
+      "ms": 4000
+    },
+    {
+      "type": "hover",
+      "description": "캘린더 내 등록된 신규 일정 이벤트 블록 호버 검증",
+      "selector": ".fc-event:visible, a.fc-event:last-child, .fc-event-title:has-text('2026'), .fc-day-grid-event:last-child"
+    },
+    {
+      "type": "wait",
+      "description": "등록 일정 시각적 확인 대기",
+      "ms": 1600
+    },
+    {
+      "type": "click",
+      "description": "등록된 일정 상세 팝업/조회 열기",
+      "selector": ".fc-event:visible, a.fc-event:last-child, .fc-event-title:has-text('2026'), .fc-day-grid-event:last-child"
+    },
+    {
+      "type": "wait",
+      "description": "일정 상세 조회 레이어 로딩 대기",
+      "ms": 2000
+    },
+    {
+      "type": "click",
+      "description": "일정 상세 레이어 닫기 버튼 클릭",
+      "selector": ".ui-dialog:visible button.ui-dialog-titlebar-close:visible, .ui-dialog:visible button:has-text('닫기'):visible, button:has-text('닫기'):visible"
+    },
+    {
+      "type": "wait",
+      "description": "캘린더 메인 화면 복귀 및 아웃트로 마무리",
+      "ms": 2500
+    }
+  ]
+}

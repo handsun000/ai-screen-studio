@@ -148,8 +148,26 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
     }
 
     // 1-D. Universal List Detail Click Dual Compatibility (Table & Vertical Split View)
+    const isClosingOrAction =
+      desc.includes("닫기") ||
+      desc.includes("취소") ||
+      desc.includes("저장") ||
+      desc.includes("상신") ||
+      desc.includes("삭제") ||
+      desc.includes("수정") ||
+      sel.includes("close") ||
+      sel.includes("btn_close") ||
+      sel.includes("titlebar-close");
+
+    const isCalendarEvent =
+      sel.includes("fc-") ||
+      desc.includes("일정") ||
+      desc.includes("캘린더");
+
     if (
       action.type === "click" &&
+      !isClosingOrAction &&
+      !isCalendarEvent &&
       (desc.includes("상세") || desc.includes("조회") || desc.includes("항목") || desc.includes("결과")) &&
       (desc.includes("클릭") || desc.includes("선택") || desc.includes("열람")) &&
       !sel.includes("lst_vr") &&
@@ -159,12 +177,20 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       sel = action.selector;
     }
 
+    // Clean accidental table list selectors from close/cancel actions
+    if ((desc.includes("닫기") || desc.includes("취소")) && sel.includes("table.tbl_lst")) {
+      action.selector = sel
+        .replace(/,\s*table\.tbl_lst[\s\S]*$/, "")
+        .trim();
+      sel = action.selector;
+    }
+
     // 2. Track Modal Dialog Entering
     if (
       sel.includes(".ui-dialog") ||
       sel.includes(".modal") ||
       sel.includes(".layer_wrap") ||
-      (desc.includes("모달") && (action.type === "click" || action.type === "wait"))
+      ((desc.includes("모달") || desc.includes("팝업") || desc.includes("상세")) && (action.type === "click" || action.type === "wait"))
     ) {
       isInsideModal = true;
     }
@@ -179,8 +205,17 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       sel.includes("closeBtn") ||
       sel.includes("btn_close");
 
-    // 4. Modal Overlay Safety: Discard background actions while modal is active
+    if (isModalCloseOrSubmit) {
+      isInsideModal = false;
+    }
+
+    // 4. Modal Overlay Safety: Discard background actions or scope hover while modal is active
     if (isInsideModal && !isModalCloseOrSubmit) {
+      if (action.type === "hover" && !sel.includes(".ui-dialog") && !sel.includes(".modal") && !sel.includes("layer")) {
+        action.selector = `.ui-dialog:visible input#subject:visible, .ui-dialog:visible textarea:visible, .ui-dialog:visible .ui-dialog-content:visible, .ui-dialog:visible, ${sel}`;
+        sel = action.selector;
+      }
+
       const isBackgroundAction =
         sel.includes(".ui-widget-overlay") ||
         sel.includes(".fc-today-button") ||
@@ -255,12 +290,105 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
     sanitizedActions.push(action);
   }
 
-  // 11. Mandatory Condition Audit for Registration / Creation scenarios
-  const hasSubmitAction = sanitizedActions.some(
+  // 12. Universal Optimization: Prune redundant 'click' actions immediately preceding 'type' on the same input
+  // 13. Universal Optimization: Prune aimless exploratory 'hover' actions (둘러보기, 영역 탐색 등)
+  const optimizedActions: BrowsePlanAction[] = [];
+  for (let i = 0; i < sanitizedActions.length; i++) {
+    const cur = sanitizedActions[i];
+    const next = sanitizedActions[i + 1];
+    const afterNext = sanitizedActions[i + 2];
+
+    // 12. Check if cur is a click to focus an input that is immediately or shortly typed into
+    if (cur.type === "click") {
+      let matchedTypeAction: BrowsePlanAction | null = null;
+      let k = i + 1;
+      while (k < sanitizedActions.length && sanitizedActions[k].type === "wait") {
+        k++;
+      }
+      if (k < sanitizedActions.length && sanitizedActions[k].type === "type") {
+        matchedTypeAction = sanitizedActions[k];
+      }
+
+      if (matchedTypeAction) {
+        const curSel = (cur.selector || "").toLowerCase();
+        const typeSel = (matchedTypeAction.selector || "").toLowerCase();
+        const curDesc = (cur.description || "").toLowerCase();
+        const typeDesc = (matchedTypeAction.description || "").toLowerCase();
+
+        const sameTarget =
+          (curSel && typeSel && (curSel === typeSel || curSel.includes(typeSel) || typeSel.includes(curSel))) ||
+          (curSel.includes("subject") && typeSel.includes("subject")) ||
+          (curSel.includes("title") && typeSel.includes("title")) ||
+          (curSel.includes("cn") && typeSel.includes("cn")) ||
+          (curSel.includes("textarea") && typeSel.includes("textarea")) ||
+          (curSel.includes("hourminute") && typeSel.includes("hourminute")) ||
+          (curSel.includes("time") && typeSel.includes("time")) ||
+          (curDesc.includes("제목") && typeDesc.includes("제목")) ||
+          (curDesc.includes("내용") && typeDesc.includes("내용")) ||
+          (curDesc.includes("시작 시간") && typeDesc.includes("시작 시간")) ||
+          (curDesc.includes("종료 시간") && typeDesc.includes("종료 시간")) ||
+          (curDesc.includes("포커스") || curDesc.includes("입력창") || curDesc.includes("입력 필드") || curDesc.includes("입력란"));
+
+        if (sameTarget) {
+          changes.push(`[최적화] 중복 마우스 클릭 제거: "${cur.description}" (이후 타이핑 단계에서 1회만 정밀 포커스 및 입력 수행)`);
+          removedActionsCount++;
+          continue; // Skip redundant click!
+        }
+      }
+    }
+
+    // 13. Prune aimless exploratory hover actions (둘러보기, 영역 탐색, 라벨 확인 등)
+    if (cur.type === "hover") {
+      const desc = cur.description || "";
+      // Only keep functional hovers: dropdown triggers, menus, or interactive calendar blocks
+      const isFunctionalHover =
+        desc.includes("메뉴") ||
+        desc.includes("서랍") ||
+        desc.includes("드롭다운") ||
+        desc.includes("펼침") ||
+        desc.includes("툴팁") ||
+        desc.includes("이벤트 클릭") ||
+        desc.includes("일정 항목");
+
+      const isAimlessHover =
+        !isFunctionalHover &&
+        (desc.includes("둘러보기") ||
+         desc.includes("탐색") ||
+         desc.includes("확인") ||
+         desc.includes("주시") ||
+         desc.includes("영역") ||
+         desc.includes("헤더") ||
+         desc.includes("버튼") ||
+         desc.includes("설정") ||
+         desc.includes("옵션") ||
+         desc.includes("체크박스"));
+
+      if (isAimlessHover) {
+        changes.push(`[최적화] 무의미한 마우스 배회(Hover) 액션 제거: "${desc}" (필수 조작 동선만 간결하게 유지)`);
+        removedActionsCount++;
+        // Also skip following wait actions related to this hover
+        while (i + 1 < sanitizedActions.length && sanitizedActions[i + 1].type === "wait") {
+          const waitDesc = sanitizedActions[i + 1].description || "";
+          if (waitDesc.includes("대기") || waitDesc.includes("확인") || waitDesc.includes("인지") || waitDesc.includes("탐색")) {
+            i++;
+            removedActionsCount++;
+          } else {
+            break;
+          }
+        }
+        continue;
+      }
+    }
+
+    optimizedActions.push(cur);
+  }
+
+  // 14. Mandatory Condition Audit for Registration / Creation scenarios
+  const hasSubmitAction = optimizedActions.some(
     (a) => a.type === "click" && (a.description?.includes("저장") || a.description?.includes("상신") || a.description?.includes("등록"))
   );
   if (hasSubmitAction) {
-    const hasTitleInput = sanitizedActions.some(
+    const hasTitleInput = optimizedActions.some(
       (a) => a.type === "type" && (a.description?.includes("제목") || a.description?.includes("명칭") || a.selector?.includes("subject") || a.selector?.includes("title"))
     );
     if (!hasTitleInput) {
@@ -268,12 +396,10 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
     }
   }
 
-
-
   return {
     plan: {
       ...plan,
-      actions: sanitizedActions,
+      actions: optimizedActions,
     },
     report: {
       fixedActionsCount,

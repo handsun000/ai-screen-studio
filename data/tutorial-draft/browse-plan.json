@@ -88,8 +88,8 @@
     },
     {
       "type": "click",
-      "description": "조직도에서 'GW테스트02 과장' 체크박스 선택",
-      "selector": ".ui-dialog:visible span.dynatree-node:has(span.name:has-text(\"GW테스트02 과장\")) span.dynatree-checkbox, .ui-dialog:visible span.dynatree-node:has(a.dynatree-title:has-text(\"GW테스트02 과장\")) span.dynatree-checkbox, .ui-dialog:visible label:has-text(\"GW테스트02 과장\")",
+      "description": "조직도에서 '첫번째 검색 결과 사원 과장' 체크박스 선택",
+      "selector": ".ui-dialog:visible span.dynatree-node:has(span.name:has-text(\"첫번째 검색 결과 사원 과장\")) span.dynatree-checkbox, .ui-dialog:visible span.dynatree-node:has(a.dynatree-title:has-text(\"첫번째 검색 결과 사원 과장\")) span.dynatree-checkbox, .ui-dialog:visible label:has-text(\"첫번째 검색 결과 사원 과장\")",
       "force": true
     },
     {
