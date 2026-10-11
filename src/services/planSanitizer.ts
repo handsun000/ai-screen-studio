@@ -202,8 +202,11 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       desc.includes("등록 완료") ||
       desc.includes("닫기") ||
       desc.includes("취소") ||
+      desc.includes("확인") ||
+      desc.includes("선택 완료") ||
       sel.includes("closeBtn") ||
-      sel.includes("btn_close");
+      sel.includes("btn_close") ||
+      sel.includes("confirm");
 
     if (isModalCloseOrSubmit) {
       isInsideModal = false;

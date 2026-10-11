@@ -85,65 +85,12 @@
       "type": "type",
       "description": "문서 제목 입력 ('2026년 상반기 업무 표준 가이드라인')",
       "selector": "input#atclWrite_subject, input[id='atclWrite_subject']",
-      "text": "2026년 상반기 업무 표준 가이드라인"
+      "text": "2026년 상반기 업무 표준 가이드라인",
+      "_lastHealReason": "화면 중앙 '*제목' 라벨 우측의 텍스트 입력창이 DOM 후보군에서 input#atclWrite_subject로 확인되며, 모달이 아닌 최상위 본문 페이지에 존재하므로 모달 스코핑 없이 직접 타겟팅함"
     },
     {
       "type": "wait",
       "description": "제목 입력 확인 대기",
-      "ms": 1200
-    },
-    {
-      "type": "click",
-      "description": "상세 옵션 펼침 버튼 클릭 (존재 시)",
-      "selector": "button:has-text('상세설정'):visible, button:has-text('상세 옵션'):visible, a.btn_opt:visible, button.btn_fold:visible, table.tbl_lst tbody tr:first-child td.sub a:visible, table tbody tr:first-child td[class*='sub'] a:visible, table tbody tr:first-child a:visible, ul.lst_vr_ul li:first-child a.sub_tp:visible, ul.lst_vr_ul li:first-child .sub a:visible, ul[id*='List'] li:first-child a.sub_tp:visible, ul[class*='lst'] li:first-child a:visible, .lst_type1 li:first-child a:visible",
-      "force": true
-    },
-    {
-      "type": "wait",
-      "description": "상세 옵션 영역 펼침 대기",
-      "ms": 1200
-    },
-    {
-      "type": "click",
-      "description": "보존 기간 설정 드롭다운/옵션 클릭",
-      "selector": "select[name*='keep']:visible, select[name*='period']:visible, tr:has-text('보존') select:visible"
-    },
-    {
-      "type": "wait",
-      "description": "보존 기간 드롭다운 대기",
-      "ms": 1000
-    },
-    {
-      "type": "click",
-      "description": "공개 범위 옵션 선택",
-      "selector": "label:has-text('공개'):visible, label:has-text('전체공개'):visible, input[type='radio'][value*='ALL']:visible",
-      "force": true
-    },
-    {
-      "type": "wait",
-      "description": "공개 범위 반영 대기",
-      "ms": 1200
-    },
-    {
-      "type": "type",
-      "description": "문서 키워드/태그 입력 필드 작성",
-      "selector": "input[name*='tag']:visible, input[name*='keyword']:visible, input[placeholder*='태그']:visible",
-      "text": "업무매뉴얼,표준가이드"
-    },
-    {
-      "type": "wait",
-      "description": "태그 입력 확인 대기",
-      "ms": 1200
-    },
-    {
-      "type": "type",
-      "description": "문서 개요/설명 입력",
-      "selector": "textarea[name*='summary']:visible, textarea[placeholder*='개요']:visible, input[name*='summary']:visible",
-      "text": "전사 임직원을 위한 2026년 상반기 업무 표준 절차서입니다."
-    },
-    {
-      "type": "wait",
-      "description": "개요 입력 확인 대기",
       "ms": 1200
     },
     {
@@ -170,7 +117,9 @@
     {
       "type": "click",
       "description": "저장 완료 안내 팝업 [확인] 클릭 (표시 시)",
-      "selector": ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, button[id*='confirm']:visible, button[id*='Confirm']:visible, .ui-dialog:visible button.btn_pri:visible, .ui-dialog:visible button._confirm:visible"
+      "selector": ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, button[id*='confirm']:visible, button[id*='Confirm']:visible, .ui-dialog:visible button.btn_pri:visible, .ui-dialog:visible button._confirm:visible",
+      "optional": true,
+      "force": false
     },
     {
       "type": "wait",

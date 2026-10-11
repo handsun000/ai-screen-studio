@@ -995,6 +995,17 @@ export function canSafelySkipFailedAction(
 }
 
 /**
+ * Marks a failed non-critical action and its subsequent wait step for permanent deletion from browse-plan.json.
+ */
+function markActionAndFollowupWaitForPruning(plan: BrowsePlan, actionIdx: number, action: BrowsePlanAction): void {
+  (action as any)._shouldPrune = true;
+  (action as any)._wasSkipped = true;
+  if (actionIdx + 1 < plan.actions.length && plan.actions[actionIdx + 1].type === "wait") {
+    (plan.actions[actionIdx + 1] as any)._shouldPrune = true;
+  }
+}
+
+/**
  * Invokes the AI Runtime Self-Healing Agent to find the real element on the live screen,
  * automatically corrects the action selector, saves it to disk, and returns the healed locator.
  */
@@ -1047,6 +1058,7 @@ async function trySelfHealAction(moments: any[], startTime: number,
 
   if (isOptional || isSelfHealSkipped || canSkip) {
     (action as any)._wasSkipped = true;
+    (action as any)._shouldPrune = true;
     console.log(`  [✨ 비필수 단계 안전 스킵] 화면에 부가 옵션("${action.description}")이 존재하지 않으므로 새로고침 없이 안전하게 건너뜁니다.`);
     return null;
   }
@@ -1135,6 +1147,7 @@ async function trySelfHealAction(moments: any[], startTime: number,
     console.warn(`  [AI 자가 치유 포기] 💡 사유: ${healResult.reason}`);
     if (canSafelySkipFailedAction(action, momentId, plan.actions.length, healResult.reason)) {
       (action as any)._wasSkipped = true;
+      (action as any)._shouldPrune = true;
       console.log(`  [✨ 비필수 단계 안전 스킵] 해당 단계("${action.description}")는 비필수 부가 옵션이므로 건너뛰고 다음 필수 단계로 진행합니다.`);
     }
     return null;
@@ -1143,6 +1156,7 @@ async function trySelfHealAction(moments: any[], startTime: number,
   console.warn(`  [AI 자가 치유 미완료] 현재 화면에서 적합한 요소를 확정하지 못했습니다.`);
   if (canSafelySkipFailedAction(action, momentId, plan.actions.length)) {
     (action as any)._wasSkipped = true;
+    (action as any)._shouldPrune = true;
     console.log(`  [✨ 비필수 단계 안전 스킵] 해당 단계("${action.description}")는 비필수 부가 옵션이므로 건너뛰고 다음 필수 단계로 진행합니다.`);
   }
   return null;
@@ -1310,9 +1324,38 @@ async function confirmTreeSelectionModal(page: Page): Promise<boolean> {
  * the next actions (title, content, save) and autonomously completes or dismisses it.
  */
 async function autoRecoverActiveModals(page: Page, action: BrowsePlanAction, moments: any[], startTime: number): Promise<boolean> {
+  // If current action is wait, do NOT dismiss modals!
+  if (action.type === 'wait') return false;
+
   try {
     const desc = (action.description || "").toLowerCase();
     const sel = (action.selector || "").toLowerCase();
+
+    // If the action is explicitly interacting with or confirming a modal, DO NOT auto-close it!
+    const isActionForModal =
+      desc.includes("선택 팝업") ||
+      desc.includes("팝업 확인") ||
+      desc.includes("확인") ||
+      desc.includes("다이얼로그") ||
+      desc.includes("조직도") ||
+      desc.includes("주소록") ||
+      desc.includes("모달") ||
+      desc.includes("팝업") ||
+      desc.includes("사원") ||
+      desc.includes("결재") ||
+      desc.includes("수신자") ||
+      desc.includes("추가") ||
+      desc.includes("저장") ||
+      desc.includes("상신") ||
+      sel.includes(".ui-dialog") ||
+      sel.includes("role='dialog'") ||
+      sel.includes("confirm") ||
+      sel.includes("org_") ||
+      sel.includes("userList");
+
+    if (isActionForModal) {
+      return false;
+    }
 
     // 1. Detect Alert/Notice modals ONLY (strictly excludes selection dialogs with dynatree/inputs)
     const isPureAlertModal = await page.evaluate(() => {
@@ -1340,35 +1383,25 @@ async function autoRecoverActiveModals(page: Page, action: BrowsePlanAction, mom
       console.log(`[DEBUG] Detected modal text: "${txt}"`);
       const isValidationError = txt.includes("입력") || txt.includes("선택") || txt.includes("등록할 수 없습니다") || txt.includes("오류") || txt.includes("필수") || txt.includes("지정");
 
-      let clicked = false;
-      try {
-        let dialogs = page.locator(".ui-dialog:visible");
-        let count = await dialogs.count();
-        if (count > 0) {
-          // Playwright로 버튼을 클릭하면 Naonsoft 그룹웨어에서 원치 않는 form submit 
-          // 또는 페이지 이동(백화현상)이 발생하는 치명적 버그가 있으므로, 
-          // 버튼 클릭 없이 모달 DOM 노드 자체를 강제로 화면에서 지워버립니다.
-          await page.evaluate(() => {
-            document.querySelectorAll(".ui-dialog, #alert_lyr, .ui-widget-overlay").forEach(el => el.remove());
-          }).catch(() => {});
-          
-          clicked = true;
-          await page.waitForTimeout(300);
-        }
-        
-      } catch (e) {
-        console.error("  [⚠️ 팝업 닫기 실패]", e);
+      if (isValidationError) {
+        console.error(`\n  🚨 [치명적 폼 검증 에러 발생] 시스템 알림: "${txt}"`);
+        await page.waitForTimeout(1000);
+        throw new Error(`폼 유효성 검증 실패 (Validation Error): ${txt}`);
       }
 
-      if (clicked) {
-        if (isValidationError) {
-          console.error(`\n  🚨 [치명적 폼 검증 에러 발생] 시스템 알림: "${txt}"`);
-          await page.waitForTimeout(1000);
-          throw new Error(`폼 유효성 검증 실패 (Validation Error): ${txt}`);
-        } else {
-          console.log(`\n  [🤖 팝업 자가 복구] 차단 알림 팝업 감지 ➔ [확인] 버튼을 클릭하여 알림을 닫습니다.`);
-          await page.waitForTimeout(600);
-        }
+      // If it's an alert or confirmation, click the confirm button rather than removing DOM!
+      const confirmBtn = page.locator(".ui-dialog:visible button:has-text('확인'):visible, #alert_lyr button:has-text('확인'):visible, .ui-dialog:visible button.btn_pri:visible, button:has-text('확인'):visible").first();
+      if (await confirmBtn.isVisible().catch(() => false)) {
+        console.log(`\n  [🤖 팝업 자가 복구] 차단 알림 팝업 감지 ➔ [확인] 버튼을 클릭하여 정상 진행합니다.`);
+        await confirmBtn.click().catch(() => {});
+        await page.waitForTimeout(600);
+        return true;
+      } else {
+        await page.evaluate(() => {
+          document.querySelectorAll(".ui-dialog, #alert_lyr, .ui-widget-overlay").forEach(el => el.remove());
+        }).catch(() => {});
+        await page.waitForTimeout(300);
+        return true;
       }
     }
 
@@ -1384,26 +1417,6 @@ async function autoRecoverActiveModals(page: Page, action: BrowsePlanAction, mom
       const txt = top.textContent || "";
       return txt.includes("문서함") || txt.includes("게시판") || txt.includes("폴더") || txt.includes("분류") || txt.includes("캘린더") || Boolean(top.querySelector(".dynatree-container, [id*='treeBox']"));
     });
-
-    if (action.type === 'wait') return false;
-
-    const isActionForModal =
-      desc.includes("선택 팝업") ||
-      desc.includes("팝업 확인") ||
-      desc.includes("다이얼로그") ||
-      desc.includes("조직도") ||
-      desc.includes("주소록") ||
-      desc.includes("모달") ||
-      desc.includes("팝업") ||
-      desc.includes("사원") ||
-      desc.includes("결재") ||
-      desc.includes("수신자") ||
-      desc.includes("검색") ||
-      desc.includes("추가") ||
-      sel.includes(".ui-dialog") ||
-      sel.includes("role='dialog'") ||
-      sel.includes("org_") ||
-      sel.includes("userList");
 
     // If the action is explicitly interacting with the modal, DO NOT auto-close it!
     if (isTreeSelectModal && isActionForModal) {
@@ -1936,7 +1949,8 @@ async function main() {
   console.log(`\nRecording started for "${slug}" at ${plan.url}`);
 
   try {
-    for (const action of plan.actions) {
+    for (let actionIdx = 0; actionIdx < plan.actions.length; actionIdx++) {
+      const action = plan.actions[actionIdx];
       momentId++;
 
       const moment: Moment = {
@@ -1956,6 +1970,10 @@ async function main() {
         }
 
         case "wait": {
+          if ((action as any)._shouldPrune) {
+            console.log(`  [동반 생략] wait: ${action.description || '대기'} (선행 부가 액션 스킵으로 인한 대기 생략)`);
+            break;
+          }
           moment.timestamp = Date.now() - recordingStart;
           const ms = action.ms ?? 1000;
           // 모달 애니메이션 대기 후 즉시 복구, 남은 시간 대기
@@ -1990,6 +2008,7 @@ async function main() {
           }
           if (!el) {
             if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+              markActionAndFollowupWaitForPruning(plan, actionIdx, action);
               console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 통과합니다: ${action.description}`);
               break;
             }
@@ -2004,6 +2023,7 @@ async function main() {
               el = healed;
             } else {
               if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+                markActionAndFollowupWaitForPruning(plan, actionIdx, action);
                 console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 통과합니다: ${action.description}`);
                 break;
               }
@@ -2049,6 +2069,7 @@ async function main() {
           }
           if (!el) {
             if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+              markActionAndFollowupWaitForPruning(plan, actionIdx, action);
               console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 통과합니다: ${action.description}`);
               break;
             }
@@ -2063,6 +2084,7 @@ async function main() {
               el = healed;
             } else {
               if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+                markActionAndFollowupWaitForPruning(plan, actionIdx, action);
                 console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 통과합니다: ${action.description}`);
                 break;
               }
@@ -2107,6 +2129,8 @@ async function main() {
 
         case "click": {
           await autoRecoverActiveModals(page, action, moments, recordingStart);
+          const descLower = (action.description || "").toLowerCase();
+          const selLower = (action.selector || "").toLowerCase();
           const isOptionalOrSub = isOptionalAction(action, momentId, plan.actions.length) || isNonCriticalSubOption(action);
           let el = await getLocatorWithWait(page, action, isOptionalOrSub);
 
@@ -2141,11 +2165,26 @@ async function main() {
             }
           }
 
-          // Universal First Item / Detail View Click Fallback (Table & Vertical Split View) (Moved to getLocator)
+          // Match click on newly created item
+          const isClickCreatedItem =
+            (descLower.includes("등록된") || descLower.includes("작성된") || descLower.includes("방금")) &&
+            (descLower.includes("제목") || descLower.includes("상세") || descLower.includes("문서") || descLower.includes("글"));
+
+          if (isClickCreatedItem) {
+            const targetText = runtimeVariables.get("lastCreatedKeyword") || runtimeVariables.get("lastCreatedTitle");
+            if (targetText) {
+              const cleanKeyword = targetText.length > 15 ? targetText.slice(0, 15).trim() : targetText;
+              const matchedLoc = page.locator(
+                `ul.lst_vr_ul li a.sub_tp:has-text('${cleanKeyword}'):visible, ul.lst_vr_ul li .sub a:has-text('${cleanKeyword}'):visible, #atclList_list2 a:has-text('${cleanKeyword}'):visible, ul[id*='List'] li a:has-text('${cleanKeyword}'):visible, table tbody tr td.sub a:has-text('${cleanKeyword}'):visible, table tbody tr a:has-text('${cleanKeyword}'):visible, .lst_vr a:has-text('${cleanKeyword}'):visible, a.sub_tp:has-text('${cleanKeyword}'):visible, a[title*='${cleanKeyword}']:visible, a._atcl:has-text('${cleanKeyword}'):visible, a:has-text('${cleanKeyword}'):visible`
+              ).first();
+              if (await matchedLoc.isVisible().catch(() => false)) {
+                console.log(`  [🎯 방금 등록된 항목 매칭] 키워드("${cleanKeyword}")와 일치하는 문서 링크를 클릭 대상으로 연결합니다.`);
+                el = matchedLoc;
+              }
+            }
+          }
 
           // 🌟 Universal Tree & Folder Node Selection Auto-Refinement
-          const descLower = (action.description || "").toLowerCase();
-          const selLower = (action.selector || "").toLowerCase();
           const isTreeSelectAction =
             (descLower.includes("선택") && (descLower.includes("트리") || descLower.includes("노드") || descLower.includes("문서함") || descLower.includes("게시판") || descLower.includes("폴더") || descLower.includes("분류") || descLower.includes("캘린더"))) ||
             selLower.includes("dynatree") ||
@@ -2154,9 +2193,32 @@ async function main() {
             selLower.includes("docselect") ||
             selLower.includes("brdselect");
 
+          const isSaveOrSubmitConfirm =
+            (descLower.includes("확인") || descLower.includes("완료")) &&
+            (descLower.includes("저장") || descLower.includes("상신") || descLower.includes("등록"));
+
+          if (isSaveOrSubmitConfirm) {
+            const confirmBtn = page.locator(
+              ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, #alert_lyr button:has-text('확인'):visible, .ui-dialog:visible button.btn_pri:visible, button:has-text('확인'):visible"
+            ).first();
+            if (await confirmBtn.isVisible().catch(() => false)) {
+              console.log(`  [🎯 저장/상신 확인 버튼 감지] 확인 다이얼로그의 [확인] 버튼을 타겟팅합니다.`);
+              el = confirmBtn;
+            } else {
+              const dialogCount = await page.locator(".ui-dialog:visible, #alert_lyr:visible").count().catch(() => 0);
+              if (dialogCount === 0) {
+                console.log(`  [✨ 저장 확인 불필요] 저장 확인 팝업 없이 즉시 저장 처리되어 확인 단계를 안전하게 통과합니다.`);
+                moment.timestamp = Date.now() - recordingStart;
+                await page.waitForTimeout(400);
+                break;
+              }
+            }
+          }
+
           const isTreeSelectConfirm =
             (descLower.includes("확인") || descLower.includes("선택 완료") || descLower.includes("적용")) &&
-            (descLower.includes("팝업") || descLower.includes("모달") || descLower.includes("다이얼로그") || descLower.includes("문서함") || descLower.includes("게시판") || selLower.includes(".ui-dialog"));
+            (descLower.includes("문서함") || descLower.includes("게시판") || descLower.includes("폴더") || descLower.includes("분류") || descLower.includes("트리") || descLower.includes("사원") || descLower.includes("조직도") || descLower.includes("주소록")) &&
+            !isSaveOrSubmitConfirm;
 
           const hasActiveTreeDialog = (await page.locator(".ui-dialog:visible .dynatree-container, [role='dialog']:visible .dynatree-container, [id*='treeBox']:visible").count().catch(() => 0)) > 0;
 
@@ -2203,6 +2265,7 @@ async function main() {
           }
           if (!el) {
             if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+              markActionAndFollowupWaitForPruning(plan, actionIdx, action);
               console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 통과합니다: ${action.description}`);
               break;
             }
@@ -2275,6 +2338,7 @@ async function main() {
 
             if (!resolvedViaLabel) {
               if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+                markActionAndFollowupWaitForPruning(plan, actionIdx, action);
                 console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 요소가 화면에 표시되지 않으나 필수 핵심 단계가 아니므로 안전하게 스킵합니다: ${action.description}`);
                 break;
               }
@@ -2351,6 +2415,7 @@ async function main() {
                   await healed.click({ timeout: 4000, force: true }).catch(() => healed.dispatchEvent("click", undefined, { timeout: 1000 }));
                 } else {
                   if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+                    markActionAndFollowupWaitForPruning(plan, actionIdx, action);
                     console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 클릭을 수행하지 못했으나 필수 핵심 단계가 아니므로 안전하게 스킵합니다: ${action.description}`);
                     break;
                   }
@@ -2398,6 +2463,7 @@ async function main() {
           }
           if (!el) {
             if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+              markActionAndFollowupWaitForPruning(plan, actionIdx, action);
               console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 입력 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 통과합니다: ${action.description}`);
               break;
             }
@@ -2439,6 +2505,7 @@ async function main() {
 
             if (!resolved) {
               if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+                markActionAndFollowupWaitForPruning(plan, actionIdx, action);
                 console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 입력 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 스킵합니다: ${action.description}`);
                 break;
               }
@@ -2750,16 +2817,25 @@ async function main() {
     }
   }
 
-  // 🌟 2-Pass Clean Master Re-recording:
-  // If AI runtime self-healing occurred during this recording run, the video contains 10-second idle stalls while
-  // Playwright timed out waiting for old selectors. Since all healed selectors have now been permanently saved
-  // to browse-plan.json, we automatically run a second, clean recording pass to produce a pristine master video!
+  // 🌟 Pruning & 2-Pass Clean Master Re-recording:
+  // If non-critical optional actions were skipped (e.g. they don't exist on this form), prune them permanently
+  // so the plan and subsequent recordings are completely clean and free of dead timeouts.
+  const toPrune = plan.actions.filter((a) => (a as any)._shouldPrune);
+  let hasPrunedActions = false;
+  if (toPrune.length > 0) {
+    console.log(`\n✂️ [불필요 비필수 액션 자동 프루닝] 화면에 존재하지 않는 ${toPrune.length}개 비필수 부가 액션을 영구 제거합니다:`);
+    toPrune.forEach((a) => console.log(`   - [제거] ${a.description || a.type}`));
+    plan.actions = plan.actions.filter((a) => !(a as any)._shouldPrune);
+    saveHealedPlan(dataDir, plan);
+    hasPrunedActions = true;
+  }
+
   const isCleanPass = process.argv.includes("--clean-pass");
   const isNoCleanPass = process.argv.includes("--no-clean-pass");
 
-  if (totalHealedCount > 0 && !isCleanPass && !isNoCleanPass) {
+  if ((totalHealedCount > 0 || hasPrunedActions) && !isCleanPass && !isNoCleanPass) {
     console.log(`\n========================================================================`);
-    console.log(`✨ [시나리오 자가 복구 완료] 총 ${totalHealedCount}건의 요소가 성공적으로 교정되어 영구 저장되었습니다.`);
+    console.log(`✨ [시나리오 최적화 완료] 자가 복구 ${totalHealedCount}건, 불필요 액션 프루닝 ${toPrune.length}건 반영 완료.`);
     console.log(`🎬 [2-Pass 클린 마스터 재녹화 자동 가동] 10초 대기 공백을 제거하고 매끄러운 최종 마스터 영상을 생성하기 위해 클린 패스를 즉시 재녹화합니다!`);
     console.log(`========================================================================\n`);
 
