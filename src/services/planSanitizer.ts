@@ -270,11 +270,29 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       action.force = true;
     }
 
-    // 9. Strip any legacy 'optional' (skip) flag - all actions must be executed without skipping
-    if ((action as any).optional !== undefined) {
-      delete (action as any).optional;
-      changes.push(`[정제] 건너뛰기(optional) 플래그 제거: "${desc}" (전체 단계 필수 실행 보장)`);
-      fixedActionsCount++;
+    // 9. Auto-mark conditional actions (존재 시, 표시 시, 노출 시, 있을 경우 등) as optional: true and force: false
+    const isConditionalDesc =
+      desc.includes("존재 시") ||
+      desc.includes("존재시") ||
+      desc.includes("있을 경우") ||
+      desc.includes("있는 경우") ||
+      desc.includes("노출 시") ||
+      desc.includes("노출시") ||
+      desc.includes("표시 시") ||
+      desc.includes("표시시") ||
+      desc.includes("필요 시") ||
+      desc.includes("필요시") ||
+      desc.includes("선택적") ||
+      desc.includes("(선택)") ||
+      desc.includes("(옵션)");
+
+    if (isConditionalDesc) {
+      if (!action.optional || action.force !== false) {
+        action.optional = true;
+        action.force = false;
+        changes.push(`[조건부 액션 플래그] 화면 미노출 시 안전 스킵 허용: "${desc}" (optional: true, force: false)`);
+        fixedActionsCount++;
+      }
     }
 
     // 10. Clean stray text attribute from non-type actions

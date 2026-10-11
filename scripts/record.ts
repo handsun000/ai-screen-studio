@@ -808,6 +808,38 @@ async function isSessionValid(
 let totalHealedCount = 0;
 
 /**
+ * Checks whether an action is optional / conditional (e.g. '존재 시', '표시 시', '노출 시', '선택적', outro confirmation).
+ * Optional actions should never fail the entire recording or trigger destructive full-page reloads.
+ */
+export function isOptionalAction(action: BrowsePlanAction, momentId?: number, totalActions?: number): boolean {
+  if (action.optional === true || action.force === false) return true;
+  if (momentId !== undefined && totalActions !== undefined && momentId >= totalActions - 2) {
+    const descLower = (action.description || "").toLowerCase();
+    if (descLower.includes("닫기") || descLower.includes("종료") || descLower.includes("아웃트로") || descLower.includes("확인")) {
+      return true;
+    }
+  }
+  const desc = (action.description || "").toLowerCase();
+  return (
+    desc.includes("존재 시") ||
+    desc.includes("존재시") ||
+    desc.includes("있을 경우") ||
+    desc.includes("있는 경우") ||
+    desc.includes("노출 시") ||
+    desc.includes("노출시") ||
+    desc.includes("표시 시") ||
+    desc.includes("표시시") ||
+    desc.includes("필요 시") ||
+    desc.includes("필요시") ||
+    desc.includes("선택적") ||
+    desc.includes("선택 단계") ||
+    desc.includes("(선택)") ||
+    desc.includes("(옵션)") ||
+    desc.includes("경우에만")
+  );
+}
+
+/**
  * Invokes the AI Runtime Self-Healing Agent to find the real element on the live screen,
  * automatically corrects the action selector, saves it to disk, and returns the healed locator.
  */
@@ -820,7 +852,7 @@ async function trySelfHealAction(moments: any[], startTime: number,
 ): Promise<Locator | null> {
   console.log(`\n  [⚠️ 요소 탐색 실패] 액션 #${momentId}: "${action.description}" (기존 셀렉터: ${action.selector || "없음"})`);
   
-  if (momentId >= plan.actions.length - 2) {
+  if (isOptionalAction(action, momentId, plan.actions.length)) {
     const descLower = (action.description || "").toLowerCase();
     if (descLower.includes("닫기") || descLower.includes("종료") || descLower.includes("아웃트로")) {
       console.log(`  [✨ 아웃트로 예외 허용] 불필요한 닫기 액션에 대한 자가 치유를 생략하고 즉시 종료를 유도합니다.`);
@@ -842,9 +874,42 @@ async function trySelfHealAction(moments: any[], startTime: number,
   console.log(`  [🤖 AI 실시간 자가 치유 가동] 실시간 화면 스크린샷과 DOM 후보군을 정밀 분석 중...`);
   let healResult = await selfHealElement(page, action, momentId, plan.actions.length, dataDir);
   
+  // 🚨 AI가 화면에 존재하지 않는 조건부/선택적 단계로 판단한 경우 즉시 안전 스킵 (새로고침 절대 금지)
+  const isOptional = isOptionalAction(action, momentId, plan.actions.length);
+  const isSelfHealSkipped = Boolean(
+    healResult &&
+    !healResult.success &&
+    (healResult.reason?.includes("생략") ||
+     healResult.reason?.includes("선택적") ||
+     healResult.reason?.includes("존재하지 않는") ||
+     healResult.reason?.includes("Fail-Fast"))
+  );
+
+  if (isOptional || isSelfHealSkipped) {
+    console.log(`  [✨ 조건부 단계 안전 스킵] 화면에 존재하지 않는 조건부/선택적 단계("${action.description}")이므로 새로고침 없이 안전하게 건너뜁니다.`);
+    return null;
+  }
+
+  // 폼 작성 중이거나 모달이 떠 있을 때는 전체 새로고침 절대 금지 (작성 중인 폼/세션 파괴 방지)
+  const hasActiveModal = (await page.locator(".ui-dialog:visible, .modal:visible, [role='dialog']:visible").count().catch(() => 0)) > 0;
+  const isFormAction =
+    action.type === "type" ||
+    Boolean(
+      action.description &&
+      (action.description.includes("입력") ||
+       action.description.includes("작성") ||
+       action.description.includes("옵션") ||
+       action.description.includes("설정") ||
+       action.description.includes("제목") ||
+       action.description.includes("본문") ||
+       action.description.includes("내용"))
+    );
+
   // 비동기 렌더링/UI 동기화 문제(새로고침해야만 데이터가 나오는 경우)를 대응하기 위한 1회 재시도 (Reload & Retry)
-  if ((!healResult || !healResult.success) && !(action as any)._hasReloadRetried) {
-    console.log(`  🔄 [비동기 UI 동기화] 요소 탐색 실패 및 자가 치유 불가 판단. 화면 강제 새로고침 후 1회 재시도합니다...`);
+  // 단, 결과 확인(Phase 5) 목록/조회 단계에서만 제한적으로 허용
+  const isOutcomePhase = momentId >= plan.actions.length - 4;
+  if (!isFormAction && !hasActiveModal && isOutcomePhase && (!healResult || !healResult.success) && !(action as any)._hasReloadRetried) {
+    console.log(`  🔄 [비동기 UI 동기화] 결과 목록 갱신 지연 감지. 화면 강제 새로고침 후 1회 재시도합니다...`);
     (action as any)._hasReloadRetried = true;
     try {
       // 1. 화면 내 명시적인 새로고침 버튼 탐색 및 클릭
@@ -1751,22 +1816,23 @@ async function main() {
             el = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
           }
           if (!el) {
-            if (action.force === false) {
-              console.log(`  [선택적 액션 스킵] 요소를 찾을 수 없어 스킵합니다: ${action.description}`);
+            if (isOptionalAction(action, momentId, plan.actions.length)) {
+              console.log(`  [선택적 액션 스킵] 요소를 찾을 수 없어 안전하게 스킵합니다: ${action.description}`);
               break;
             }
             throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
           }
+          const isOptional = isOptionalAction(action, momentId, plan.actions.length);
+          const waitTimeout = isOptional ? 2000 : (momentId >= plan.actions.length - 2) ? 2000 : 3500;
           try {
-            const waitTimeout = (momentId >= plan.actions.length - 2) ? 2000 : 3500;
             await el.waitFor({ state: "visible", timeout: waitTimeout });
           } catch (waitErr) {
             const healed = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
             if (healed) {
               el = healed;
             } else {
-              if (action.force === false || momentId >= plan.actions.length - 2) {
-                console.log(`  [선택적 액션 스킵 / 아웃트로 무시] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 스킵합니다: ${action.description}`);
+              if (isOptionalAction(action, momentId, plan.actions.length)) {
+                console.log(`  [선택적 액션 스킵 / 아웃트로 무시] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 스킵합니다: ${action.description}`);
                 break;
               }
               throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
@@ -1809,22 +1875,23 @@ async function main() {
             el = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
           }
           if (!el) {
-            if (action.force === false) {
-              console.log(`  [선택적 액션 스킵] 요소를 찾을 수 없어 스킵합니다: ${action.description}`);
+            if (isOptionalAction(action, momentId, plan.actions.length)) {
+              console.log(`  [선택적 액션 스킵] 요소를 찾을 수 없어 안전하게 스킵합니다: ${action.description}`);
               break;
             }
             throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
           }
+          const isOptional = isOptionalAction(action, momentId, plan.actions.length);
+          const waitTimeout = isOptional ? 2500 : (momentId >= plan.actions.length - 2) ? 3000 : 25000;
           try {
-            const waitTimeout = (momentId >= plan.actions.length - 2) ? 3000 : 25000;
             await el.waitFor({ state: "visible", timeout: waitTimeout });
           } catch (waitErr) {
             const healed = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
             if (healed) {
               el = healed;
             } else {
-              if (action.force === false) {
-                console.log(`  [선택적 액션 스킵] 요소를 찾을 수 없어 스킵합니다: ${action.description}`);
+              if (isOptionalAction(action, momentId, plan.actions.length)) {
+                console.log(`  [선택적 액션 스킵] 요소를 찾을 수 없어 안전하게 스킵합니다: ${action.description}`);
                 break;
               }
               throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
@@ -1962,15 +2029,16 @@ async function main() {
             el = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
           }
           if (!el) {
-            if (action.force === false || momentId >= plan.actions.length - 2) {
-              console.log(`  [선택적 액션 스킵 / 아웃트로 무시] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 스킵합니다: ${action.description}`);
+            if (isOptionalAction(action, momentId, plan.actions.length)) {
+              console.log(`  [✨ 선택적 액션 안전 스킵] 요소를 찾을 수 없으나 조건부/선택적 단계("${action.description}")이므로 안전하게 통과합니다.`);
               break;
             }
             throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
           }
 
           // 1. Wait for element to become visible on the screen
-          const waitTimeout = (momentId >= plan.actions.length - 2) ? 3000 : 25000;
+          const isOptional = isOptionalAction(action, momentId, plan.actions.length);
+          const waitTimeout = isOptional ? 2500 : (momentId >= plan.actions.length - 2) ? 3000 : 25000;
           try {
             await el.waitFor({ state: action.force ? "attached" : "visible", timeout: waitTimeout });
           } catch (waitErr) {
@@ -2034,8 +2102,8 @@ async function main() {
             }
 
             if (!resolvedViaLabel) {
-              if (action.force === false || momentId >= plan.actions.length - 2) {
-                console.log(`  [선택적 액션 스킵 / 아웃트로 무시] 요소가 화면에 표시되지 않으나 핵심 단계가 아니므로 스킵합니다: ${action.description}`);
+              if (isOptionalAction(action, momentId, plan.actions.length)) {
+                console.log(`  [✨ 선택적 액션 안전 스킵] 요소가 화면에 표시되지 않으나 조건부/선택적 단계("${action.description}")이므로 안전하게 스킵합니다.`);
                 break;
               }
               throw new Error(`요소가 화면에 표시되지 않습니다 (${waitTimeout}ms 초과): ${action.selector}`);
@@ -2156,14 +2224,15 @@ async function main() {
             el = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
           }
           if (!el) {
-            if (action.force === false) {
-              console.log(`  [선택적 액션 스킵] 입력 요소를 찾을 수 없어 스킵합니다: ${action.description}`);
+            if (isOptionalAction(action, momentId, plan.actions.length)) {
+              console.log(`  [✨ 선택적 액션 안전 스킵] 입력 요소를 찾을 수 없으나 조건부/선택적 단계("${action.description}")이므로 안전하게 스킵합니다.`);
               break;
             }
             throw new Error(`입력 요소를 찾을 수 없습니다: ${action.selector}`);
           }
 
-          const waitTimeout = 25000;
+          const isOptional = isOptionalAction(action, momentId, plan.actions.length);
+          const waitTimeout = isOptional ? 2500 : 25000;
           try {
             await el.waitFor({ state: "visible", timeout: waitTimeout });
           } catch (waitErr) {
@@ -2197,6 +2266,10 @@ async function main() {
             }
 
             if (!resolved) {
+              if (isOptionalAction(action, momentId, plan.actions.length)) {
+                console.log(`  [✨ 선택적 액션 안전 스킵] 입력 요소를 찾을 수 없으나 조건부/선택적 단계("${action.description}")이므로 안전하게 스킵합니다.`);
+                break;
+              }
               throw new Error(`입력 요소를 찾을 수 없거나 화면에 표시되지 않습니다: ${action.selector}`);
             }
           }

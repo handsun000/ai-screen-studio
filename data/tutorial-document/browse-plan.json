@@ -1,5 +1,5 @@
 {
-  "url": "https://gwdev.bc.ac.kr",
+  "url": "https://gwdev.unison.co.kr",
   "viewport": {
     "width": 1920,
     "height": 1080
@@ -8,156 +8,166 @@
   "actions": [
     {
       "type": "wait",
-      "description": "메인 대시보드 화면 로딩 및 시각적 앵커 대기 (Phase 1)",
-      "ms": 1600
+      "description": "메인 포털 대시보드 로딩 및 시각적 앵커 대기 (Phase 1)",
+      "ms": 3000
     },
     {
       "type": "click",
-      "description": "상단 GNB '포탈 전체메뉴' 서랍 열기 버튼 클릭 (Phase 2)",
-      "selector": "button.btn_svc_open:visible, button[title='포탈 전체메뉴']:visible, .btn_svc_open:visible"
+      "description": "상단 GNB '포탈 전체메뉴' 버튼 클릭",
+      "selector": "button.btn_svc_open:visible, button[title='포탈 전체메뉴'], .btn_svc_open:visible"
     },
     {
       "type": "wait",
-      "description": "포탈 전체메뉴 드로어 레이어 펼침 대기",
-      "ms": 1200
+      "description": "전체메뉴 드로어 레이어 열림 대기",
+      "ms": 1300
     },
     {
       "type": "click",
-      "description": "전체메뉴 내 '문서관리' 메뉴 클릭하여 문서관리 모듈로 이동",
-      "selector": "#svc_box a:has-text('문서관리'), a:has-text('문서관리'):visible, #svc_lst a:has-text('문서관리')"
+      "description": "전체메뉴 서랍 내 '문서관리' 메뉴 클릭 (Phase 2)",
+      "selector": "#svc_box a:has-text('문서관리'), #svc_box a:has-text('문서')"
     },
     {
       "type": "wait",
-      "description": "문서관리 메인 화면 및 좌측 문서함 트리 로딩 대기",
-      "ms": 1800
+      "description": "문서관리 메인 화면 렌더링 대기",
+      "ms": 3500
     },
     {
       "type": "click",
-      "description": "좌측 문서함 트리 첫 번째 폴더 확장 아이콘 클릭 (문서 구조 확인)",
-      "selector": "#docLeft_tree1 .dynatree-expander, #docLeft_tree1 li:first-child .dynatree-expander, .tree_box .dynatree-expander"
+      "description": "문서함 트리 첫 번째 폴더 노드 확장 토글",
+      "selector": "#snb .dynatree-expander:first-child, #snb .dynatree-node:first-child .dynatree-expander, #snb .dynatree-title:first-child"
     },
     {
       "type": "wait",
-      "description": "문서함 하위 계층 트리 펼침 대기",
-      "ms": 1200
-    },
-    {
-      "type": "click",
-      "description": "좌측 상단 [문서 등록] 버튼 클릭 (Phase 3)",
-      "selector": "button#docLeft_docRegBtn, button:has-text('문서 등록'):visible, .workset_btn button:has-text('문서 등록')"
-    },
-    {
-      "type": "wait",
-      "description": "문서함 선택 레이어 팝업 로딩 대기",
+      "description": "하위 문서함 목록 로딩 대기",
       "ms": 1500
     },
     {
       "type": "click",
-      "description": "문서함 선택 팝업 내 대상 문서함 노드 선택",
+      "description": "하위 일반 문서함 클릭 (목록 화면 조회)",
+      "selector": "#snb .dynatree-container li a.dynatree-title:visible, #snb a:has-text('전사문서함'):visible, #snb a:has-text('문서함'):visible, table.tbl_lst tbody tr:first-child td.sub a:visible, table tbody tr:first-child td[class*='sub'] a:visible, table tbody tr:first-child a:visible, ul.lst_vr_ul li:first-child a.sub_tp:visible, ul.lst_vr_ul li:first-child .sub a:visible, ul[id*='List'] li:first-child a.sub_tp:visible, ul[class*='lst'] li:first-child a:visible, .lst_type1 li:first-child a:visible"
+    },
+    {
+      "type": "wait",
+      "description": "선택 문서함의 문서 목록 로딩 대기",
+      "ms": 1800
+    },
+    {
+      "type": "click",
+      "description": "좌측 사이드바 [문서 등록] 버튼 클릭 (Phase 3)",
+      "selector": "#snb button:has-text('문서 등록'):visible, #snb button:has-text('등록'):visible, button:has-text('문서등록'):visible, button#docWriteBtn:visible"
+    },
+    {
+      "type": "wait",
+      "description": "문서함 선택 팝업 로딩 대기",
+      "ms": 1600
+    },
+    {
+      "type": "click",
+      "description": "문서함 선택 트리에서 등록 대상 폴더 선택",
       "selector": ".ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:not(:has(ul)) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:last-child a.dynatree-title:visible, .ui-dialog:visible [class*='tree'] .dynatree-node:not(.dynatree-folder) a:visible, .ui-dialog:visible [class*='tree'] li:last-child a:visible, .ui-dialog:visible .dynatree-container a.dynatree-title:visible"
     },
     {
       "type": "wait",
-      "description": "선택 문서함 활성화 상태 확인 대기",
+      "description": "선택된 대상 문서함 확인 대기",
       "ms": 1200
     },
     {
       "type": "click",
-      "description": "문서함 선택 팝업 하단 [확인] 버튼 클릭하여 등록 폼 진입",
+      "description": "문서함 선택 팝업 하단 [확인] 버튼 클릭",
       "selector": ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, button[id*='confirm']:visible, button[id*='Confirm']:visible, .ui-dialog:visible button.btn_pri:visible, .ui-dialog:visible button._confirm:visible"
     },
     {
       "type": "wait",
-      "description": "문서 등록 상세 폼 렌더링 대기",
-      "ms": 1800
+      "description": "문서 등록 작성 폼 화면 로딩 대기",
+      "ms": 2500
     },
     {
       "type": "type",
-      "description": "문서 제목 입력 필드에 '2026학년도 부서 업무 추진 계획서' 입력",
-      "selector": "input#subject:visible, input[name='subject']:visible, input[name*='subject']:visible, #atclWrite_subject:visible",
-      "text": "2026학년도 부서 업무 추진 계획서"
+      "description": "문서 제목 입력 ('2026년 상반기 업무 표준 가이드라인')",
+      "selector": "input#atclWrite_subject, input[id='atclWrite_subject']",
+      "text": "2026년 상반기 업무 표준 가이드라인"
     },
     {
       "type": "wait",
-      "description": "문서 제목 입력 확인 대기",
-      "ms": 1200
-    },
-    {
-      "type": "click",
-      "description": "공개 범위 및 권한 설정을 위한 '공개' 라디오/체크 옵션 클릭",
-      "selector": "label:has-text('공개'):visible, input[type='radio'][value='Y']:visible, input[name*='publ']:visible",
-      "force": true
-    },
-    {
-      "type": "wait",
-      "description": "공개범위 옵션 반영 대기",
-      "ms": 1200
-    },
-    {
-      "type": "click",
-      "description": "문서 공유/보안 등급 및 권한 설정 영역 확인 클릭",
-      "selector": ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, button[id*='confirm']:visible, button[id*='Confirm']:visible, .ui-dialog:visible button.btn_pri:visible, .ui-dialog:visible button._confirm:visible",
-      "force": true
-    },
-    {
-      "type": "wait",
-      "description": "권한 및 공유 설정 검토 대기",
+      "description": "제목 입력 확인 대기",
       "ms": 1200
     },
     {
       "type": "type",
       "description": "문서 본문 내용 작성",
-      "selector": "div[contenteditable='true']:visible, textarea#atclCn:visible, textarea:visible, textarea[placeholder*='내용']",
-      "text": "부서별 연간 주요 업무 목표 및 추진 일정에 대한 상세 계획 문서입니다."
+      "selector": "div[contenteditable='true']:visible, textarea#cn:visible, textarea:visible, .note-editable:visible",
+      "text": "1. 개요: 업무 표준화 추진 가이드\n2. 주요 준수사항: 그룹웨어 전자결재 및 문서 이력 관리 철저\n3. 시행일자: 2026년 3월 1일부"
     },
     {
       "type": "wait",
-      "description": "본문 내용 입력 확인 대기",
-      "ms": 1200
-    },
-    {
-      "type": "click",
-      "description": "문서 등록 폼 상단 [저장] 버튼 클릭 (Phase 4)",
-      "selector": "button#btn_save:visible, button:has-text('저장'):visible, button._save:visible, .btn_area button:has-text('저장')"
-    },
-    {
-      "type": "wait",
-      "description": "문서 저장 처리 및 목록 화면 로딩 대기",
-      "ms": 1800
-    },
-    {
-      "type": "type",
-      "description": "등록 문서 및 기존 자료 조회를 위해 검색창에 실제 첫 번째 행 문서명 자동 연동 입력 (Phase 5)",
-      "selector": "input[name*='searchWord']:visible, input#searchWord:visible, input[type='search']:visible, .srch_bar input:visible",
-      "text": "실시간 실제 목록 데이터",
-      "useScraped": "auto",
-      "dynamicStrategy": "first-row-title"
-    },
-    {
-      "type": "wait",
-      "description": "검색어 입력 확인 대기",
-      "ms": 1200
-    },
-    {
-      "type": "click",
-      "description": "문서 검색 실행 버튼 클릭",
-      "selector": "button[title*='검색']:visible, button.btn_ico:has(.ico_srch):visible, button:has-text('검색'):visible"
-    },
-    {
-      "type": "wait",
-      "description": "검색 결과 목록 갱신 대기",
+      "description": "본문 에디터 내용 확인 대기",
       "ms": 1500
     },
     {
       "type": "click",
-      "description": "검색 결과 첫 번째 문서 항목을 클릭하여 상세 내용 및 이력/권한 조회",
-      "selector": "table tbody tr:first-child a:visible, ul.lst_type1 li:first-child a:visible, table tbody tr:first-child td a:visible, table.tbl_lst tbody tr:first-child td.sub a:visible, table tbody tr:first-child td[class*='sub'] a:visible, table tbody tr:first-child a:visible, ul.lst_vr_ul li:first-child a.sub_tp:visible, ul.lst_vr_ul li:first-child .sub a:visible, ul[id*='List'] li:first-child a.sub_tp:visible, ul[class*='lst'] li:first-child a:visible, .lst_type1 li:first-child a:visible",
-      "useScraped": "auto"
+      "description": "문서 작성 상단 [저장] 버튼 클릭 (Phase 4)",
+      "selector": "button#savebtn:visible, button:has-text('저장'):visible, button:has-text('등록'):visible, .btn_area button:has-text('저장'):visible"
     },
     {
       "type": "wait",
-      "description": "문서 상세 내용, 첨부파일, 접근 권한 정보 확인 및 튜토리얼 마무리",
+      "description": "저장 처리 및 확인 알림 대기",
       "ms": 1800
+    },
+    {
+      "type": "click",
+      "description": "저장 완료 안내 팝업 [확인] 클릭 (표시 시)",
+      "selector": ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, button[id*='confirm']:visible, button[id*='Confirm']:visible, .ui-dialog:visible button.btn_pri:visible, .ui-dialog:visible button._confirm:visible"
+    },
+    {
+      "type": "wait",
+      "description": "문서 등록 완료 후 목록 새로고침 대기 (Phase 5)",
+      "ms": 3000
+    },
+    {
+      "type": "click",
+      "description": "등록된 문서 제목 클릭하여 상세 화면 진입",
+      "selector": "table tbody tr:first-child a:has-text('2026년 상반기 업무 표준 가이드라인'), table tbody tr:first-child a:visible, table.tbl_lst tbody tr:first-child td.sub a:visible, table tbody tr:first-child td[class*='sub'] a:visible, table tbody tr:first-child a:visible, ul.lst_vr_ul li:first-child a.sub_tp:visible, ul.lst_vr_ul li:first-child .sub a:visible, ul[id*='List'] li:first-child a.sub_tp:visible, ul[class*='lst'] li:first-child a:visible, .lst_type1 li:first-child a:visible"
+    },
+    {
+      "type": "wait",
+      "description": "문서 상세 조회 화면 로딩 대기",
+      "ms": 2200
+    },
+    {
+      "type": "click",
+      "description": "문서 상세 화면 내 '이력 정보' 또는 '문서 정보' 탭 클릭",
+      "selector": "a:has-text('이력정보'):visible, a:has-text('이력'):visible, a:has-text('문서정보'):visible, button:has-text('이력'):visible, table.tbl_lst tbody tr:first-child td.sub a:visible, table tbody tr:first-child td[class*='sub'] a:visible, table tbody tr:first-child a:visible, ul.lst_vr_ul li:first-child a.sub_tp:visible, ul.lst_vr_ul li:first-child .sub a:visible, ul[id*='List'] li:first-child a.sub_tp:visible, ul[class*='lst'] li:first-child a:visible, .lst_type1 li:first-child a:visible"
+    },
+    {
+      "type": "wait",
+      "description": "문서 이력 및 속성 탭 확인 대기",
+      "ms": 1500
+    },
+    {
+      "type": "click",
+      "description": "상세 화면 상단 [목록] 버튼 클릭 (목록 화면 복귀)",
+      "selector": "button:has-text('목록'):visible, a:has-text('목록'):visible, .btn_area button:has-text('목록'):visible, table.tbl_lst tbody tr:first-child td.sub a:visible, table tbody tr:first-child td[class*='sub'] a:visible, table tbody tr:first-child a:visible, ul.lst_vr_ul li:first-child a.sub_tp:visible, ul.lst_vr_ul li:first-child .sub a:visible, ul[id*='List'] li:first-child a.sub_tp:visible, ul[class*='lst'] li:first-child a:visible, .lst_type1 li:first-child a:visible"
+    },
+    {
+      "type": "wait",
+      "description": "문서 목록 화면 복귀 대기",
+      "ms": 1800
+    },
+    {
+      "type": "type",
+      "description": "문서 검색창에 방금 등록한 문서 키워드 입력",
+      "selector": "input[type='search']:visible, input[placeholder*='검색']:visible, input[name*='searchWord']:visible, .search_box input:visible",
+      "text": "업무 표준"
+    },
+    {
+      "type": "click",
+      "description": "검색 실행 버튼 클릭",
+      "selector": "button:has-text('검색'):visible, .search_box button:visible, button[title*='검색']:visible"
+    },
+    {
+      "type": "wait",
+      "description": "검색 결과 필터링 확인 및 튜토리얼 종료 아웃트로",
+      "ms": 2500
     }
   ]
 }
