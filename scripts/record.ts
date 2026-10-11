@@ -75,17 +75,20 @@ function sortSelectorsBySpecificity(parts: string[]): string[] {
   });
 }
 
-async function getLocatorWithWait(page: Page, action: BrowsePlanAction): Promise<Locator | null> {
+async function getLocatorWithWait(page: Page, action: BrowsePlanAction, isFastCheck: boolean = false): Promise<Locator | null> {
   const originalSelector = action.selector;
   const rawParts = (action.selector || "").split(",").map(s => s.trim()).filter(Boolean);
   const parts = sortSelectorsBySpecificity(rawParts);
   
-  // 1. 초기 3초(6회)는 가장 구체적인 상위 셀렉터(우선순위 최고)만으로 탐색하여,
+  const topAttempts = isFastCheck ? 2 : 6;
+  const allAttempts = isFastCheck ? 3 : 12;
+
+  // 1. 초기 시도는 가장 구체적인 상위 셀렉터(우선순위 최고)만으로 탐색하여,
   // 화면 로딩 중 덜 구체적인 Fallback 셀렉터가 먼저 매칭되어 잘못된 요소를 클릭하는 현상을 방지
   if (parts.length > 1) {
     const topCandidates = parts.slice(0, Math.min(2, parts.length)).join(", ");
     action.selector = topCandidates; 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < topAttempts; i++) {
       let el = await getLocator(page, action);
       if (el) {
         action.selector = originalSelector;
@@ -99,7 +102,7 @@ async function getLocatorWithWait(page: Page, action: BrowsePlanAction): Promise
   // 2. 구체적 셀렉터가 끝내 나타나지 않으면, 모든 Fallback을 포함하여(구체적인 순서대로) 탐색
   let el = null;
   action.selector = parts.join(", ");
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < allAttempts; i++) {
     el = await getLocator(page, action);
     if (el) break;
     await page.waitForTimeout(500);
@@ -840,6 +843,158 @@ export function isOptionalAction(action: BrowsePlanAction, momentId?: number, to
 }
 
 /**
+ * Determines if an action is an essential, core step that CANNOT be skipped.
+ * Critical actions:
+ * - Save / Submit / Finalize buttons (저장, 상신, 등록 버튼, 발행, 완료)
+ * - Primary Title / Subject input (제목, subject, title)
+ * - Primary Content / Body input (본문, 내용, editor, cn)
+ * - Primary Module Navigation (포탈 전체메뉴, btn_svc_open)
+ * - Mandatory Form Container Selection (문서함 선택, 캘린더 선택, 게시판 선택, 양식 선택)
+ */
+export function isCriticalAction(action: BrowsePlanAction): boolean {
+  if (action.optional === true) return false;
+
+  const desc = (action.description || "").toLowerCase();
+  const sel = (action.selector || "").toLowerCase();
+
+  // 1. Submit / Save buttons
+  if (
+    desc.includes("저장") ||
+    desc.includes("상신") ||
+    desc.includes("등록 버튼") ||
+    desc.includes("발행") ||
+    desc.includes("완료") ||
+    sel.includes("savebtn") ||
+    sel.includes("btn_save") ||
+    sel.includes("btn_submit")
+  ) {
+    return true;
+  }
+
+  // 2. Primary Title / Subject input
+  if (
+    (desc.includes("제목") || sel.includes("subject") || sel.includes("title")) &&
+    (action.type === "type" || desc.includes("입력") || desc.includes("작성") || desc.includes("클릭"))
+  ) {
+    return true;
+  }
+
+  // 3. Primary Body / Content input
+  if (
+    (desc.includes("본문") || desc.includes("내용") || sel.includes("editor") || sel.includes("cn") || sel.includes("content")) &&
+    (action.type === "type" || desc.includes("입력") || desc.includes("작성") || desc.includes("클릭"))
+  ) {
+    return true;
+  }
+
+  // 4. Primary Module Navigation (Drawer)
+  if (desc.includes("전체메뉴") || sel.includes("btn_svc_open") || desc.includes("포탈 전체메뉴")) {
+    return true;
+  }
+
+  // 5. Container / Folder Selection in Modal
+  if (
+    (desc.includes("문서함") || desc.includes("게시판") || desc.includes("캘린더") || desc.includes("폴더") || desc.includes("양식")) &&
+    (desc.includes("선택") || desc.includes("클릭") || desc.includes("지정"))
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Detects whether an action represents a non-essential sub-option or cosmetic field
+ * (e.g. 보존기간, 공개범위, 태그, 개요, 설명, 상세옵션, 알림, 첨부파일, 장소 등)
+ * which frequently does not exist or is folded in modern enterprise web forms.
+ */
+export function isNonCriticalSubOption(action: BrowsePlanAction): boolean {
+  const desc = (action.description || "").toLowerCase();
+  const sel = (action.selector || "").toLowerCase();
+
+  const subOptionKeywords = [
+    "보존기간",
+    "보존 기간",
+    "보존연한",
+    "공개범위",
+    "공개 범위",
+    "공개여부",
+    "공개 여부",
+    "태그",
+    "tag",
+    "키워드",
+    "keyword",
+    "개요",
+    "상세 옵션",
+    "상세옵션",
+    "상세 설정",
+    "상세설정",
+    "추가 옵션",
+    "추가옵션",
+    "부가 옵션",
+    "부가옵션",
+    "알림 설정",
+    "알림",
+    "중요도",
+    "우선순위",
+    "장소",
+    "종일",
+    "체크박스",
+    "첨부",
+    "파일첨부",
+    "설명 입력",
+  ];
+
+  return subOptionKeywords.some((kw) => desc.includes(kw) || sel.includes(kw));
+}
+
+/**
+ * Determines whether a failed action can be safely skipped without crashing the recording.
+ */
+export function canSafelySkipFailedAction(
+  action: BrowsePlanAction,
+  momentId?: number,
+  totalActions?: number,
+  selfHealReason?: string
+): boolean {
+  if (isCriticalAction(action)) {
+    // If it's near outro (last 2 actions), allow skipping even if it looks critical (like an extra confirm)
+    if (momentId !== undefined && totalActions !== undefined && momentId >= totalActions - 1) {
+      return true;
+    }
+    return false;
+  }
+
+  if (isOptionalAction(action, momentId, totalActions)) {
+    return true;
+  }
+
+  if (isNonCriticalSubOption(action)) {
+    return true;
+  }
+
+  if (selfHealReason) {
+    const r = selfHealReason.toLowerCase();
+    if (
+      r.includes("생략") ||
+      r.includes("선택적") ||
+      r.includes("존재하지 않는") ||
+      r.includes("fail-fast") ||
+      r.includes("찾을 수 없") ||
+      r.includes("표시되지 않")
+    ) {
+      return true;
+    }
+  }
+
+  if (momentId !== undefined && totalActions !== undefined && momentId >= totalActions - 2) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Invokes the AI Runtime Self-Healing Agent to find the real element on the live screen,
  * automatically corrects the action selector, saves it to disk, and returns the healed locator.
  */
@@ -873,8 +1028,11 @@ async function trySelfHealAction(moments: any[], startTime: number,
 
   console.log(`  [🤖 AI 실시간 자가 치유 가동] 실시간 화면 스크린샷과 DOM 후보군을 정밀 분석 중...`);
   let healResult = await selfHealElement(page, action, momentId, plan.actions.length, dataDir);
+  if (healResult?.reason) {
+    (action as any)._lastHealReason = healResult.reason;
+  }
   
-  // 🚨 AI가 화면에 존재하지 않는 조건부/선택적 단계로 판단한 경우 즉시 안전 스킵 (새로고침 절대 금지)
+  // 🚨 AI가 화면에 존재하지 않는 조건부/선택적 단계로 판단했거나 비필수 부가 단계인 경우 즉시 안전 스킵 (새로고침 절대 금지)
   const isOptional = isOptionalAction(action, momentId, plan.actions.length);
   const isSelfHealSkipped = Boolean(
     healResult &&
@@ -882,11 +1040,14 @@ async function trySelfHealAction(moments: any[], startTime: number,
     (healResult.reason?.includes("생략") ||
      healResult.reason?.includes("선택적") ||
      healResult.reason?.includes("존재하지 않는") ||
-     healResult.reason?.includes("Fail-Fast"))
+     healResult.reason?.includes("Fail-Fast") ||
+     healResult.reason?.includes("찾을 수 없"))
   );
+  const canSkip = canSafelySkipFailedAction(action, momentId, plan.actions.length, healResult?.reason);
 
-  if (isOptional || isSelfHealSkipped) {
-    console.log(`  [✨ 조건부 단계 안전 스킵] 화면에 존재하지 않는 조건부/선택적 단계("${action.description}")이므로 새로고침 없이 안전하게 건너뜁니다.`);
+  if (isOptional || isSelfHealSkipped || canSkip) {
+    (action as any)._wasSkipped = true;
+    console.log(`  [✨ 비필수 단계 안전 스킵] 화면에 부가 옵션("${action.description}")이 존재하지 않으므로 새로고침 없이 안전하게 건너뜁니다.`);
     return null;
   }
 
@@ -933,6 +1094,9 @@ async function trySelfHealAction(moments: any[], startTime: number,
       
       console.log(`  [🤖 AI 실시간 자가 치유 2차 가동] 새로고침 후 다시 스크린샷 분석 중...`);
       healResult = await selfHealElement(page, action, momentId, plan.actions.length, dataDir);
+      if (healResult?.reason) {
+        (action as any)._lastHealReason = healResult.reason;
+      }
     } catch (reloadErr: any) {
       console.warn(`  ⚠️ 화면 새로고침 중 오류 발생: ${reloadErr.message}`);
     }
@@ -969,10 +1133,18 @@ async function trySelfHealAction(moments: any[], startTime: number,
     }
   } else if (healResult && !healResult.success) {
     console.warn(`  [AI 자가 치유 포기] 💡 사유: ${healResult.reason}`);
+    if (canSafelySkipFailedAction(action, momentId, plan.actions.length, healResult.reason)) {
+      (action as any)._wasSkipped = true;
+      console.log(`  [✨ 비필수 단계 안전 스킵] 해당 단계("${action.description}")는 비필수 부가 옵션이므로 건너뛰고 다음 필수 단계로 진행합니다.`);
+    }
     return null;
   }
 
   console.warn(`  [AI 자가 치유 미완료] 현재 화면에서 적합한 요소를 확정하지 못했습니다.`);
+  if (canSafelySkipFailedAction(action, momentId, plan.actions.length)) {
+    (action as any)._wasSkipped = true;
+    console.log(`  [✨ 비필수 단계 안전 스킵] 해당 단계("${action.description}")는 비필수 부가 옵션이므로 건너뛰고 다음 필수 단계로 진행합니다.`);
+  }
   return null;
 }
 
@@ -1811,19 +1983,19 @@ async function main() {
 
         case "hover": {
           await autoRecoverActiveModals(page, action, moments, recordingStart);
-          let el = await getLocatorWithWait(page, action);
+          const isOptionalOrSub = isOptionalAction(action, momentId, plan.actions.length) || isNonCriticalSubOption(action);
+          let el = await getLocatorWithWait(page, action, isOptionalOrSub);
           if (!el) {
             el = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
           }
           if (!el) {
-            if (isOptionalAction(action, momentId, plan.actions.length)) {
-              console.log(`  [선택적 액션 스킵] 요소를 찾을 수 없어 안전하게 스킵합니다: ${action.description}`);
+            if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+              console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 통과합니다: ${action.description}`);
               break;
             }
             throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
           }
-          const isOptional = isOptionalAction(action, momentId, plan.actions.length);
-          const waitTimeout = isOptional ? 2000 : (momentId >= plan.actions.length - 2) ? 2000 : 3500;
+          const waitTimeout = isOptionalOrSub ? 2000 : (momentId >= plan.actions.length - 2) ? 2000 : 3500;
           try {
             await el.waitFor({ state: "visible", timeout: waitTimeout });
           } catch (waitErr) {
@@ -1831,8 +2003,8 @@ async function main() {
             if (healed) {
               el = healed;
             } else {
-              if (isOptionalAction(action, momentId, plan.actions.length)) {
-                console.log(`  [선택적 액션 스킵 / 아웃트로 무시] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 스킵합니다: ${action.description}`);
+              if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+                console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 통과합니다: ${action.description}`);
                 break;
               }
               throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
@@ -1870,19 +2042,19 @@ async function main() {
 
         case "dblclick": {
           await autoRecoverActiveModals(page, action, moments, recordingStart);
-          let el = await getLocatorWithWait(page, action);
+          const isOptionalOrSub = isOptionalAction(action, momentId, plan.actions.length) || isNonCriticalSubOption(action);
+          let el = await getLocatorWithWait(page, action, isOptionalOrSub);
           if (!el) {
             el = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
           }
           if (!el) {
-            if (isOptionalAction(action, momentId, plan.actions.length)) {
-              console.log(`  [선택적 액션 스킵] 요소를 찾을 수 없어 안전하게 스킵합니다: ${action.description}`);
+            if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+              console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 통과합니다: ${action.description}`);
               break;
             }
             throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
           }
-          const isOptional = isOptionalAction(action, momentId, plan.actions.length);
-          const waitTimeout = isOptional ? 2500 : (momentId >= plan.actions.length - 2) ? 3000 : 25000;
+          const waitTimeout = isOptionalOrSub ? 2500 : (momentId >= plan.actions.length - 2) ? 3000 : 15000;
           try {
             await el.waitFor({ state: "visible", timeout: waitTimeout });
           } catch (waitErr) {
@@ -1890,8 +2062,8 @@ async function main() {
             if (healed) {
               el = healed;
             } else {
-              if (isOptionalAction(action, momentId, plan.actions.length)) {
-                console.log(`  [선택적 액션 스킵] 요소를 찾을 수 없어 안전하게 스킵합니다: ${action.description}`);
+              if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+                console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 통과합니다: ${action.description}`);
                 break;
               }
               throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
@@ -1935,7 +2107,8 @@ async function main() {
 
         case "click": {
           await autoRecoverActiveModals(page, action, moments, recordingStart);
-          let el = await getLocatorWithWait(page, action);
+          const isOptionalOrSub = isOptionalAction(action, momentId, plan.actions.length) || isNonCriticalSubOption(action);
+          let el = await getLocatorWithWait(page, action, isOptionalOrSub);
 
           // Method 2: Dynamic matching if clicking a searched item or using a scraped variable
           const isSearchExecutionButton =
@@ -2029,16 +2202,15 @@ async function main() {
             el = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
           }
           if (!el) {
-            if (isOptionalAction(action, momentId, plan.actions.length)) {
-              console.log(`  [✨ 선택적 액션 안전 스킵] 요소를 찾을 수 없으나 조건부/선택적 단계("${action.description}")이므로 안전하게 통과합니다.`);
+            if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+              console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 통과합니다: ${action.description}`);
               break;
             }
             throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
           }
 
           // 1. Wait for element to become visible on the screen
-          const isOptional = isOptionalAction(action, momentId, plan.actions.length);
-          const waitTimeout = isOptional ? 2500 : (momentId >= plan.actions.length - 2) ? 3000 : 25000;
+          const waitTimeout = isOptionalOrSub ? 2500 : (momentId >= plan.actions.length - 2) ? 3000 : 15000;
           try {
             await el.waitFor({ state: action.force ? "attached" : "visible", timeout: waitTimeout });
           } catch (waitErr) {
@@ -2102,8 +2274,8 @@ async function main() {
             }
 
             if (!resolvedViaLabel) {
-              if (isOptionalAction(action, momentId, plan.actions.length)) {
-                console.log(`  [✨ 선택적 액션 안전 스킵] 요소가 화면에 표시되지 않으나 조건부/선택적 단계("${action.description}")이므로 안전하게 스킵합니다.`);
+              if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+                console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 요소가 화면에 표시되지 않으나 필수 핵심 단계가 아니므로 안전하게 스킵합니다: ${action.description}`);
                 break;
               }
               throw new Error(`요소가 화면에 표시되지 않습니다 (${waitTimeout}ms 초과): ${action.selector}`);
@@ -2178,8 +2350,8 @@ async function main() {
                   el = healed;
                   await healed.click({ timeout: 4000, force: true }).catch(() => healed.dispatchEvent("click", undefined, { timeout: 1000 }));
                 } else {
-                  if (momentId >= plan.actions.length - 2) {
-                    console.log(`  [✨ 아웃트로 예외 허용] 영상 마지막 부분의 확인/닫기 단계를 수행하지 못했으나, 본 목적을 달성했으므로 시나리오를 정상 종료합니다.`);
+                  if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+                    console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 클릭을 수행하지 못했으나 필수 핵심 단계가 아니므로 안전하게 스킵합니다: ${action.description}`);
                     break;
                   }
                   throw clickErr;
@@ -2219,20 +2391,20 @@ async function main() {
 
         case "type": {
           await autoRecoverActiveModals(page, action, moments, recordingStart);
-          let el = await getLocatorWithWait(page, action);
+          const isOptionalOrSub = isOptionalAction(action, momentId, plan.actions.length) || isNonCriticalSubOption(action);
+          let el = await getLocatorWithWait(page, action, isOptionalOrSub);
           if (!el) {
             el = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
           }
           if (!el) {
-            if (isOptionalAction(action, momentId, plan.actions.length)) {
-              console.log(`  [✨ 선택적 액션 안전 스킵] 입력 요소를 찾을 수 없으나 조건부/선택적 단계("${action.description}")이므로 안전하게 스킵합니다.`);
+            if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+              console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 입력 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 통과합니다: ${action.description}`);
               break;
             }
             throw new Error(`입력 요소를 찾을 수 없습니다: ${action.selector}`);
           }
 
-          const isOptional = isOptionalAction(action, momentId, plan.actions.length);
-          const waitTimeout = isOptional ? 2500 : 25000;
+          const waitTimeout = isOptionalOrSub ? 2500 : 15000;
           try {
             await el.waitFor({ state: "visible", timeout: waitTimeout });
           } catch (waitErr) {
@@ -2266,8 +2438,8 @@ async function main() {
             }
 
             if (!resolved) {
-              if (isOptionalAction(action, momentId, plan.actions.length)) {
-                console.log(`  [✨ 선택적 액션 안전 스킵] 입력 요소를 찾을 수 없으나 조건부/선택적 단계("${action.description}")이므로 안전하게 스킵합니다.`);
+              if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+                console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 입력 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 스킵합니다: ${action.description}`);
                 break;
               }
               throw new Error(`입력 요소를 찾을 수 없거나 화면에 표시되지 않습니다: ${action.selector}`);
