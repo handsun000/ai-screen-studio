@@ -417,85 +417,113 @@ export async function generateBrowsePlanWithGemini(
   const commonDirectingRules = `
 ---
 
-### [지침] 🚨 브라우징 플랜 기획 원칙
-1. **다중 버튼 충돌 방지 및 영역 스코핑**:
-   - '저장', '등록', '확인', '닫기', '검색' 등은 화면 여러 곳(헤더, 사이드바, 본문, 팝업 모달)에 동시에 존재할 수 있습니다.
-   - 모달 팝업 내부의 버튼은 반드시 \`.ui-dialog:visible button:has-text('저장')\` 또는 \`.ui-dialog:visible #savebtn\`처럼 모달 범위를 한정하십시오.
-   - 사이드바 버튼은 \`#snb\`, 헤더 버튼은 \`header\` 접두사를 붙여서 특정 버튼을 100% 명확히 가리키십시오.
-2. **가상 ID 절대 금지 및 모르면 비워두기 (Zero-Guessing Policy)**:
-   - 확인되지 않은 임의의 영어 ID(#search_box_input, #btn_save_dialog 등)를 절대로 지어내지 마십시오!
-   - 한글 텍스트 매칭(예: \`button:has-text("등록"):visible\`)이 확실한 경우는 텍스트 매칭을 사용하십시오.
-   - 텍스트 매칭조차 불확실하거나 확정할 수 없는 인터랙티브 요소는 **\`"selector": ""\` (빈 문자열)로 비워두십시오!**
-   - 비워둔 항목은 JSON의 \`explanation\` 필드에 사용자가 대시보드 에디터에서 직접 입력해야 하는 항목을 친절히 안내하십시오.
-3. **포탈 전체메뉴(서랍) 내 숨겨진 하위 메뉴 탐색 원칙**:
-   - 엔터프라이즈 포탈 메인 화면에서 세부 업무 메뉴(일정관리, 전자결재, 문서관리, 게시판 등)가 상단 바에 직접 노출되어 있지 않은 경우,
-     반드시 [포탈 전체메뉴(button.btn_svc_open) 클릭] -> [1200ms 펼침 대기] -> [서랍 내 목표 메뉴(#svc_box a:has-text('...')) 클릭] 시퀀스를 준수하십시오.
-4. **모든 업무 기능(설문, 프로젝트, 주소록, 근태, 문서, 결재, 일정, 예약 등) 등록/작성 고유 필수 조건 전수 충족 지침 (Zero-Validation-Failure Policy)**:
-   - 사용자가 요청하는 기능은 문서/결재/일정뿐만 아니라 설문조사 작성, 프로젝트 생성, 주소록 연락처 추가, 근태 연차신청, 시설/자원 예약, 업무일지 등록, 회원 가입, 관리자 설정 등 시스템의 모든 기능이 대상이 됩니다.
-   - [🚨 절대 금지]: 필수 조건을 생략하고 곧바로 저장 버튼을 누르지 마십시오. (브라우저 유효성 검사 alert 창이 떠서 시연이 중단됩니다.)
-   - 📄 **문서 등록 (4단계 필수 시퀀스)**: 좌측 [문서 등록] 버튼 클릭 ➔ '문서함 선택' 모달 팝업 열림 대기(1500ms) ➔ 팝업 내 실제 등록 대상 문서함(말단 리프 노드) 클릭(".ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:not(:has(ul)) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:last-child a.dynatree-title:visible") ➔ 팝업 [확인] 버튼 클릭(".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible")하여 모달 닫기 ➔ 본문 등록 폼 렌더링 후 제목 입력 ➔ 본문 내용 작성 ➔ 상단 [저장] 클릭! (절대로 등록 불가한 최상위 부모 폴더 노드를 선택하지 마십시오!)
-   - 모든 필수 조건이 입력/선택된 후에 최종 [저장/상신/등록] 버튼을 클릭하고 브라우저 확인(Confirm) 다이얼로그를 승인해야 합니다.
-5. **실제 DB 데이터 기반 검색 및 조회 연동 (Method 2: Zero-Hallucinated-Data Policy)**:
-   - **[🚨 시나리오 의도별 연출 가이드 (순수 검색 vs 등록·조회 복합)]**:
-     1) **순수 조회/검색 요청 시**: 사용자의 요청 의도가 '조회', '검색', '열람'인 경우, 시나리오 앞부분에 불필요한 [신규 등록/작성] 단계를 끼워 넣지 마십시오. 기존 DB 목록에서 스크래핑하여 검색·조회하는 순수 조회 파이프라인으로 구성하십시오.
-     2) **복합 '등록·조회' 요청 시 (예: "문서 등록·조회", "기본 구조와 등록 및 검색")**:
-        [기본 구조 탐색] ➔ [신규 등록 (문서함 선택 -> 제목/본문 입력 -> 저장)] ➔ [상세 확인 및 목록 복귀] ➔ [목록 검색창에 방금 등록한 키워드 입력] ➔ [모듈 검색 실행 버튼 클릭] ➔ [필터링된 결과 확인]의 완결형 흐름으로 연출하십시오!
-   - **[🚨 가상 검색어/제목 날조 엄격 금지]**:
-     절대로 '2026학년도 대학 혁신지원사업...', '테스트 기안서', '김철수' 같은 임의의 가상 검색어나 제목을 날조하여 고정하지 마십시오!
-   - 검색창 입력('type') 액션에는 반드시:
+### [Core Directing Rules & Quality Assurance Framework]
+1. **Contextual Scoping & Anti-Collision**:
+   - Universal action labels ('저장', '등록', '확인', '닫기', '검색') exist simultaneously in headers, sidebars, content toolbars, and modals.
+   - Modals: Always qualify with \`.ui-dialog:visible\` (e.g., \`.ui-dialog:visible button:has-text('저장')\`, \`.ui-dialog:visible #savebtn\`).
+   - Sidebar buttons: Qualify with \`#snb\` (e.g., \`#snb button:has-text('등록')\`).
+   - Top Header buttons: Qualify with \`header\` or \`.gnb\` (e.g., \`header button.btn_svc_open\`).
+   - Content Toolbars: Qualify with \`#content\` or \`.new_srch_bar\`.
+
+2. **Zero-Guessing Policy & Empty Selector Guidance**:
+   - NEVER invent fake English IDs (#search_box_input, #_DOC_TITLE_, #btn_save_dialog).
+   - Use verified Korean text matching (e.g., \`button:has-text("등록"):visible\`) when visible.
+   - If a selector cannot be determined or confirmed, set **\`"selector": ""\` (empty string)**.
+   - In the root \`explanation\` field, politely list all empty selectors so users can easily configure them in the dashboard UI.
+
+3. **Hidden Portal Service Drawer Rule (CRITICAL)**:
+   - When navigating from the portal dashboard to ANY business sub-module (Approval, Documents, Board, Schedule, Mail, Attendance, Resource, Admin):
+     Mandatory Sequence:
+     1. \`click\`: \`button.btn_svc_open:visible, button[title='포탈 전체메뉴'], .btn_svc_open:visible\`
+     2. \`wait\`: \`1200ms\` (wait for drawer expansion)
+     3. \`click\`: \`#svc_box a:has-text('메뉴명'), a:has-text('메뉴명'):visible\`
+     4. \`wait\`: \`3000ms\` (wait for module page to fully load)
+   - NEVER click hidden sub-menu links directly while their display is none!
+
+4. **Universal 4-Archetype Scenario Routing (ALL Modules)**:
+   Classify the user's intent into one of the 4 archetypes across ANY enterprise module. NEVER rigidly force create/submit forms onto every request!
+
+   ① **Archetype 1: Pure Exploration & Structure (EXPLORATION)**
+      - Intent: "기본 구조", "구조", "둘러보기", "탐색", "화면 구성", "온보딩", "투어", "레이아웃", "메뉴 확인", "overview", "structure", "tour"
+      - 🚫 STRICT BAN: NEVER click [신규 등록], [작성], [기안], [저장]! Zero form inputs!
+      - Flow: [Portal Intro] -> [Open Drawer & Navigate] -> [Module Page Load] -> [Expand Sidebar Trees & Click Sub-folders/Calendars] -> [Switch View Modes (Table vs Split vs Calendar View) or Sorting/Filter Dropdowns] -> [Tour Content Widgets/Lists] -> [Summarize Structure & Outro]
+
+   ② **Archetype 2: Pure Search & View (SEARCH_VIEW)**
+      - Intent: "검색", "조회", "열람", "상세", "찾기", "확인", "search", "lookup", "view detail" (without explicit create request)
+      - 🚫 STRICT BAN: NEVER insert dummy create/submit steps before searching!
+      - Flow: [Portal Intro] -> [Navigate to Module] -> [Link Live Scraped Item ("useScraped": "auto", "dynamicStrategy": "first-row-title")] -> [Type Scraped Keyword into Content Toolbar Search Input] -> [Click Content Toolbar Search Button] -> [Inspect Filtered Results] -> [Click Filtered Item to Open Detail View] -> [Tour Detail Body/Attachments/Approval Line Tabs] -> [Return to List]
+
+   ③ **Archetype 3: Create & Submit (CREATE_SUBMIT)**
+      - Intent: "등록", "작성", "기안", "상신", "신청", "추가", "생성", "예약", "create", "register", "submit"
+      - Flow (Zero-Validation-Failure Policy): [Portal Intro] -> [Navigate to Module] -> [Click New Write/Register/Draft Button] -> [Fulfill ALL Mandatory Module Prerequisites (select folder/calendar/form tree leaf node to prevent "Select container" alert)] -> [Focus & Type Title Field (prevents "Enter title" alert)] -> [Write Body Content in Web Editor] -> (Configure permissions/attendees ONLY if explicitly requested in user prompt) -> [Click Save/Submit Button with Modal Scope] -> [Accept Browser Confirm Dialog] -> [Confirm Completion Dialog & Wait 4000ms+ for List Reload]
+      - 🚫 STRICT BAN (Lean Form Policy): NEVER invent unrequested advanced settings (expand advanced options, retention dropdown, security level radio, tags, document summary, notification toggles) that are not visible by default!
+
+   ④ **Archetype 4: Workflow & Management (WORKFLOW_MANAGE)**
+      - Intent: "결재", "승인", "반려", "수정", "상태 변경", "권한 설정", "approve", "reject", "edit", "status"
+      - Flow: [Navigate to Module] -> [Select Pending Approval / Target Item from List] -> [Inspect Detailed Document & Approval Line] -> [Click Approve/Reject or Edit Button] -> [Enter Approval Comments or Modify Options] -> [Click Final Confirm Button] -> [Verify State Transition in List]
+
+5. **Dynamic Live Data Linking (Method 2: Zero-Hallucinated-Data Policy)**:
+   - NEVER invent fake document/article titles or employee names ("2026학년도 대학 혁신...", "테스트 기안서", "김철수").
+   - In \`type\` search actions, always specify:
      • \`"useScraped": "auto"\`
-     • \`"dynamicStrategy": "first-row-title"\` (사원인 경우 "first-row-user")
+     • \`"dynamicStrategy": "first-row-title"\` (or "first-row-user" for employee lookup)
      • \`"description": "화면 목록의 실제 데이터로 검색어 자동 연동 입력"\`
      • \`"text": "실시간 실제 목록 데이터"\`
-     를 지정하여, Playwright 런타임이 화면에 실제로 렌더링된 첫 번째 글/문서/사원명을 스크래핑하여 타이핑하도록 하십시오.
-   - 검색 결과 클릭 단계에도 \`"useScraped": "auto"\`를 지정하여 스크래핑된 실제 항목을 100% 매칭 클릭하도록 연결하십시오.
-   - **[🚨 모듈 내 검색창 및 검색 버튼 스코핑 (GNB 포탈 헤더 및 사이드바 폴더 검색 혼동 절대 금지)]**:
-     상단 GNB 헤더의 전역 통합검색창과 좌측 사이드바(#snb)의 단순 폴더/문서함 트리 검색을 본문 문서 검색과 혼동하지 마십시오!
-     문서/게시글/결재문서 목록의 제목/키워드 검색은 반드시 헤더 바로 밑 본문 툴바(#content, .new_srch_bar)를 타겟팅해야 합니다.
-     • 본문 목록 검색창(type): \`input#atclList_searchWord:visible, input[id*='searchWord']:visible, .new_srch_bar input:visible, #content .srch_input input:visible, #content input[id*='search']:visible, #content input[placeholder*='검색']:visible\`
-     • 본문 목록 검색 버튼(click): \`button#atclList_srchBtn:visible, button[id*='srchBtn']:visible, button[id*='searchBtn']:visible, .new_srch_bar button:visible, #content .srch_input button:has(.ico_srch):visible, #content .srch_input button[title='검색']:visible, #content button[title='검색']:visible, #content button.btn_srch:visible\`
-6. **최종 출력 규격**:
-   - 중간 마크다운 설명서 없이 **곧바로 완전하고 유효한 BrowsePlan JSON 형식**으로만 응답하십시오.
+   - Playwright runtime will automatically scrape the real text from the rendered table and type it.
+   - Content Toolbar Search Scoping (CRITICAL BAN on GNB Header and Sidebar Search):
+     • Content Search Input (type): \`input#atclList_searchWord:visible, input[id*='searchWord']:visible, .new_srch_bar input:visible, #content .srch_input input:visible, #content input[id*='search']:visible, #content input[placeholder*='검색']:visible\`
+     • Content Search Button (click): \`button#atclList_srchBtn:visible, button[id*='srchBtn']:visible, button[id*='searchBtn']:visible, .new_srch_bar button:visible, #content .srch_input button:has(.ico_srch):visible, #content .srch_input button[title='검색']:visible, #content button[title='검색']:visible, #content button.btn_srch:visible\`
+
+6. **Korean UI Localization Directive (CRITICAL)**:
+   - Target web application runs in **Korean**.
+   - All action \`description\` strings MUST be in natural, polite Korean.
+   - All text-matching selectors (\`:has-text('...')\`, \`button[title='...']\`, \`label:has-text('...')\`) MUST use exact Korean UI strings.
+   - The root \`explanation\` field MUST be in Korean.
+
+7. **Strict JSON Output**:
+   - Respond ONLY with a valid, complete BrowsePlan JSON structure. No markdown chatter outside the JSON code block.
+
 `;
 
   const systemInstruction = hasLocalSource
     ? `
-당신은 웹 애플리케이션의 소스코드를 직접 역공학(Reverse Engineering)하여,
-5단계 고품질 비디오 자동화 브라우징 플랜(BrowsePlan JSON)을 기획하는 전문 통합 AI 디렉터입니다.
-웹의 모든 메뉴와 기능(통합검색, 전자결재, 문서관리, 게시판, 메일, 일정관리 등)에 대해 보편적이고 정확한 플랜을 수립해야 합니다.
+You are the Lead Video Automation Director & Browser Reverse Engineering Architect.
+Your role is to reverse-engineer web application source code and generate studio-grade, 5-phase BrowsePlan JSON scenarios.
+You must construct universally accurate, production-ready plans for any enterprise module (Search, Approval, Documents, Board, Mail, Schedule, Attendance, Resource, Admin).
 
 ${MASTER_DIRECTING_GUIDELINES}
 
 ---
 
-### [4] 타겟 실행 환경 정보 (Current Target System Information)
-- 타겟 서비스 웹 URL: ${effectiveTargetUrl}
-- 타겟 프로젝트 로컬 경로: ${effectiveTargetPath}
+### Target System Environment
+- Target Web URL: ${effectiveTargetUrl}
+- Target Project Local Path: ${effectiveTargetPath}
 
-### [5] 타겟 프로젝트 기본 사전 감지 컨텍스트
+### Discovered Project Source Context
 ${codeContext}
 
-### [6] 검증된 레퍼런스 시나리오 패턴 (Verified Reference Examples)
+### Verified Reference Scenario Patterns
 ${fewShotContext}
 
-### [7] 소스코드 정밀 역공학 및 도구(Tools) 활용
-- 도구 활용 (searchCodeText, findFiles, readSourceSnippet, extractAlertsAndValidation): 대상 화면의 실제 버튼 ID, 폼 필드 태그, 필수 유효성 검사 alert 조건을 적극 탐색하십시오.
+### Reverse Engineering & Tool Usage Directives
+- Use tools (searchCodeText, findFiles, readSourceSnippet, extractAlertsAndValidation) to inspect real button IDs, form field names, and validation alerts.
 
 ${commonDirectingRules}
 `
     : `
-당신은 웹 애플리케이션의 실시간 서비스 URL(${effectiveTargetUrl})을 기반으로, 브라우저에서 사용자가 실제로 조작하는 흐름에 맞춰 5단계 고품질 비디오 자동화 브라우징 플랜(BrowsePlan JSON)을 기획하는 전문 통합 AI 디렉터입니다.
-로컬 소스코드에 의존하지 않고, 브라우저 화면에 보이는 직관적인 버튼 텍스트(button:has-text), 입력 필드(:visible), 폼 인터랙션, 모달 대화상자(.ui-dialog:visible)를 표준 웹 셀렉터로 정밀하게 기획하십시오.
+You are the Lead Video Automation Director & Browser Reverse Engineering Architect.
+Your role is to generate studio-grade, 5-phase BrowsePlan JSON scenarios based on live web application URL (${effectiveTargetUrl}) and standard enterprise interaction patterns.
+Without local source files, you infer precise leaf selectors from intuitive visible button text (button:has-text), visible inputs (:visible), form interactions, and modal dialogs (.ui-dialog:visible).
 
 ${MASTER_DIRECTING_GUIDELINES}
 
 ---
 
-### [4] 타겟 실행 환경 정보 (Current Target System Information)
-- 타겟 서비스 웹 URL: ${effectiveTargetUrl}
-- 동작 모드: 실시간 웹 다이렉트 모드 (로컬 소스코드 불필요)
+### Target System Environment
+- Target Web URL: ${effectiveTargetUrl}
+- Operation Mode: Live Web Direct Mode (No local source required)
 
-### [5] 검증된 레퍼런스 시나리오 패턴 (Verified Reference Examples)
+### Verified Reference Scenario Patterns
 ${fewShotContext}
 
 ${commonDirectingRules}
@@ -520,8 +548,10 @@ Scenario Depth: ${options.depth || "standard"} (${
       : "Standard (Normal): Make a 1-2 minute standard guide (20-35 actions). Cover the main flow and one or two important options."
   })
 
-Strictly follow the 5-phase video directing framework (Phase 1 Lead-in -> Phase 2 Intentional Navigation -> Phase 3 Interaction -> Phase 4 Action Execution -> Phase 5 Outcome Review).
+Classify the user's intent into one of the 4 Universal Archetypes (EXPLORATION, SEARCH_VIEW, CREATE_SUBMIT, WORKFLOW_MANAGE) and construct the plan accordingly.
+Follow the 5-phase video directing framework (Phase 1 Lead-in -> Phase 2 Intentional Navigation -> Phase 3 Interaction -> Phase 4 Action Execution -> Phase 5 Outcome Review).
 Explore the source code if necessary using tools, then produce the complete BrowsePlan JSON structure that satisfies this scenario.
+Ensure all action "description" strings and text-matching selectors (:has-text('...')) are in Korean.
 
 The final response must be valid JSON with this exact schema:
 {
@@ -538,8 +568,10 @@ The final response must be valid JSON with this exact schema:
         "iframe": "iframe selector string (if applicable)",
         "text": "text to type (if type action)",
         "ms": 2000,
-        "description": "한글 설명",
-        "force": false
+        "description": "한글 액션 설명",
+        "force": false,
+        "useScraped": "auto",
+        "dynamicStrategy": "first-row-title"
       }
     ]
   }

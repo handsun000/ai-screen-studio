@@ -452,9 +452,15 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
   }
 
   // 14. Mandatory Condition Audit for Registration / Creation scenarios
-  const hasSubmitAction = optimizedActions.some(
-    (a) => a.type === "click" && (a.description?.includes("저장") || a.description?.includes("상신") || a.description?.includes("등록"))
-  );
+  const hasSubmitAction = optimizedActions.some((a) => {
+    if (a.type !== "click") return false;
+    const desc = a.description || "";
+    if (desc.includes("저장") || desc.includes("상신")) return true;
+    if (desc.includes("등록") && !desc.includes("등록일") && !desc.includes("등록순") && !desc.includes("등록자")) {
+      return desc.includes("버튼") || desc.includes("클릭") || desc.includes("완료") || (a.selector && (a.selector.includes("save") || a.selector.includes("reg")));
+    }
+    return false;
+  });
   if (hasSubmitAction) {
     const hasTitleInput = optimizedActions.some(
       (a) => a.type === "type" && (a.description?.includes("제목") || a.description?.includes("명칭") || a.selector?.includes("subject") || a.selector?.includes("title"))
