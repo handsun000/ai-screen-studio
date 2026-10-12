@@ -155,8 +155,11 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       desc.includes("상신") ||
       desc.includes("삭제") ||
       desc.includes("수정") ||
+      desc.includes("목록") ||
+      desc.includes("복귀") ||
       sel.includes("close") ||
       sel.includes("btn_close") ||
+      sel.includes("listBtn") ||
       sel.includes("titlebar-close");
 
     const isCalendarEvent =
@@ -185,21 +188,47 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       sel = action.selector;
     }
 
-    // 1-E. Module Search vs GNB Header Search Collision Prevention
+    // 1-E. Module Content Search vs Sidebar Folder Search vs GNB Header Search Collision Prevention
+    const isFolderTreeSearch = desc.includes("문서함 검색") || desc.includes("폴더 검색") || desc.includes("트리 검색") || desc.includes("사이드바 검색");
     const isSearchExecuteAction =
       action.type === "click" &&
       (desc.includes("검색") || sel.includes("search") || sel.includes("srch")) &&
       (desc.includes("버튼") || desc.includes("실행") || desc.includes("아이콘") || sel.includes("Btn") || sel.includes("btn") || sel.includes("submit")) &&
       !desc.includes("결과") &&
       !desc.includes("상세") &&
-      !desc.includes("문서") &&
-      !desc.includes("목록") &&
       !desc.includes("통합검색") &&
       !desc.includes("헤더") &&
       !desc.includes("포탈 검색");
 
     if (isSearchExecuteAction) {
-      action.selector = `#snb .srch_bar button.btn_srch:visible, #snb .srch_bar button[title='검색']:visible, button#atclList_srchBtn:visible, .srch_input button[title='검색']:visible, #content .srch_input button:has(.ico_srch):visible, #snb button.btn_srch:visible`;
+      if (isFolderTreeSearch) {
+        action.selector = `#snb .srch_bar button.btn_srch:visible, #snb .srch_bar button[title='검색']:visible, #snb button.btn_srch:visible`;
+      } else {
+        // Prioritize Content Toolbar Search Button (헤더 바로 아래 본문 제목/문서 검색 버튼)
+        action.selector = `button#atclList_srchBtn:visible, button[id*='srchBtn']:visible, button[id*='searchBtn']:visible, .new_srch_bar button:visible, #content .srch_input button:has(.ico_srch):visible, #content .srch_input button[title='검색']:visible, #content button[title='검색']:visible, #content button.btn_srch:visible, #content button:has-text('검색'):visible`;
+      }
+      sel = action.selector;
+    }
+
+    // 1-F. Content List Search Input (헤더 바로 아래 본문 제목/키워드 검색창 vs 사이드바 문서함 검색창)
+    const isSearchInputAction =
+      action.type === "type" &&
+      (desc.includes("검색") || sel.includes("search") || sel.includes("srch") || Boolean(action.useScraped)) &&
+      !desc.includes("제목") &&
+      !desc.includes("내용") &&
+      !desc.includes("본문") &&
+      !isInsideModal &&
+      !desc.includes("통합검색") &&
+      !desc.includes("헤더") &&
+      !desc.includes("포탈 검색");
+
+    if (isSearchInputAction) {
+      if (isFolderTreeSearch) {
+        action.selector = `#snb .srch_bar input:visible, #snb input[placeholder*='검색']:visible`;
+      } else {
+        // Prioritize Content Toolbar Search Input (헤더 바로 아래 본문 제목/키워드 검색 입력창)
+        action.selector = `input#atclList_searchWord:visible, input[id*='searchWord']:visible, .new_srch_bar input:visible, #content .srch_input input:visible, #content input[id*='search']:visible, #content input[placeholder*='검색']:visible`;
+      }
       sel = action.selector;
     }
 

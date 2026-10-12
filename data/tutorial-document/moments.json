@@ -3,21 +3,21 @@
     "url": "https://gwdev.unison.co.kr",
     "viewportWidth": 1920,
     "viewportHeight": 1080,
-    "totalDurationMs": 64816,
-    "recordingStart": "2026-10-12T00:58:04.390Z"
+    "totalDurationMs": 65668,
+    "recordingStart": "2026-10-12T01:24:25.273Z"
   },
   "moments": [
     {
       "id": 1,
       "type": "wait",
-      "timestamp": 432,
+      "timestamp": 497,
       "description": "메인 대시보드 로딩 및 시각적 앵커 대기 (Phase 1)"
     },
     {
       "id": 2,
       "type": "click",
-      "timestamp": 4267,
-      "description": "상단 GNB '포탈 전체메뉴' 서랍 열기 버튼 클릭",
+      "timestamp": 4341,
+      "description": "상단 GNB '포탈 전체메뉴' 버튼 클릭 (Phase 2)",
       "cursor": {
         "x": 1376,
         "y": 83
@@ -32,14 +32,14 @@
     {
       "id": 3,
       "type": "wait",
-      "timestamp": 5325,
-      "description": "전체메뉴 레이어 서랍 펼침 대기"
+      "timestamp": 5407,
+      "description": "전체메뉴 서랍 레이어 펼침 대기"
     },
     {
       "id": 4,
       "type": "click",
-      "timestamp": 7118,
-      "description": "전체메뉴 서랍 내 '문서관리' 메뉴 클릭 (Phase 2)",
+      "timestamp": 7234,
+      "description": "전체메뉴 내 '문서관리' 메뉴 클릭",
       "cursor": {
         "x": 1158,
         "y": 332
@@ -54,14 +54,14 @@
     {
       "id": 5,
       "type": "wait",
-      "timestamp": 8175,
-      "description": "문서관리 메인 대시보드 및 폴더 구조 로딩 대기"
+      "timestamp": 8304,
+      "description": "문서관리 메인 화면 및 문서함 트리 로딩 대기"
     },
     {
       "id": 6,
       "type": "click",
-      "timestamp": 12022,
-      "description": "좌측 상단 [문서 등록] 버튼 클릭 (Phase 3)",
+      "timestamp": 12164,
+      "description": "좌측 사이드바 [문서 등록] 버튼 클릭 (Phase 3)",
       "cursor": {
         "x": 75,
         "y": 148
@@ -76,14 +76,14 @@
     {
       "id": 7,
       "type": "wait",
-      "timestamp": 13077,
-      "description": "문서함 선택 팝업 레이어 로딩 대기"
+      "timestamp": 13214,
+      "description": "대상 문서함 선택 모달 팝업 로딩 대기"
     },
     {
       "id": 8,
       "type": "click",
-      "timestamp": 15921,
-      "description": "문서함 선택 팝업 내 대상 문서함 노드 선택",
+      "timestamp": 16637,
+      "description": "팝업 내 실제 등록 대상 문서함(말단 노드) 선택",
       "cursor": {
         "x": 85,
         "y": 320
@@ -98,14 +98,14 @@
     {
       "id": 9,
       "type": "wait",
-      "timestamp": 26958,
-      "description": "문서함 선택 상태 확인 대기"
+      "timestamp": 27679,
+      "description": "문서함 선택 상태 인지 대기"
     },
     {
       "id": 10,
       "type": "click",
-      "timestamp": 28966,
-      "description": "문서함 선택 팝업 하단 [확인] 버튼 클릭",
+      "timestamp": 30000,
+      "description": "문서함 선택 팝업 [확인] 버튼 클릭",
       "cursor": {
         "x": 928,
         "y": 727
@@ -120,14 +120,14 @@
     {
       "id": 11,
       "type": "wait",
-      "timestamp": 31204,
-      "description": "문서 작성 폼 렌더링 및 에디터 로딩 대기"
+      "timestamp": 32246,
+      "description": "문서 등록 폼 화면 렌더링 대기"
     },
     {
       "id": 12,
       "type": "type",
-      "timestamp": 34421,
-      "description": "문서 제목 입력 필드에 '2026년 상반기 업무 추진 계획서' 입력",
+      "timestamp": 35436,
+      "description": "문서 제목 필드에 '2026년도 상반기 표준 업무 지침서' 입력",
       "cursor": {
         "x": 512,
         "y": 415
@@ -138,19 +138,19 @@
         "width": 964,
         "height": 32
       },
-      "keys": "2026년 상반기 업무 추진 계획서"
+      "keys": "2026년도 상반기 표준 업무 지침서"
     },
     {
       "id": 13,
       "type": "wait",
-      "timestamp": 35970,
+      "timestamp": 37038,
       "description": "제목 입력 확인 대기"
     },
     {
       "id": 14,
       "type": "type",
-      "timestamp": 37231,
-      "description": "문서 본문 내용 에디터 영역에 설명 작성",
+      "timestamp": 38514,
+      "description": "문서 본문 필드에 '부서별 업무 표준화 및 효율적 협업을 위한 2026년도 상반기 업무 지침입니다.' 입력",
       "cursor": {
         "x": 0,
         "y": 151
@@ -161,19 +161,19 @@
         "width": 302,
         "height": 302
       },
-      "keys": "2026년도 상반기 주요 사업 추진 계획 및 부서별 세부 실행 전략에 대한 문서입니다."
+      "keys": "부서별 업무 표준화 및 효율적 협업을 위한 2026년도 상반기 업무 지침입니다."
     },
     {
       "id": 15,
       "type": "wait",
-      "timestamp": 40100,
-      "description": "본문 작성 완료 확인 대기"
+      "timestamp": 41190,
+      "description": "본문 내용 작성 확인 대기"
     },
     {
       "id": 16,
       "type": "click",
-      "timestamp": 41940,
-      "description": "문서 작성 화면 상단 [저장] 버튼 클릭 (Phase 4)",
+      "timestamp": 43052,
+      "description": "상단 본문 [저장] 버튼 클릭 (Phase 4)",
       "cursor": {
         "x": 311,
         "y": 197
@@ -188,14 +188,14 @@
     {
       "id": 17,
       "type": "wait",
-      "timestamp": 43033,
-      "description": "문서 저장 처리 및 화면 전환 대기"
+      "timestamp": 44147,
+      "description": "저장 처리 및 등록 완료 응답 대기"
     },
     {
       "id": 18,
       "type": "click",
-      "timestamp": 45781,
-      "description": "저장 완료 안내 알림창 확인 버튼 클릭 (표시 시)",
+      "timestamp": 46432,
+      "description": "저장 완료 안내 팝업 [확인] 클릭 (표시 시)",
       "cursor": {
         "x": 903,
         "y": 140
@@ -210,75 +210,75 @@
     {
       "id": 19,
       "type": "wait",
-      "timestamp": 46844,
-      "description": "문서함 목록 갱신 및 데이터 동기화 대기"
+      "timestamp": 47502,
+      "description": "문서 목록 화면 새로고침 및 데이터 반영 대기 (Phase 5)"
     },
     {
       "id": 20,
       "type": "type",
-      "timestamp": 51039,
-      "description": "문서관리 검색창에 실시간 데이터 자동 연동 입력 (조회 연동)",
+      "timestamp": 52303,
+      "description": "문서 목록 검색창에 방금 등록/조회할 문서 검색어 입력",
       "cursor": {
-        "x": 37,
-        "y": 266
+        "x": 1626,
+        "y": 140
       },
       "target": {
-        "x": 21,
-        "y": 250,
-        "width": 174,
-        "height": 32
+        "x": 1610,
+        "y": 123,
+        "width": 150,
+        "height": 34
       },
-      "keys": "2026년 상반기 업무 추진 계획서"
+      "keys": "2026년도 상반기 표준 업무 지침서"
     },
     {
       "id": 21,
       "type": "wait",
-      "timestamp": 52636,
+      "timestamp": 53976,
       "description": "검색어 입력 상태 대기"
     },
     {
       "id": 22,
       "type": "click",
-      "timestamp": 53913,
-      "description": "문서관리 모듈 내 [검색] 실행 버튼 클릭",
+      "timestamp": 55328,
+      "description": "문서 목록 본문 내 [검색] 실행 버튼 클릭",
       "cursor": {
-        "x": 202,
-        "y": 266
+        "x": 1774,
+        "y": 140
       },
       "target": {
-        "x": 194,
-        "y": 250,
-        "width": 15,
-        "height": 32
+        "x": 1760,
+        "y": 123,
+        "width": 28,
+        "height": 34
       }
     },
     {
       "id": 23,
       "type": "wait",
-      "timestamp": 54979,
-      "description": "검색 결과 필터링 목록 렌더링 대기"
+      "timestamp": 56401,
+      "description": "검색 결과 목록 갱신 대기"
     },
     {
       "id": 24,
       "type": "click",
-      "timestamp": 57793,
-      "description": "검색된 대상 문서를 클릭하여 상세 열람 (Phase 5)",
+      "timestamp": 59728,
+      "description": "검색된 문서 상세 조회 클릭",
       "cursor": {
-        "x": 464,
-        "y": 283
+        "x": 1718,
+        "y": 184
       },
       "target": {
-        "x": 370,
-        "y": 273,
-        "width": 189,
-        "height": 20
+        "x": 1572,
+        "y": 166,
+        "width": 291,
+        "height": 36
       }
     },
     {
       "id": 25,
       "type": "wait",
-      "timestamp": 58858,
-      "description": "문서 상세 내용 및 이력 정보 화면 확인 후 튜토리얼 종료"
+      "timestamp": 60783,
+      "description": "문서 상세 조회 내용 확인 및 아웃트로 마무리"
     }
   ]
 }

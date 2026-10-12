@@ -219,8 +219,8 @@ export const MASTER_DIRECTING_GUIDELINES = `
    - **[🔍 모듈 내 검색창 및 검색 실행 버튼 스코핑 (상단 GNB 헤더 검색 충돌 절대 금지)]**:
      - 엔터프라이즈 포탈 상단 공통 헤더(\`header\`, \`#header\`, \`.gnb\`)에는 전사 통합검색창과 검색 버튼이 상시 존재합니다.
      - 따라서 모듈 내(문서관리, 결재, 게시판 등) 검색을 수행할 때 단순 \`button:has-text('검색')\`이나 \`button[title*='검색']\`을 단독으로 쓰면 최상단 GNB 헤더의 검색 버튼이 클릭되어 시나리오가 엉뚱한 헤더 오버레이로 빠집니다!
-     - 검색창 입력(type): \`#snb input[placeholder*='검색'], #content input[placeholder*='검색'], input:not(header *):not(#header *)[placeholder*='검색'], .srch_bar input\`
-     - 검색 실행 버튼(click): \`#snb .srch_bar button.btn_srch:visible, #snb .srch_bar button[title='검색']:visible, button#atclList_srchBtn:visible, .srch_input button[title='검색']:visible, #content .srch_input button:has(.ico_srch):visible, #snb button.btn_srch:visible\`
+     - 검색창 입력(type): \`input#atclList_searchWord:visible, input[id*='searchWord']:visible, .new_srch_bar input:visible, #content .srch_input input:visible, #content input[id*='search']:visible, #content input[placeholder*='검색']:visible\`
+     - 검색 실행 버튼(click): \`button#atclList_srchBtn:visible, button[id*='srchBtn']:visible, button[id*='searchBtn']:visible, .new_srch_bar button:visible, #content .srch_input button:has(.ico_srch):visible, #content .srch_input button[title='검색']:visible, #content button[title='검색']:visible, #content button.btn_srch:visible\`
 3. **iFrame 감지 및 대응**:
    - 그룹웨어, 엔터프라이즈 포털, 에디터는 종종 iFrame을 사용합니다.
    - 전자결재/양식: \`iframe[name*="docBox"], iframe[src*="form"], iframe#subBody\`
@@ -287,6 +287,6 @@ export const MASTER_DIRECTING_GUIDELINES = `
    - 시스템에 이미 축적되어 있는 실제 데이터 목록을 탐색하고, 목록의 첫 번째 실제 데이터를 스크래핑하여 검색창에 입력하고, 결과를 클릭하여 상세 내용을 조회하는 순수 조회 파이프라인으로 구성하십시오.
 4. **[🚨 모듈 내 검색창 및 검색 실행 버튼 영역 스코핑 필수 (GNB 헤더 검색 충돌 절대 차단)]**:
    - 검색창 입력(\`type\`) 및 검색 버튼 클릭(\`click\`) 시 상단 GNB 헤더(\`header\`, \`.gnb\`) 요소를 절대 타겟팅하지 마십시오.
-   - 검색창은 \`#snb input[placeholder*='검색'], #content input[placeholder*='검색'], input:not(header *):not(#header *)[placeholder*='검색']\`,
-   - 검색 실행 버튼은 \`#snb .srch_bar button.btn_srch:visible, #snb .srch_bar button[title='검색']:visible, button#atclList_srchBtn:visible, .srch_input button[title='검색']:visible, #content .srch_input button:has(.ico_srch):visible, #snb button.btn_srch:visible\` 처럼 모듈/사이드바 스코프를 반드시 명시하십시오.
+   - 검색창은 \`input#atclList_searchWord:visible, input[id*='searchWord']:visible, .new_srch_bar input:visible, #content .srch_input input:visible, #content input[id*='search']:visible, #content input[placeholder*='검색']:visible\`,
+   - 검색 실행 버튼은 \`button#atclList_srchBtn:visible, button[id*='srchBtn']:visible, button[id*='searchBtn']:visible, .new_srch_bar button:visible, #content .srch_input button:has(.ico_srch):visible, #content .srch_input button[title='검색']:visible, #content button[title='검색']:visible, #content button.btn_srch:visible\` 처럼 본문 툴바 스코프를 반드시 명시하십시오.
 `;

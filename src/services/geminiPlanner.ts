@@ -449,10 +449,11 @@ export async function generateBrowsePlanWithGemini(
      • \`"text": "실시간 실제 목록 데이터"\`
      를 지정하여, Playwright 런타임이 화면에 실제로 렌더링된 첫 번째 글/문서/사원명을 스크래핑하여 타이핑하도록 하십시오.
    - 검색 결과 클릭 단계에도 \`"useScraped": "auto"\`를 지정하여 스크래핑된 실제 항목을 100% 매칭 클릭하도록 연결하십시오.
-   - **[🚨 모듈 내 검색창 및 검색 버튼 스코핑 (GNB 포탈 헤더 검색 충돌 절대 금지)]**:
-     상단 GNB 헤더의 전역 통합검색창/버튼과 모듈 내부 검색을 명확히 구분하십시오.
-     • 모듈 내 검색창(type): \`#snb input[placeholder*='검색'], #content input[placeholder*='검색'], input:not(header *):not(#header *)[placeholder*='검색']\`
-     • 모듈 내 검색 버튼(click): \`#snb .srch_bar button.btn_srch:visible, #snb .srch_bar button[title='검색']:visible, button#atclList_srchBtn:visible, .srch_input button[title='검색']:visible, #content .srch_input button:has(.ico_srch):visible, #snb button.btn_srch:visible\`
+   - **[🚨 모듈 내 검색창 및 검색 버튼 스코핑 (GNB 포탈 헤더 및 사이드바 폴더 검색 혼동 절대 금지)]**:
+     상단 GNB 헤더의 전역 통합검색창과 좌측 사이드바(#snb)의 단순 폴더/문서함 트리 검색을 본문 문서 검색과 혼동하지 마십시오!
+     문서/게시글/결재문서 목록의 제목/키워드 검색은 반드시 헤더 바로 밑 본문 툴바(#content, .new_srch_bar)를 타겟팅해야 합니다.
+     • 본문 목록 검색창(type): \`input#atclList_searchWord:visible, input[id*='searchWord']:visible, .new_srch_bar input:visible, #content .srch_input input:visible, #content input[id*='search']:visible, #content input[placeholder*='검색']:visible\`
+     • 본문 목록 검색 버튼(click): \`button#atclList_srchBtn:visible, button[id*='srchBtn']:visible, button[id*='searchBtn']:visible, .new_srch_bar button:visible, #content .srch_input button:has(.ico_srch):visible, #content .srch_input button[title='검색']:visible, #content button[title='검색']:visible, #content button.btn_srch:visible\`
 6. **최종 출력 규격**:
    - 중간 마크다운 설명서 없이 **곧바로 완전하고 유효한 BrowsePlan JSON 형식**으로만 응답하십시오.
 `;

@@ -509,12 +509,22 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
     }
 
     if (action.type === "click" && desc.includes("검색") && (desc.includes("버튼") || desc.includes("실행") || desc.includes("클릭"))) {
+      const isFolderTreeSearch = desc.includes("문서함") || desc.includes("폴더") || desc.includes("트리") || desc.includes("사이드바");
+      if (!isFolderTreeSearch) {
+        fallbackSelectors.push(
+          "button#atclList_srchBtn:visible",
+          "button[id*='srchBtn']:visible",
+          "button[id*='searchBtn']:visible",
+          ".new_srch_bar button:visible",
+          "#content .srch_input button:has(.ico_srch):visible",
+          "#content .srch_input button[title='검색']:visible",
+          "#content button[title='검색']:visible",
+          "#content button.btn_srch:visible"
+        );
+      }
       fallbackSelectors.push(
         "#snb .srch_bar button.btn_srch:visible",
         "#snb .srch_bar button[title='검색']:visible",
-        "button#atclList_srchBtn:visible",
-        ".srch_input button[title='검색']:visible",
-        "#content .srch_input button:has(.ico_srch):visible",
         "#snb button.btn_srch:visible"
       );
     }
@@ -2162,12 +2172,20 @@ async function main() {
             (action.selector && (action.selector.includes("searchBtn") || action.selector.includes("btn_srch") || action.selector.includes("btn_search") || action.selector.includes("search_btn")));
 
           if (isSearchExecutionButton) {
-            const moduleSearchBtn = page.locator(
-              "#snb .srch_bar button.btn_srch:visible, #snb .srch_bar button[title='검색']:visible, button#atclList_srchBtn:visible, .srch_input button[title='검색']:visible, #content .srch_input button:has(.ico_srch):visible, #snb button.btn_srch:visible, #snb .srch_bar button:visible, #content .srch_bar button:visible"
+            const isFolderTreeSearch = cleanDesc.includes("문서함") || cleanDesc.includes("폴더") || cleanDesc.includes("트리") || cleanDesc.includes("사이드바");
+            const contentSearchBtn = page.locator(
+              "button#atclList_srchBtn:visible, button[id*='srchBtn']:visible, button[id*='searchBtn']:visible, .new_srch_bar button:visible, #content .srch_input button:has(.ico_srch):visible, #content .srch_input button[title='검색']:visible, #content button[title='검색']:visible, #content button.btn_srch:visible, #content button:has-text('검색'):visible"
             ).first();
-            if (await moduleSearchBtn.isVisible().catch(() => false)) {
-              console.log(`  [🎯 모듈 내 검색 실행 버튼 특정] 포털 GNB 상단 헤더를 배제하고 현재 모듈/사이드바 내의 검색 실행 버튼을 연결합니다.`);
-              el = moduleSearchBtn;
+            const sidebarSearchBtn = page.locator(
+              "#snb .srch_bar button.btn_srch:visible, #snb .srch_bar button[title='검색']:visible, #snb button.btn_srch:visible"
+            ).first();
+
+            if (!isFolderTreeSearch && await contentSearchBtn.isVisible().catch(() => false)) {
+              console.log(`  [🎯 본문 목록 검색 실행 버튼 특정] 사이드바/GNB를 배제하고 헤더 바로 밑 본문 툴바의 제목/목록 검색 실행 버튼을 연결합니다.`);
+              el = contentSearchBtn;
+            } else if (await sidebarSearchBtn.isVisible().catch(() => false)) {
+              console.log(`  [🎯 사이드바 트리 검색 실행 버튼 특정] 사이드바 내의 검색 실행 버튼을 연결합니다.`);
+              el = sidebarSearchBtn;
             }
           }
 
@@ -2490,6 +2508,32 @@ async function main() {
           await autoRecoverActiveModals(page, action, moments, recordingStart);
           const isOptionalOrSub = isOptionalAction(action, momentId, plan.actions.length) || isNonCriticalSubOption(action);
           let el = await getLocatorWithWait(page, action, isOptionalOrSub);
+
+          const cleanTypeDesc = (action.description || "").replace(/[\[\]]/g, "");
+          const isSearchInput =
+            (cleanTypeDesc.includes("검색") || Boolean(action.useScraped) || (action.selector && (action.selector.includes("search") || action.selector.includes("srch")))) &&
+            !cleanTypeDesc.includes("제목") &&
+            !cleanTypeDesc.includes("본문") &&
+            !cleanTypeDesc.includes("내용") &&
+            !cleanTypeDesc.includes("작성");
+
+          if (isSearchInput) {
+            const isFolderTreeSearch = cleanTypeDesc.includes("문서함") || cleanTypeDesc.includes("폴더") || cleanTypeDesc.includes("트리") || cleanTypeDesc.includes("사이드바");
+            const contentSearchInput = page.locator(
+              "input#atclList_searchWord:visible, input[id*='searchWord']:visible, .new_srch_bar input:visible, #content .srch_input input:visible, #content input[id*='search']:visible, #content input[placeholder*='검색']:visible"
+            ).first();
+            const sidebarSearchInput = page.locator(
+              "#snb .srch_bar input:visible, #snb input[placeholder*='검색']:visible"
+            ).first();
+
+            if (!isFolderTreeSearch && await contentSearchInput.isVisible().catch(() => false)) {
+              console.log(`  [🎯 본문 목록 검색 입력창 특정] 사이드바/GNB를 배제하고 헤더 바로 밑 본문 툴바의 제목/키워드 검색창을 연결합니다.`);
+              el = contentSearchInput;
+            } else if (await sidebarSearchInput.isVisible().catch(() => false)) {
+              console.log(`  [🎯 사이드바 트리 검색 입력창 특정] 사이드바 내의 검색 입력창을 연결합니다.`);
+              el = sidebarSearchInput;
+            }
+          }
           if (!el) {
             el = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
           }

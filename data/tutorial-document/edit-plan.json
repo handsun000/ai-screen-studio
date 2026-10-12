@@ -1,12 +1,12 @@
 {
-  "totalDurationFrames": 3889,
+  "totalDurationFrames": 3940,
   "fps": 60,
   "defaultZoom": 1.0,
   "segments": [
     {
       "momentId": 2,
-      "startFrame": 256,
-      "endFrame": 487,
+      "startFrame": 260,
+      "endFrame": 494,
       "speed": 1.0,
       "zoom": 1.3,
       "zoomTarget": {
@@ -23,8 +23,8 @@
     },
     {
       "momentId": 6,
-      "startFrame": 721,
-      "endFrame": 1015,
+      "startFrame": 730,
+      "endFrame": 1058,
       "speed": 1.0,
       "zoom": 1.3,
       "zoomTarget": {
@@ -41,8 +41,8 @@
     },
     {
       "momentId": 10,
-      "startFrame": 1738,
-      "endFrame": 2807,
+      "startFrame": 1800,
+      "endFrame": 3644,
       "speed": 1.0,
       "zoom": 1.4,
       "zoomTarget": {
@@ -51,28 +51,10 @@
       },
       "easeInFrames": 20,
       "easeOutFrames": 20,
-      "description": "Click at (928, 727) + Typing: 2026\ub144 \uc0c1\ubc18\uae30 \uc5c5\ubb34 \ucd94\uc9c4 \uacc4\ud68d\uc11c + Typing: 2026\ub144\ub3c4 \uc0c1\ubc18\uae30 \uc8fc\uc694 \uc0ac\uc5c5 \ucd94\uc9c4 \uacc4\ud68d \ubc0f \ubd80\uc11c\ubcc4 \uc138 + Click at (311, 197) + Click at (903, 140)",
+      "description": "Click at (928, 727) + Typing: 2026\ub144\ub3c4 \uc0c1\ubc18\uae30 \ud45c\uc900 \uc5c5\ubb34 \uc9c0\uce68\uc11c + Typing: \ubd80\uc11c\ubcc4 \uc5c5\ubb34 \ud45c\uc900\ud654 \ubc0f \ud6a8\uc728\uc801 \ud611\uc5c5\uc744 \uc704\ud55c 2026\ub144\ub3c4 + Click at (311, 197) + Click at (903, 140) + Typing: 2026\ub144\ub3c4 \uc0c1\ubc18\uae30 \ud45c\uc900 \uc5c5\ubb34 \uc9c0\uce68\uc11c + Click at (1774, 140) + Click at (1718, 184)",
       "zoomTargetEnd": {
-        "x": 903,
-        "y": 140
-      }
-    },
-    {
-      "momentId": 20,
-      "startFrame": 3062,
-      "endFrame": 3528,
-      "speed": 1.0,
-      "zoom": 1.4,
-      "zoomTarget": {
-        "x": 37,
-        "y": 266
-      },
-      "easeInFrames": 20,
-      "easeOutFrames": 20,
-      "description": "Typing: 2026\ub144 \uc0c1\ubc18\uae30 \uc5c5\ubb34 \ucd94\uc9c4 \uacc4\ud68d\uc11c + Click at (202, 266) + Click at (464, 283)",
-      "zoomTargetEnd": {
-        "x": 464,
-        "y": 283
+        "x": 1718,
+        "y": 184
       }
     }
   ]
