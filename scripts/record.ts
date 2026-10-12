@@ -448,7 +448,7 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
 
     // 1. Extract any text inside brackets or quotes: [문서 등록], [일정 등록], [저장], [확인], [상신], [검색] 등
     const quoteMatch = desc.match(/[\[\'\"\(](.*?)[\]\'\"\)]/);
-    if (quoteMatch && quoteMatch[1] && quoteMatch[1].length >= 2) {
+    if (quoteMatch && quoteMatch[1] && quoteMatch[1].length >= 2 && quoteMatch[1].trim() !== "검색") {
       const textKey = quoteMatch[1].trim();
       fallbackSelectors.push(
         `.ui-dialog:visible button:has-text('${textKey}'):visible`,
@@ -510,11 +510,12 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
 
     if (action.type === "click" && desc.includes("검색") && (desc.includes("버튼") || desc.includes("실행") || desc.includes("클릭"))) {
       fallbackSelectors.push(
-        "button[title*='검색']:visible",
-        "button:has-text('검색'):visible",
-        ".btn_ico:has(.ico_srch):visible",
-        "[class*='srch_btn']:visible",
-        "[id*='searchBtn']:visible"
+        "#snb .srch_bar button.btn_srch:visible",
+        "#snb .srch_bar button[title='검색']:visible",
+        "button#atclList_srchBtn:visible",
+        ".srch_input button[title='검색']:visible",
+        "#content .srch_input button:has(.ico_srch):visible",
+        "#snb button.btn_srch:visible"
       );
     }
 
@@ -1750,7 +1751,22 @@ async function main() {
 
     console.log("👉 (안내: 화면에 창이 가려져 있다면 작업 표시줄의 'Chrome' 또는 'Chromium' 아이콘을 클릭하여 앞으로 가져와 주세요.)\n");
 
-    await waitForEnter();
+    const waitForLoginSuccess = async () => {
+      while (true) {
+        try {
+          if (loginPage.isClosed()) break;
+          const url = loginPage.url();
+          const hasGnb = await loginPage.locator('#svc_lst, .user_info, #header, .portal_wrap, button:has-text("로그아웃"), a:has-text("로그아웃")').count().catch(() => 0);
+          if (hasGnb > 0 && !url.includes("login") && !url.includes("oauth") && !url.includes("authorize")) {
+            console.log("\n🎉 [실시간 감지] 사용자가 브라우저에서 로그인을 완료한 것을 감지했습니다! 세션을 즉시 저장하고 녹화를 시작합니다.");
+            break;
+          }
+        } catch {}
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+    };
+
+    await Promise.race([waitForEnter(), waitForLoginSuccess()]);
 
     await loginContext.storageState({ path: authPath });
     await loginContext.close();
@@ -2134,10 +2150,26 @@ async function main() {
           const isOptionalOrSub = isOptionalAction(action, momentId, plan.actions.length) || isNonCriticalSubOption(action);
           let el = await getLocatorWithWait(page, action, isOptionalOrSub);
 
-          // Method 2: Dynamic matching if clicking a searched item or using a scraped variable
+          const cleanDesc = (action.description || "").replace(/[\[\]]/g, "");
           const isSearchExecutionButton =
-            (action.description && (action.description.includes("검색 버튼") || action.description.includes("검색 실행") || action.description.includes("검색 아이콘"))) ||
-            (action.selector && (action.selector.includes("searchBtn") || action.selector.includes("btn_search") || action.selector.includes("search_btn")));
+            (cleanDesc.includes("검색") &&
+             (cleanDesc.includes("버튼") || cleanDesc.includes("실행") || cleanDesc.includes("클릭") || cleanDesc.includes("아이콘")) &&
+             !cleanDesc.includes("통합검색") &&
+             !cleanDesc.includes("전사검색") &&
+             !cleanDesc.includes("결과") &&
+             !cleanDesc.includes("상세") &&
+             !cleanDesc.includes("문서")) ||
+            (action.selector && (action.selector.includes("searchBtn") || action.selector.includes("btn_srch") || action.selector.includes("btn_search") || action.selector.includes("search_btn")));
+
+          if (isSearchExecutionButton) {
+            const moduleSearchBtn = page.locator(
+              "#snb .srch_bar button.btn_srch:visible, #snb .srch_bar button[title='검색']:visible, button#atclList_srchBtn:visible, .srch_input button[title='검색']:visible, #content .srch_input button:has(.ico_srch):visible, #snb button.btn_srch:visible, #snb .srch_bar button:visible, #content .srch_bar button:visible"
+            ).first();
+            if (await moduleSearchBtn.isVisible().catch(() => false)) {
+              console.log(`  [🎯 모듈 내 검색 실행 버튼 특정] 포털 GNB 상단 헤더를 배제하고 현재 모듈/사이드바 내의 검색 실행 버튼을 연결합니다.`);
+              el = moduleSearchBtn;
+            }
+          }
 
           const isClickSearchResult = !isSearchExecutionButton && (
             Boolean(action.useScraped) ||

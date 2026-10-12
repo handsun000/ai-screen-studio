@@ -185,6 +185,24 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       sel = action.selector;
     }
 
+    // 1-E. Module Search vs GNB Header Search Collision Prevention
+    const isSearchExecuteAction =
+      action.type === "click" &&
+      (desc.includes("검색") || sel.includes("search") || sel.includes("srch")) &&
+      (desc.includes("버튼") || desc.includes("실행") || desc.includes("아이콘") || sel.includes("Btn") || sel.includes("btn") || sel.includes("submit")) &&
+      !desc.includes("결과") &&
+      !desc.includes("상세") &&
+      !desc.includes("문서") &&
+      !desc.includes("목록") &&
+      !desc.includes("통합검색") &&
+      !desc.includes("헤더") &&
+      !desc.includes("포탈 검색");
+
+    if (isSearchExecuteAction) {
+      action.selector = `#snb .srch_bar button.btn_srch:visible, #snb .srch_bar button[title='검색']:visible, button#atclList_srchBtn:visible, .srch_input button[title='검색']:visible, #content .srch_input button:has(.ico_srch):visible, #snb button.btn_srch:visible`;
+      sel = action.selector;
+    }
+
     // 2. Track Modal Dialog Entering
     if (
       sel.includes(".ui-dialog") ||

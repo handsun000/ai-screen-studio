@@ -436,9 +436,10 @@ export async function generateBrowsePlanWithGemini(
    - 📄 **문서 등록 (4단계 필수 시퀀스)**: 좌측 [문서 등록] 버튼 클릭 ➔ '문서함 선택' 모달 팝업 열림 대기(1500ms) ➔ 팝업 내 실제 등록 대상 문서함(말단 리프 노드) 클릭(".ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:not(:has(ul)) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:last-child a.dynatree-title:visible") ➔ 팝업 [확인] 버튼 클릭(".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible")하여 모달 닫기 ➔ 본문 등록 폼 렌더링 후 제목 입력 ➔ 본문 내용 작성 ➔ 상단 [저장] 클릭! (절대로 등록 불가한 최상위 부모 폴더 노드를 선택하지 마십시오!)
    - 모든 필수 조건이 입력/선택된 후에 최종 [저장/상신/등록] 버튼을 클릭하고 브라우저 확인(Confirm) 다이얼로그를 승인해야 합니다.
 5. **실제 DB 데이터 기반 검색 및 조회 연동 (Method 2: Zero-Hallucinated-Data Policy)**:
-   - **[🚨 검색/조회 목적 시나리오에 불필요한 신규 등록 단계 생성 엄격 금지]**:
-     사용자의 요청 의도가 '조회', '검색', '확인', '열람', '상세보기'인 경우, 시나리오 앞부분에 불필요하게 [신규 등록/작성] 버튼을 눌러 가상 제목과 본문을 입력하고 저장하는 등록 단계를 절대로 끼워 넣지 마십시오!
-     시연은 [목표 메뉴 이동] -> [분류/함 선택 및 목록 로딩 대기] -> [화면의 실제 DB 데이터 스크래핑 및 검색창 입력] -> [검색 실행] -> [해당 실제 데이터 클릭 상세 확인]의 순수 조회 파이프라인으로 구성해야 합니다.
+   - **[🚨 시나리오 의도별 연출 가이드 (순수 검색 vs 등록·조회 복합)]**:
+     1) **순수 조회/검색 요청 시**: 사용자의 요청 의도가 '조회', '검색', '열람'인 경우, 시나리오 앞부분에 불필요한 [신규 등록/작성] 단계를 끼워 넣지 마십시오. 기존 DB 목록에서 스크래핑하여 검색·조회하는 순수 조회 파이프라인으로 구성하십시오.
+     2) **복합 '등록·조회' 요청 시 (예: "문서 등록·조회", "기본 구조와 등록 및 검색")**:
+        [기본 구조 탐색] ➔ [신규 등록 (문서함 선택 -> 제목/본문 입력 -> 저장)] ➔ [상세 확인 및 목록 복귀] ➔ [목록 검색창에 방금 등록한 키워드 입력] ➔ [모듈 검색 실행 버튼 클릭] ➔ [필터링된 결과 확인]의 완결형 흐름으로 연출하십시오!
    - **[🚨 가상 검색어/제목 날조 엄격 금지]**:
      절대로 '2026학년도 대학 혁신지원사업...', '테스트 기안서', '김철수' 같은 임의의 가상 검색어나 제목을 날조하여 고정하지 마십시오!
    - 검색창 입력('type') 액션에는 반드시:
@@ -448,6 +449,10 @@ export async function generateBrowsePlanWithGemini(
      • \`"text": "실시간 실제 목록 데이터"\`
      를 지정하여, Playwright 런타임이 화면에 실제로 렌더링된 첫 번째 글/문서/사원명을 스크래핑하여 타이핑하도록 하십시오.
    - 검색 결과 클릭 단계에도 \`"useScraped": "auto"\`를 지정하여 스크래핑된 실제 항목을 100% 매칭 클릭하도록 연결하십시오.
+   - **[🚨 모듈 내 검색창 및 검색 버튼 스코핑 (GNB 포탈 헤더 검색 충돌 절대 금지)]**:
+     상단 GNB 헤더의 전역 통합검색창/버튼과 모듈 내부 검색을 명확히 구분하십시오.
+     • 모듈 내 검색창(type): \`#snb input[placeholder*='검색'], #content input[placeholder*='검색'], input:not(header *):not(#header *)[placeholder*='검색']\`
+     • 모듈 내 검색 버튼(click): \`#snb .srch_bar button.btn_srch:visible, #snb .srch_bar button[title='검색']:visible, button#atclList_srchBtn:visible, .srch_input button[title='검색']:visible, #content .srch_input button:has(.ico_srch):visible, #snb button.btn_srch:visible\`
 6. **최종 출력 규격**:
    - 중간 마크다운 설명서 없이 **곧바로 완전하고 유효한 BrowsePlan JSON 형식**으로만 응답하십시오.
 `;

@@ -131,29 +131,38 @@ export async function extractLiveCandidates(page: Page): Promise<{
         const inSidebar = !!el.closest("#snb, .snb, .aside, .left_menu, aside");
         const inHeader = !!el.closest("header, #header, .gnb, .top_menu, nav");
 
-        // Synthesize smart candidate selector
-        let suggestedSelector = "";
-        const modalPrefix = inModal ? ".ui-dialog:visible " : "";
+        // Synthesize smart candidate selector with accurate container scope prefix
+        let scopePrefix = "";
+        if (inModal) {
+          scopePrefix = ".ui-dialog:visible ";
+        } else if (inSidebar) {
+          scopePrefix = "#snb ";
+        } else if (inHeader) {
+          scopePrefix = "header ";
+        }
 
+        let suggestedSelector = "";
         if (id && !id.startsWith("ui-id-") && !id.startsWith("_")) {
-          suggestedSelector = `${modalPrefix}${tag}#${id}`;
+          suggestedSelector = `${scopePrefix}${tag}#${id}`;
         } else if (text && text.length >= 2 && text.length <= 25) {
-          suggestedSelector = `${modalPrefix}${tag}:has-text('${text}')`;
+          suggestedSelector = `${scopePrefix}${tag}:has-text('${text}')`;
         } else if (name && value) {
-          suggestedSelector = `${modalPrefix}${tag}[name='${name}'][value='${value}']`;
+          suggestedSelector = `${scopePrefix}${tag}[name='${name}'][value='${value}']`;
         } else if (name) {
-          suggestedSelector = `${modalPrefix}${tag}[name='${name}']`;
+          suggestedSelector = `${scopePrefix}${tag}[name='${name}']`;
         } else if (placeholder) {
-          suggestedSelector = `${modalPrefix}${tag}[placeholder*='${placeholder}']`;
+          suggestedSelector = `${scopePrefix}${tag}[placeholder*='${placeholder}']`;
+        } else if (title) {
+          suggestedSelector = `${scopePrefix}${tag}[title*='${title}']`;
         } else if (className) {
           const firstClass = className.split(/\s+/)[0];
           if (firstClass && !firstClass.startsWith("ui-")) {
-            suggestedSelector = `${modalPrefix}${tag}.${firstClass}`;
+            suggestedSelector = `${scopePrefix}${tag}.${firstClass}`;
           }
         }
 
         if (!suggestedSelector) {
-          suggestedSelector = `${modalPrefix}${tag}`;
+          suggestedSelector = `${scopePrefix}${tag}`;
         }
 
         candidates.push({
@@ -204,8 +213,11 @@ export async function extractLiveCandidates(page: Page): Promise<{
         if (allCandidates.length >= 300) break;
         try {
           const frameLocator = page.frameLocator(iframeSel);
-          const frameCandidates = await frameLocator
-            .locator("body")
+          const bodyLoc = frameLocator.locator("body");
+          const isBodyVisible = await bodyLoc.isVisible({ timeout: 800 }).catch(() => false);
+          if (!isBodyVisible) continue;
+
+          const frameCandidates = await bodyLoc
             .evaluate((body, frameSel) => {
               const list: any[] = [];
               const query =
@@ -360,6 +372,10 @@ export async function selfHealElement(
 6. 🛑 포기 원칙 (Fail-Fast Policy):
    - 현재 화면(스크린샷)이 의도한 페이지나 팝업 상태가 아니라서, 사용자가 지시한 "원래 목적(description)"을 수행할 대상 버튼/입력창이 아예 존재하지 않는다고 판단되면 억지로 대체 요소를 찾거나 이전 단계를 대신 누르지 마십시오.
    - 반드시 "success": false 로 설정하고, selector는 빈 문자열로 반환하여 녹화가 안전하게 중단되도록 하십시오.
+7. 🔍 모듈 영역 vs 상단 GNB 포탈 헤더 검색/버튼 분리 원칙 (Module vs GNB Header Isolation):
+   - 업무 모듈(문서관리, 전자결재, 일정관리, 게시판 등) 내에서 검색어나 버튼을 다룰 때, 상단 포탈 공통 헤더(\`header\`, \`#header\`, \`.gnb\`, \`inHeader: true\`)에 위치한 전체 통합 검색창이나 포탈 헤더 버튼을 절대로 선택하지 마십시오!
+   - 모듈 내 검색창이나 버튼은 좌측 사이드바(\`inSidebar: true\`, \`#snb\`), 본문 상단(\`inHeader: false\`, \`#content\`, \`.srch_bar\`), 또는 모달(\`inModal: true\`)에 위치합니다.
+   - 후보군에 \`inHeader: true\`인 요소와 \`inSidebar: true\` 또는 본문 요소가 있을 경우, 헤더 요소는 전역 포탈 요소이므로 배제하고 모듈 내부 요소를 선택해야 합니다.
 
 ### [응답 포맷 (Strict JSON Only)]
 반드시 아래 JSON 형식으로만 응답하십시오 (마크다운 코드블록이나 불필요한 설명 금지):
@@ -401,6 +417,8 @@ ${JSON.stringify(candidates, null, 2)}
     ])
   );
 
+  console.log(`  [🤖 AI 실시간 자가 치유] 화면 DOM 후보군 (${candidates.length}개) 추출 완료, AI 분석 요청 중...`);
+
   for (const model of candidateModels) {
     for (const key of apiKeys) {
       try {
@@ -417,6 +435,9 @@ ${JSON.stringify(candidates, null, 2)}
         }
         parts.push({ text: userPrompt });
 
+        const aiStart = Date.now();
+        console.log(`  [🤖 AI 실시간 자가 치유] Gemini (${model}) AI 정밀 분석 요청 중...`);
+
         const response = await ai.models.generateContent({
           model,
           contents: [{ role: "user", parts }],
@@ -425,12 +446,10 @@ ${JSON.stringify(candidates, null, 2)}
             temperature: 0.1,
             maxOutputTokens: 4096,
             responseMimeType: "application/json",
-            // Disable thinking tokens to prevent output token exhaustion
-            thinkingConfig: {
-              thinkingBudget: 0,
-            },
           },
         });
+
+        console.log(`  [🤖 AI 실시간 자가 치유] Gemini (${model}) 응답 수신 완료 (${Date.now() - aiStart}ms)`);
 
         const rawText = response.text || "";
         let parsed: any = null;
