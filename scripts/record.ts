@@ -8,6 +8,7 @@ import { getVideoMetadata } from "@remotion/renderer";
 import type { BrowsePlan, BrowsePlanAction, Moment, MomentsFile } from "../src/types";
 import { sanitizeBrowsePlan } from "../src/services/planSanitizer";
 import { selfHealElement, saveHealedPlan } from "../src/services/elementSelfHealer";
+import { findExistingAuthSession, syncAuthSession } from "../src/services/authManager";
 
 // Universal runtime tracking for created entities across scenarios
 const currentRuntimeVariables = new Map<string, string>();
@@ -80,8 +81,8 @@ async function getLocatorWithWait(page: Page, action: BrowsePlanAction, isFastCh
   const rawParts = (action.selector || "").split(",").map(s => s.trim()).filter(Boolean);
   const parts = sortSelectorsBySpecificity(rawParts);
   
-  const topAttempts = isFastCheck ? 2 : 6;
-  const allAttempts = isFastCheck ? 3 : 12;
+  const topAttempts = isFastCheck ? 2 : 3;
+  const allAttempts = isFastCheck ? 2 : 5;
 
   // 1. 초기 시도는 가장 구체적인 상위 셀렉터(우선순위 최고)만으로 탐색하여,
   // 화면 로딩 중 덜 구체적인 Fallback 셀렉터가 먼저 매칭되어 잘못된 요소를 클릭하는 현상을 방지
@@ -238,9 +239,10 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
     }
   }
 
-  // 2. Active modal dialog scoping (Handles stacked/nested dialogs by prioritizing topmost/latest modal)
+  // 2. Active modal dialog scoping (Handles stacked/nested dialogs by prioritizing topmost modal by z-index)
   const dialogLoc = page.locator(".ui-dialog:visible, .modal:visible, .layer_wrap:visible, .equ_select_lyr:visible, [role='dialog']:visible");
   const dialogCount = await dialogLoc.count().catch(() => 0);
+  const hasOverlay = (await page.locator(".ui-widget-overlay:visible, .modal-backdrop:visible").count().catch(() => 0)) > 0;
 
   if (dialogCount > 0 && action.selector) {
     const dialogSelectors = action.selector
@@ -248,8 +250,28 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
       .map((s) => s.trim())
       .filter(Boolean);
 
-    // Check topmost dialogs first (from last/top to first) to prevent targeting covered parent dialog
-    for (let d = dialogCount - 1; d >= 0; d--) {
+    // Calculate z-indices so the true topmost visual dialog is checked first
+    const dialogIndicesByZIndex = await page.evaluate(() => {
+      const dialogs = Array.from(document.querySelectorAll(".ui-dialog, .modal, .layer_wrap, .equ_select_lyr, [role='dialog']")).filter((el) => {
+        const s = window.getComputedStyle(el);
+        const r = el.getBoundingClientRect();
+        return s.display !== "none" && s.visibility !== "hidden" && r.width > 50 && r.height > 50;
+      });
+      return dialogs
+        .map((d, i) => ({ index: i, zIndex: parseInt(window.getComputedStyle(d).zIndex, 10) || 0 }))
+        .sort((a, b) => b.zIndex - a.zIndex)
+        .map((item) => item.index);
+    }).catch(() => []);
+
+    const order = dialogIndicesByZIndex.length === dialogCount
+      ? dialogIndicesByZIndex
+      : Array.from({ length: dialogCount }, (_, i) => dialogCount - 1 - i);
+
+    // Check topmost dialogs first (from highest z-index down) to prevent targeting covered parent dialog
+    for (let orderIdx = 0; orderIdx < order.length; orderIdx++) {
+      // 🛡️ If a modal backdrop/overlay is active, lower background dialogs are physically covered and unclickable!
+      if (hasOverlay && orderIdx > 0) break;
+      const d = order[orderIdx];
       const topDialog = dialogLoc.nth(d);
       for (const s of dialogSelectors) {
         const isLast = s.endsWith(":last") || s.includes(":last");
@@ -261,7 +283,7 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
           let cand = topDialog.locator(cleanSel);
           cand = isLast ? cand.last() : cand.first();
           if (await cand.isVisible().catch(() => false)) {
-            console.log(`  [🎯 최상단 모달 요소 감지] 중첩 팝업 #${d + 1} 내부에서 '${cleanSel}' 요소를 우선 선택합니다.`);
+            console.log(`  [🎯 최상단 모달 요소 감지] 활성 팝업(z-index 우선) 내부에서 '${cleanSel}' 요소를 우선 선택합니다.`);
             return cand;
           }
         } catch {
@@ -270,21 +292,33 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
       }
     }
 
-    for (const baseObj of candidateBases) {
-      for (const s of dialogSelectors) {
-        if (s.includes(".ui-dialog") || s.includes(".modal") || s.includes("layer")) {
-          const isLast = s.endsWith(":last") || s.includes(":last");
-          let cleanS = s.replace(/:first\b/g, "").replace(/:last\b/g, "").trim();
-          if (!cleanS) continue;
-          try {
-            let directLoc = baseObj.locator(cleanS);
-            directLoc = isLast ? directLoc.last() : directLoc.first();
-            if (await directLoc.isVisible().catch(() => false)) {
-              return directLoc;
-            }
-          } catch {}
+    if (!hasOverlay) {
+      for (const baseObj of candidateBases) {
+        for (const s of dialogSelectors) {
+          if (s.includes(".ui-dialog") || s.includes(".modal") || s.includes("layer")) {
+            const isLast = s.endsWith(":last") || s.includes(":last");
+            let cleanS = s.replace(/:first\b/g, "").replace(/:last\b/g, "").trim();
+            if (!cleanS) continue;
+            try {
+              let directLoc = baseObj.locator(cleanS);
+              directLoc = isLast ? directLoc.last() : directLoc.first();
+              if (await directLoc.isVisible().catch(() => false)) {
+                return directLoc;
+              }
+            } catch {}
+          }
         }
       }
+    }
+
+    // 🛡️ MODAL BACKDROP DEFENSE:
+    // If a modal overlay (.ui-widget-overlay, .modal-backdrop) is covering the viewport,
+    // elements on the background page outside the modal CANNOT be physically clicked by a user.
+    // Searching candidateBases will only find covered background elements (e.g. #snb, table.tbl_lst),
+    // causing pointer interception errors and 40s freezes.
+    if (hasOverlay) {
+      console.log(`  [🛡️ 모달 오버레이 보호] 화면에 딤드 오버레이가 활성화되어 있어 배경 요소 검색을 차단하고 모달 복구/자가 치유로 위임합니다.`);
+      return null;
     }
   }
 
@@ -476,7 +510,11 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
       );
     }
 
-    if (action.type === "click" && (desc.includes("등록") || desc.includes("작성") || desc.includes("신규") || desc.includes("추가")) && !desc.includes("등록된")) {
+    const isNewDraftAction =
+      (desc.includes("문서 등록") || desc.includes("일정 등록") || desc.includes("게시글 등록") || desc.includes("신규 등록") || desc.includes("신규 작성") || desc.includes("글작성")) &&
+      !desc.includes("등록된") && !desc.includes("대상자") && !desc.includes("사용자") && !desc.includes("추가");
+
+    if (action.type === "click" && isNewDraftAction) {
       fallbackSelectors.push(
         "#snb button:has-text('등록'):visible",
         "#snb button:has-text('작성'):visible",
@@ -486,6 +524,16 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
         "a:has-text('등록'):visible",
         "a:has-text('작성'):visible",
         "button:has-text('글작성'):visible"
+      );
+    }
+
+    if (action.type === "click" && desc.includes("추가") && !isNewDraftAction) {
+      fallbackSelectors.push(
+        ".ui-dialog:visible button:has-text('추가'):visible",
+        ".modal:visible button:has-text('추가'):visible",
+        "button:has-text('추가'):visible",
+        "button._addBtn:visible",
+        "button.btn_add:visible"
       );
     }
 
@@ -661,6 +709,8 @@ async function resolveAtomicTarget(
     const isContainer = await locator.evaluate((node) => {
       const tag = node.tagName.toLowerCase();
       const rect = node.getBoundingClientRect();
+      const isCardOrCheckboxLabel = tag === "label" && (node.classList.contains("user_info") || node.classList.contains("chkbox") || !!node.querySelector("input[type='checkbox']"));
+      if (isCardOrCheckboxLabel) return false;
       const isLarge = rect.width > 280 || rect.height > 80;
       const isWrapper = ["div", "form", "section", "li", "tr", "td", "p", "ul", "ol", "label"].includes(tag);
       return isLarge || isWrapper;
@@ -670,7 +720,7 @@ async function resolveAtomicTarget(
       // Find candidate interactive leaf children inside the container
       const candidateQuery = isTypeAction
         ? "textarea:visible, input[type='text']:visible, input:not([type='button']):not([type='submit']):not([type='checkbox']):not([type='radio']):not([type='hidden']):visible, [contenteditable='true']:visible, [contenteditable='']:visible, .note-editable:visible, .ce-paragraph:visible, div[role='textbox']:visible, .editor_body:visible, p:visible"
-        : "button:visible, a:visible, .fc-title:visible, .fc-event-title:visible, [class*='title']:visible, [class*='subject']:visible, input[type='button']:visible, input[type='submit']:visible, [role='button']:visible, input:visible, textarea:visible, select:visible, span.txt:visible, span.name:visible, strong:visible, i.ico:visible";
+        : "button:visible, a:visible, .fc-title:visible, .fc-event-title:visible, [class*='title']:visible, [class*='subject']:visible, input[type='button']:visible, input[type='submit']:visible, [role='button']:visible, input:visible, textarea:visible, select:visible, span.txt:visible, strong:visible, i.ico:visible";
 
       const childCandidates = locator.locator(candidateQuery);
       const count = await childCandidates.count().catch(() => 0);
@@ -759,7 +809,16 @@ async function isSessionValid(
   authPath: string,
   viewport: { width: number; height: number }
 ): Promise<boolean> {
-  if (!fs.existsSync(authPath)) return false;
+  if (!fs.existsSync(authPath) || fs.statSync(authPath).size < 100) return false;
+
+  // Quick sanity check: if auth.json only has unauthenticated initial cookies, it is NOT logged in
+  try {
+    const raw = JSON.parse(fs.readFileSync(authPath, "utf-8"));
+    const cookies = raw.cookies || [];
+    if (cookies.length === 0) {
+      return false;
+    }
+  } catch {}
 
   console.log(`🔍 [세션 사전 검사] 저장된 인증 세션의 유효성을 백그라운드에서 검증합니다...`);
   let checkBrowser;
@@ -771,9 +830,17 @@ async function isSessionValid(
     });
     const checkPage = await checkContext.newPage();
 
-    await checkPage.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
+    let targetTestUrl = url;
+    try {
+      const parsed = new URL(url);
+      if (parsed.pathname === "" || parsed.pathname === "/") {
+        targetTestUrl = new URL("/ekp/main/home/homGwMain", url).toString();
+      }
+    } catch {}
+
+    await checkPage.goto(targetTestUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
     // Brief sleep to catch client-side URL redirects (e.g. location.href = '/login')
-    await checkPage.waitForTimeout(1200);
+    await checkPage.waitForTimeout(2000);
 
     const currentUrl = checkPage.url().toLowerCase();
 
@@ -781,18 +848,24 @@ async function isSessionValid(
     const isLoginUrl =
       currentUrl.includes("/login") ||
       currentUrl.includes("signin") ||
+      currentUrl.includes("userlogin") ||
       currentUrl.includes("sso") ||
       currentUrl.includes("/auth");
 
     // 2. Visible password or user input form check
-    const hasPasswordInput = (await checkPage.locator('input[type="password"]:visible').count()) > 0;
-    const hasLoginForm = (await checkPage.locator('form#loginForm, .login_box, input#userId:visible').count()) > 0;
+    const hasPasswordInput = (await checkPage.locator('input[type="password"]:visible').count().catch(() => 0)) > 0;
+    const hasLoginForm = (await checkPage.locator('form#loginForm, .login_box, input#userId:visible').count().catch(() => 0)) > 0;
 
     // 3. Positive login indicator (GNB menu, logout button, portal frame)
     const hasGnbOrPortal =
       (await checkPage
-        .locator('#svc_lst, .user_info, button:has-text("로그아웃"), a:has-text("로그아웃"), #header, .portal_wrap')
-        .count()) > 0;
+        .locator('#svc_lst, .user_info, button:has-text("로그아웃"), a:has-text("로그아웃"), #header, .portal_wrap, .user_name')
+        .count().catch(() => 0)) > 0;
+
+    const isMainPortalUrl =
+      currentUrl.includes("/main/") ||
+      currentUrl.includes("/portal/") ||
+      currentUrl.includes("/home");
 
     await checkBrowser.close();
 
@@ -801,13 +874,13 @@ async function isSessionValid(
       return false;
     }
 
-    if (hasGnbOrPortal) {
+    if (hasGnbOrPortal || isMainPortalUrl) {
       console.log(`✅ [세션 검증 성공] 로그인 세션이 유효합니다. (사용자 화면 정상 접근 확인)`);
       return true;
     }
 
-    console.log(`ℹ️ [세션 확인] 로그인 폼 미감지: 유효한 세션으로 유지합니다.`);
-    return true;
+    console.log(`⚠️ [세션 미확인] 포탈 메인 화면 및 로그인 인디케이터가 확인되지 않았습니다.`);
+    return false;
   } catch (err: any) {
     if (checkBrowser) {
       try {
@@ -877,7 +950,12 @@ export function isCriticalAction(action: BrowsePlanAction): boolean {
     desc.includes("완료") ||
     sel.includes("savebtn") ||
     sel.includes("btn_save") ||
-    sel.includes("btn_submit")
+    sel.includes("btn_submit") ||
+    sel.includes("_draftbtn") ||
+    sel.includes("_draft") ||
+    sel.includes("_confirmbtn") ||
+    sel.includes("workwritebtn") ||
+    sel.includes("reg_shedule")
   ) {
     return true;
   }
@@ -984,16 +1062,10 @@ export function canSafelySkipFailedAction(
     return true;
   }
 
+  // AI가 명시적으로 "선택적 옵션이므로 생략 가능"이라고 보고한 경우에만 스킵 허용 (찾을 수 없음/Fail-Fast는 실패이지 스킵이 아님!)
   if (selfHealReason) {
     const r = selfHealReason.toLowerCase();
-    if (
-      r.includes("생략") ||
-      r.includes("선택적") ||
-      r.includes("존재하지 않는") ||
-      r.includes("fail-fast") ||
-      r.includes("찾을 수 없") ||
-      r.includes("표시되지 않")
-    ) {
+    if (r.includes("선택적 옵션") || r.includes("비필수 옵션") || r.includes("생략 가능")) {
       return true;
     }
   }
@@ -1054,23 +1126,14 @@ async function trySelfHealAction(moments: any[], startTime: number,
     (action as any)._lastHealReason = healResult.reason;
   }
   
-  // 🚨 AI가 화면에 존재하지 않는 조건부/선택적 단계로 판단했거나 비필수 부가 단계인 경우 즉시 안전 스킵 (새로고침 절대 금지)
+  // 🚨 오직 명시적 비필수/선택적 단계인 경우에만 안전 스킵 허용 (필수 단계는 절대로 스킵하지 않음)
   const isOptional = isOptionalAction(action, momentId, plan.actions.length);
-  const isSelfHealSkipped = Boolean(
-    healResult &&
-    !healResult.success &&
-    (healResult.reason?.includes("생략") ||
-     healResult.reason?.includes("선택적") ||
-     healResult.reason?.includes("존재하지 않는") ||
-     healResult.reason?.includes("Fail-Fast") ||
-     healResult.reason?.includes("찾을 수 없"))
-  );
   const canSkip = canSafelySkipFailedAction(action, momentId, plan.actions.length, healResult?.reason);
 
-  if (isOptional || isSelfHealSkipped || canSkip) {
+  if ((isOptional || canSkip) && !isCriticalAction(action)) {
     (action as any)._wasSkipped = true;
     (action as any)._shouldPrune = true;
-    console.log(`  [✨ 비필수 단계 안전 스킵] 화면에 부가 옵션("${action.description}")이 존재하지 않으므로 새로고침 없이 안전하게 건너뜁니다.`);
+    console.log(`  [✨ 비필수 단계 안전 스킵] 해당 단계("${action.description}")는 비필수 부가 옵션이므로 건너뛰고 다음 단계로 진행합니다.`);
     return null;
   }
 
@@ -1197,8 +1260,9 @@ async function ensureTreeLeafSelected(page: Page): Promise<{ success: boolean; t
 
     console.log(`  [📁 트리/폴더 정밀 분석] 선택 팝업 확인: 트리 확장 및 실제 등록 가능 말단 노드(Leaf Node) 탐색 시작`);
 
-    // 1. Trigger tree expansion via button and Dynatree/Fancytree API
-    const expandBtn = page.locator("#docSelect_expandTree, .btn_fopn, button:has-text('모두펼침'), .dynatree-expander").first();
+    // 1. Trigger tree expansion via button and Dynatree/Fancytree API (strictly inside topmost modal!)
+    const topDialog = page.locator(".ui-dialog:visible, .modal:visible, [role='dialog']:visible").last();
+    const expandBtn = topDialog.locator("#docSelect_expandTree, #eapBinderSelect_expandTree, .btn_fopn, button:has-text('모두펼침'), .dynatree-expander").first();
     if (await expandBtn.isVisible().catch(() => false)) {
       await expandBtn.click({ force: true }).catch(() => {});
     }
@@ -1206,11 +1270,23 @@ async function ensureTreeLeafSelected(page: Page): Promise<{ success: boolean; t
     await page.evaluate(() => {
       try {
         const win = window as any;
+        const dialogs = Array.from(document.querySelectorAll(".ui-dialog, .modal, [role='dialog']")).filter((d) => {
+          const r = d.getBoundingClientRect();
+          const s = window.getComputedStyle(d);
+          return r.width > 100 && r.height > 60 && s.display !== "none" && s.visibility !== "hidden";
+        });
+        const topModal = dialogs[dialogs.length - 1];
+        if (!topModal) return;
+
         if (win.DocSelect && win.DocSelect.tree) {
           win.DocSelect.tree.expandTree();
         }
-        if (win.$) {
-          const treeEls = win.$(".dynatree-container, [id*='treeBox'], [id*='Tree']");
+        if (win.EapBinderSelect && win.EapBinderSelect.tree) {
+          try { win.EapBinderSelect.tree.expandTree(); } catch {}
+        }
+        if (win.$ && topModal) {
+          // Strictly find tree inside topModal only - NEVER search window globally!
+          const treeEls = win.$(topModal).find(".dynatree-container, [id*='treeBox'], [id*='Tree']");
           treeEls.each(function(this: any) {
             try {
               const dynatree = win.$(this).dynatree("getRoot");
@@ -1227,8 +1303,8 @@ async function ensureTreeLeafSelected(page: Page): Promise<{ success: boolean; t
     });
 
     // 2. WAIT for lazy load AJAX to complete and real child board nodes to render (Timeout 4s)
-    const childBoardLoc = page.locator(
-      ".ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:not(:has(ul)) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:last-child a.dynatree-title:visible, [id*='treeBox'] .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .dynatree-container a.dynatree-title:visible"
+    const childBoardLoc = topDialog.locator(
+      ".dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .dynatree-container li:not(:has(ul)) a.dynatree-title:visible, .dynatree-container li:last-child a.dynatree-title:visible, [id*='treeBox'] .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .dynatree-container a.dynatree-title:visible"
     ).first();
 
     await childBoardLoc.waitFor({ state: "visible", timeout: 4000 }).catch(() => {});
@@ -1237,9 +1313,18 @@ async function ensureTreeLeafSelected(page: Page): Promise<{ success: boolean; t
     const activatedData = await page.evaluate(() => {
       try {
         const win = window as any;
+        const dialogs = Array.from(document.querySelectorAll(".ui-dialog, .modal, [role='dialog']")).filter((d) => {
+          const r = d.getBoundingClientRect();
+          const s = window.getComputedStyle(d);
+          return r.width > 100 && r.height > 60 && s.display !== "none" && s.visibility !== "hidden";
+        });
+        const topModal = dialogs[dialogs.length - 1];
+        if (!topModal) return { success: false };
+
         let targetNode: any = null;
         if (win.$) {
-          const treeEls = win.$(".dynatree-container, [id*='treeBox'], [id*='Tree']");
+          // Strictly limit to treeEls inside topModal!
+          const treeEls = win.$(topModal).find(".dynatree-container, [id*='treeBox'], [id*='Tree']");
           treeEls.each(function(this: any) {
             try {
               const tree = win.$(this).dynatree("getTree");
@@ -1261,6 +1346,9 @@ async function ensureTreeLeafSelected(page: Page): Promise<{ success: boolean; t
         if (targetNode) {
           targetNode.activate();
           targetNode.focus();
+          if (typeof targetNode.select === "function") {
+            try { targetNode.select(true); } catch {}
+          }
           return { success: true, title: targetNode.data.title, key: targetNode.data.key };
         }
       } catch {}
@@ -1272,6 +1360,13 @@ async function ensureTreeLeafSelected(page: Page): Promise<{ success: boolean; t
     }
 
     // 4. Also physically click the DOM element so cursor coordinates and visual highlight are recorded
+    const checkboxLoc = topDialog.locator(".dynatree-checkbox:visible").first();
+    if (await checkboxLoc.isVisible().catch(() => false)) {
+      await checkboxLoc.click({ force: true }).catch(() => {});
+      await page.waitForTimeout(500);
+      return { success: true, title: activatedData?.title };
+    }
+
     if (await childBoardLoc.isVisible().catch(() => false)) {
       await childBoardLoc.click({ force: true }).catch(() => {});
       await page.waitForTimeout(500);
@@ -1295,7 +1390,7 @@ async function confirmTreeSelectionModal(page: Page): Promise<boolean> {
 
     // 2. Click confirm button
     const confirmBtn = page.locator(
-      ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button.btn_pri:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, #docSelect_confirm:visible, button._confirm:visible"
+      ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button.btn_pri:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, #docSelect_confirm:visible, #eapBinderSelect_confirm:visible, button._confirm:visible"
     ).first();
     if (await confirmBtn.isVisible().catch(() => false)) {
       console.log(`  [🔘 확인 버튼 클릭] 팝업 확인 버튼 클릭하여 모달 닫기`);
@@ -1314,6 +1409,9 @@ async function confirmTreeSelectionModal(page: Page): Promise<boolean> {
           const win = window as any;
           if (win.DocSelect && win.DocSelect.fn) {
             win.DocSelect.fn.confirm();
+          }
+          if (win.EapBinderSelect && win.EapBinderSelect.fn) {
+            try { win.EapBinderSelect.fn.confirm(); } catch {}
           }
         } catch {}
       });
@@ -1346,18 +1444,13 @@ async function autoRecoverActiveModals(page: Page, action: BrowsePlanAction, mom
     const isActionForModal =
       desc.includes("선택 팝업") ||
       desc.includes("팝업 확인") ||
-      desc.includes("확인") ||
       desc.includes("다이얼로그") ||
       desc.includes("조직도") ||
       desc.includes("주소록") ||
       desc.includes("모달") ||
       desc.includes("팝업") ||
       desc.includes("사원") ||
-      desc.includes("결재") ||
       desc.includes("수신자") ||
-      desc.includes("추가") ||
-      desc.includes("저장") ||
-      desc.includes("상신") ||
       sel.includes(".ui-dialog") ||
       sel.includes("role='dialog'") ||
       sel.includes("confirm") ||
@@ -1393,17 +1486,18 @@ async function autoRecoverActiveModals(page: Page, action: BrowsePlanAction, mom
       });
       console.log(`[DEBUG] Detected modal text: "${txt}"`);
       const isValidationError = txt.includes("입력") || txt.includes("선택") || txt.includes("등록할 수 없습니다") || txt.includes("오류") || txt.includes("필수") || txt.includes("지정");
+      const isSubmitAction = desc.includes("상신") || desc.includes("저장") || desc.includes("제출") || desc.includes("완료");
 
-      if (isValidationError) {
+      if (isValidationError && isSubmitAction) {
         console.error(`\n  🚨 [치명적 폼 검증 에러 발생] 시스템 알림: "${txt}"`);
         await page.waitForTimeout(1000);
         throw new Error(`폼 유효성 검증 실패 (Validation Error): ${txt}`);
       }
 
-      // If it's an alert or confirmation, click the confirm button rather than removing DOM!
+      // If it's an alert or notice during intermediate steps, dismiss it via confirm button!
       const confirmBtn = page.locator(".ui-dialog:visible button:has-text('확인'):visible, #alert_lyr button:has-text('확인'):visible, .ui-dialog:visible button.btn_pri:visible, button:has-text('확인'):visible").first();
       if (await confirmBtn.isVisible().catch(() => false)) {
-        console.log(`\n  [🤖 팝업 자가 복구] 차단 알림 팝업 감지 ➔ [확인] 버튼을 클릭하여 정상 진행합니다.`);
+        console.log(`\n  [🤖 팝업 자가 복구] 차단 알림 팝업("${txt}") 감지 ➔ [확인] 버튼을 클릭하여 정상 진행합니다.`);
         await confirmBtn.click().catch(() => {});
         await page.waitForTimeout(600);
         return true;
@@ -1425,8 +1519,10 @@ async function autoRecoverActiveModals(page: Page, action: BrowsePlanAction, mom
       });
       const top = dialogs[dialogs.length - 1];
       if (!top) return false;
-      const txt = top.textContent || "";
-      return txt.includes("문서함") || txt.includes("게시판") || txt.includes("폴더") || txt.includes("분류") || txt.includes("캘린더") || Boolean(top.querySelector(".dynatree-container, [id*='treeBox']"));
+      const title = (top.querySelector(".ui-dialog-title, .title, h3, h4")?.textContent || "").trim();
+      const hasTree = Boolean(top.querySelector(".dynatree-container, .fancytree-container, [id*='treeBox']"));
+      const isSelectionTitle = title.includes("선택") || title.includes("문서함") || title.includes("폴더") || title.includes("게시판");
+      return hasTree && isSelectionTitle && !title.includes("권한") && !title.includes("조직도") && !title.includes("주소록");
     });
 
     // If the action is explicitly interacting with the modal, DO NOT auto-close it!
@@ -1438,16 +1534,65 @@ async function autoRecoverActiveModals(page: Page, action: BrowsePlanAction, mom
       desc.includes("제목") ||
       desc.includes("본문") ||
       desc.includes("내용") ||
-      desc.includes("공개") ||
       desc.includes("저장") ||
-      desc.includes("등록") ||
-      desc.includes("작성"); // removed "검색" because search happens inside modals too
+      desc.includes("상신") ||
+      desc.includes("등록 진행") ||
+      desc.includes("공개");
 
-    if (isTreeSelectModal && (isPostModalAction || !isActionForModal)) {
+    // ONLY auto-recover tree selection modal when the plan has moved on to filling form inputs (title, body)
+    if (isTreeSelectModal && isPostModalAction) {
       console.log(`\n  [🤖 팝업 자가 복구] 화면을 가로막고 있는 선택 팝업을 감지했습니다.`);
       console.log(`     ➡️ 대상 리프 노드를 자동으로 선택하고 [확인]을 클릭하여 본문 등록 폼으로 진입합니다.`);
       await confirmTreeSelectionModal(page);
       return true;
+    }
+
+    // 3. 2-Tier Nested Picker Auto-Summoning:
+    // If action wants to select a user/attendee or expand org tree, but we are inside an outer settings layer
+    // that requires clicking [추가] or [조직도] to summon the actual picker:
+    const isUserOrTreeIntent =
+      desc.includes("사원") ||
+      desc.includes("사용자") ||
+      desc.includes("대상자") ||
+      desc.includes("조직도") ||
+      desc.includes("직원") ||
+      desc.includes("부서") ||
+      sel.includes("user_info") ||
+      sel.includes("orgUser") ||
+      sel.includes("user_card");
+
+    if (isUserOrTreeIntent) {
+      const hasInnerTrigger = (await page.locator(".ui-dialog:visible button:has-text('추가'):visible, .ui-dialog:visible button:has-text('조직도'):visible, .ui-dialog:visible button:has-text('주소록'):visible").count().catch(() => 0)) > 0;
+      const hasUserListAlready = (await page.locator(".ui-dialog:visible label.user_info, .ui-dialog:visible .user_card, .ui-dialog:visible #orgUserList_listbox, .ui-dialog:visible .dynatree-container").count().catch(() => 0)) > 0;
+      if (hasInnerTrigger && !hasUserListAlready) {
+        console.log(`\n  [🤖 팝업 자가 복구] 설정 대화상자 내 하위 조직도/피커 호출 버튼 감지 ➔ [추가/조직도] 클릭하여 선택 팝업 오픈`);
+        const innerTrigger = page.locator(".ui-dialog:visible button:has-text('추가'):visible, .ui-dialog:visible button:has-text('조직도'):visible, .ui-dialog:visible button:has-text('주소록'):visible").first();
+        await innerTrigger.click().catch(() => {});
+        await page.waitForTimeout(1500);
+        return true;
+      }
+    }
+
+    // 4. Outer Setting Layer Auto-Dismissal for Form Actions (Body, Save, Submit):
+    // If the plan has returned to main form actions (writing body, clicking save) but an outer modal is still open:
+    const isMainFormAction =
+      desc.includes("본문") ||
+      desc.includes("내용") ||
+      desc.includes("저장") ||
+      desc.includes("상신") ||
+      desc.includes("등록 진행");
+
+    if (isMainFormAction) {
+      const activeDialogCount = await page.locator(".ui-dialog:visible, .modal:visible, [role='dialog']:visible").count().catch(() => 0);
+      if (activeDialogCount > 0) {
+        console.log(`\n  [🤖 팝업 자가 복구] 본문 작성/저장 진행 중 열려 있는 상위 설정 팝업 감지 ➔ [확인] 버튼을 클릭하여 설정 적용 및 본문 복귀`);
+        const confirmBtn = page.locator(".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, .ui-dialog:visible button.btn_pri:visible, button:has-text('확인'):visible").first();
+        if (await confirmBtn.isVisible().catch(() => false)) {
+          await confirmBtn.click().catch(() => {});
+          await page.waitForTimeout(1200);
+          return true;
+        }
+      }
     }
   } catch (err: any) {
     if (err?.message?.includes("Validation Error")) {
@@ -1682,22 +1827,12 @@ async function main() {
 
   // Auto-reuse existing auth session if available and not forced
   if (!fs.existsSync(authPath) && !forceLogin) {
-    const parentDataDir = path.resolve(__dirname, "..", "data");
-    const candidateDirs = [
-      "approval-draft",
-      "menu-guide-and-notification",
-      "messenger-chat-start",
-      "ai-chat-and-search",
-    ];
-    for (const cand of candidateDirs) {
-      const candAuth = path.join(parentDataDir, cand, "auth.json");
-      if (fs.existsSync(candAuth)) {
-        console.log(`🔑 기존 인증 세션 (${cand}/auth.json)을 '${slug}' 시나리오로 복사하여 테스트합니다.`);
-        try {
-          fs.copyFileSync(candAuth, authPath);
-        } catch { }
-        break;
-      }
+    const existingCandidate = findExistingAuthSession(slug);
+    if (existingCandidate && fs.existsSync(existingCandidate)) {
+      console.log(`🔑 [세션 자동 연동] 기존 인증 세션(${path.basename(path.dirname(existingCandidate))}/auth.json)을 감지하여 '${slug}' 시나리오로 즉시 연결합니다.`);
+      try {
+        fs.copyFileSync(existingCandidate, authPath);
+      } catch {}
     }
   }
 
@@ -1759,46 +1894,94 @@ async function main() {
     await loginPage.goto(plan.url);
     await loginPage.bringToFront();
 
-    console.log("👉 (안내: 화면에 창이 가려져 있다면 작업 표시줄의 'Chrome' 또는 'Chromium' 아이콘을 클릭하여 앞으로 가져와 주세요.)\n");
+    // Listen for newly opened popup windows/tabs (e.g. window.open portal)
+    loginContext.on("page", (newPage) => {
+      newPage.bringToFront().catch(() => {});
+    });
+
+    const startTime = Date.now();
+    const GRACE_PERIOD_MS = 2500; // Allow initial page redirect to settle
+
+    const isActuallyLoggedIn = async (): Promise<boolean> => {
+      if (Date.now() - startTime < GRACE_PERIOD_MS) {
+        return false;
+      }
+
+      const pages = loginContext.pages();
+      for (const p of pages) {
+        try {
+          if (p.isClosed()) continue;
+          const currentUrl = p.url().toLowerCase();
+          if (currentUrl === "about:blank") continue;
+
+          // 1. If currently on a login URL or has visible password inputs, DEFINITELY NOT logged in yet
+          const isLoginUrl =
+            currentUrl.includes("login") ||
+            currentUrl.includes("signin") ||
+            currentUrl.includes("userlogin") ||
+            currentUrl.includes("oauth") ||
+            currentUrl.includes("authorize");
+
+          const hasPassword = (await p.locator('input[type="password"]:visible').count().catch(() => 0)) > 0;
+          const hasLoginForm = (await p.locator('form#loginForm, .login_box, input#userId:visible').count().catch(() => 0)) > 0;
+
+          if (isLoginUrl || hasPassword || hasLoginForm) {
+            continue; // Still on login page, skip
+          }
+
+          // 2. POSITIVE indicators REQUIRED
+          const hasGnbOrPortal =
+            (await p
+              .locator('#svc_lst, .user_info, button:has-text("로그아웃"), a:has-text("로그아웃"), .user_name, #header, .portal_wrap, #snb, .body_wrap')
+              .count()
+              .catch(() => 0)) > 0;
+
+          const isMainPortalUrl =
+            currentUrl.includes("/main/") ||
+            currentUrl.includes("/portal/") ||
+            currentUrl.includes("/home");
+
+          if (hasGnbOrPortal || isMainPortalUrl) {
+            return true;
+          }
+        } catch {}
+      }
+      return false;
+    };
 
     const waitForLoginSuccess = async () => {
       while (true) {
         try {
-          if (loginPage.isClosed()) break;
-          const url = loginPage.url();
-          const hasGnb = await loginPage.locator('#svc_lst, .user_info, #header, .portal_wrap, button:has-text("로그아웃"), a:has-text("로그아웃")').count().catch(() => 0);
-          if (hasGnb > 0 && !url.includes("login") && !url.includes("oauth") && !url.includes("authorize")) {
+          const allPages = loginContext.pages();
+          const allClosed = allPages.length === 0 || allPages.every((p) => p.isClosed());
+          if (allClosed) break;
+
+          const loggedIn = await isActuallyLoggedIn();
+          if (loggedIn) {
             console.log("\n🎉 [실시간 감지] 사용자가 브라우저에서 로그인을 완료한 것을 감지했습니다! 세션을 즉시 저장하고 녹화를 시작합니다.");
             break;
           }
         } catch {}
-        await new Promise((r) => setTimeout(r, 1000));
+        await new Promise((r) => setTimeout(r, 800));
       }
     };
 
     await Promise.race([waitForEnter(), waitForLoginSuccess()]);
 
-    await loginContext.storageState({ path: authPath });
-    await loginContext.close();
-    await loginBrowser.close();
-    console.log(`\n🎉 로그인 세션 저장 완료: ${authPath}`);
-
-    // Sync fresh session to other common scenarios
-    const parentDataDir = path.resolve(__dirname, "..", "data");
-    const candidateDirs = [
-      "approval-draft",
-      "menu-guide-and-notification",
-      "messenger-chat-start",
-      "ai-chat-and-search",
-    ];
-    for (const cand of candidateDirs) {
-      const candDir = path.join(parentDataDir, cand);
-      if (fs.existsSync(candDir) && cand !== slug) {
-        try {
-          fs.copyFileSync(authPath, path.join(candDir, "auth.json"));
-        } catch { }
-      }
+    const loggedIn = await isActuallyLoggedIn();
+    if (loggedIn) {
+      await loginContext.storageState({ path: authPath });
+      console.log(`\n🎉 로그인 세션 저장 완료: ${authPath}`);
+      try {
+        syncAuthSession(authPath);
+        console.log(`🌐 [세션 전체 동기화] 새로운 인증 정보가 모든 시나리오 및 AI 탐색기에 영구 동기화되었습니다.`);
+      } catch {}
+    } else {
+      console.log(`\n⚠️ [세션 보존] 실제 로그인이 완료되지 않아 기존 인증 세션을 덮어쓰지 않습니다.`);
     }
+
+    await loginContext.close().catch(() => {});
+    await loginBrowser.close().catch(() => {});
   }
 
   // Clean up any stale webm temporary files from previous runs
@@ -1868,6 +2051,10 @@ async function main() {
       window.opener = window.opener || window;
       const origClose = window.close;
       window.close = function () {
+        if (!window.opener || window.name === "hiddenFrm" || window.location.href === "about:blank" || window !== window.top) {
+          try { origClose.call(window); } catch (e) { }
+          return;
+        }
         console.log("[Studio Popup] window.close() 호출 감지 -> 이전 페이지로 자동 뒤로가기");
         if (window.history.length > 1) {
           window.history.back();
@@ -1880,6 +2067,9 @@ async function main() {
     try {
       const origOpen = window.open;
       window.open = function (url, target, features) {
+        if (target === "hiddenFrm" || (features && features.includes("width=0"))) {
+          return origOpen ? origOpen.apply(window, arguments as any) : window;
+        }
         console.log(`[Studio Popup] window.open("${url}") 호출 감지 -> 단일 화면 녹화를 위해 동일 창으로 부드럽게 전환`);
         if (url && typeof url === "string" && url !== "about:blank") {
           window.location.href = url;
@@ -1934,6 +2124,12 @@ async function main() {
   // --- 🪟 Layer 2: Real Multi-Window / Popup Active Page Tracker ---
   // In case a popup does open as a new Page in the context, seamlessly switch 'page' to it!
   context.on("page", async (newPage) => {
+    // 300ms 대기 후 즉시 닫힌 더미 팝업(Naonsoft hiddenFrm 등)은 메인 녹화 페이지 하이재킹 차단
+    await new Promise((r) => setTimeout(r, 300));
+    if (newPage.isClosed()) {
+      return;
+    }
+
     console.log(`\n  [🪟 새 브라우저 창(Popup) 감지] 새 팝업 창이 열렸습니다: ${newPage.url() || "about:blank"}`);
     await newPage.setViewportSize(plan.viewport).catch(() => {});
     attachDialogHandler(newPage);
@@ -1961,8 +2157,16 @@ async function main() {
     await page.bringToFront().catch(() => { });
     bringWindowToForeground();
   }
-  console.log(`페이지 이동 중: ${plan.url}`);
-  await page.goto(plan.url, { waitUntil: "domcontentloaded", timeout: 30000 });
+  let targetNavUrl = plan.url;
+  try {
+    const parsed = new URL(plan.url);
+    if (parsed.pathname === "" || parsed.pathname === "/") {
+      targetNavUrl = new URL("/ekp/main/home/homGwMain", plan.url).toString();
+    }
+  } catch {}
+
+  console.log(`페이지 이동 중: ${targetNavUrl}`);
+  await page.goto(targetNavUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
   if (isHeaded) {
     bringWindowToForeground();
   }
@@ -2266,46 +2470,56 @@ async function main() {
           }
 
           const isTreeSelectConfirm =
-            (descLower.includes("확인") || descLower.includes("선택 완료") || descLower.includes("적용")) &&
-            (descLower.includes("문서함") || descLower.includes("게시판") || descLower.includes("폴더") || descLower.includes("분류") || descLower.includes("트리") || descLower.includes("사원") || descLower.includes("조직도") || descLower.includes("주소록")) &&
+            (descLower.includes("확인") || descLower.includes("선택 완료") || descLower.includes("적용") || descLower.includes("닫기")) &&
+            (descLower.includes("팝업") || descLower.includes("모달") || descLower.includes("대화상자") || descLower.includes("문서함") || descLower.includes("보관함") || descLower.includes("게시판") || descLower.includes("폴더") || descLower.includes("분류") || descLower.includes("트리") || descLower.includes("사원") || descLower.includes("조직도") || descLower.includes("주소록")) &&
             !isSaveOrSubmitConfirm;
 
-          const hasActiveTreeDialog = (await page.locator(".ui-dialog:visible .dynatree-container, [role='dialog']:visible .dynatree-container, [id*='treeBox']:visible").count().catch(() => 0)) > 0;
+          const hasActiveTreeDialog = (await page.locator(".ui-dialog:visible, .modal:visible, [role='dialog']:visible").count().catch(() => 0)) > 0;
 
           // 1. If this is a modal confirmation step but the modal is ALREADY CLOSED, pass safely without crashing!
           if (isTreeSelectConfirm && !hasActiveTreeDialog) {
-            console.log(`  [✨ 모달 확인 불필요] 선택 팝업이 이미 정상 종료되어 확인 클릭 단계를 안전하게 통과합니다.`);
+            console.log(`  [✨ 모달 확인 불필요] 대상 팝업이 이미 정상 종료되어 '${action.description}' 단계를 안전하게 통과합니다.`);
             moment.timestamp = Date.now() - recordingStart;
             await page.waitForTimeout(400);
             break;
           }
 
-          if (hasActiveTreeDialog) {
-            if (isTreeSelectAction) {
-              await ensureTreeLeafSelected(page);
-              const leafLoc = page.locator(
-                ".ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:not(:has(ul)) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:last-child a.dynatree-title:visible, [id*='treeBox'] .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .dynatree-container a.dynatree-title:visible"
-              ).first();
-              if (await leafLoc.isVisible().catch(() => false)) {
-                el = leafLoc;
-              }
+          const topTreeDlg = page.locator(".ui-dialog:visible, .modal:visible, [role='dialog']:visible").last();
+
+          if (isTreeSelectAction) {
+            // Unconditionally expand tree first so child folders and binders become visible!
+            const expandBtn = page.locator(".ui-dialog:visible button.btn_fopn, .ui-dialog:visible .dynatree-expander, .ui-dialog:visible button:has-text('모두펼침'), .ui-dialog:visible #eapBinderSelect_expandTree").first();
+            if (await expandBtn.isVisible().catch(() => false)) {
+              console.log(`  [📁 트리 펼침] 모두펼침 버튼 클릭하여 하위 보관함 목록 표시`);
+              await expandBtn.click({ force: true }).catch(() => {});
+              await page.waitForTimeout(700);
             }
 
-            if (isTreeSelectConfirm) {
-              // Target the visible confirm button directly so mouse cursor travels to it in the video
-              const confirmBtn = page.locator(
-                ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button.btn_pri:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, #docSelect_confirm:visible"
-              ).first();
-              if (await confirmBtn.isVisible().catch(() => false)) {
-                el = confirmBtn;
-              } else {
-                // If button not directly visible in DOM, safely invoke helper and exit step
-                const dismissed = await confirmTreeSelectionModal(page);
-                if (dismissed) {
-                  moment.timestamp = Date.now() - recordingStart;
-                  await page.waitForTimeout(400);
-                  break;
-                }
+            // Target actual binder leaf node (exclude non-writable parent folder "팀초이-개발")
+            const leafLoc = page.locator(
+              ".ui-dialog:visible a.dynatree-title:has-text('공용 문서보관함'), .ui-dialog:visible .dynatree-container ul li a.dynatree-title:visible, .ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible"
+            ).first();
+
+            if (await leafLoc.isVisible().catch(() => false)) {
+              el = leafLoc;
+            }
+          }
+
+          if (isTreeSelectConfirm) {
+            // Target the visible confirm button directly so mouse cursor travels to it in the video
+            const confirmBtn = page.locator(
+              "button#eapBinderSelect_confirm:visible, .ui-dialog:visible #eapBinderSelect_confirm, .ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button.btn_pri:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible"
+            ).first();
+            if (await confirmBtn.isVisible().catch(() => false)) {
+              el = confirmBtn;
+            } else {
+              // If confirm button is not visible, check if dialog is already closed!
+              const dialogCount = await page.locator(".ui-dialog:visible, .modal:visible").count().catch(() => 0);
+              if (dialogCount === 0) {
+                console.log(`  [✨ 모달 확인 불필요] 선택 팝업이 이미 정상 종료되어 확인 클릭 단계를 안전하게 통과합니다.`);
+                moment.timestamp = Date.now() - recordingStart;
+                await page.waitForTimeout(400);
+                break;
               }
             }
           }
@@ -2354,20 +2568,14 @@ async function main() {
               const desc = action.description || "";
               let fallbackLoc: Locator | null = null;
 
-              if (desc.includes("예약사용") || desc.includes("자원예약 사용") || desc.includes("자원예약")) {
-                fallbackLoc = page.locator("label:has-text('예약사용'), text='예약사용', input#scd_link_res_chk").first();
-              } else if ((desc.includes("자원") || desc.includes("예약")) && (desc.includes("열기") || desc.includes("추가") || desc.includes("+") || desc.includes("모달") || desc.includes("버튼"))) {
-                fallbackLoc = page.locator("button#scd_link_res_select_button, #scd_link_res_select button, button:has(.ico_plus), button[title*='추가']").first();
-              } else if (desc.includes("시설") || desc.includes("회의실")) {
-                if (desc.includes("탭") || desc.includes("카테고리")) {
-                  fallbackLoc = page.locator(".ui-dialog:visible a:has-text('시설'), a:has-text('시설'):visible").first();
-                } else {
-                  fallbackLoc = page.locator(":text('3층 회의실'), .ui-dialog:visible div[class*='lst'] > *:first-child, .ui-dialog:visible li:first-child").first();
-                }
-              } else if (desc.includes("확인")) {
-                fallbackLoc = page.locator(".ui-dialog:visible button:has-text('확인'), button:has-text('확인'):visible").first();
-              } else if (desc.includes("저장")) {
-                fallbackLoc = page.locator("#reg_schedule_form #savebtn, .ui-dialog:visible button:has-text('저장'), button:has-text('저장'):visible").first();
+              if (desc.includes("확인") || desc.includes("적용") || desc.includes("선택 완료")) {
+                fallbackLoc = page.locator(".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, .modal:visible button:has-text('확인'):visible, [role='dialog']:visible button:has-text('확인'):visible, button:has-text('확인'):visible").first();
+              } else if (desc.includes("저장") || desc.includes("상신") || desc.includes("등록") || desc.includes("발행") || desc.includes("완료")) {
+                fallbackLoc = page.locator("button:has-text('저장'):visible, button:has-text('상신'):visible, button:has-text('등록'):visible, button.btn_save:visible, button.btn_submit:visible, button.btn_pri:visible, input[type='submit']:visible").first();
+              } else if (desc.includes("닫기") || desc.includes("취소")) {
+                fallbackLoc = page.locator(".ui-dialog:visible button:has-text('닫기'):visible, .ui-dialog:visible button:has-text('취소'):visible, button:has-text('닫기'):visible, button:has-text('취소'):visible, button.btn_close:visible").first();
+              } else if (desc.includes("추가") || desc.includes("선택") || desc.includes("조직도") || desc.includes("주소록")) {
+                fallbackLoc = page.locator(".ui-dialog:visible button:has-text('추가'):visible, .ui-dialog:visible button:has-text('선택'):visible, button:has-text('추가'):visible, button:has-text('조직도'):visible, button.btn_add:visible").first();
               }
 
               if (fallbackLoc && (await fallbackLoc.count().catch(() => 0)) > 0) {
@@ -2433,45 +2641,79 @@ async function main() {
           }
 
           // 4. 즉시 실제 클릭 실행 (마커와 동시에 브라우저에서 실행됨)
-          const clickTimeout = (momentId >= plan.actions.length - 2) ? 2000 : 10000;
+          const clickTimeout = (momentId >= plan.actions.length - 2) ? 2000 : 3500;
           try {
             console.log(`  [DEBUG] click starts. timeout=${clickTimeout}, force=${action.force}`);
             const t1 = Date.now();
             if (isDisabled) {
-              await el.click({ timeout: 4000, force: true }).catch(() => { });
+              await el.click({ timeout: 3000, force: true }).catch(() => { });
             } else {
               await el.click({ timeout: clickTimeout, force: action.force ?? false });
             }
             console.log(`  [DEBUG] click done. took ${Date.now() - t1}ms`);
           } catch (clickErr: any) {
             console.log(`  [DEBUG] click failed: ${clickErr.message}`);
-            // Non-optional fallback: try DOM dispatchEvent("click")
-            try {
-              console.log(`  [DEBUG] fallback click force=true starts`);
-              const t2 = Date.now();
-              await el.click({ timeout: 3000, force: true });
-              console.log(`  [DEBUG] fallback click done. took ${Date.now() - t2}ms`);
-            } catch {
-              try {
-                await el.dispatchEvent("click", undefined, { timeout: 1000 });
-              } catch {
-                // Trigger AI Self-Healing if click itself completely fails!
-                console.log(`  [DEBUG] dispatchEvent failed. trySelfHealAction starts`);
-                const t3 = Date.now();
+            const isInterceptedByOverlay = clickErr.message?.includes("intercepted") || clickErr.message?.includes("overlay");
+            if (isInterceptedByOverlay) {
+              console.log(`  [🛡️ 오버레이 차단 감지] 화면 팝업/모달 오버레이가 클릭을 가로막고 있습니다. 배경 강제 클릭을 중단하고 팝업 복구/자가 치유로 전환합니다.`);
+              const unblocked = await autoRecoverActiveModals(page, action, moments, recordingStart);
+              if (unblocked) {
+                const newEl = await getLocator(page, action);
+                if (newEl && await newEl.isVisible().catch(() => false)) {
+                  el = newEl;
+                  await el.click({ timeout: 3000 }).catch(() => {});
+                }
+              } else {
                 const healed = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
-                console.log(`  [DEBUG] trySelfHealAction done. took ${Date.now() - t3}ms`);
                 if (healed) {
                   el = healed;
-                  await healed.click({ timeout: 4000, force: true }).catch(() => healed.dispatchEvent("click", undefined, { timeout: 1000 }));
-                } else {
-                  if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
-                    markActionAndFollowupWaitForPruning(plan, actionIdx, action);
-                    console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 클릭을 수행하지 못했으나 필수 핵심 단계가 아니므로 안전하게 스킵합니다: ${action.description}`);
-                    break;
-                  }
-                  throw clickErr;
+                  await healed.click({ timeout: 3000, force: true }).catch(() => {});
+                } else if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+                  markActionAndFollowupWaitForPruning(plan, actionIdx, action);
+                  console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 오버레이 차단으로 클릭할 수 없으나 부가 단계이므로 안전하게 스킵합니다: ${action.description}`);
+                  break;
                 }
               }
+            } else {
+              // Non-optional fallback: try DOM dispatchEvent("click")
+              try {
+                console.log(`  [DEBUG] fallback click force=true starts`);
+                const t2 = Date.now();
+                await el.click({ timeout: 2500, force: true });
+                console.log(`  [DEBUG] fallback click done. took ${Date.now() - t2}ms`);
+              } catch {
+                try {
+                  await el.dispatchEvent("click", undefined, { timeout: 1000 });
+                } catch {
+                  // Trigger AI Self-Healing if click itself completely fails!
+                  console.log(`  [DEBUG] dispatchEvent failed. trySelfHealAction starts`);
+                  const t3 = Date.now();
+                  const healed = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
+                  console.log(`  [DEBUG] trySelfHealAction done. took ${Date.now() - t3}ms`);
+                  if (healed) {
+                    el = healed;
+                    await healed.click({ timeout: 3000, force: true }).catch(() => healed.dispatchEvent("click", undefined, { timeout: 1000 }));
+                  } else {
+                    if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+                      markActionAndFollowupWaitForPruning(plan, actionIdx, action);
+                      console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 클릭을 수행하지 못했으나 필수 핵심 단계가 아니므로 안전하게 스킵합니다: ${action.description}`);
+                      break;
+                    }
+                    throw clickErr;
+                  }
+                }
+              }
+            }
+          }
+
+          // If a dropdown menu opened (e.g. [권한 ▲] toggle in shuttle picker dialog), select permission option to complete transfer!
+          const isDropdownToggle = (action.selector && action.selector.includes("drop_tgl")) || (action.description && (action.description.includes("권한") || action.description.includes("전달") || action.description.includes("추가")));
+          if (isDropdownToggle) {
+            const dropMenuOpt = page.locator(".drop_menu:visible a:has-text('읽기/쓰기'), .drop_menu:visible a:has-text('읽기'), .drop_menu:visible a:first-child, .dropdown-menu:visible a:first-child").first();
+            if (await dropMenuOpt.isVisible().catch(() => false)) {
+              console.log(`  [✨ 셔틀 권한 선택 완료] 드롭다운 메뉴가 열려 권한 레벨 옵션을 클릭하여 대상 전송을 완료합니다.`);
+              await dropMenuOpt.click().catch(() => {});
+              await page.waitForTimeout(600);
             }
           }
 
@@ -2485,18 +2727,23 @@ async function main() {
               await page.waitForTimeout(400);
               const topDlg = page.locator(".ui-dialog:visible, [role='dialog']:visible").last();
               const leafLoc = topDlg.locator(
-                ".dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .dynatree-container li:not(:has(ul)) a.dynatree-title:visible, .dynatree-container li:last-child a.dynatree-title:visible, .dynatree-container a.dynatree-title:visible"
+                "a.dynatree-title:has-text('공용 문서보관함'):visible, .dynatree-container li:last-child a.dynatree-title:visible, .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .dynatree-container a.dynatree-title:visible"
               ).first();
               if (await leafLoc.isVisible().catch(() => false)) {
                 await leafLoc.click({ force: true }).catch(() => {});
                 await page.waitForTimeout(500);
               }
-              const confirmBtn = topDlg.locator(".ui-dialog-buttonpane button:has-text('확인'), button:has-text('확인'):visible").first();
+              const confirmBtn = topDlg.locator("#eapBinderSelect_confirm:visible, .ui-dialog-buttonpane button:has-text('확인'), button:has-text('확인'):visible").first();
               if (await confirmBtn.isVisible().catch(() => false)) {
                 await confirmBtn.click({ force: true }).catch(() => {});
               }
             }
             await page.locator(".ui-widget-overlay:visible, .ui-dialog:visible:has(.dynatree-container)").waitFor({ state: "hidden", timeout: 3500 }).catch(() => {});
+            await page.evaluate(() => {
+              if (document.querySelectorAll(".ui-dialog:visible").length === 0) {
+                document.querySelectorAll(".ui-widget-overlay").forEach(el => el.remove());
+              }
+            }).catch(() => {});
             console.log(`  [✨ 팝업 닫힘 완료] 선택 팝업이 정상 해제되어 본문 작성 폼으로 진입했습니다.`);
           }
 

@@ -561,9 +561,175 @@ npm start
      - 25개 액션, 48.8초 초고화질 무결점 최종 MP4 렌더링 완료.
      - `new_frame_16s.jpg` ~ `new_frame_46s.jpg` 전수 시각 검증 통과: 폼 입력 시 줌아웃 없는 완벽한 카메라 안정성, 중복 클릭 제로, 유휴 시 및 아웃트로 시 마우스 자동 숨김 확인.
 
+### ✅ Task 15. 모달 딤드 오버레이 차단 방어 & 중첩 다이얼로그 최상위 Z-index 자동 타겟팅 & 등록 폼 컨트롤 보호 범용 엔진 고도화 (2026-10-12 완료)
+1. **문제 정의 및 배경 (`tutorial-document3` 영상 분석)**:
+   - **문제 1 (딤드 오버레이 배후 클릭 요격)**: 모달 팝업(`.ui-widget-overlay`)이 떠 있는 상태에서 시나리오나 폴백 로직이 배경 사이드바나 목록 요소를 찾으려 하여, Playwright에서 "element intercepted by <div class='ui-widget-overlay'>" 에러 및 39초간 긴 멈춤 지연 발생.
+   - **문제 2 (중첩 모달 확인 버튼 혼선)**: 권한 설정 팝업 위에 조직도 선택 팝업이 중첩(Nested Modal)되어 떴을 때, 단순 `.first()` 셀렉터로 인해 최상단 활성 팝업이 아닌 뒷배경 팝업의 [확인] 버튼을 클릭하려다 42초간 프리징 발생.
+   - **문제 3 (폼 컨트롤 셀렉터 오염)**: `planSanitizer.ts`의 범용 테이블 폴백이 폼 등록 화면의 체크박스/버튼까지 `table.tbl_lst`로 잘못 덮어씌워 폼 저장이 누락되던 문제.
+2. **전사 범용 해결 내역 (특정 시나리오 하드코딩 일체 배제)**:
+   - **1. 모달 딤드 오버레이 방어막 (`scripts/record.ts`)**:
+     - `.ui-widget-overlay:visible` 감지 시 백그라운드 요소 탐색을 원천 차단하고 즉시 모달 자가 복구(`autoRecoverActiveModals`) 또는 자가 치유(`trySelfHealAction`)로 위임.
+     - Playwright 클릭 시 `intercepted` / `overlay` 에러 발생 시 억지 강제 클릭(force: true)을 중단하고 팝업 복구/자가 치유로 즉시 전환.
+     - `getLocatorWithWait` 타임아웃을 9초에서 3.5초로 단축하여 이상 상태 발생 시 3초 이내에 자가 치유로 즉시 전환(Fast-Fail).
+   - **2. 최상위 Z-index 중첩 모달 핀포인트 타겟팅 (`scripts/record.ts`)**:
+     - 화면에 2개 이상의 모달/다이얼로그가 중첩되어 있을 때, z-index가 가장 높은 최상단 활성 다이얼로그(`.ui-dialog:visible, .modal:visible, [role='dialog']:visible`).last()를 자동으로 타겟 스코프로 바인딩.
+     - 트리 선택 및 모달 확인 버튼 클릭 시 항상 사용자의 눈앞에 보이는 최상단 모달의 버튼만을 100% 정확하게 클릭하도록 보장.
+   - **3. 등록 폼 컨트롤 보호 & 테이블 폴백 스코프 한정 (`planSanitizer.ts`)**:
+     - `table.tbl_lst` 폴백을 단순 목록 행 클릭 의도(`isListRowIntent`)에만 엄격히 제한하고, 폼 컨트롤/체크박스/버튼에는 절대 주입되지 않도록 격리.
+   - **4. AI 프롬프트 체크박스 환각 방지 가이드 (`tutorialTemplates.ts`, `geminiPlanner.ts`)**:
+     - 통합 권한 모달에서 존재하지 않는 5개의 개별 체크박스를 AI가 임의로 가상 생성하지 않도록 프롬프트 가이드 보강.
+3. **최종 무결점 검증 결과 (`data/tutorial-document3/recording.mp4`)**:
+   - **총 녹화 런타임**: **153.8초(2분 34초) ➔ 70.4초(1분 10초)로 54% 이상 획기적 단축!**
+   - **오버레이 차단 멈춤 제로**: 딤드 오버레이 뒤 클릭 현상 0회.
+   - **중첩 모달 즉시 해제**: 조직도 팝업 및 권한 팝업이 순차적으로 지연 없이 즉각 확인 및 닫힘.
+   - **문서 등록 완결**: 개별 권한 설정 후 문서가 성공적으로 저장되어 워크샵 자료 문서함 최상단에 즉시 등록 및 상세 뷰 렌더링 확인 (`test3_25s.jpg`, `test3_45s.jpg`, `test3_55s.jpg`, `test3_68s.jpg` 전수 시각 검증 통과).
+
+### ✅ Task 16. 유니버설 셔틀/픽커 다이얼로그 4단계 표준 시퀀스 확립 (Universal Shuttle & Picker Dialog Standard) (2026-10-12 완료)
+1. **문제 정의 및 배경**:
+   - 기존에는 AI가 조직도/권한/참석자 선택 등 셔틀(Transfer) 다이얼로그를 다룰 때, 팝업을 열고 대상을 클릭하지 않은 채 곧바로 [추가] 및 [확인]을 누르는 비정상적인 시나리오를 작성함.
+   - 사용자 피드백: *"권한선택모달에서 사용자를 선택하는 모습이 안보이는데 시나리오에는 그런게 없기때문에 당연히 선택을 안했겠지 근데 기본적으로 메뉴얼이라 함은 다 선택해서 넘어가는 모습이 담기는게 좀 정상적이지 않나라는 생각을 해"*
+   - 엔진 레벨의 런타임 하드코딩(사원 목록 강제 클릭)을 배제하고, AI 시나리오 기획 프레임워크 자체에 웹 표준 UX 패턴을 주입하여 **모든 웹 애플리케이션의 픽커 다이얼로그에 100% 범용 적용**되도록 개선.
+2. **유니버설 셔틀/픽커 다이얼로그 4단계 필수 시퀀스 (`tutorialTemplates.ts`, `geminiPlanner.ts`)**:
+   - ① **[1단계: 모달 오픈]**: 대상 지정 트리거 버튼(`button:has-text('추가')`, `button:has-text('조직도')`) 클릭
+   - ② **[2단계: 시각적 대상 선택 - 필수!]**:
+     - *절대 대상을 비워둔 채 넘어가지 말 것 (매뉴얼 영상의 필수 시연 요소)*
+     - 좌측 부서 트리 노드 또는 중앙/우측 사원 카드/체크박스를 명확하게 클릭하여 시청자가 누구를 선택하는지 시각적으로 인지할 수 있도록 연출.
+     - 셀렉터: `.ui-dialog:visible .user_card:first-child, .ui-dialog:visible .dynatree-container li:first-child a.dynatree-title:visible, .ui-dialog:visible tr:first-child td, .ui-dialog:visible li:first-child label, .ui-dialog:visible tr:first-child input[type='checkbox']`
+   - ③ **[3단계: 대상 목록으로 추가/전달]**:
+     - 선택한 대상을 우측 타겟 목록으로 전달하는 `[추가]`, `[권한]`, `[선택]` 버튼 클릭
+   - ④ **[4단계: 대화상자 확인 및 적용]**:
+     - 최상단 활성 모달의 `[확인]` 버튼을 클릭하여 설정 반영 및 팝업 닫힘
+3. **자체 테스트 및 영상 검증 결과 (`data/test-org-picker/recording.mp4`)**:
+   - 신규 시나리오 생성 테스트: AI가 정확하게 4단계 시퀀스(`[1단계: 모달 오픈] -> [2단계: 시각적 대상 선택] -> [3단계: 대상 목록으로 추가] -> [4단계: 대화상자 확인 및 적용]`)를 완전체로 기획.
+   - 실제 브라우저 녹화 검증:
+     - 41.4초: 조직도 트리/사원 목록에서 대상을 클릭 (`org_42s.jpg`)
+     - 43.8초: [권한] 추가 버튼을 클릭하여 타겟 목록으로 전달
+     - 46.3초: [확인] 버튼 클릭하여 팝업 닫힘 (`org_47s.jpg`)
+     - 50.7초: 본문 폼 상단 [저장] 클릭
+     - 60.0초: 새로 등록된 계획서 항목이 문서함 목록에 나타나고 상세 열람까지 완결 (`org_62s.jpg`)
+   - **총 비디오 길이 63.9초 (1분 3초)** 초고화질 무결점 영상 완성.
+
+### ✅ Task 17. 조직도/권한 셔틀 픽커 중앙 사원 후보 카드 정밀 타겟팅 & 드롭다운 자동 연계 & 중첩 부모 모달 2-Tier 확인 방어막 엔진 구축 (2026-10-12 완료)
+1. **문제의 기술적 근본 원인 분석 (왜 왼쪽 부서 트리만 계속 클릭했는가?)**:
+   - **원인 1 (`planSanitizer.ts` 과잉 치환 버그)**:
+     기존 `planSanitizer.ts`의 트리/폴더 노드 정제 규칙(규칙 1-B)이 `선택`, `트리`, `노드` 키워드가 들어간 모든 모달 액션을 왼쪽 부서 트리(`.dynatree-container`)로 일괄 덮어씌워버림. 이로 인해 AI가 "사원 선택"을 의도했더라도 왼쪽 부서 트리 노드로 강제 변환되어 화면에서는 왼쪽 부서만 클릭하는 이상 현상이 발생함.
+   - **원인 2 (프로필 레이어 오작동 vs 카드 체크박스)**:
+     Naonsoft 조직도에서는 사원 텍스트(`span.name`, `권정민 사장`)를 직접 클릭하면 선택되는 것이 아니라 '사원 명함/프로필 팝업 레이어'가 떠서 화면 클릭을 가로막음. 실제 사원 카드를 선택하려면 `label.user_info.chkbox`를 클릭해야만 카드 둘레에 파란색 선택 테두리(Blue Border)가 생기며 선택 상태가 됨.
+   - **원인 3 (셔틀 드롭다운 버튼 특성)**:
+     `[권한 ▲]` 버튼은 단순 클릭 버튼이 아니라 드롭다운 토글(`button.drop_tgl`)임. 클릭 시 `.drop_menu`가 펼쳐지며 그 안의 권한 레벨(`[읽기/쓰기]`, `[읽기]`)을 클릭해야만 비로소 사원이 우측 타겟 목록으로 전달됨.
+   - **원인 4 (2-Tier 중첩 모달 부모 확인 누락)**:
+     문서 등록 폼에서 `[개별권한 설정]`을 누르면 부모 레이어(`docMain_authEditLyr`)가 열리고, 그 안에서 `[추가]`를 눌러야 자식 조직도 모달이 열림. 조직도 모달을 닫아도 부모 레이어가 열려 있으므로, 부모 레이어의 `[확인]`까지 완료해야 메인 폼의 `[저장]` 버튼을 누를 수 있음.
+
+2. **전사 범용 해결 내역 (Zero Hardcoding & Universal Multi-Tier Modal Architecture)**:
+   - **1. 사원 선택 의도 격리 및 중앙 후보 카드 정밀 셀렉터 보강 (`planSanitizer.ts`)**:
+     - `isUserSelection`(사원, 사용자, 대상자, 직원, 인원 등)을 일반 폴더 트리 정제에서 완벽히 분리하여 왼쪽 트리가 사원 선택 단계를 덮어쓰지 못하도록 차단.
+     - 규칙 1-B1.4 고도화: 단일 시나리오("개별권한")가 아닌 모든 서브 옵션/설정 트리거(권한, 결재선, 참석자, 수신자, 분류, 옵션 등)를 포괄하는 범용 시맨틱 셀렉터(`button:has-text('${kw}')`, `label:has-text('${kw}')`) 엔진으로 확장.
+     - 규칙 1-B1.5 신설: 모달 내 사원 선택 시 중앙 후보 카드(`.ui-dialog:visible label.user_info.chkbox, .ui-dialog:visible label[class*='user_info'], .ui-dialog:visible #orgUserList_listbox label.user_info`)를 1순위로 지정.
+     - 규칙 1-B1.6 신설: 하위 피커 호출 및 셔틀 전송 버튼을 범용 셀렉터 체인(`.ui-dialog:visible button:has-text('추가'):visible`, `button.drop_tgl:visible`, `.ui-dialog:visible button.btn_rgt:visible`)으로 정제하여 하드코딩된 단일 화면 ID(`authEdit_authAdd`, `docMain_authEditLyr`)를 원천 제거.
+   - **2. 프로필 팝업 차단 및 원자적 타겟팅 가드 (`scripts/record.ts`)**:
+     - `resolveAtomicTarget`에서 `label.user_info.chkbox` 및 `label[class*='chkbox']`를 컨테이너 분해 대상에서 제외하여, 자식 `span.name`으로 파고들어 프로필 창이 뜨는 현상을 원천 방지.
+   - **3. 셔틀 드롭다운 메뉴 자동 연계 트랜스퍼 (`scripts/record.ts`)**:
+     - `button.drop_tgl` 클릭 후 화면에 `.drop_menu:visible`이 나타나면 자동으로 권한 레벨 옵션(`[읽기/쓰기]`, `[읽기]`)을 클릭하여 우측 대상 목록으로 사원 전달을 완결.
+   - **4. 유니버설 중첩 모달 스택 LIFO 닫기 방어막 (`planSanitizer.ts` 규칙 15)**:
+     - 특정 시나리오명("개별권한")을 일체 배제하고, 복수 개의 다이얼로그가 중첩된 모든 웹 시나리오(전자결재 결재선 지정, 일정관리 참석자/자원, 메일 수신자, 문서 권한/분류 등)에서 내부 피커 닫힘 후 미닫힌 상위 설정 대화상자의 [확인] 액션을 자동으로 보강하여 본문 등록 폼으로 안전하게 복귀.
+   - **5. 레거시 단일 시나리오 하드코딩 폴백 전면 제거 (`scripts/record.ts`)**:
+     - 기존의 특정 화면 전용 폴백(`scd_link_res_select_button`, `3층 회의실`, `reg_schedule_form`)을 전면 삭제하고, 시맨틱 표준 버튼(`[확인]`, `[저장/상신/등록]`, `[닫기/취소]`, `[추가/선택]`) 기반의 범용 탐색 체계로 단일화.
+
+3. **최종 무결점 검증 결과 (`data/test-org-picker/recording.mp4`)**:
+   - **총 31개 액션, 82.1초 초고화질 무결점 녹화 완료**.
+   - **시각적 실증 증거 (Visual Verification Frames)**:
+     - `test_user_checked.jpg`: 중앙 사원 목록의 "권정민 사장" 카드 둘레에 선명한 파란색 하이라이트 테두리가 씌워지며 선택 완료.
+     - `frame_user_selected.jpg` & `test_user_transferred.jpg`: `[권한 ▲]` 클릭 후 우측 '권한' 목록에 "권정민 사장"이 눈 모양(조회 권한) 아이콘과 함께 완벽히 이동된 모습 확인.
+     - `frame_doc_saved.jpg`: 본문 등록 폼으로 복귀하여 개별권한 영역에 `읽기(조회): 권정민`이 표시되고, 상단 파란색 `[저장]` 버튼을 클릭하여 문서 등록이 100% 무결점으로 완료된 모습 확인.
+
+
+---
+
+### ✅ Task 18. 사전 시각 탐색기(Pre-flight Visual Explorer) 및 Gemini 멀티모달 시나리오 직결 파이프라인 구축 (2026-10-12 완료)
+1. **문제 정의 및 배경**:
+   - 기존 시나리오 AI(`geminiPlanner.ts`)는 텍스트 프롬프트와 정적 소스코드/문서만을 읽고 상상에 의존하여 시나리오(`browse-plan.json`)를 작성했음.
+   - 이로 인해 실제 웹 화면의 렌더링 상태나 최신 DOM ID를 확인하지 못해 할루시네이션이 발생했고, 녹화 시점의 런타임 자가 치유(`elementSelfHealer.ts`)에 의존해야 하는 구조적 한계가 존재했음.
+   - 사용자 지침: **"시나리오 AI가 처음부터 브라우저를 띄워 실제 화면을 눈으로 확인(스크린샷 + DOM 분석)하고, 그 시각 정보를 바탕으로 시나리오를 생성해야 한다."**
+2. **구현 내역 (`src/services/visualProbeAgent.ts`, `src/services/geminiPlanner.ts`)**:
+   - **1) 사전 시각 탐색 에이전트 (`visualProbeAgent.ts`)**:
+     - 플랜 생성 요청 즉시 Playwright 헤드리스 브라우저 구동 및 기존 인증 세션(`data/*/auth.json`) 자동 로드.
+     - [화면 1] 포탈 메인 시작 화면 캡처 및 DOM 후보군 추출.
+     - [화면 2] 프롬프트 분석 기반 대상 모듈 이동(서랍 펼침 연계) 및 모듈 메인 화면 캡처.
+     - [화면 3] 신규 등록/작성 또는 검색 폼 진입 화면 캡처 및 DOM 후보군 추출.
+     - [화면 4] 권한/조직도/참석자 등 서브 팝업 모달 화면 캡처 및 DOM 후보군 추출.
+   - **2) Gemini 멀티모달 시각 엔진 직결 (`geminiPlanner.ts`)**:
+     - 캡처된 실제 브라우저 스크린샷들을 JPEG Base64 멀티모달 이미지 파트(`inlineData`)로 변환하여 Gemini API의 `contents`에 직결 주입.
+     - 화면에서 실시간 추출된 180~200여 개의 실제 인터랙티브 엘리먼트 후보군(`tag`, `id`, `text`, `suggestedSelector`)을 함께 주입.
+     - Gemini가 상상이나 추측 대신 **제공된 실제 화면 이미지와 추출된 실제 셀렉터만을 100% 매칭**하여 시나리오를 최초 생성하도록 지침 강제.
+3. **실제 검증 결과 (`scratch/test-visual-scenario-gen.ts`)**:
+   - 실시간 웹 접속(`https://gwdev.unison.co.kr`) 및 4장의 실제 브라우저 화면(시작 화면 46개, 문서관리 메인 180개, 등록 폼 184개, 팝업 모달 200개) 실시간 확보.
+   - Gemini 3.8 Flash가 단 1턴(1-Turn) 만에 실존 셀렉터(`button#edmsLeft_docRegBtn`, `button.btn_svc_open`, `label.user_info.chkbox` 등)를 100% 정확하게 매칭하여 27개 액션의 완전 무결한 시나리오를 단번에 생성 성공.
+
+---
+
+### ✅ Task 19. 다중 모달 중첩 스택 최상단 스코핑 가드 및 100% 무결점 E2E 파이프라인 실증 완료 (2026-10-12 완료)
+1. **문제 정의 및 배경**:
+   - 2-Tier 중첩 모달(부모 설정 레이어 위에 자식 조직도/사원 픽커 모달이 띄워지는 엔터프라이즈 UI)에서, Playwright가 셔틀 전송 버튼(`button:has-text('추가')`)을 탐색할 때 DOM 순서상 먼저 나타나는 부모 레이어의 버튼(`#authEdit_authAdd`)을 선택하는 문제 발생.
+   - 부모 레이어는 자식 모달의 모달 오버레이(`<div class="ui-widget-overlay"></div>`)에 가려져 있어 포인터 이벤트가 차단(`intercepts pointer events`)되고, 런타임 자가 치유 호출로 인해 불필요한 26초 멈춤 공백이 발생했음.
+2. **범용 아키텍처 개선 내역 (Zero Hardcoding)**:
+   - **1) 최상단 활성 모달 강제 스코핑 및 백드롭 오버레이 방어막 (`scripts/record.ts`)**:
+     - 화면에 모달 오버레이(`hasOverlay`)가 활성화되어 있는 경우, `dialogLoc` 탐색 시 z-index 최상위 다이얼로그(`order[0]`)만 탐색하고 오버레이에 가려진 하위 다이얼로그(`orderIdx > 0`) 탐색을 엄격히 차단.
+     - 전역 다이얼로그 폴백 루프에서도 오버레이 활성 시 배경 다이얼로그 요소를 매칭하지 않도록 원천 차단.
+   - **2) 셔틀 전송 버튼 우선순위 및 자가 치유 셀렉터 영구 보존 (`planSanitizer.ts`)**:
+     - 셔틀 팝업 대상 전달 버튼 정제 시, 하위 팝업 오픈용 `추가` 버튼보다 자식 모달 내부의 실존 전송 버튼(`button.drop_tgl`, `button:has-text('권한')`, `button:has-text('선택')`)을 최우선 매칭하도록 순서 보정.
+     - `!(action as any)._lastHealReason` 가드를 추가하여 AI 자가 치유를 통해 획득한 정밀 셀렉터를 정제기가 일반 규칙으로 덮어쓰지 못하도록 보존.
+   - **3) 2-Tier 중첩 트리거 중복 주입 방지 (`planSanitizer.ts`)**:
+     - `userPickIdx` 감지 시 피커를 오픈하는 트리거 버튼(설명에 '피커 호출', '버튼 클릭', `btn_add` 포함)을 사원 선택 단계로 오인하지 않도록 정밀 격리하여 중복 `[추가]` 클릭 액션 발생을 방지.
+3. **최종 E2E 파이프라인 완결 실증 결과 (`output/visual-test-e2e.mp4`)**:
+   - **비디오 스펙**: 1080p 60fps, 1분 13초 (4398 프레임), 34.9 MB.
+   - **불필요 대기 공백 100% 제거**: 이전 1분 39초에서 1분 13초로 단축, 오버레이 차단 0건, 클릭 실패 0건 (`click failed: 0`).
+   - **5단계 시연 완결 실증 (Verification Frames 1~18)**:
+     - `frame_007.jpg`: 개별권한 레이어 내부의 `[+ 추가]` 버튼에 가상 커서가 정확히 안착하여 클릭.
+     - `frame_008.jpg`: 최상단에 열린 조직도 모달에서 "권정민 사장" 사원 카드를 정확히 타겟팅하여 파란색 하이라이트 선택.
+     - `frame_009.jpg`: `[권한 ▲]` 버튼을 정밀 클릭하여 우측 '권한' 목록으로 사원 전송 완결.
+     - `frame_010.jpg`: 자식 조직도 모달 [확인] -> 부모 권한 레이어 [확인] 순으로 LIFO 닫기 완료 후 등록 폼에 `읽기 (조회) : 권정민`이 완벽 반영.
+     - `frame_016.jpg`: 1.4x 부드러운 카메라 줌인 상태에서 에디터 본문 타이핑 및 상단 툴바 `[저장]` 버튼 클릭.
+     - `frame_017.jpg` & `frame_018.jpg`: 목록으로 복귀하여 신규 등록된 문서가 최상단에 노출되고, 해당 문서를 클릭하여 상세 조회 창(제목, 작성자, 개별권한, 본문 내용)까지 시연 완료.
+
+### ✅ Task 20. 시나리오 AI 가동 전 통합 인증 관리자 (`authManager.ts`) 구축 및 사전 로그인 보장 (2026-10-12 완료)
+1. **문제 정의 및 배경**:
+   - 시나리오 AI(`geminiPlanner.ts`, `visualProbeAgent.ts`)가 실제 화면을 눈으로 확인하고 시나리오를 작성하려면 대상 웹 시스템에 접속해야 함.
+   - 하지만 최초 실행 시 또는 세션 쿠키 만료 시, 로그인이 안 되어 있으면 모든 내부 업무 페이지 접근이 차단되고 로그인 페이지(`/login`)로 튕기므로 시각 탐색이 원천 불가능해지는 선후 관계 모순 발생.
+2. **구현 내역 (`src/services/authManager.ts`, `src/services/visualProbeAgent.ts`, `scripts/dashboard-server.ts`)**:
+   - **1) 통합 인증 관리자 (`authManager.ts`) 신설**:
+     - `ensureAuthenticatedSession(options)`: 사전 시각 탐색 직전 세션 유효성을 1차 검사하고, 미인증/만료 상태일 경우 자동으로 헤디드(Headed) Chrome/Chromium 브라우저 창을 화면에 팝업.
+     - `waitForLoginSuccess()`: 사용자가 브라우저에서 로그인을 완료하여 GNB/포탈 메인이 로드되는 순간을 실시간 감지하여 창을 자동 종료하고 `auth.json` 영구 저장 및 전체 시나리오 동기화.
+     - `isSessionValid()`: 백그라운드에서 비밀번호 입력창이나 로그인 리다이렉트 발생 여부를 정밀 판별.
+   - **2) 사전 시각 탐색기(`visualProbeAgent.ts`) 직결**:
+     - 탐색 시작 시 `ensureAuthenticatedSession`을 최우선 실행하여, **반드시 로그인이 100% 보장된 상태에서만** 4개 화면 캡처 및 DOM 분석을 진행하도록 선후 관계 완전 정상화.
+   - **3) 웹 대시보드 UI 및 REST API 연동**:
+     - `GET /api/auth/status`, `POST /api/auth/login` 엔드포인트 신설.
+     - 대시보드 헤더에 `[🔐 로그인 활성 / 로그인 필요 (클릭)]` 상태 뱃지 탑재 및 원클릭 재로그인/세션 갱신 지원.
+
+### ✅ Task 21. 단 1회 로그인 보장 (Single-Sign-On Experience) & AI 시나리오-녹화 간 세션 유실 원천 차단 파이프라인 정립 (2026-10-12 완료)
+1. **문제 정의 및 배경**:
+   - 시나리오 AI가 화면을 확인할 때 로그인 창에서 사용자가 로그인을 완료했는데도, 이후 녹화 단계(`record.ts`)를 실행할 때 또다시 로그인 창이 열려 사용자에게 불필요한 중복 로그인을 요구하는 치명적인 UX 문제 발생.
+   - **근본 원인 분석**:
+     ① AI 탐색 시 생성된 `auth.json`은 루트 `data/auth.json`에 저장되었으나, 신규 시나리오가 생성되었을 때 해당 슬러그 디렉토리(`data/<slug>/auth.json`)로 복사되지 않았음.
+     ② `record.ts`가 구식 4개 디렉토리(`approval-draft` 등)만 하드코딩으로 검사하고, 루트 `data/auth.json`이나 신규 슬러그 세션을 전혀 인식하지 못해 `needsLogin = true`로 판정하여 로그인 창을 중복 호출함.
+     ③ `launchInteractiveLogin`에서 사용자가 로그인을 마치고 창을 닫았을 때 `isClosed()` 조건으로 인해 세션 저장이 취소되는 취약점 존재.
+2. **구현 및 해결 내역 (`src/services/authManager.ts`, `scripts/record.ts`, `src/services/geminiPlanner.ts`, `src/services/scenarioManager.ts`, `scripts/dashboard-server.ts`, `dashboard/app.js`)**:
+   - **1) 통합 세션 최신순 동적 탐색 (`findExistingAuthSession`)**:
+     - 대상 슬러그 -> 루트 `data/auth.json` -> `data/` 내 모든 시나리오 폴더 중 `stat.mtimeMs`가 가장 최신인 유효 세션을 자동 감지.
+   - **2) 전체 시나리오 실시간 양방향 동기화 (`syncAuthSession` & `ensureSessionForSlug`)**:
+     - 단 한 번의 로그인이 완료되는 즉시 루트 `data/auth.json`뿐만 아니라 존재하는 모든 시나리오 폴더에 최신 쿠키/스토리지를 즉각 전파.
+     - 시나리오 AI가 새로운 플랜을 확정(`geminiPlanner.ts`), 플랜을 저장(`scenarioManager.ts`), 또는 대시보드에서 녹화를 실행할 때(`dashboard-server.ts`), 대상 슬러그 폴더에 최신 세션을 무조건 자동 주입.
+   - **3) `record.ts`의 구식 하드코딩 탐색 완전 제거**:
+     - `record.ts` 시작 시 최신 세션을 자동 인계받아 `isSessionValid`를 통과하므로, **별도의 브라우저 로그인 창 없이 0초 만에 메인 녹화 브라우저로 직행**.
+     - 만약 녹화 중 사용자가 강제로 재로그인하더라도, 종료 즉시 `syncAuthSession`을 호출하여 모든 시나리오와 AI 탐색기에 영구 동기화.
+   - **4) 다중 감지 센서 및 브라우저 창 닫힘 안전 저장 (`launchInteractiveLogin`)**:
+     - URL 변경, 비밀번호 입력창 소멸, GNB/포탈 렌더링을 실시간 감지하여 즉시 세션을 영구 저장.
+     - 사용자가 창을 닫거나 콘솔 Enter를 누르더라도 최신 세션을 유실하지 않도록 3중 안전 저장망 구축.
+
 ---
 
 ### 🚨 [중요 규칙] AI 어시스턴트의 `browse-plan.json` 직접 수정 엄격 금지 (Zero Manual Plan Editing)
 * **절대 AI Coding Assistant(너)가 `browse-plan.json`을 직접 수동으로 편집(예: `replace_file_content` 등)하지 마십시오.**
 * 특정 요소 탐색 실패나 시나리오 오류가 발생하면, 반드시 시스템 내부의 AI(Planner 프롬프트, `tutorialTemplates.ts`, `planSanitizer.ts`, `elementSelfHealer.ts` 등)를 고쳐서 **애플리케이션 스스로 올바른 시나리오를 생성하거나 자가 복구하도록 아키텍처를 개선**해야 합니다.
 * 문제 해결 후에는 애플리케이션을 통해 플랜을 재생성/재녹화하고, 생성된 결과물(`recording.mp4`, `moments.json` 등)을 `view_file`로 확인하여 정상 동작을 입증해야 합니다.
+

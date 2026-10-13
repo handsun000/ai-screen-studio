@@ -12,9 +12,21 @@ export interface StudioConfig {
   geminiModel: string;
 }
 
+export const DEFAULT_GROUPWARE_PROJECTS = [
+  "C:/dev/IdeaProjects/bc2026/bc2026_gw",
+  "C:/dev/IdeaProjects/bc2026/bc2026_iam",
+  "C:/dev/IdeaProjects/unison/unison_gw",
+  "C:/dev/IdeaProjects/unison/unison_iam",
+];
+
+export function getDiscoveredGroupwareProjects(): string[] {
+  return DEFAULT_GROUPWARE_PROJECTS.filter((p) => fs.existsSync(p));
+}
+
 // In-memory runtime config, initialized from .env or defaults
+const discoveredGw = getDiscoveredGroupwareProjects();
 let currentConfig: StudioConfig = {
-  targetProjectPath: process.env.TARGET_PROJECT_PATH || "",
+  targetProjectPath: process.env.TARGET_PROJECT_PATH || (discoveredGw.length > 0 ? discoveredGw[0] : ""),
   targetBaseUrl: process.env.TARGET_BASE_URL || "https://gwdev.unison.co.kr",
   geminiModel: process.env.GEMINI_MODEL || "gemini-3.8-flash",
 };

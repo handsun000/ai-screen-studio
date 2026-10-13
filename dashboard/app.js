@@ -233,6 +233,21 @@ async function fetchStatus() {
     } else {
       pillAi.innerHTML = `<span class="status-dot" style="background:#EF4444"></span><span>Gemini Key 미설정</span>`;
     }
+
+    const pillAuth = document.getElementById("pill-auth");
+    const authDot = document.getElementById("auth-status-dot");
+    const authLabel = document.getElementById("pill-auth-label");
+    if (pillAuth && authLabel) {
+      if (data.hasAuthSession) {
+        if (authDot) authDot.style.background = "#10B981";
+        authLabel.textContent = "로그인 활성";
+        pillAuth.title = `인증 세션: ${data.authSessionPath || "auth.json"} (클릭하여 계정 변경/재로그인)`;
+      } else {
+        if (authDot) authDot.style.background = "#F59E0B";
+        authLabel.textContent = "로그인 필요 (클릭)";
+        pillAuth.title = "저장된 세션이 없습니다. 클릭하여 브라우저에서 1회 로그인합니다.";
+      }
+    }
   } catch (err) {
     console.error("fetchStatus failed:", err);
   }
@@ -859,10 +874,16 @@ function renderActionCards() {
           <span class="builder-field-label">⚡ 주요 급소 버튼 원클릭 퀵 선택:</span>
           <div class="builder-scope-chips">
             <button type="button" class="builder-chip preset-chip" data-preset="portal-menu">🔝 포탈 전체메뉴</button>
-            <button type="button" class="builder-chip preset-chip" data-preset="sched-reg">👈 일정 등록 (사이드바)</button>
-            <button type="button" class="builder-chip preset-chip" data-preset="modal-save">🪟 팝업 저장 (#savebtn)</button>
+            <button type="button" class="builder-chip preset-chip" data-preset="appr-write">📑 결재 작성</button>
+            <button type="button" class="builder-chip preset-chip" data-preset="binder-sel">📂 기록물철(보관함)</button>
+            <button type="button" class="builder-chip preset-chip" data-preset="tree-expand">🌳 트리 펼침(.btn_fopn)</button>
+            <button type="button" class="builder-chip preset-chip" data-preset="appr-submit">📝 기안문 상신(._draftBtn)</button>
+            <button type="button" class="builder-chip preset-chip" data-preset="sched-reg">👈 일정 등록</button>
+            <button type="button" class="builder-chip preset-chip" data-preset="brd-write">📢 게시판 글작성</button>
+            <button type="button" class="builder-chip preset-chip" data-preset="doc-write">📁 문서 등록</button>
+            <button type="button" class="builder-chip preset-chip" data-preset="eml-write">✉️ 메일 쓰기</button>
+            <button type="button" class="builder-chip preset-chip" data-preset="modal-save">🪟 팝업 저장(#savebtn)</button>
             <button type="button" class="builder-chip preset-chip" data-preset="modal-confirm">🪟 팝업 확인</button>
-            <button type="button" class="builder-chip preset-chip" data-preset="appr-submit">📝 기안문 상신</button>
           </div>
         </div>
 
@@ -1009,10 +1030,16 @@ function renderActionCards() {
       // Presets in Builder
       const PRESET_SELECTORS = {
         "portal-menu": "button.btn_svc_open, button[title='포탈 전체메뉴'], button:has-text('포탈 전체메뉴')",
-        "sched-reg": "button#reg_shedule_lefttop, #snb button:has-text('일정 등록'):visible, button:has-text('일정 등록'):visible",
+        "appr-write": "#eapLeft_workWriteBtn, #gapLeft_workWriteBtn, button:has-text('결재작성'):visible, button:has-text('기안작성'):visible",
+        "binder-sel": "button#eapDocReg_binderSelBtn, button#eapDocReg_bindBtn, button#gapDocReg_binderSelBtn, button:has-text('기록물철'):visible, button:has-text('문서보관함'):visible",
+        "tree-expand": ".ui-dialog:visible .btn_fopn, .ui-dialog:visible .dynatree-expander, .btn_fopn",
+        "appr-submit": "button._draftBtn, button._draft, button:has-text('결재상신'):visible, button:has-text('상신'):visible",
+        "sched-reg": "button#reg_shedule_lefttop, button#scheduleLayerBtn, button:has-text('일정등록'):visible",
+        "brd-write": "button#brdBoardLeft_writeBtn, .btn_write, button:has-text('글작성'):visible",
+        "doc-write": "button#docLeft_writeBtn, button#reg_doc_btn, button:has-text('문서등록'):visible",
+        "eml-write": "button#emlList_goWriteEmail, button#emlSideMenu_writeBtn, button:has-text('메일쓰기'):visible",
         "modal-save": ".ui-dialog:visible #savebtn, .ui-dialog:visible button:has-text('저장'), button#savebtn:visible",
-        "modal-confirm": ".ui-dialog:visible button:has-text('확인'), button:has-text('확인'):visible",
-        "appr-submit": "button:has-text('상신'):visible, button:has-text('저장'):visible",
+        "modal-confirm": ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button._confirmBtn, .ui-dialog:visible button:has-text('확인'):visible",
       };
 
       card.querySelectorAll(".preset-chip").forEach((chip) => {
@@ -1413,6 +1440,9 @@ function initSSE() {
 
 async function sendTerminalInput(input = "\n") {
       try {
+        // Also signal interactive login orchestrator
+        fetch("/api/auth/complete", { method: "POST" }).catch(() => {});
+
         const res = await fetch("/api/record/input", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1480,6 +1510,85 @@ function bindEvents() {
           switchTab("tab-generator");
           targetBaseUrlInput.focus();
           targetBaseUrlInput.select();
+        });
+      }
+
+      const pillAuth = document.getElementById("pill-auth");
+      const loginModalOverlay = document.getElementById("login-modal-overlay");
+      const btnCloseLoginModal = document.getElementById("btn-close-login-modal");
+      const btnCancelLoginModal = document.getElementById("btn-cancel-login-modal");
+      const btnConfirmLoginDone = document.getElementById("btn-confirm-login-done");
+      const loginModalStatusText = document.getElementById("login-modal-status-text");
+
+      const closeLoginModal = () => {
+        if (loginModalOverlay) loginModalOverlay.classList.add("hidden");
+      };
+
+      if (btnCloseLoginModal) {
+        btnCloseLoginModal.addEventListener("click", () => {
+          fetch("/api/auth/complete", { method: "POST" }).catch(() => {});
+          closeLoginModal();
+        });
+      }
+
+      if (btnCancelLoginModal) {
+        btnCancelLoginModal.addEventListener("click", () => {
+          fetch("/api/auth/complete", { method: "POST" }).catch(() => {});
+          closeLoginModal();
+        });
+      }
+
+      if (btnConfirmLoginDone) {
+        btnConfirmLoginDone.addEventListener("click", async () => {
+          if (loginModalStatusText) {
+            loginModalStatusText.textContent = "⏳ 세션 저장 및 브라우저 창 닫는 중...";
+          }
+          btnConfirmLoginDone.disabled = true;
+          try {
+            await fetch("/api/auth/complete", { method: "POST" });
+          } catch (e) {
+            console.error("로그인 완료 신호 전송 실패:", e);
+          } finally {
+            setTimeout(() => {
+              btnConfirmLoginDone.disabled = false;
+            }, 1000);
+          }
+        });
+      }
+
+      if (pillAuth) {
+        pillAuth.addEventListener("click", async () => {
+          const authLabel = document.getElementById("pill-auth-label");
+          if (authLabel) authLabel.textContent = "로그인 창 여는 중...";
+
+          // Open interactive login modal
+          if (loginModalOverlay) {
+            loginModalOverlay.classList.remove("hidden");
+            if (loginModalStatusText) {
+              loginModalStatusText.textContent = "브라우저 창에서 로그인 대기 중... 완료 후 버튼을 눌러주세요";
+            }
+          }
+
+          try {
+            const res = await fetch("/api/auth/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ url: targetBaseUrlInput ? targetBaseUrlInput.value : undefined }),
+            });
+            const result = await res.json();
+            closeLoginModal();
+
+            if (result.success) {
+              alert("🎉 로그인 세션이 성공적으로 저장되었습니다!");
+            } else {
+              alert(result.message || "로그인이 완료되지 않았습니다.");
+            }
+          } catch (e) {
+            closeLoginModal();
+            alert("로그인 요청 실패: " + e.message);
+          } finally {
+            fetchStatus();
+          }
         });
       }
 

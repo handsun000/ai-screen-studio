@@ -17,6 +17,96 @@ export interface ScenarioTemplate {
 
 export const UNIVERSAL_TUTORIAL_TEMPLATES: ScenarioTemplate[] = [
   {
+    id: "gw-eap-draft",
+    name: "전자결재 문서 기안 및 상신 (Approval Draft)",
+    icon: "📑",
+    description: "전자결재 양식 선택 -> 기록물철(문서보관함) 선택 -> 제목 및 본문 작성 -> 결재상신으로 이어지는 엔터프라이즈 전자결재 완결형 튜토리얼",
+    promptTemplate: "【목표】: 전자결재 신규 문서 기안 및 결재선 상신\n【진입 경로】: 포탈 전체메뉴(btn_svc_open) -> 전자결재 메뉴 이동\n【조작 순서】: [결재작성] 대버튼 클릭 -> 결재 양식 선택 -> [기록물철/보관함 선택] 버튼 클릭 후 공용보관함 폴더 확장 및 선택 -> 제목 입력 -> 본문 작성 -> [결재상신] 버튼 클릭 -> 확인 승인\n【결과 확인】: 상신 완료 안내 및 기안문서함 목록 확인",
+    phases: [
+      "1단계 [도입]: 포탈 메인 대시보드 3초간 노출",
+      "2단계 [이동]: 포탈 전체메뉴(btn_svc_open) 클릭 -> 1200ms 대기 -> [전자결재] 메뉴 클릭 및 페이지 로딩 대기",
+      "3단계 [양식선택]: 좌측 사이드바 [결재작성] 대버튼 클릭 -> 대상 결재양식 카드 선택",
+      "4단계 [필수분류]: [기록물철] 선택 버튼 클릭 -> 다이얼로그 트리 펼침(.btn_fopn) 후 대상 보관함 선택 -> 확인",
+      "5단계 [제목본문]: 제목 입력창에 기안 문서 제목 타이핑 및 본문 에디터 내용 작성",
+      "6단계 [결재상신]: 상단 [결재상신] 버튼(._draftBtn) 클릭 후 확인 팝업 승인",
+      "7단계 [완료확인]: 상신 완료 안내 및 목록 갱신 확인"
+    ]
+  },
+  {
+    id: "gw-scd-register",
+    name: "일정관리 새 일정 등록 (Schedule Register)",
+    icon: "📅",
+    description: "캘린더 선택 -> 일정 등록 레이어 오픈 -> 제목/시간 입력 -> 저장 및 캘린더 반영 튜토리얼",
+    promptTemplate: "【목표】: 일정관리 신규 일정 등록 및 캘린더 확인\n【진입 경로】: 포탈 전체메뉴 -> 일정관리 메뉴 이동\n【조작 순서】: [일정등록] 버튼 클릭 -> 일정 제목 입력 -> 캘린더 선택 -> [저장] 버튼 클릭\n【결과 확인】: 캘린더에 등록된 일정 블록 확인",
+    phases: [
+      "1단계 [도입]: 메인 대시보드 3초간 와이드 뷰",
+      "2단계 [이동]: 포탈 전체메뉴(btn_svc_open) 클릭 -> 1200ms 대기 -> [일정관리] 메뉴 클릭 및 페이지 로딩 대기",
+      "3단계 [작성진입]: 좌측 [일정등록] 버튼(reg_shedule_lefttop) 클릭",
+      "4단계 [정보입력]: 일정 제목 입력창에 제목 타이핑 및 캘린더 선택",
+      "5단계 [저장실행]: 하단 [저장] 버튼(#savebtn) 클릭 후 캘린더 갱신 대기",
+      "6단계 [등록확인]: 월간 캘린더 화면에 생성된 일정 확인"
+    ]
+  },
+  {
+    id: "gw-brd-post",
+    name: "게시판 새 공지 및 글 작성 (Board Post)",
+    icon: "📢",
+    description: "게시판 선택 -> 글작성 버튼 -> 제목/본문 입력 -> 저장 및 게시글 상세 확인 튜토리얼",
+    promptTemplate: "【목표】: 사내 게시판에 새 공지사항 및 게시글 작성\n【진입 경로】: 포탈 전체메뉴 -> 게시판 메뉴 이동\n【조작 순서】: 좌측 [글작성] 버튼 클릭 -> 게시판 선택 -> 제목 입력 -> 본문 내용 작성 -> [저장] 버튼 클릭\n【결과 확인】: 게시글 목록에 새 글 노출 확인",
+    phases: [
+      "1단계 [도입]: 포탈 메인 대시보드 3초간 노출",
+      "2단계 [이동]: 포탈 전체메뉴(btn_svc_open) 클릭 -> 1200ms 대기 -> [게시판] 메뉴 클릭 및 페이지 로딩 대기",
+      "3단계 [작성진입]: 좌측 [글작성] 버튼(#brdBoardLeft_writeBtn) 클릭",
+      "4단계 [내용작성]: 제목 입력창(#brdAtclReg_subject)에 글 제목 타이핑 및 본문 작성",
+      "5단계 [저장실행]: 상단 [저장] 버튼(#brdAtclReg_save) 클릭 후 확인 승인",
+      "6단계 [목록확인]: 게시판 목록에 신규 등록된 글 확인"
+    ]
+  },
+  {
+    id: "gw-doc-register",
+    name: "문서관리 새 문서 등록 (Document Register)",
+    icon: "📂",
+    description: "문서등록 버튼 -> 문서함 선택 대화상자에서 공용문서함 폴더 확장 및 선택 -> 제목 입력 -> 저장 튜토리얼",
+    promptTemplate: "【목표】: 문서관리 공용 문서함에 신규 문서 등록\n【진입 경로】: 포탈 전체메뉴 -> 문서관리 메뉴 이동\n【조작 순서】: [문서등록] 버튼 클릭 -> [문서함선택] 다이얼로그 트리 확장 후 문서함 선택 -> 제목 입력 -> 본문 내용 작성 -> [저장] 버튼 클릭\n【결과 확인】: 문서함 목록에 새 문서 등록 확인",
+    phases: [
+      "1단계 [도입]: 포탈 메인 대시보드 3초간 노출",
+      "2단계 [이동]: 포탈 전체메뉴(btn_svc_open) 클릭 -> 1200ms 대기 -> [문서관리] 메뉴 클릭 및 페이지 로딩 대기",
+      "3단계 [작성진입]: 좌측 [문서등록] 버튼(#docLeft_writeBtn) 클릭",
+      "4단계 [문서함선택]: 문서함 선택 다이얼로그에서 트리 펼침(.btn_fopn) 후 대상 문서함 선택",
+      "5단계 [정보입력]: 문서 제목 입력(#atclEdit_subject) 및 본문 작성",
+      "6단계 [저장실행]: [저장] 버튼(#atclEdit_saveBtn) 클릭 후 완료 확인"
+    ]
+  },
+  {
+    id: "gw-eml-send",
+    name: "전자우편 메일 작성 및 발송 (Webmail Send)",
+    icon: "✉️",
+    description: "메일쓰기 -> 받는 사람/제목/본문 작성 -> 발송 튜토리얼",
+    promptTemplate: "【목표】: 전자우편 신규 메일 작성 및 수신자 발송\n【진입 경로】: 포탈 전체메뉴 -> 전자우편 메뉴 이동\n【조작 순서】: [메일쓰기] 버튼 클릭 -> 받는 사람 입력 -> 제목 입력 -> 본문 작성 -> [보내기] 버튼 클릭\n【결과 확인】: 발송 완료 메시지 확인",
+    phases: [
+      "1단계 [도입]: 메인 포탈 3초간 노출",
+      "2단계 [이동]: 포탈 전체메뉴(btn_svc_open) 클릭 -> 1200ms 대기 -> [전자우편] 메뉴 클릭",
+      "3단계 [작성진입]: [메일쓰기] 버튼(#emlList_goWriteEmail) 클릭",
+      "4단계 [내용작성]: 제목(#emlWrite_subject) 및 본문 내용 입력",
+      "5단계 [발송실행]: 상단 [보내기] 버튼(._emlWriteConfirm_send) 클릭",
+      "6단계 [결과확인]: 발송 완료 후 받은메일함 복귀"
+    ]
+  },
+  {
+    id: "gw-org-lookup",
+    name: "조직도 임직원 검색 및 조회 (Org Chart Lookup)",
+    icon: "👥",
+    description: "조직도 팝업 열기 -> 부서 트리 확장 -> 사원 검색/선택 -> 사용자 상세 정보 조회 튜토리얼",
+    promptTemplate: "【목표】: 조직도에서 부서 및 사원 검색 및 상세 정보 확인\n【진입 경로】: 메인 화면 조직도 아이콘/버튼 클릭\n【조작 순서】: 조직도 팝업 오픈 -> 부서 트리 전체 확장(#orgTree_btnExpandAll) -> 사원 목록에서 사원 선택 -> 상세 프로필 확인\n【결과 확인】: 사원 연락처 및 소속 정보 확인 후 닫기",
+    phases: [
+      "1단계 [도입]: 메인 화면 노출",
+      "2단계 [팝업오픈]: 조직도 버튼 클릭하여 조직도 팝업 오픈",
+      "3단계 [트리확장]: [전체 펼침] 버튼(#orgTree_btnExpandAll) 클릭하여 부서 구조 확인",
+      "4단계 [사원선택]: 사원 목록에서 특정 사원 카드 클릭하여 상세 조회",
+      "5단계 [마무리]: 조직도 창 닫기"
+    ]
+  },
+  {
     id: "create-and-submit",
     name: "신규 등록 및 폼 작성 (Create & Submit)",
     icon: "📝",
@@ -170,9 +260,44 @@ The user's prompt MUST be routed into one of the following 4 archetypes across A
 
 #### ③ Archetype 3: Create & Submit (CREATE_SUBMIT)
 - **Intent Triggers**: "등록", "작성", "기안", "상신", "신청", "추가", "생성", "예약", "create", "register", "submit"
-- 🎯 **Standard Directing Flow (Zero-Validation-Failure Policy)**:
-  [Portal Main] ➔ [Navigate to Module] ➔ [Click New Write/Register/Draft Button] ➔ [Fulfill ALL Mandatory Module Prerequisites (select folder/calendar/form tree leaf node to prevent "Select container" alert)] ➔ [Focus & Type Title Field (prevents "Enter title" alert)] ➔ [Write Body Content in Web Editor] ➔ (Configure permissions/attendees ONLY if explicitly requested in user prompt) ➔ [Click Save/Submit Button with Modal Scope] ➔ [Accept Browser Confirm Dialog] ➔ [Confirm Completion Dialog & Wait 4000ms+ for List Reload]
-- 🚫 **STRICT PROHIBITION (Lean Form Policy)**: NEVER invent unrequested advanced settings (expand advanced options, retention dropdown, security level radio, tags, document summary, notification toggles) that are not visible by default! Only include standard mandatory fields: [Container] -> [Title] -> [Body] -> [Submit].
+- 🛡️ **UNIVERSAL SHUTTLE & PICKER DIALOG STANDARD (Transfer List Pattern & 2-Tier Nested Modals)**:
+  When a tutorial involves selecting users, attendees, departments, or permissions via a popup dialog (e.g. 조직도, 참석자 선택, 권한 대상자 지정, 결재선 지정):
+  A genuine manual/tutorial video MUST visually demonstrate the complete user selection process so viewers can follow along. NEVER skip picking the target and jump straight to transfer or confirm!
+  Strictly generate the following sequence:
+  ① **[설정 레이어 오픈]**: Click the trigger button on the main form (e.g. \`button:has-text('권한설정'):visible\`, \`button:has-text('결재선'):visible\`, \`button:has-text('참석자'):visible\`)
+  ② **[하위 픽커/조직도 호출 (중첩 레이어 구조 시 필수!)]**: If the opened settings layer contains an inner [추가] or [조직도] button, click it to summon the actual user selection popup!
+     - Selector: \`.ui-dialog:visible button:has-text('추가'):visible, .ui-dialog:visible button:has-text('조직도'):visible, .ui-dialog:visible button:has-text('주소록'):visible\`
+     - Description: "설정 대화상자 내 [추가] 버튼 클릭하여 조직도 팝업 호출"
+  ③ **[시각적 대상 선택 - 필수!]**: Click the first employee card in the middle pane (or department node):
+     - Selector: \`.ui-dialog:visible label.user_info.chkbox, .ui-dialog:visible label[class*='user_info'], .ui-dialog:visible #orgUserList_listbox label.user_info, .ui-dialog:visible [id^='user_']:first-child, .ui-dialog:visible .user_card:first-child, .ui-dialog:visible [class*='user_lst'] li:first-child, .ui-dialog:visible [class*='user']:has(.name):first-child, .ui-dialog:visible li:first-child label, .ui-dialog:visible tr:first-child td\`
+     - Description: "조직도/사원 목록에서 대상자(첫 번째 사원 카드) 클릭하여 선택"
+  ④ **[대상 목록으로 추가/전달]**: Click the transfer button to move the selected employee into the target list:
+     - Selector: \`.ui-dialog:visible button.drop_tgl:visible, .ui-dialog:visible button:has-text('추가'):visible, .ui-dialog:visible button:has-text('선택'):visible, .ui-dialog:visible button:has-text('권한'):visible, .ui-dialog:visible button.btn_rgt:visible\`
+     - Description: "선택한 대상자를 권한/참석 대상 목록으로 추가 클릭"
+  ⑤ **[하위 조직도 팝업 확인]**: Click the confirm button on the user picker dialog:
+     - Selector: \`.ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible\`
+     - Description: "조직도 대화상자 [확인] 버튼 클릭하여 대상자 반영"
+  ⑥ **[상위 설정 대화상자 확인 (중첩 레이어 닫기 및 본문 복귀)]**: Click the confirm button on the outer settings layer:
+     - Selector: \`.ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, .modal:visible button:has-text('확인'):visible\`
+     - Description: "설정 대화상자 [확인] 버튼 클릭하여 설정 완료 및 본문 복귀"
+  🚫 NEVER hallucinate 5 separate individual checkbox clicks (e.g. 조회/인쇄/저장/수정/개정) with fictitious IDs! In enterprise web apps, permissions are managed via modal dialogs, org pickers, or level select dropdowns.
+
+- 📜 **ELECTRONIC APPROVAL DRAFTING 3-TIER SEQUENCE (전자결재 기안 표준 3단계 - 필수!)**:
+  In enterprise electronic approval systems (e.g., Naonsoft Groupware), drafting a document follows a strict 3-tier sequence. "결재 작성" buttons exist at TWO levels (Sidebar Big Button vs Card-internal Small Button):
+  ① **[1단계: 좌측 사이드바 '결재 작성' 대버튼 클릭]**:
+     - Selector: \`button#gapLeft_workWriteBtn, #snb button:has-text('결재 작성'):visible, .snb_btn_box button:has-text('결재 작성'):visible\`
+     - Description: "좌측 사이드바 '결재 작성' 대버튼 클릭하여 결재업무 선택 목록 오픈"
+  ② **[2단계: 대상 결재업무/양식 카드 선택 클릭 (예: '테스트 업무', '지출결의서')]**:
+     - 🚨 "테스트 업무"는 본문 제목이 아니라 **실제 화면 목록의 양식 카드 이름**입니다!
+     - Selector: \`li.aw_li:has-text('테스트 업무') a._his, .app_work_list li:has-text('테스트 업무') a, li.aw_li:first-child a._his\`
+     - Description: "결재업무 목록에서 '테스트 업무' 카드 클릭하여 선택"
+  ③ **[3단계: 선택된 카드 내부의 소형 '결재 작성' 버튼 클릭]**:
+     - 🚨 When a card is selected, a small [결재 작성] button appears inside the card!
+     - 🚨 NEVER use generic button:has-text('결재 작성'):visible here! Generic matches the top sidebar button, resetting the list!
+     - Selector: \`li.aw_li.selected button.btn_write, li.aw_li:has-text('테스트 업무') button.btn_write, li.aw_li.selected button:has-text('결재 작성')\`
+     - Description: "선택된 '테스트 업무' 카드 내부의 [결재 작성] 버튼 클릭하여 기안 작성 화면 오픈"
+  ④ **[4단계: 기안서 작성 폼 로딩 및 본문 입력 진입]**:
+     - Wait 3000ms for homGwMainSub / form editor to render, then proceed to enter title, doc box, comments, and submit!
 
 #### ④ Archetype 4: Workflow & Management (WORKFLOW_MANAGE)
 - **Intent Triggers**: "결재", "승인", "반려", "수정", "상태 변경", "권한 설정", "approve", "reject", "edit", "status"
@@ -221,10 +346,14 @@ Even when target source code is incomplete, ensure 100% execution using multi-fa
      2) If still uncertain, set **\`"selector": ""\` (empty string)**!
      3) When leaving empty, explain in the root \`explanation\` field: "⚠️ [Step N: Target Button] selector is left empty for dashboard input." The dashboard UI highlights this action with a badge so the user can fill it in 1 second.
 
-5. **Org Chart & Tree Selection Heuristics**
+5. **Org Chart & Shuttle Picker Selection Heuristics**
    - NEVER type fake employee names into search inputs in employee picker modals.
-   - Always expand the department tree on the left (\`.dynatree-container li:first-child a.dynatree-title\`), then check the first employee in the right list (\`.lst_type1 li:first-child input[type='checkbox'], table tbody tr:first-child input[type='checkbox']\`), and click Confirm.
-   - Do NOT invent arrow transfer buttons (\`btn_rgt\`, \`btn_add\`) unless confirmed in source code.
+   - In any picker/shuttle dialog, ALWAYS follow the complete visual sequence:
+     1) Open modal
+     2) Click department node or first employee card/row in source list (\`.ui-dialog:visible .user_card:first-child, .ui-dialog:visible .dynatree-container li:first-child a.dynatree-title:visible, .ui-dialog:visible tr:first-child td, .ui-dialog:visible li:first-child label, .ui-dialog:visible tr:first-child input[type='checkbox']\`)
+     3) Click add/transfer button (\`.ui-dialog:visible button:has-text('권한'):visible, .ui-dialog:visible button:has-text('추가'):visible, .ui-dialog:visible button:has-text('선택'):visible\`) to move them into the target box
+     4) Click confirm (\`.ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible\`)
+   - Demonstrating the actual selection of a user/item is what distinguishes a genuine manual video from an incomplete test script.
 
 6. **Dynamic Live Data Linking (Method 2: Zero-Hallucinated-Data)**
    - NEVER hardcode fake article/doc titles like "2026학년도 대학 혁신지원사업...", "테스트 기안서", "김철수".

@@ -3,7 +3,8 @@ import * as fs from "fs";
 import * as path from "path";
 import * as dotenv from "dotenv";
 import type { BrowsePlan } from "../types";
-import { getConfig } from "./configManager";
+import { getConfig, DEFAULT_GROUPWARE_PROJECTS } from "./configManager";
+import { getGroupwarePromptContext } from "./groupwareCatalog";
 import { MASTER_DIRECTING_GUIDELINES } from "./tutorialTemplates";
 import {
   createCodeExplorerTools,
@@ -12,6 +13,8 @@ import {
 } from "./codeExplorerAgent";
 import { getCachedPlan, setCachedPlan } from "./aiCacheManager";
 import { sanitizeBrowsePlan } from "./planSanitizer";
+import { probeTargetScreens, VisualProbeScreen } from "./visualProbeAgent";
+import { ensureSessionForSlug } from "./authManager";
 
 dotenv.config({ override: true });
 
@@ -38,6 +41,7 @@ export interface GeneratePlanResult {
   actionSpec?: ActionSpecResult;
   isFromCache?: boolean;
   cachedAt?: string;
+  visualScreensCount?: number;
 }
 
 /**
@@ -48,7 +52,11 @@ export interface GeneratePlanResult {
 export function scanTargetProjectContext(prompt: string, targetPath?: string): string {
   const contextSnippets: string[] = [];
   const rawPath = targetPath !== undefined ? targetPath : getConfig().targetProjectPath;
-  const projectRoot = (rawPath || "").trim().replace(/\\/g, "/");
+  let projectRoot = (rawPath || "").trim().replace(/\\/g, "/");
+  if (!projectRoot || !fs.existsSync(projectRoot)) {
+    const discovered = DEFAULT_GROUPWARE_PROJECTS.filter((p) => fs.existsSync(p));
+    if (discovered.length > 0) projectRoot = discovered[0].replace(/\\/g, "/");
+  }
 
   if (!projectRoot) {
     return "[실시간 웹 모드] 로컬 소스코드 의존성 없이 대상 서비스 URL 및 표준 웹 인터랙션 명세로 시나리오를 구성합니다.";
@@ -406,6 +414,26 @@ export async function generateBrowsePlanWithGemini(
     options.onProgress?.(`🌐 [실시간 웹 모드] URL(${effectiveTargetUrl}) 기반 5단계 영상 연출 플랜 수립을 시작합니다...`);
   }
 
+  // --- Pre-flight Visual Explorer Probe (Visual-First Scenario Generation) ---
+  let visualScreens: VisualProbeScreen[] = [];
+  if (effectiveTargetUrl) {
+    try {
+      options.onProgress?.(`👁️ [시각적 사전 탐색] 시나리오 AI가 브라우저를 띄워 실제 화면을 눈으로 확인하고 DOM 구조를 분석합니다...`);
+      const probeResult = await probeTargetScreens({
+        targetUrl: effectiveTargetUrl,
+        prompt: options.prompt,
+        slug: options.slug,
+        onProgress: options.onProgress,
+      });
+      if (probeResult.success && probeResult.screens.length > 0) {
+        visualScreens = probeResult.screens;
+        options.onProgress?.(`📸 [시각 정보 주입] 확보된 ${visualScreens.length}장의 실제 브라우저 화면과 DOM 후보군을 Gemini 멀티모달 시각 엔진에 주입합니다.`);
+      }
+    } catch (probeErr: any) {
+      console.warn(`[VisualProbe] Failed during scenario planning: ${probeErr.message}`);
+    }
+  }
+
   // --- Initialize Autonomous Code Explorer Tools for Target Project (Optional) ---
   const toolExecutors = hasLocalSource ? createCodeExplorerTools(effectiveTargetPath) : {};
   const toolDeclarations = hasLocalSource ? codeExplorerToolDeclarations : [];
@@ -415,6 +443,8 @@ export async function generateBrowsePlanWithGemini(
   const fewShotContext = loadFewShotExamples();
 
   const commonDirectingRules = `
+${getGroupwarePromptContext(options.prompt)}
+
 ---
 
 ### [Core Directing Rules & Quality Assurance Framework]
@@ -457,6 +487,21 @@ export async function generateBrowsePlanWithGemini(
       - Intent: "등록", "작성", "기안", "상신", "신청", "추가", "생성", "예약", "create", "register", "submit"
       - Flow (Zero-Validation-Failure Policy): [Portal Intro] -> [Navigate to Module] -> [Click New Write/Register/Draft Button] -> [Fulfill ALL Mandatory Module Prerequisites (select folder/calendar/form tree leaf node to prevent "Select container" alert)] -> [Focus & Type Title Field (prevents "Enter title" alert)] -> [Write Body Content in Web Editor] -> (Configure permissions/attendees ONLY if explicitly requested in user prompt) -> [Click Save/Submit Button with Modal Scope] -> [Accept Browser Confirm Dialog] -> [Confirm Completion Dialog & Wait 4000ms+ for List Reload]
       - 🚫 STRICT BAN (Lean Form Policy): NEVER invent unrequested advanced settings (expand advanced options, retention dropdown, security level radio, tags, document summary, notification toggles) that are not visible by default!
+      - 🛡️ **UNIVERSAL SHUTTLE & PICKER DIALOG STANDARD (Transfer List Pattern & 2-Tier Nested Modals)**:
+        When a tutorial involves selecting users, attendees, departments, or permissions via a popup dialog (e.g. 조직도, 참석자 선택, 권한 대상자 지정, 결재선 지정):
+        A genuine manual video MUST visually demonstrate the complete user selection process so viewers can follow along. NEVER skip picking the target and jump straight to transfer or confirm!
+        Strictly plan the sequence:
+        1) [설정 레이어 오픈]: Click the trigger button on the main form (e.g. \`button:has-text('권한설정'):visible\`, \`button:has-text('결재선'):visible\`, \`button:has-text('참석자'):visible\`)
+        2) [하위 픽커/조직도 호출 (중첩 레이어 구조 시 필수!)]: If the opened settings layer contains an inner [추가] or [조직도] button, click it to summon the actual user selection popup!
+           Selector: \`.ui-dialog:visible button:has-text('추가'):visible, .ui-dialog:visible button:has-text('조직도'):visible, .ui-dialog:visible button:has-text('주소록'):visible\`
+           Description: "설정 대화상자 내 [추가] 버튼 클릭하여 조직도 팝업 호출"
+        3) [시각적 대상 선택 - 사원/사용자 카드 선택 필수!]: In enterprise org pickers, the left tree is ONLY a department filter. The ACTUAL selectable entity is the employee card in the middle pane! Click the first employee card/row in the middle list (description MUST include '사원 선택' or '사용자 선택'):
+           Selector: \`.ui-dialog:visible label.user_info.chkbox, .ui-dialog:visible label[class*='user_info'], .ui-dialog:visible #orgUserList_listbox label.user_info, .ui-dialog:visible [id^='user_']:first-child, .ui-dialog:visible .user_card:first-child, .ui-dialog:visible [class*='user_lst'] li:first-child, .ui-dialog:visible [class*='user']:has(.name):first-child, .ui-dialog:visible li:first-child label, .ui-dialog:visible tr:first-child td\`
+           (Notice: This highlights the employee card with a distinct blue border so viewers clearly see who is being selected!)
+        4) [대상 목록으로 추가/전달]: Click the transfer/add button (\`.ui-dialog:visible button.drop_tgl:visible, .ui-dialog:visible button:has-text('추가'):visible, .ui-dialog:visible button:has-text('선택'):visible, .ui-dialog:visible button:has-text('권한'):visible, .ui-dialog:visible button.btn_rgt:visible\`) to move the selected employee from the middle pane into the right target box
+        5) [하위 조직도 팝업 확인]: Click the confirm button on the user picker dialog (\`.ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible\`)
+        6) [상위 설정 대화상자 확인 (중첩 레이어 닫기 및 본문 복귀)]: Click the confirm button on the outer settings layer (\`.ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, .modal:visible button:has-text('확인'):visible\`)
+        🚫 NEVER hallucinate 5 separate individual checkbox clicks (e.g. 조회/인쇄/저장/수정/개정) with fictitious IDs! In enterprise web apps, permissions are managed via modal dialogs, org pickers, or level select dropdowns.
 
    ④ **Archetype 4: Workflow & Management (WORKFLOW_MANAGE)**
       - Intent: "결재", "승인", "반려", "수정", "상태 변경", "권한 설정", "approve", "reject", "edit", "status"
@@ -602,7 +647,36 @@ The final response must be valid JSON with this exact schema:
         const contents: any[] = [
           {
             role: "user",
-            parts: [{ text: userContent }],
+            parts: [
+              { text: userContent },
+              ...(visualScreens.length > 0
+                ? [
+                    {
+                      text:
+                        `\n\n### [👁️ 사전 시각 탐색: 실제 브라우저 실시간 캡처 화면 및 추출된 DOM 요소 증거]\n` +
+                        `시나리오 AI가 브라우저를 직접 구동하여 현 시점 실제 접속한 화면 스크린샷과 추출된 DOM 요소들입니다.\n` +
+                        `절대로 추측이나 상상으로 셀렉터를 지어내지 말고, 아래 캡처된 실제 화면 이미지에서 사용자가 조작해야 하는 요소를 직접 눈으로 확인한 뒤,\n` +
+                        `함께 제공된 [추출된 실제 인터랙티브 엘리먼트 후보군]의 'suggestedSelector' 또는 정확한 클래스/텍스트를 100% 사용하여 시나리오를 구성하십시오.\n`,
+                    },
+                    ...visualScreens.flatMap((s, i) => [
+                      {
+                        text:
+                          `\n\n#### 📸 [화면 #${i + 1}: ${s.name}] (URL: ${s.url})\n` +
+                          (s.dialogTitle ? `활성 대화상자: "${s.dialogTitle}"\n` : "") +
+                          (s.openedBy ? `⚠️ 필수 진입 트리거: "${s.openedBy}" (이 화면으로 진입하려면 직전 단계에서 이 트리거를 클릭하는 액션이 반드시 필요합니다!)\n` : "") +
+                          `화면에서 추출된 실제 인터랙티브 엘리먼트 후보군:\n` +
+                          JSON.stringify(s.candidates.slice(0, 35), null, 2),
+                      },
+                      {
+                        inlineData: {
+                          mimeType: "image/jpeg",
+                          data: s.base64,
+                        },
+                      },
+                    ]),
+                  ]
+                : []),
+            ],
           },
         ];
 
@@ -760,6 +834,9 @@ The final response must be valid JSON with this exact schema:
     `## 1. 개요 및 연출 의도`,
     `- 설명: ${parsed.explanation || "시나리오가 성공적으로 생성되었습니다."}`,
     `- 총 연출 액션 수: ${sanitizedPlan.actions.length}단계`,
+    ...(visualScreens.length > 0
+      ? [`- 👁️ 사전 시각 탐색: 실제 브라우저 화면 ${visualScreens.length}장 캡처 및 DOM 후보군 시각 분석 반영`]
+      : []),
     "",
     `## 2. 실시간 소스코드 도구 탐색 내역`,
     toolActivityLogs.length > 0
@@ -778,6 +855,7 @@ The final response must be valid JSON with this exact schema:
     suggestedSlug: suggestedSlug.replace(/[^a-zA-Z0-9_\-]/g, "-").toLowerCase(),
     actionSpecMarkdown: actionSpecSummary,
     isFromCache: false,
+    visualScreensCount: visualScreens.length,
   };
 
   // Save to cache for future identical requests (token saver)
@@ -790,6 +868,10 @@ The final response must be valid JSON with this exact schema:
       options.depth,
       finalResult
     );
+  } catch {}
+
+  try {
+    ensureSessionForSlug(finalResult.suggestedSlug);
   } catch {}
 
   return finalResult;

@@ -93,19 +93,200 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
     // 1-B. Universal Tree / Folder / Category Selection Dialog Leaf Node Resolution
     const isModalContext = desc.includes("팝업") || desc.includes("모달") || desc.includes("다이얼로그") || sel.includes(".ui-dialog") || sel.includes(".modal") || isInsideModal;
     const isSidebarNavigation = desc.includes("좌측") || desc.includes("사이드바") || desc.includes("둘러보기") || sel.includes("#snb") || sel.includes("#left") || sel.includes(".snb");
+    const isUserSelection =
+      desc.includes("사원") ||
+      desc.includes("사용자") ||
+      desc.includes("대상자") ||
+      desc.includes("직원") ||
+      desc.includes("참석자") ||
+      desc.includes("결재자") ||
+      desc.includes("담당자") ||
+      desc.includes("인원") ||
+      desc.includes("유저") ||
+      desc.includes("멤버") ||
+      desc.includes("사람");
 
     if (
       action.type === "click" &&
       !desc.includes("확인") &&
       isModalContext &&
       !isSidebarNavigation &&
+      !isUserSelection &&
+      !sel.includes("dynatree-checkbox") &&
       (desc.includes("노드") || desc.includes("트리") || desc.includes("폴더") || desc.includes("분류") || desc.includes("문서함") || desc.includes("게시판") || desc.includes("캘린더") || desc.includes("양식"))
     ) {
       const original = action.selector;
-      action.selector = ".ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:not(:has(ul)) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:last-child a.dynatree-title:visible, .ui-dialog:visible [class*='tree'] .dynatree-node:not(.dynatree-folder) a:visible, .ui-dialog:visible [class*='tree'] li:last-child a:visible, .ui-dialog:visible .dynatree-container a.dynatree-title:visible";
+      const targetTitleMatch = desc.match(/['"‘“]([^'"’“”]+)['"’”]/);
+      const titlePrefix = targetTitleMatch ? `.ui-dialog:visible a.dynatree-title:has-text('${targetTitleMatch[1]}'):visible, ` : "";
+      action.selector = `${titlePrefix}.ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:not(:has(ul)) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:last-child a.dynatree-title:visible, .ui-dialog:visible [class*='tree'] .dynatree-node:not(.dynatree-folder) a:visible, .ui-dialog:visible [class*='tree'] li:last-child a:visible, .ui-dialog:visible .dynatree-container a.dynatree-title:visible`;
       changes.push(`[정제] 트리/폴더 선택 모달 최상위 비등록 폴더 제외 및 말단 리프 노드 셀렉터 보강: "${original}" -> "${action.selector}"`);
       fixedActionsCount++;
       sel = action.selector;
+    }
+
+    // 1-B1.4 Universal Form Sub-Option / Detail Setup Trigger (before modal context)
+    const isSubOptionTrigger =
+      action.type === "click" &&
+      !isModalContext &&
+      !desc.includes("확인") &&
+      !desc.includes("저장") &&
+      !desc.includes("상신") &&
+      (desc.includes("설정") || desc.includes("지정") || desc.includes("선택") || desc.includes("추가")) &&
+      (desc.includes("권한") || desc.includes("결재선") || desc.includes("참석자") || desc.includes("수신자") || desc.includes("참조자") || desc.includes("옵션") || desc.includes("분류") || desc.includes("알림") || desc.includes("자원"));
+
+    if (isSubOptionTrigger) {
+      const match = desc.match(/(개별권한|권한설정|권한|결재선|참석자|수신자|참조자|옵션|분류|알림|자원)/);
+      const kw = match ? match[0] : "";
+      if (kw && !(action.selector || "").includes(":has-text")) {
+        action.selector = action.selector ? `button:has-text('${kw}'):visible, label:has-text('${kw}'):visible, a:has-text('${kw}'):visible, ${action.selector}` : `button:has-text('${kw}'):visible, label:has-text('${kw}'):visible, a:has-text('${kw}'):visible`;
+        sel = action.selector;
+      }
+    }
+
+    if (
+      action.type === "click" &&
+      !desc.includes("확인") &&
+      isModalContext &&
+      isUserSelection &&
+      !desc.includes("추가") &&
+      !desc.includes("전달") &&
+      !desc.includes("이동")
+    ) {
+      const original = action.selector;
+      action.selector = ".ui-dialog:visible span.dynatree-checkbox:visible, .ui-dialog:visible label.user_info.chkbox, .ui-dialog:visible label[class*='user_info'], .ui-dialog:visible #orgUserList_listbox label.user_info, .ui-dialog:visible #orgUserList_listbox li:first-child, .ui-dialog:visible .org_user_lst li:first-child, .ui-dialog:visible [id^='user_']:first-child, .ui-dialog:visible .user_card:first-child, .ui-dialog:visible [class*='user_lst'] li:first-child, .ui-dialog:visible [class*='user']:has(.name):first-child, .ui-dialog:visible li:first-child label, .ui-dialog:visible tr:first-child td";
+      changes.push(`[정제] 조직도/권한 팝업 사원/사용자 선택 중앙 후보 카드 및 체크박스 셀렉터 보강: "${original}" -> "${action.selector}"`);
+      fixedActionsCount++;
+      sel = action.selector;
+    }
+
+    // 1-B1.6 Universal Shuttle Transfer & Inner Picker Trigger Buttons
+    const isModalOpenAction =
+      desc.includes("모달 오픈") ||
+      desc.includes("모달 호출") ||
+      desc.includes("팝업 오픈") ||
+      desc.includes("팝업 호출") ||
+      desc.includes("팝업 열기") ||
+      desc.includes("창 열기") ||
+      desc.includes("버튼 클릭하여 선택 모달") ||
+      desc.includes("지정을 위해");
+
+    if (
+      action.type === "click" &&
+      isModalOpenAction &&
+      (desc.includes("추가") || desc.includes("조직도") || desc.includes("주소록") || desc.includes("선택") || desc.includes("검색"))
+    ) {
+      const original = action.selector;
+      action.selector = ".ui-dialog:visible button:has-text('추가'):visible, .ui-dialog:visible button:has-text('조직도'):visible, .ui-dialog:visible button:has-text('주소록'):visible, .ui-dialog:visible button.btn_add:visible, .modal:visible button:has-text('추가'):visible, [role='dialog']:visible button:has-text('추가'):visible, button:has-text('추가'):visible, button:has-text('조직도'):visible";
+      changes.push(`[정제] 팝업 내부 하위 피커/조직도 호출 버튼 셀렉터 보강: "${original}" -> "${action.selector}"`);
+      fixedActionsCount++;
+      sel = action.selector;
+    } else if (
+      action.type === "click" &&
+      isModalContext &&
+      !isModalOpenAction &&
+      !desc.includes("양식") &&
+      !desc.includes("결재작성") &&
+      !desc.includes("결재 작성") &&
+      (desc.includes("전달") || desc.includes("이동") || ((desc.includes("추가") || desc.includes("권한")) && (desc.includes("목록으로") || desc.includes("대상 목록") || desc.includes("▲") || desc.includes("▶"))))
+    ) {
+      if (!(action as any)._lastHealReason) {
+        const original = action.selector;
+        action.selector = ".ui-dialog:visible button.drop_tgl:visible, .ui-dialog:visible button:has-text('권한'):visible, .ui-dialog:visible button:has-text('선택'):visible, .ui-dialog:visible button.btn_rgt:visible, .ui-dialog:visible button.btn_add:visible, .ui-dialog:visible .btn_area button:visible, button.drop_tgl:visible, button:has-text('권한'):visible, .ui-dialog:visible button:has-text('추가'):visible";
+        changes.push(`[정제] 셔틀 팝업 대상 추가/전달 버튼 셀렉터 보강: "${original}" -> "${action.selector}"`);
+        fixedActionsCount++;
+        sel = action.selector;
+      }
+    }
+
+    // 1-B1.8 Electronic Approval Form Selection / Draft Initiation Refinement
+    if (
+      action.type === "click" &&
+      (desc.includes("결재작성") || desc.includes("결재 작성") || (desc.includes("양식") && (desc.includes("선택") || desc.includes("클릭"))))
+    ) {
+      const isLeftSnbBtn = desc.includes("좌측") || desc.includes("사이드바") || desc.includes("snb") || (!desc.includes("카드") && !desc.includes("양식 내") && !desc.includes("선택한") && desc.includes("사이드"));
+      const isCardSelect = (desc.includes("카드") || desc.includes("양식")) && (desc.includes("선택") || desc.includes("클릭")) && !desc.includes("버튼 클릭");
+      const isCardWriteBtn = desc.includes("카드 내") || desc.includes("양식 내") || desc.includes("선택한") || (desc.includes("버튼") && !isLeftSnbBtn);
+
+      if (isLeftSnbBtn) {
+        const original = action.selector;
+        action.selector = "button#gapLeft_workWriteBtn, #snb button:has-text('결재 작성'):visible, .snb_btn_box button:has-text('결재 작성'):visible, button#gapLeft_workWriteBtn:visible";
+        changes.push(`[정제] 전자결재 좌측 SNB '결재 작성' 대버튼 셀렉터 정밀 보강: "${original}" -> "${action.selector}"`);
+        fixedActionsCount++;
+        sel = action.selector;
+      } else if (isCardSelect) {
+        const original = action.selector;
+        if (desc.includes("테스트 업무")) {
+          action.selector = "li.aw_li:has-text('테스트 업무') a._his, .app_work_list li:has-text('테스트 업무') a, a:has-text('테스트 업무'):visible";
+        } else if (desc.includes("지출결의서")) {
+          action.selector = "li.aw_li:has-text('지출결의서') a._his, .app_work_list li:has-text('지출결의서') a, a:has-text('지출결의서'):visible";
+        } else {
+          action.selector = "li.aw_li:first-child a._his, .app_work_list li:first-child a, li.aw_li a._his:visible";
+        }
+        changes.push(`[정제] 전자결재 결재업무 카드 선택 셀렉터 정밀 보강: "${original}" -> "${action.selector}"`);
+        fixedActionsCount++;
+        sel = action.selector;
+      } else if (isCardWriteBtn) {
+        const original = action.selector;
+        // CRITICAL: NEVER place generic 'button:has-text(\'결재 작성\'):visible' first, as it clicks the top SNB button and resets the list!
+        action.selector = "li.aw_li.selected button.btn_write, li.aw_li:has-text('테스트 업무') button.btn_write, li.aw_li.selected button:has-text('결재 작성'), .app_work_list li.selected button.btn_write, button.btn_write:visible";
+        changes.push(`[정제] 전자결재 카드 내부 소형 '결재 작성' 버튼 셀렉터 정밀 보강: "${original}" -> "${action.selector}"`);
+        fixedActionsCount++;
+        sel = action.selector;
+      }
+    }
+
+        // 1-B1.9 Naonsoft Groupware Canonical Action Mappings
+    if (action.type === "click") {
+      // 결재상신
+      if (desc.includes("상신") && !desc.includes("양식") && !desc.includes("확인") && !desc.includes("취소")) {
+        const original = action.selector;
+        action.selector = "button._draftBtn, button._draft, button:has-text('결재상신'):visible, button:has-text('상신'):visible, .btn_draft:visible";
+        if (original !== action.selector) {
+          changes.push(`[그룹웨어 정밀 매핑] 전자결재 상신 버튼 보강: "${original}" -> "${action.selector}"`);
+          fixedActionsCount++;
+        }
+        sel = action.selector;
+      }
+      // 기록물철 / 문서보관함
+      else if ((desc.includes("기록물철") || desc.includes("문서보관함")) && (desc.includes("선택") || desc.includes("클릭") || desc.includes("버튼")) && !desc.includes("트리") && !desc.includes("노드") && !desc.includes("확인")) {
+        const original = action.selector;
+        action.selector = "button#eapDocReg_binderSelBtn, button#eapDocReg_bindBtn, button#gapDocReg_binderSelBtn, button:has-text('기록물철'):visible, button:has-text('문서보관함'):visible";
+        if (original !== action.selector) {
+          changes.push(`[그룹웨어 정밀 매핑] 기록물철/보관함 선택 버튼 보강: "${original}" -> "${action.selector}"`);
+          fixedActionsCount++;
+        }
+        sel = action.selector;
+      }
+      // 일정등록
+      else if ((desc.includes("일정등록") || desc.includes("일정 등록")) && !desc.includes("저장") && !desc.includes("완료") && !desc.includes("취소")) {
+        const original = action.selector;
+        action.selector = "button#reg_shedule_lefttop, button#scheduleLayerBtn, button:has-text('일정등록'):visible";
+        if (original !== action.selector) {
+          changes.push(`[그룹웨어 정밀 매핑] 일정등록 버튼 보강: "${original}" -> "${action.selector}"`);
+          fixedActionsCount++;
+        }
+        sel = action.selector;
+      }
+      // 게시판 글작성
+      else if ((desc.includes("글작성") || desc.includes("게시글 작성") || desc.includes("글 작성")) && !desc.includes("저장") && !desc.includes("취소")) {
+        const original = action.selector;
+        action.selector = "button#brdBoardLeft_writeBtn, .btn_write, button:has-text('글작성'):visible";
+        if (original !== action.selector) {
+          changes.push(`[그룹웨어 정밀 매핑] 게시판 글작성 버튼 보강: "${original}" -> "${action.selector}"`);
+          fixedActionsCount++;
+        }
+        sel = action.selector;
+      }
+      // 문서관리 문서등록
+      else if ((desc.includes("문서등록") || desc.includes("문서 등록")) && !desc.includes("저장") && !desc.includes("취소")) {
+        const original = action.selector;
+        action.selector = "button#docLeft_writeBtn, button#reg_doc_btn, button:has-text('문서등록'):visible";
+        if (original !== action.selector) {
+          changes.push(`[그룹웨어 정밀 매핑] 문서관리 문서등록 버튼 보강: "${original}" -> "${action.selector}"`);
+          fixedActionsCount++;
+        }
+        sel = action.selector;
+      }
     }
 
     // 1-B2. Universal Dialog Confirm / Apply Button
@@ -114,7 +295,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       (desc.includes("확인") || desc.includes("선택 완료") || desc.includes("적용")) &&
       (isModalContext || sel.includes("confirm") || sel.includes("Confirm"))
     ) {
-      action.selector = ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, button[id*='confirm']:visible, button[id*='Confirm']:visible, .ui-dialog:visible button.btn_pri:visible, .ui-dialog:visible button._confirm:visible";
+      action.selector = ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, .ui-dialog:visible button._confirm:visible, button[id*='confirm']:visible, button[id*='Confirm']:visible, .ui-dialog:visible button.btn_pri:visible";
       delete action.iframe;
       sel = action.selector;
     }
@@ -167,12 +348,31 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       desc.includes("일정") ||
       desc.includes("캘린더");
 
+    const isFormOrControlAction =
+      sel.includes("input") ||
+      sel.includes("checkbox") ||
+      sel.includes("radio") ||
+      sel.includes("button") ||
+      sel.includes("select") ||
+      sel.includes("dialog") ||
+      sel.includes("auth") ||
+      desc.includes("체크박스") ||
+      desc.includes("라디오") ||
+      desc.includes("권한") ||
+      desc.includes("옵션") ||
+      desc.includes("입력") ||
+      desc.includes("버튼") ||
+      desc.includes("작성");
+
+    const isListRowIntent =
+      !isFormOrControlAction &&
+      (desc.includes("목록") || desc.includes("리스트") || desc.includes("게시글") || desc.includes("문서 선택") || desc.includes("문서 클릭") || desc.includes("행 클릭") || desc.includes("첫 번째 글"));
+
     if (
       action.type === "click" &&
       !isClosingOrAction &&
       !isCalendarEvent &&
-      (desc.includes("상세") || desc.includes("조회") || desc.includes("항목") || desc.includes("결과")) &&
-      (desc.includes("클릭") || desc.includes("선택") || desc.includes("열람")) &&
+      isListRowIntent &&
       !sel.includes("lst_vr") &&
       !sel.includes("sub_tp")
     ) {
@@ -180,12 +380,17 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       sel = action.selector;
     }
 
-    // Clean accidental table list selectors from close/cancel actions
-    if ((desc.includes("닫기") || desc.includes("취소")) && sel.includes("table.tbl_lst")) {
+    // Clean accidental table list selectors and force flags from close/cancel or form/control actions
+    if ((desc.includes("닫기") || desc.includes("취소") || isFormOrControlAction) && sel.includes("table.tbl_lst")) {
       action.selector = sel
         .replace(/,\s*table\.tbl_lst[\s\S]*$/, "")
         .trim();
       sel = action.selector;
+      changes.push(`[컨텍스트 격리] 폼/컨트롤 액션에서 부적절한 목록 선택 Fallback 제거: "${desc}"`);
+    }
+
+    if (action.force && isFormOrControlAction && !action.optional) {
+      delete action.force;
     }
 
     // 1-E. Module Content Search vs Sidebar Folder Search vs GNB Header Search Collision Prevention
@@ -315,10 +520,10 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       }
     }
 
-    // 8. Checkbox / Radio click stabilization (force click)
-    if (action.type === "click" && (sel.includes("checkbox") || sel.includes("radio") || desc.includes("체크"))) {
-      action.force = true;
-    }
+    // 8. Checkbox / Radio click stabilization
+    // Note: Do NOT blindly set action.force = true here because it causes Playwright
+    // to force-click through modal backdrops (.ui-widget-overlay).
+    // Runtime resolveAtomicTarget in record.ts already handles custom styled checkbox labels safely.
 
     // 9. Auto-mark conditional actions (존재 시, 표시 시, 노출 시, 있을 경우 등) as optional: true and force: false
     const isConditionalDesc =
@@ -468,6 +673,143 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
     if (!hasTitleInput) {
       changes.push(`[⚠️ 등록 필수 조건 점검] 등록/저장 시나리오에 '제목 입력' 액션이 감지되지 않았습니다. 필수값 유효성 검사 alert 통과를 위해 제목 입력을 추가하십시오.`);
     }
+  }
+
+  // 15-A. Universal 2-Tier Nested Picker Trigger Injection (Setting Layer -> Inner User Picker)
+  // If an outer setting layer was opened (e.g. 권한 설정, 참석자 설정, 결재선 설정, 옵션 설정),
+  // and subsequent steps attempt to select a user card or org tree,
+  // BUT there is NO step clicking the inner trigger ([추가], [조직도], [주소록]) to actually summon the picker:
+  const outerSettingTriggerIdx = optimizedActions.findIndex((a, idx) => {
+    if (a.type !== "click") return false;
+    const d = (a.description || "").toLowerCase();
+    return (
+      (d.includes("설정") || d.includes("지정")) &&
+      (d.includes("권한") || d.includes("참석자") || d.includes("결재선") || d.includes("수신자") || d.includes("자원") || d.includes("옵션")) &&
+      !d.includes("확인") &&
+      idx < optimizedActions.length - 4
+    );
+  });
+
+  if (outerSettingTriggerIdx !== -1) {
+    const userPickIdx = optimizedActions.findIndex((a, idx) => {
+      if (a.type !== "click") return false;
+      const d = (a.description || "").toLowerCase();
+      const s = (a.selector || "").toLowerCase();
+      const isTrigger =
+        d.includes("추가 버튼") ||
+        d.includes("조직도 버튼") ||
+        d.includes("피커 호출") ||
+        d.includes("대화상자 호출") ||
+        d.includes("팝업 호출") ||
+        s.includes("btn_add");
+      if (isTrigger) return false;
+      return (
+        idx > outerSettingTriggerIdx &&
+        (d.includes("사원") ||
+          d.includes("사용자 선택") ||
+          d.includes("대상자") ||
+          d.includes("직원") ||
+          d.includes("부서 노드") ||
+          s.includes("user_info") ||
+          s.includes("user_card") ||
+          s.includes("chkbox"))
+      );
+    });
+
+    if (userPickIdx !== -1) {
+      const hasInnerTriggerBetween = optimizedActions.slice(outerSettingTriggerIdx + 1, userPickIdx).some((a) => {
+        if (a.type !== "click") return false;
+        const d = (a.description || "").toLowerCase();
+        const s = (a.selector || "").toLowerCase();
+        return (
+          (d.includes("추가") && !d.includes("목록으로") && !d.includes("대상 목록")) ||
+          d.includes("조직도") ||
+          d.includes("주소록") ||
+          d.includes("피커") ||
+          s.includes("btn_add")
+        );
+      });
+
+      if (!hasInnerTriggerBetween) {
+        let insertPos = outerSettingTriggerIdx + 1;
+        if (insertPos < optimizedActions.length && optimizedActions[insertPos].type === "wait") {
+          insertPos++;
+        }
+        optimizedActions.splice(
+          insertPos,
+          0,
+          {
+            type: "click",
+            description: "설정 대화상자 내 [추가] 버튼 클릭하여 조직도/사용자 선택 팝업 호출",
+            selector: ".ui-dialog:visible button:has-text('추가'):visible, .ui-dialog:visible button:has-text('조직도'):visible, .ui-dialog:visible button:has-text('주소록'):visible, .ui-dialog:visible button.btn_add:visible, button:has-text('추가'):visible",
+          },
+          {
+            type: "wait",
+            description: "조직도/사용자 선택 팝업 로딩 대기",
+            ms: 1800,
+          }
+        );
+        changes.push(`[보강] 2-Tier 중첩 모달 감지: 설정 레이어 오픈 후 내부 [추가/조직도] 호출 액션 자동 주입`);
+        fixedActionsCount++;
+      }
+    }
+  }
+
+  // 15. Universal Multi-Tier Modal Stack Confirmation Balance (LIFO Dialog Closure)
+  // In any enterprise web application (Approval Line, Attendees, Permissions, Resources, Address Book, Categories),
+  // if an outer setting modal was opened, and then an inner picker modal was opened and confirmed,
+  // the outer setting modal must also be confirmed before proceeding to final form submit/save.
+  const outerModalTriggerIdx = optimizedActions.findIndex((a, idx) => {
+    if (a.type !== "click") return false;
+    const d = (a.description || "").toLowerCase();
+    return (
+      (d.includes("설정") || d.includes("지정") || d.includes("관리") || d.includes("선택 모달") || d.includes("팝업 오픈") || d.includes("창 열기")) &&
+      !d.includes("확인") &&
+      !d.includes("저장") &&
+      !d.includes("상신") &&
+      idx < optimizedActions.length - 4
+    );
+  });
+
+  const innerPickerConfirmIdx = optimizedActions.findIndex((a, idx) => {
+    if (a.type !== "click") return false;
+    const d = (a.description || "").toLowerCase();
+    return (
+      idx > outerModalTriggerIdx &&
+      outerModalTriggerIdx !== -1 &&
+      (d.includes("선택 대화상자") || d.includes("조직도") || d.includes("주소록") || d.includes("모달 확인") || d.includes("설정 반영") || d.includes("피커") || d.includes("선택 완료") || d.includes("적용")) &&
+      d.includes("확인")
+    );
+  });
+
+  const hasOuterConfirmAfter = optimizedActions.some((a, idx) => {
+    if (a.type !== "click") return false;
+    const d = (a.description || "").toLowerCase();
+    return idx > innerPickerConfirmIdx && innerPickerConfirmIdx !== -1 && d.includes("확인");
+  });
+
+  if (outerModalTriggerIdx !== -1 && innerPickerConfirmIdx !== -1 && !hasOuterConfirmAfter) {
+    let insertIdx = innerPickerConfirmIdx + 1;
+    if (insertIdx < optimizedActions.length && optimizedActions[insertIdx].type === "wait") {
+      insertIdx++;
+    }
+    optimizedActions.splice(
+      insertIdx,
+      0,
+      {
+        type: "click",
+        description: "상위 설정 대화상자 [확인] 버튼 클릭하여 설정 완료 및 본문 복귀",
+        selector: ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, .modal:visible button:has-text('확인'):visible, [role='dialog']:visible button:has-text('확인'):visible, button:has-text('확인'):visible",
+        optional: true,
+      },
+      {
+        type: "wait",
+        description: "상위 설정 완료 및 본문 폼 복귀 대기",
+        ms: 1500,
+      }
+    );
+    changes.push(`[보강] 중첩 모달(Nested Dialog) 감지: 내부 피커 확인 후 상위 설정 대화상자 [확인] 액션 자동 주입`);
+    fixedActionsCount++;
   }
 
   return {
