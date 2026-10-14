@@ -14,8 +14,11 @@ auth.json
 
 # Scratch & Temporary Testing directories
 scratch/
+scratch*/
 tmp/
+tmp*/
 temp/
+temp*/
 .cache/
 
 # Build & Render Outputs
@@ -44,9 +47,17 @@ playwright/.cache/
 public/sfx/*.mp3
 public/sfx/*.wav
 
-# Debug Screenshots & Backups
-data/**/debug_*.png
-data/**/recording_error.png
+# Debug Screenshots, Verification Frames & Test Scenarios
+data/**/*.png
+data/**/*.jpg
+data/**/*.jpeg
+data/**/*.webm
+data/**/inspections/
+data/**/verification_frames/
+data/**/frames/
+data/test-*/
+data/live-demo-*/
+data/visual-test-*/
 *.bak
 
 # IDE & OS Files

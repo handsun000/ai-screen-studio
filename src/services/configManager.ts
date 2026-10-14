@@ -49,7 +49,11 @@ export function updateConfig(newConfig: Partial<StudioConfig>): StudioConfig {
     currentConfig.targetProjectPath = newConfig.targetProjectPath.trim().replace(/\\/g, "/");
   }
   if (newConfig.targetBaseUrl !== undefined) {
-    currentConfig.targetBaseUrl = newConfig.targetBaseUrl.trim();
+    let raw = newConfig.targetBaseUrl.trim();
+    if (raw && !/^https?:\/\//i.test(raw)) {
+      raw = "http://" + raw;
+    }
+    currentConfig.targetBaseUrl = raw;
   }
   if (newConfig.geminiModel !== undefined) {
     currentConfig.geminiModel = newConfig.geminiModel.trim();

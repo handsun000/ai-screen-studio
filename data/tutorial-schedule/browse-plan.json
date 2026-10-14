@@ -44,7 +44,7 @@
     {
       "type": "click",
       "description": "좌측 상단 [일정 등록] 버튼 클릭 (Phase 3)",
-      "selector": "button#reg_shedule_lefttop, #snb button:has-text('등록'):visible, button:has-text('일정 등록'):visible, button:has-text('일정등록'):visible"
+      "selector": "button#reg_shedule_lefttop, button#scheduleLayerBtn, button:has-text('일정등록'):visible"
     },
     {
       "type": "wait",
@@ -54,7 +54,7 @@
     {
       "type": "type",
       "description": "일정 제목 필드에 '전략 기획 워크숍 및 중장기 과제 회의' 입력",
-      "selector": ".ui-dialog:visible input#subject, #reg_schedule_form #subject, input#subject:visible, input[name*='subject']:visible",
+      "selector": "input#eapDocReg_docSubject:visible, input#docTitle:visible, input[name*='Subject']:visible, input[placeholder*='제목']:visible, input#subject:visible",
       "text": "전략 기획 워크숍 및 중장기 과제 회의"
     },
     {
@@ -65,7 +65,9 @@
     {
       "type": "click",
       "description": "상세 설정 확장 버튼 클릭 (노출 시)",
-      "selector": ".ui-dialog:visible button._detailBtn:visible, .ui-dialog:visible button:has-text('상세'):visible, .ui-dialog:visible a:has-text('상세'):visible, .ui-dialog:visible button.btn_more:visible, table.tbl_lst tbody tr:first-child td.sub a:visible, table tbody tr:first-child td[class*='sub'] a:visible, table tbody tr:first-child a:visible, ul.lst_vr_ul li:first-child a.sub_tp:visible, ul.lst_vr_ul li:first-child .sub a:visible, ul[id*='List'] li:first-child a.sub_tp:visible, ul[class*='lst'] li:first-child a:visible, .lst_type1 li:first-child a:visible"
+      "selector": ".ui-dialog:visible button.btn_fopn:visible, .ui-dialog:visible button:has-text('모두펼침'):visible, .ui-dialog:visible .dynatree-expander:visible",
+      "optional": true,
+      "force": false
     },
     {
       "type": "wait",
@@ -97,7 +99,7 @@
     {
       "type": "type",
       "description": "장소 입력 필드에 '본사 10층 대회의실' 입력",
-      "selector": ".ui-dialog:visible input#palace, .ui-dialog:visible input[name='palace']",
+      "selector": ".ui-dialog:visible input#palace:visible, .ui-dialog:visible input#place:visible, .ui-dialog:visible input[name*='palace']:visible, .ui-dialog:visible input[name*='place']:visible, .ui-dialog:visible input[placeholder*='장소']:visible, input#palace:visible",
       "text": "본사 10층 대회의실"
     },
     {
@@ -108,7 +110,8 @@
     {
       "type": "click",
       "description": "공개 여부 옵션 확인 및 클릭",
-      "selector": ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, button[id*='confirm']:visible, button[id*='Confirm']:visible, .ui-dialog:visible button.btn_pri:visible, .ui-dialog:visible button._confirm:visible"
+      "selector": ".ui-dialog:visible label:has-text('비공개'):visible, .ui-dialog:visible label:has-text('공개'):visible, .ui-dialog:visible input#publYn:visible, input[name*='publ']:visible, label:has-text('비공개'), label:has-text('공개')",
+      "optional": true
     },
     {
       "type": "wait",
@@ -149,7 +152,9 @@
     {
       "type": "click",
       "description": "저장 완료 안내 팝업 확인 버튼 클릭 (표시 시)",
-      "selector": ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, button[id*='confirm']:visible, button[id*='Confirm']:visible, .ui-dialog:visible button.btn_pri:visible, .ui-dialog:visible button._confirm:visible"
+      "selector": ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button._confirmBtn:visible, .ui-dialog:visible button._confirm:visible, .ui-dialog:visible .ui-dialog-buttonpane button:text-is('확인'):visible, button[id*='confirm']:visible, button[id*='Confirm']:visible, .ui-dialog:visible button.btn_pri:text-is('확인'):visible",
+      "optional": true,
+      "force": false
     },
     {
       "type": "wait",
@@ -159,7 +164,7 @@
     {
       "type": "hover",
       "description": "캘린더에 방금 등록된 일정 항목 호버",
-      "selector": ".ui-dialog:visible input#subject:visible, .ui-dialog:visible textarea:visible, .ui-dialog:visible .ui-dialog-content:visible, .ui-dialog:visible, a.fc-event:has-text('전략 기획 워크숍'), .fc-event-title:has-text('전략 기획 워크숍'), .fc-event:has-text('전략 기획 워크숍'):visible, a.fc-event:last-child"
+      "selector": "a.fc-event:has-text('전략 기획 워크숍'), .fc-event-title:has-text('전략 기획 워크숍'), .fc-event:has-text('전략 기획 워크숍'):visible, a.fc-event:last-child"
     },
     {
       "type": "wait",

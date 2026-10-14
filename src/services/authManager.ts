@@ -262,6 +262,22 @@ export function triggerLoginComplete(): boolean {
 }
 
 /**
+ * Normalizes a target URL by trimming and ensuring http:// or https:// protocol.
+ */
+export function normalizeTargetUrl(rawUrl: string): string {
+  let url = (rawUrl || "").trim();
+  if (!url) return "";
+  if (!/^https?:\/\//i.test(url)) {
+    url = "http://" + url;
+  }
+  return url;
+}
+
+export interface InteractiveLoginOptions {
+  isServer?: boolean;
+}
+
+/**
  * Interactive Login Window:
  * Pops up a real headed browser window, directs the user to log in,
  * automatically detects when login is completed, and saves auth.json.
@@ -269,9 +285,11 @@ export function triggerLoginComplete(): boolean {
 export async function launchInteractiveLogin(
   url: string,
   targetAuthPath: string,
-  onProgress?: (message: string) => void
+  onProgress?: (message: string) => void,
+  options?: InteractiveLoginOptions
 ): Promise<boolean> {
-  onProgress?.("🌐 [로그인 창 실행] 브라우저 로그인 창을 띄웁니다. 로그인을 완료해 주세요...");
+  const normalizedUrl = normalizeTargetUrl(url);
+  onProgress?.(`🌐 [로그인 창 실행] 브라우저 로그인 창(${normalizedUrl})을 띄웁니다. 로그인을 완료해 주세요...`);
 
   let loginBrowser: Browser;
   try {
@@ -301,10 +319,12 @@ export async function launchInteractiveLogin(
   try {
     const loginContext = await loginBrowser.newContext({
       viewport: null, // Open as a real maximized window
+      ignoreHTTPSErrors: true,
     });
     const loginPage = await loginContext.newPage();
-    await loginPage.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
+    await loginPage.goto(normalizedUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
     await loginPage.bringToFront();
+    await loginPage.evaluate(() => window.focus()).catch(() => {});
 
     onProgress?.("👉 [로그인 대기] 브라우저 창에서 아이디/비밀번호를 입력하고 로그인을 완료해 주세요.");
 
@@ -371,34 +391,136 @@ export async function launchInteractiveLogin(
       try {
         if (targetPage.isClosed()) return;
         await targetPage.evaluate((isLoggedIn: boolean) => {
+          // Polyfill esbuild/tsx __name helper in browser context
+          (window as any).__name = (window as any).__name || ((fn: any) => fn);
+
           let container = document.getElementById("studio-floating-login-helper");
+          // If legacy container exists, replace with latest v3 draggable container immediately
+          if (container && container.dataset.version !== "v3") {
+            container.remove();
+            container = null;
+          }
+
           if (!container) {
             container = document.createElement("div");
             container.id = "studio-floating-login-helper";
+            container.dataset.version = "v3";
+
+            // Default initial position (top right, calculated with left/top for zero style conflict)
+            let initialTop = 16;
+            let initialLeft = Math.max(16, (window.innerWidth || 1280) - 400);
+
+            try {
+              const savedPos = sessionStorage.getItem("studio_helper_pos");
+              if (savedPos) {
+                const pos = JSON.parse(savedPos);
+                if (typeof pos.x === "number" && typeof pos.y === "number") {
+                  initialLeft = Math.max(8, Math.min((window.innerWidth || 1280) - 360, pos.x));
+                  initialTop = Math.max(8, Math.min((window.innerHeight || 800) - 70, pos.y));
+                }
+              }
+            } catch {}
+
             container.innerHTML = `
-              <div id="studio-helper-card" style="position:fixed; top:16px; right:16px; z-index:2147483647; background:linear-gradient(135deg, #1e293b, #0f172a); color:#ffffff; padding:10px 18px; border-radius:12px; box-shadow:0 10px 25px -5px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.12); font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif; display:flex; align-items:center; gap:14px; pointer-events:auto; user-select:none;">
-                <div style="display:flex; flex-direction:column;">
-                  <span style="font-size:11px; color:#94a3b8; font-weight:600; letter-spacing:0.5px;">SCREEN DEMO STUDIO</span>
-                  <span id="studio-helper-status" style="font-size:13px; font-weight:700; color:#38bdf8;">🔐 로그인 진행 중...</span>
+              <div id="studio-helper-card" style="position:fixed !important; top:${initialTop}px !important; left:${initialLeft}px !important; z-index:2147483647 !important; background:linear-gradient(135deg, #1e293b, #0f172a) !important; color:#ffffff !important; padding:10px 16px !important; border-radius:12px !important; box-shadow:0 10px 25px -5px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.12) !important; font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif !important; display:flex !important; align-items:center !important; gap:12px !important; pointer-events:auto !important; user-select:none !important; -webkit-user-select:none !important; touch-action:none !important; cursor:grab !important; box-sizing:border-box !important;">
+                <div id="studio-drag-handle" title="마우스로 잡고 어디든 드래그하여 이동" style="cursor:grab !important; display:flex !important; align-items:center !important; justify-content:center !important; padding:6px 8px !important; background:rgba(255,255,255,0.1) !important; border-radius:6px !important; color:#cbd5e1 !important; font-size:18px !important; line-height:1 !important; user-select:none !important;">
+                  ⠿
                 </div>
-                <button id="studio-btn-login-done" style="background:#2563eb; color:#ffffff; border:none; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; box-shadow:0 4px 12px rgba(37,99,235,0.3); transition:all 0.2s;">
+                <div style="display:flex !important; flex-direction:column !important; cursor:grab !important; pointer-events:none !important;">
+                  <span style="font-size:11px !important; color:#94a3b8 !important; font-weight:600 !important; letter-spacing:0.5px !important;">SCREEN DEMO STUDIO</span>
+                  <span id="studio-helper-status" style="font-size:13px !important; font-weight:700 !important; color:#38bdf8 !important;">🔐 로그인 진행 중...</span>
+                </div>
+                <button id="studio-btn-login-done" style="background:#2563eb !important; color:#ffffff !important; border:none !important; padding:8px 16px !important; border-radius:8px !important; font-size:13px !important; font-weight:700 !important; cursor:pointer !important; display:flex !important; align-items:center !important; gap:6px !important; box-shadow:0 4px 12px rgba(37,99,235,0.3) !important; transition:all 0.2s !important; white-space:nowrap !important; pointer-events:auto !important;">
                   <span id="studio-btn-label">⏎ 로그인 완료 & 창 닫기</span>
                 </button>
               </div>
             `;
             document.body.appendChild(container);
 
-            const btn = document.getElementById("studio-btn-login-done");
+            const card = document.getElementById("studio-helper-card") as HTMLElement | null;
+            const btn = document.getElementById("studio-btn-login-done") as HTMLElement | null;
+
+            if (card) {
+              let isDragging = false;
+              let startX = 0;
+              let startY = 0;
+              let startLeft = 0;
+              let startTop = 0;
+
+              // Prevent HTML5 ghost image dragging
+              card.ondragstart = () => false;
+
+              // Use Pointer Events + setPointerCapture for 100% reliable dragging across iframes and windows
+              card.addEventListener("pointerdown", (e: PointerEvent) => {
+                if (btn && (e.target === btn || btn.contains(e.target as Node))) {
+                  return; // Don't drag when clicking the submit button
+                }
+                if (e.button !== 0) return; // Left mouse button only
+
+                isDragging = true;
+                try {
+                  card.setPointerCapture(e.pointerId);
+                } catch {}
+
+                const rect = card.getBoundingClientRect();
+                startLeft = rect.left;
+                startTop = rect.top;
+                startX = e.clientX;
+                startY = e.clientY;
+
+                card.style.setProperty("cursor", "grabbing", "important");
+                card.style.setProperty("opacity", "0.92", "important");
+                card.style.setProperty("box-shadow", "0 16px 36px rgba(0,0,0,0.65), 0 0 0 2px rgba(56,189,248,0.7)", "important");
+                e.preventDefault();
+              });
+
+              card.addEventListener("pointermove", (e: PointerEvent) => {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+
+                let newX = startLeft + dx;
+                let newY = startTop + dy;
+
+                const cardWidth = card.offsetWidth || 380;
+                const cardHeight = card.offsetHeight || 60;
+                newX = Math.max(8, Math.min(window.innerWidth - cardWidth - 8, newX));
+                newY = Math.max(8, Math.min(window.innerHeight - cardHeight - 8, newY));
+
+                card.style.setProperty("left", `${newX}px`, "important");
+                card.style.setProperty("top", `${newY}px`, "important");
+              });
+
+              const handlePointerUp = (e: PointerEvent) => {
+                if (!isDragging) return;
+                isDragging = false;
+                try {
+                  card.releasePointerCapture(e.pointerId);
+                } catch {}
+
+                card.style.setProperty("cursor", "grab", "important");
+                card.style.setProperty("opacity", "1", "important");
+                card.style.setProperty("box-shadow", "0 10px 25px -5px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.12)", "important");
+
+                try {
+                  const rect = card.getBoundingClientRect();
+                  sessionStorage.setItem("studio_helper_pos", JSON.stringify({ x: rect.left, y: rect.top }));
+                } catch {}
+              };
+
+              card.addEventListener("pointerup", handlePointerUp);
+              card.addEventListener("pointercancel", handlePointerUp);
+            }
+
             if (btn) {
               btn.addEventListener("mouseenter", () => {
-                btn.style.transform = "translateY(-1px)";
-                btn.style.filter = "brightness(1.1)";
+                btn.style.filter = "brightness(1.15)";
               });
               btn.addEventListener("mouseleave", () => {
-                btn.style.transform = "none";
                 btn.style.filter = "none";
               });
-              btn.addEventListener("click", () => {
+              btn.addEventListener("click", (e) => {
+                e.stopPropagation();
                 const label = document.getElementById("studio-btn-label");
                 if (label) label.textContent = "⏳ 저장 및 닫는 중...";
                 btn.style.opacity = "0.7";
@@ -406,6 +528,8 @@ export async function launchInteractiveLogin(
               });
             }
           }
+
+
 
           // Update styles if logged in
           const statusText = document.getElementById("studio-helper-status");
@@ -496,10 +620,10 @@ export async function launchInteractiveLogin(
       }
     };
 
-    // Also support Enter key in console if running in terminal
+    // Also support Enter key in console if running in terminal CLI
     const waitForEnter = async (): Promise<boolean> => {
       return new Promise<boolean>((resolve) => {
-        if (!process.stdin.isTTY) return;
+        if (options?.isServer || !process.stdin.isTTY) return;
         const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
         rl.once("line", async () => {
           rl.close();
@@ -536,6 +660,7 @@ export async function launchInteractiveLogin(
     await loginBrowser.close().catch(() => {});
     return sessionSaved && fs.existsSync(targetAuthPath) && fs.statSync(targetAuthPath).size > 100;
   } catch (err: any) {
+    console.error(`❌ [브라우저 로그인 오류] ${err.message}`, err);
     await loginBrowser.close().catch(() => {});
     onProgress?.(`⚠️ [로그인 오류] ${err.message}`);
     return false;

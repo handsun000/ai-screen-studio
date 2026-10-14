@@ -1,11 +1,13 @@
 // -- Browse Plan (input to record script) --
 
 export interface BrowsePlanAction {
-  type: "navigate" | "click" | "dblclick" | "hover" | "scroll" | "wait" | "script" | "type" | "upload" | "scrape";
+  type: "navigate" | "click" | "dblclick" | "hover" | "scroll" | "wait" | "script" | "type" | "upload" | "scrape" | "dragAndDrop";
   filePath?: string;
   force?: boolean;
   url?: string;
   selector?: string;
+  sourceSelector?: string;     // For dragAndDrop action: element to drag from
+  targetSelector?: string;     // For dragAndDrop action: element to drop onto
   iframe?: string;
   text?: string;
   /** @deprecated 건너뛰기(optional) 기능 제거됨 - 모든 액션은 100% 실제로 실행되어야 합니다. */
@@ -21,6 +23,10 @@ export interface BrowsePlanAction {
   useScraped?: string;         // Variable name to read text from for typing or matching (or "auto")
   dynamicFrom?: string;        // Specific selector to directly scrape live text from before typing
   dynamicStrategy?: "first-row-title" | "first-row-user" | "first-tree-node" | "auto";
+
+  // Eyedropper Direct DOM Capture Metadata
+  recordedByEyedropper?: boolean;
+  targetHtml?: string;
 }
 
 export interface CursorSettings {
@@ -32,6 +38,7 @@ export interface BrowsePlan {
   url: string;
   viewport: { width: number; height: number };
   requiresLogin?: boolean;
+  recordedByEyedropper?: boolean;
   cursor?: CursorSettings;
   actions: BrowsePlanAction[];
 }
@@ -61,7 +68,7 @@ export interface BoundingBox {
 
 export interface Moment {
   id: number;
-  type: "navigate" | "click" | "dblclick" | "hover" | "scroll" | "wait" | "script" | "drag" | "type" | "key" | "upload" | "scrape";
+  type: "navigate" | "click" | "dblclick" | "hover" | "scroll" | "wait" | "script" | "drag" | "type" | "key" | "upload" | "scrape" | "dragAndDrop";
   timestamp: number;
   url?: string;
   cursor?: CursorPosition;

@@ -3,7 +3,11 @@ import cors from "cors";
 import * as path from "path";
 import * as fs from "fs";
 import * as dotenv from "dotenv";
-import { generateBrowsePlanWithGemini } from "../src/services/geminiPlanner";
+import {
+  generateBrowsePlanWithGemini,
+  normalizeUserPrompt,
+  polishPromptWithAI,
+} from "../src/services/geminiPlanner";
 import {
   listScenarios,
   getScenarioDetails,
@@ -15,6 +19,18 @@ import { recordRunner } from "../src/services/recordRunner";
 import { renderRunner } from "../src/services/renderRunner";
 import { getConfig, updateConfig, analyzeProject } from "../src/services/configManager";
 import { UNIVERSAL_TUTORIAL_TEMPLATES } from "../src/services/tutorialTemplates";
+
+import {
+  findExistingAuthSession,
+  isSessionValid,
+  launchInteractiveLogin,
+  getAuthFilePath,
+  ensureSessionForSlug,
+  syncAuthSession,
+  triggerLoginComplete,
+  normalizeTargetUrl,
+} from "../src/services/authManager";
+import { actionRecorderService } from "../src/services/actionRecorderService";
 
 dotenv.config({ override: true });
 
@@ -32,11 +48,17 @@ app.get("/api/status", (_req: Request, res: Response) => {
   const config = getConfig();
   const analysis = analyzeProject(config.targetProjectPath);
 
-  // Check auth session file in any scenario or root data
-  const hasAuth =
-    fs.existsSync(path.join(DATA_DIR, "approval-draft", "auth.json")) ||
-    fs.existsSync(path.join(DATA_DIR, "login-and-install", "auth.json")) ||
-    fs.existsSync(path.join(DATA_DIR, "auth.json"));
+  const existingAuth = findExistingAuthSession();
+  let hasAuth = false;
+  if (existingAuth && fs.existsSync(existingAuth)) {
+    try {
+      const raw = JSON.parse(fs.readFileSync(existingAuth, "utf-8"));
+      const cookies = raw.cookies || [];
+      hasAuth = cookies.length > 0;
+    } catch {
+      hasAuth = false;
+    }
+  }
 
   res.json({
     geminiApiKeySet: !!apiKey,
@@ -46,9 +68,78 @@ app.get("/api/status", (_req: Request, res: Response) => {
     targetProjectExists: analysis.exists,
     targetBaseUrl: config.targetBaseUrl,
     hasAuthSession: hasAuth,
+    authSessionPath: existingAuth,
     activeSlug: getActiveSlug(),
     analysis,
   });
+});
+
+// Auth Session Management APIs
+app.get("/api/auth/status", async (req: Request, res: Response) => {
+  try {
+    const config = getConfig();
+    const url = (req.query.url as string) || config.targetBaseUrl || "https://gwdev.unison.co.kr";
+    const slug = (req.query.slug as string) || undefined;
+    const authPath = findExistingAuthSession(slug);
+
+    if (!authPath) {
+      res.json({ authenticated: false, message: "저장된 인증 세션이 없습니다." });
+      return;
+    }
+
+    const valid = await isSessionValid(url, authPath);
+    res.json({
+      authenticated: valid,
+      authPath,
+      message: valid ? "로그인 세션이 유효합니다." : "로그인 세션이 만료되었습니다.",
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/auth/login", async (req: Request, res: Response) => {
+  try {
+    const rawUrl = (req.body.url || "").trim();
+    const config = getConfig();
+    const url = normalizeTargetUrl(rawUrl || config.targetBaseUrl || "http://gwdev.apple21.co.kr/");
+
+    // Automatically persist the new targetBaseUrl if changed
+    if (rawUrl && url !== config.targetBaseUrl) {
+      updateConfig({ targetBaseUrl: url });
+      console.log(`[Dashboard Config] 타겟 접속 URL 동기화 및 갱신: ${url}`);
+    }
+
+    const slug = req.body.slug;
+    const targetAuth = getAuthFilePath(slug);
+
+    console.log(`\n======================================================`);
+    console.log(`🌐 [로그인 창 실행 요청]`);
+    console.log(`   - 접속 URL: ${url}`);
+    console.log(`   - 세션 파일: ${targetAuth}`);
+    console.log(`======================================================`);
+
+    const success = await launchInteractiveLogin(
+      url,
+      targetAuth,
+      (msg) => console.log(`[Auth Login] ${msg}`),
+      { isServer: true }
+    );
+
+    res.json({
+      success,
+      authPath: targetAuth,
+      message: success ? "로그인이 성공적으로 완료되었습니다." : "로그인이 완료되지 않았습니다.",
+    });
+  } catch (err: any) {
+    console.error(`[Auth API 오류]`, err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/auth/complete", (_req: Request, res: Response) => {
+  const triggered = triggerLoginComplete();
+  res.json({ success: triggered, message: triggered ? "로그인 완료 신호가 전송되었습니다." : "대기 중인 로그인 창이 없습니다." });
 });
 
 // Dynamic Config Management APIs
@@ -134,6 +225,83 @@ app.get("/api/gemini/stream-progress", (req: Request, res: Response) => {
   });
 });
 
+// 3.5 Prompt Polishing & Step-Chain Normalizer API
+app.post("/api/ai/polish-prompt", async (req: Request, res: Response) => {
+  try {
+    const rawPrompt = (req.body.prompt || "").trim();
+    if (!rawPrompt) {
+      res.status(400).json({ error: "다듬을 시나리오 문장을 입력해주세요." });
+      return;
+    }
+    const result = await polishPromptWithAI(rawPrompt);
+    res.json(result);
+  } catch (err: any) {
+    const fallback = normalizeUserPrompt(req.body.prompt || "");
+    res.json(fallback);
+  }
+});
+
+// 3.6 Way A: Live Eyedropper & Action Demonstration Recorder APIs
+app.post("/api/recorder/start", async (req: Request, res: Response) => {
+  try {
+    const { url, slug } = req.body || {};
+    const status = await actionRecorderService.startRecordingSession({ url, slug });
+    res.json({ success: true, status });
+  } catch (err: any) {
+    console.error("[Recorder Start Error]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/recorder/status", (_req: Request, res: Response) => {
+  res.json(actionRecorderService.getStatus());
+});
+
+app.get("/api/recorder/stream", (req: Request, res: Response) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  res.write(`data: ${JSON.stringify(actionRecorderService.getStatus())}\n\n`);
+
+  const unsubscribe = actionRecorderService.onStatusChange((status) => {
+    res.write(`data: ${JSON.stringify(status)}\n\n`);
+  });
+
+  req.on("close", () => {
+    unsubscribe();
+  });
+});
+
+app.post("/api/recorder/stop", async (req: Request, res: Response) => {
+  try {
+    const { customTitleHint, slug, directingStyle } = req.body || {};
+    const result = await actionRecorderService.stopAndBuildScenario({ customTitleHint, slug, directingStyle });
+    if (result.events && result.events.length > 0 && result.suggestedSlug && result.plan) {
+      try {
+        saveBrowsePlan(result.suggestedSlug, result.plan);
+        ensureSessionForSlug(result.suggestedSlug);
+      } catch (saveErr: any) {
+        console.warn("[Recorder Auto-Save Warning]", saveErr.message);
+      }
+    }
+    res.json({ success: true, ...result });
+  } catch (err: any) {
+    console.error("[Recorder Stop Error]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/recorder/cancel", async (_req: Request, res: Response) => {
+  try {
+    await actionRecorderService.stopRecordingSession(false);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 4. Gemini AI Plan Generation API (supports dynamic project path, URL overrides, and directing style)
 app.post("/api/scenarios/generate", async (req: Request, res: Response) => {
   try {
@@ -174,6 +342,11 @@ app.post("/api/scenarios/generate", async (req: Request, res: Response) => {
     });
 
     notifyAiProgress("✅ [완료] 브라우징 플랜 및 연출 시퀀스 생성 완료!");
+    if (result && result.suggestedSlug) {
+      try {
+        ensureSessionForSlug(result.suggestedSlug);
+      } catch {}
+    }
     res.json(result);
   } catch (err: any) {
     console.error("[Dashboard API] Generate error:", err);
@@ -192,6 +365,9 @@ app.post("/api/scenarios/save", (req: Request, res: Response) => {
     }
 
     const saved = saveBrowsePlan(slug, plan);
+    try {
+      ensureSessionForSlug(slug);
+    } catch {}
     res.json(saved);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -206,6 +382,11 @@ app.post("/api/scenarios/record", (req: Request, res: Response) => {
       res.status(400).json({ error: "slug가 필요합니다." });
       return;
     }
+
+    // Ensure session is propagated to the scenario folder before recording starts
+    try {
+      ensureSessionForSlug(slug);
+    } catch {}
 
     const task = recordRunner.startRecord(slug, { headed, login });
     res.json({ success: true, task });

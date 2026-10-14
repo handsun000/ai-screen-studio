@@ -41,27 +41,42 @@ export function createCodeExplorerTools(projectRoot: string) {
 
       // Map common module names to actual enterprise directory names
       const moduleAliases: Record<string, string[]> = {
-        mail: ["eml", "mail"],
-        email: ["eml", "mail"],
-        eml: ["eml", "mail"],
-        schedule: ["scd", "schedule"],
-        calendar: ["scd", "schedule"],
-        scd: ["scd", "schedule"],
-        note: ["not", "note"],
-        not: ["not", "note"],
+        mail: ["email", "eml", "mail"],
+        email: ["email", "eml", "mail"],
+        eml: ["email", "eml", "mail"],
+        schedule: ["schedule", "scd"],
+        calendar: ["schedule", "scd"],
+        scd: ["schedule", "scd"],
+        note: ["note", "not"],
+        not: ["note", "not"],
         app: ["app", "eapp", "approval"],
         approval: ["app", "eapp", "approval"],
+        eap: ["app", "eapp", "approval"],
         eapp: ["app", "eapp", "approval"],
         doc: ["doc", "document"],
         document: ["doc", "document"],
         board: ["board", "brd"],
         brd: ["board", "brd"],
-        work: ["work", "smw", "wor"],
-        smw: ["work", "smw", "wor"],
+        work: ["work", "wor"],
+        wor: ["work", "wor"],
+        smartwork: ["smartwork", "smw"],
+        smw: ["smartwork", "smw"],
+        project: ["project", "prj", "space", "teamsite"],
+        prj: ["project", "prj"],
+        survey: ["survey", "sur"],
+        sur: ["survey", "sur"],
+        filebox: ["filebox", "fbx"],
+        fbx: ["filebox", "fbx"],
+        memo: ["memo", "mmo"],
+        mmo: ["memo", "mmo"],
+        addr: ["addr"],
+        org: ["organization", "org"],
+        organization: ["organization", "org"],
         attend: ["attend", "atn"],
         atn: ["attend", "atn"],
-        res: ["res", "rmg"],
-        rmg: ["res", "rmg"],
+        res: ["reservation", "res", "rmg"],
+        rmg: ["reservation", "res", "rmg"],
+        reservation: ["reservation", "res", "rmg"],
       };
 
       // Priority search roots
@@ -422,65 +437,55 @@ export async function exploreCodebaseForActionSpec(
 
   const toolExecutors = createCodeExplorerTools(projectRoot);
   const toolDeclarations = codeExplorerToolDeclarations;
-  const systemInstruction = `당신은 웹 애플리케이션의 소스코드를 직접 역공학(Reverse Engineering)하여 정밀 분석하는 전문 'Code Explorer Agent'입니다.
-사용자가 "상단 메뉴에서 일정관리로 이동하여 주간 부서 회의 일정을 등록하고 저장하는 시나리오"처럼 일상적인 자연어로 간단하게 요청하더라도, 당신은 전문 시니어 개발자처럼 소스코드를 정밀하게 파고들어 100% 검증된 [화면 조작 기획서 (Action Spec)]를 작성해야 합니다.
+  const systemInstruction = `You are an elite **Code Explorer & Reverse Engineering Agent** for enterprise web applications.
+Your mission is to inspect the target project's JSP, JS, and HTML source files using the provided tools and produce a 100% verified **[화면 조작 기획서 (Action Spec)]** in Korean.
 
-[★ 핵심 원칙 1: 사용자 요청 4대 인터랙션 자동 분해 (Chain of Goals)]
-사용자의 단순한 요청에서 다음 4대 핵심 요소를 차례대로 도구를 통해 소스코드에서 반드시 찾아내십시오:
-1. [진입 메뉴/경로]: 사용자가 언급한 업무 기능(예: '일정관리', '전자결재', '게시판', '문서관리')의 GNB 메뉴 텍스트 및 링크.
-2. [등록/작성 트리거 버튼]: 화면에서 작성/등록을 시작하는 버튼.
-   - 엔터프라이즈 시스템에서 이 버튼은 메인 화면이 아니라 [좌측 사이드바 (*LeftView.jsp, *Left.js)] 상단(#reg_*_lefttop, .workset_btn, button#gapLeft_workWriteBtn 등)에 있습니다!
-   - searchCodeText로 '일정등록', '기안작성', '글작성', '등록' 등을 검색하여 실제 <button id="...">를 찾아내십시오.
-3. [작성 폼 3대 핵심 필드 심층 추적 (Deep Drill-down)]:
-   - 등록 버튼을 클릭했을 때 열리는 폼 파일(*SimpleView.jsp, *Write.jsp, 또는 팝업 컴포넌트)을 findFiles나 searchCodeText로 찾아 반드시 readSourceSnippet으로 직접 읽으십시오!
-   - 그 화면 소스 안에서 실제 사용되는 3대 요소를 찾아내십시오:
-     ① 제목 필드 (예: <input id="subject" name="subject">)
-     ② 본문 내용 필드 (예: <textarea id="cn">)
-     ③ 최종 저장/등록 버튼 (예: <button id="savebtn">)
-4. [유효성 검사(Validation Alert) 추적]:
-   - 폼 저장 시 필수값 누락을 체크하는 자바스크립트 if문 및 alert() 메시지를 extractAlertsAndValidation으로 찾아 필수 입력 순서를 규정하십시오.
+### [Core Rule 1: 4-Stage Chain of Goals]
+Decompose the user's natural language request and verify these 4 elements in the source code:
+1. **[Entry Menu / GNB Route]**: GNB menu text and drawer entry (\`button.btn_svc_open:visible\` -> \`#svc_box a:has-text('...')\`).
+2. **[Write / Action Trigger Button]**: Located at the top of the module's Left Sidebar (\`*LeftView.jsp\`, \`*SideBar.jsp\`, \`*Left.js\`), e.g. \`button#reg_shedule_lefttop\`, \`#eapLeft_workWriteBtn\`, \`button#rmgResSideBar_apply\`, \`button#worSideBar_workReg\`.
+3. **[Form 3 Core Fields (Deep Drill-Down)]**:
+   - Locate the registration/view JSP (\`*SimpleView.jsp\`, \`*Reg.jsp\`, \`*Write.jsp\`) via \`findFiles\` or \`searchCodeText\`, and inspect it with \`readSourceSnippet\`.
+   - Identify: ① Title input (\`#subject\`, \`#eapDocReg_docSubject\`, etc.), ② Body editor (\`#cn\`, \`textarea#reqWhy\`, etc.), ③ Final Submit/Save button (\`#savebtn\`, \`#eapDocReg_draftBtn\`, \`#resInsertDetailView_saveBtn\`, etc.).
+4. **[Validation Alert & Prerequisite Rules]**:
+   - Use \`extractAlertsAndValidation\` on the corresponding \`.js\` controller to find \`naon.ui.alert\` / \`alert()\` checks and mandatory field order.
 
-[★ 핵심 원칙 2: 🚨 출처 증거 강제 (Evidence-Based Verification)]
-- 당신이 도구(searchCodeText, readSourceSnippet)로 실제 소스 라인을 직접 읽어서 확인한 ID만 기획서에 기록하십시오.
-- 식별된 모든 DOM 셀렉터 옆에는 반드시 [확인된 출처: 파일명:라인번호] (예: scdLeftView.jsp:L48)를 명시하십시오!
-- 출처 라인 번호가 없는 가상의 ID는 절대 인정되지 않습니다.
+### [Core Rule 2: Evidence-Based Verification (Citation Mandatory)]
+- Record ONLY DOM IDs and selectors that you directly confirmed via \`searchCodeText\` or \`readSourceSnippet\`.
+- Next to every selector, you MUST cite \`[확인 출처: 파일명:L라인번호]\` (e.g., \`[확인 출처: scdLeftView.jsp:L48]\`).
 
-[★ 핵심 원칙 3: 🚨 모르면 절대로 ID를 추측하지 말고 비워두거나 텍스트 매칭 사용! (Zero-Guessing Policy)]
-- 만약 특정 버튼이나 입력창의 ID를 소스코드에서 찾지 못했거나 불확실하다면, 절대로 그럴듯한 영어 ID(#btn_orgUIselectDialog, #scd_write_btn, #_DOC_TITLE_ 등)를 지어내지 마십시오!
-- 모르는 항목은 다음과 같이 정직하게 처리하십시오:
-  1) 화면 텍스트 매칭이 가능하면: 예) \`button:has-text("일정 등록"):visible\`
-  2) 텍스트 매칭도 불확실하면: **아예 셀렉터를 비워두고(\`""\`)**, 기획서의 [## 3. ⚠️ 사용자 확인/직접 입력 필요 항목]에 등록하십시오!
-  3) 기획서와 설명에 "사용자가 대시보드 에디터에서 직접 셀렉터를 입력해야 함"을 명확히 안내하십시오.
-  - 대시보드 에디터는 비어있는 셀렉터가 있는 액션 카드에 주황색 펄스 테두리와 '⚠️ 셀렉터 입력 필요' 배지, 그리고 퀵 채우기 헬퍼를 자동으로 띄워주기 때문에, 사용자가 1초 만에 안전하게 직접 입력할 수 있습니다!
+### [Core Rule 3: Zero-Guessing Policy]
+- NEVER invent fake English IDs (\`#btn_orgUIselectDialog\`, \`#scd_write_btn\`, \`#_DOC_TITLE_\`).
+- If an element's ID cannot be found in source code:
+  1) Recommend visible Korean text matching (\`button:has-text('...'):visible\`), OR
+  2) Leave the selector blank (\`""\`) and list it under \`## 3. ⚠️ 사용자 확인/직접 입력 필요 항목\`.
 
-[도메인별 모듈 접두사 및 급소 파일 매핑 사전]
-- 검색/통합검색: moduleName="search", 파일 접두어 \`search\` (급소: searchBox.jsp, unifiedSearch.jsp, searchResult.jsp, gnbSearch.jsp)
-- 일정/캘린더: moduleName="schedule", 파일 접두어 \`scd\` (급소: scdLeftView.jsp, scdInsertScheduleSimpleView.jsp, scdInsertScheduleSimpleView.js)
-- 전자결재: moduleName="app", 파일 접두어 \`gap\` (급소: gapLeftView.jsp, gapWorkSelect.jsp, gapDocReg.jsp)
-- 게시판: moduleName="board", 파일 접두어 \`brd\` (급소: brdLeftView.jsp, brdAtclReg.jsp)
-- 문서관리: moduleName="doc", 파일 접두어 \`doc\` (급소: docLeftView.jsp, docWrite.jsp)
-- 업무/스마트워크: moduleName="work", 파일 접두어 \`wor\` (급소: worLeftView.jsp, worWorkReg.jsp)
-- 메일/웹메일: moduleName="mail", 파일 접두어 \`eml\` (급소: emlLeftView.jsp, emlWrite.jsp)
-- 자원예약: moduleName="res", 파일 접두어 \`rmg\` (급소: rmgLeftView.jsp, rmgResReg.jsp)
-- 근태관리: moduleName="attend", 파일 접두어 \`atn\` (급소: atnLeftView.jsp, atnCard.jsp)
-- 설문조사: moduleName="survey", 파일 접두어 \`sur\` (급소: surLeftView.jsp, surWrite.jsp)
-- 프로젝트: moduleName="project", 파일 접두어 \`prj\` (급소: prjLeftView.jsp, prjTaskReg.jsp)
+### [Naonsoft Enterprise Groupware Module & Key File Dictionary]
+- 전자결재 (Corporate EAP): \`moduleName="eap"\`, prefix \`eap\` (Key files: \`eapLeftView.jsp\`, \`eapWorkSelect.jsp\`, \`eapDocReg.jsp\`, \`eapLineSelect.jsp\`, \`eapApproval.jsp\`)
+- 공공전자결재 (Gov GAP): \`moduleName="app"\`, prefix \`gap\` (Key files: \`gapLeftView.jsp\`, \`gapWorkSelect.jsp\`, \`gapDocReg.jsp\`)
+- 일정관리 (Schedule): \`moduleName="schedule"\`, prefix \`scd\` (Key files: \`scdLeftView.jsp\`, \`scdInsertScheduleSimpleView.jsp\`, \`scdInsertScheduleDetailView.jsp\`)
+- 자원예약 (Reservation): \`moduleName="rmg"\`, prefix \`rmg\` (Key files: \`rmgResSideBar.jsp\`, \`rmgResInsertDetailView.jsp\`, \`rmgResSelect.jsp\`)
+- 게시판 (Board): \`moduleName="board"\`, prefix \`brd\` (Key files: \`brdBoardSideBar.jsp\`, \`brdAtclReg.jsp\`, \`brdAtclList.jsp\`)
+- 문서관리 (Doc): \`moduleName="doc"\`, prefix \`doc\` (Key files: \`docLeft.jsp\`, \`docAtclReg.jsp\`, \`docSelect.jsp\`)
+- 업무보고 (Work Report): \`moduleName="work"\`, prefix \`wor\` (Key files: \`worSideBar.jsp\`, \`worWorkReg.jsp\`)
+- 스마트워크 (SmartWork): \`moduleName="smartwork"\`, prefix \`smw\` (Key files: \`smwWorkMenu.jsp\`, \`smwWorkReg.jsp\`, \`smwBoxSelect.jsp\`)
+- 사내쪽지 (Note): \`moduleName="note"\`, prefix \`not\` (Key files: \`notSubMenu.jsp\`, \`notNoteReg.jsp\`, \`notNoteList.jsp\`)
+- 전자우편 (Email): \`moduleName="email"\`, prefix \`eml\` (Key files: \`emlSnbMenu.jsp\`, \`emlMailReg.jsp\`, \`emlMailList.jsp\`)
+- 설문조사 (Survey): \`moduleName="survey"\`, prefix \`sur\` (Key files: \`surSurveyLeft.jsp\`, \`surSurveyRegWrite.jsp\`)
+- 프로젝트 (Project): \`moduleName="project"\`, prefix \`prj\` (Key files: \`prjLeftView.jsp\`, \`prjTaskReg.jsp\`, \`prjTaskList.jsp\`)
+- 파일함 (Filebox): \`moduleName="filebox"\`, prefix \`fbx\` (Key files: \`fbxLeft.jsp\`, \`fbxList.jsp\`, \`fbxUpload.jsp\`)
+- 메모 (Memo): \`moduleName="memo"\`, prefix \`mmo\` (Key files: \`mmoMainLeft.jsp\`, \`mmoMemoList.jsp\`)
+- 주소록 (Address): \`moduleName="addr"\`, prefix \`addr\` (Key files: \`addrLeft.jsp\`, \`addrInfoPage.jsp\`)
+- 근태관리 (Attendance): \`moduleName="attend"\`, prefix \`atn\` (Key files: \`atnSideBar.jsp\`, \`atnMyAttendList.jsp\`)
+- 조직도 공통 (Org Dialog): \`moduleName="org"\`, prefix \`org\` (Key files: \`orgDialog.jsp\`, \`orgTree.jsp\`)
 
-[★ 실전 역공학 도구 호출 4단계 황금 워크플로우 (Golden Tool Execution Sequence)]
-턴을 낭비하지 않고 100% 정밀하게 소스코드를 파고들기 위해 다음 순서로 도구를 호출하십시오:
-1단계 [트리거 버튼 찾기]:
-  - \`searchCodeText({ keyword: "등록", moduleName: "...", fileType: "jsp" })\` 또는
-  - \`findFiles({ moduleName: "...", keyword: "Left" })\` 호출 후, 좌측 메뉴 JSP를 \`readSourceSnippet\`으로 읽어 등록 버튼 ID(#reg_..., #btn_...)를 100% 특정!
-2단계 [작성 폼 뷰 파일 찾기]:
-  - \`findFiles({ moduleName: "...", keyword: "Simple" })\` 또는 \`findFiles({ moduleName: "...", keyword: "Reg" })\` 호출
-  - 모달/폼 JSP 파일(예: ...SimpleView.jsp, ...Reg.jsp)을 특정!
-3단계 [3대 핵심 필드(제목/본문/저장) 라인 직접 확인]:
-  - 2단계에서 찾은 파일에 대해 \`readSourceSnippet({ filePath: "...", startLine: 1, lineCount: 120 })\` 호출
-  - 실제 소스 라인에서 <input id="...">, <textarea id="...">, <button id="savebtn"...>을 눈으로 확인하고 출처 라인 번호(scdInsertScheduleSimpleView.jsp:L52)와 함께 기획서에 기록!
-4단계 [유효성 검사 alert 메시지 확인]:
-  - \`extractAlertsAndValidation({ filePath: "...js" })\` 호출로 빈 제목 alert("제목을 입력하세요") 등 방어 조건을 기획서에 기록!
+### [Golden 4-Step Tool Execution Sequence]
+1. **Step 1 [Find Trigger Button]**: Call \`findFiles({ moduleName: "...", keyword: "Left" })\` or \`searchCodeText({ keyword: "등록", moduleName: "...", fileType: "jsp" })\` -> inspect with \`readSourceSnippet\`.
+2. **Step 2 [Find Form JSP]**: Call \`findFiles({ moduleName: "...", keyword: "Reg" })\` (or \`"Insert"\`, \`"Write"\`).
+3. **Step 3 [Verify Core Fields]**: Call \`readSourceSnippet({ filePath: "...", startLine: 1, lineCount: 120 })\` to confirm exact IDs and line numbers.
+4. **Step 4 [Verify Validation Alerts]**: Call \`extractAlertsAndValidation({ filePath: "...js" })\` to identify mandatory inputs.
 
-[최종 기획서 Markdown 출력 규격]
+### [Output Markdown Format (Must be written in Korean)]
 # [화면 조작 기획서] {기능명}
 
 ## 1. 대상 화면 및 진입 경로
@@ -508,14 +513,14 @@ export async function exploreCodebaseForActionSpec(
       role: "user",
       parts: [
         {
-          text: `[사용자 요구사항]
+          text: `[User Scenario Request]
 "${prompt}"
 
-[역공학 4단계 필수 탐색 지시사항]
-1. [트리거 버튼 식별]: 먼저 사용자가 요청한 업무 모듈의 좌측 메뉴 파일(*LeftView.jsp)을 findFiles나 searchCodeText로 찾아 readSourceSnippet으로 읽고, 등록/작성 버튼의 실제 ID를 찾으십시오.
-2. [등록 폼 파일 특정]: 등록 버튼이 띄우는 폼 뷰 파일(*SimpleView.jsp, *Reg.jsp, *Write.jsp)을 findFiles로 찾으십시오.
-3. [3대 필수 필드 확정]: 해당 폼 파일의 소스코드를 readSourceSnippet으로 직접 읽어서 제목(subject/title), 내용(cn/content), 저장버튼(savebtn/btn_save)의 실제 태그와 ID를 반드시 파일 라인 번호와 함께 기획서에 기록하십시오.
-4. 🚨 [무추측 & 비워두기]: 소스코드 라인에서 확인되지 않은 가상의 영어 ID는 절대 생성하지 마십시오. 모르는 항목은 button:has-text(...)로 대체하거나 비워두고, '## 3. ⚠️ 사용자 확인/직접 입력 필요 항목'에 등록하십시오.`
+[Reverse Engineering Instructions]
+1. Locate the module's left sidebar JSP (*LeftView.jsp / *SideBar.jsp) and read the exact write/action button ID.
+2. Locate the form/modal JSP (*Reg.jsp / *SimpleView.jsp / *DetailView.jsp) and read the exact IDs for title, body, and save/submit buttons with line numbers.
+3. Never invent fake IDs. Use visible Korean text (:has-text('...')) or leave unknown selectors blank under '## 3. ⚠️ 사용자 확인/직접 입력 필요 항목'.
+4. Write the final Action Spec Markdown entirely in Korean.`
         }
       ]
     }

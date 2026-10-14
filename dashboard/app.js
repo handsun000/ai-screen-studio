@@ -183,11 +183,15 @@ function updateProjectAnalysisUI(analysis) {
 
 async function handleSaveConfig() {
   const targetProjectPath = targetProjectPathInput.value.trim();
-  const targetBaseUrl = targetBaseUrlInput.value.trim();
+  let targetBaseUrl = targetBaseUrlInput.value.trim();
 
   if (!targetBaseUrl) {
     alert("접속 대상 서비스 URL(Target Base URL)을 입력해주세요.");
     return;
+  }
+  if (!/^https?:\/\//i.test(targetBaseUrl)) {
+    targetBaseUrl = "http://" + targetBaseUrl;
+    targetBaseUrlInput.value = targetBaseUrl;
   }
 
   btnValidateProject.disabled = true;
@@ -533,6 +537,13 @@ async function handleGeneratePlan() {
 
     slugInput.value = currentSlug;
 
+    // Show automatic prompt normalization feedback if the backend refined the prompt
+    const polishFeedbackEl = document.getElementById("prompt-polish-feedback");
+    if (data.normalizedPrompt && data.normalizedPrompt !== prompt && polishFeedbackEl) {
+      polishFeedbackEl.style.display = "block";
+      polishFeedbackEl.innerHTML = `✨ <b>자동 정석 포맷 보정 적용됨:</b> ${data.normalizedPrompt}`;
+    }
+
     if (data.isFromCache) {
       planSlugBadge.textContent = `시나리오: ${currentSlug} ⚡ (캐시 적중 - 토큰 소모 0)`;
       explanationText.textContent = `⚡ [캐시 적중] 동일한 시나리오 분석 결과가 캐시에 보관되어 있어 AI API 호출 없이 0.05초 만에 즉시 불러왔습니다.\n\n${currentExplanation}`;
@@ -562,6 +573,275 @@ async function handleGeneratePlan() {
     btnGenerate.disabled = false;
     generateBtnText.textContent = "Gemini로 시나리오 생성";
   }
+}
+
+const PROMPT_CHAIN_PRESETS = {
+  "eap-full": {
+    slug: "eap-minutes-draft-submit",
+    prompt:
+      "전자결재 -> 결재 작성 -> 검색으로 '회의록' 검색 -> '회의록' 결재업무 카드 선택 후 작성 클릭 -> 제목에 '테스트 회의록 결재 부탁드립니다.' 입력 -> 결재분류 폴더 버튼 선택 -> 결재분류 팝업에서 '테스트' 선택 -> 결재분류 팝업에서 확인 클릭 -> 기안의견에 '승인 부탁드립니다.' 입력 -> 문서 내용에 '금일 회의 완료' 입력 -> 결재선 탭 선택 -> 결재선 선택 버튼 클릭 -> 결재선 선택 팝업에서 '테스트' 부서 선택 -> 결재선 선택 팝업에서 'test001' 체크박스 선택 -> 결재선 선택 팝업에서 첫번째 '합의' 버튼 선택 -> 결재선 선택 팝업에서 'test002'를 두번째 결재칸으로 드래그 앤 드롭 -> 결재선 선택 팝업에서 확인 클릭 -> 결재상신 버튼 클릭 -> 결재현황 클릭 -> 제일 최근 결재 문서 제목 클릭",
+  },
+  "eap-approve": {
+    slug: "eap-pending-doc-approve",
+    prompt:
+      "전자결재 -> 결재대기함 클릭 -> 목록에서 첫 번째 결재 대기 문서 제목 클릭 -> 문서 본문 및 결재선 확인 -> 상단 '결재' 버튼 클릭 -> 결재 팝업에서 '승인' 선택 -> 결재 의견에 '검토 완료하여 승인합니다.' 입력 -> 결재 팝업에서 확인 클릭 -> 결재종결함 클릭 -> 제일 최근 결재 문서 제목 클릭",
+  },
+  "scd-reg": {
+    slug: "scd-weekly-meeting-reg",
+    prompt:
+      "일정관리 -> 좌측 상단 '일정 등록' 버튼 클릭 -> 일정 등록 팝업에서 일정 제목에 '주간 프로젝트 점검 회의' 입력 -> 장소에 '대회의실' 입력 -> 내용에 '스프린트 진행 현황 및 이슈 공유' 입력 -> 일정 등록 팝업 하단 '저장' 버튼 클릭 -> 캘린더 화면에서 등록된 '주간 프로젝트 점검 회의' 일정 클릭하여 상세 확인",
+  },
+  "rmg-res": {
+    slug: "rmg-room-reservation",
+    prompt:
+      "자원예약 -> 좌측 상단 '예약 신청' 버튼 클릭 -> 자원 선택 버튼 클릭 -> 자원 선택 팝업에서 '대회의실' 선택 후 확인 클릭 -> 제목에 '신규 서비스 아키텍처 리뷰' 입력 -> 사용시간 확인 -> 신청사유에 '부서간 기술 검토 회의' 입력 -> 하단 '저장' 버튼 클릭 -> 내 예약 목록에서 등록된 예약 내역 클릭하여 확인",
+  },
+  "doc-reg": {
+    slug: "doc-security-guide-reg",
+    prompt:
+      "문서관리 -> 좌측 상단 '문서 등록' 버튼 클릭 -> 문서함 선택 팝업에서 첫 번째 문서함 선택 후 확인 클릭 -> 문서 제목에 '2026년 정보보안 운영 지침' 입력 -> 본문 에디터에 '전사 정보보안 규정 개정안 안내입니다.' 입력 -> 상단 '저장' 버튼 클릭 -> 목록에서 방금 등록된 문서 제목 클릭하여 상세 조회",
+  },
+  "search-view": {
+    slug: "bod-notice-search-view",
+    prompt:
+      "게시판 -> 좌측 트리에서 '공지사항' 클릭 -> 목록의 첫 번째 게시글 제목으로 검색창에 검색어 입력 후 검색 버튼 클릭 -> 검색된 결과 목록에서 첫 번째 게시글 제목 클릭 -> 게시글 본문 상세 내용 스크롤 확인 -> '목록' 버튼 클릭하여 복귀",
+  },
+};
+
+async function handlePolishPrompt(useLLM = false) {
+  const raw = promptInput ? promptInput.value.trim() : "";
+  if (!raw) {
+    alert("먼저 시나리오 흐름이나 설명을 입력하거나 상단 예시/조립 칩을 클릭해주세요.");
+    if (promptInput) promptInput.focus();
+    return;
+  }
+
+  const btnPolish = document.getElementById("btn-polish-prompt");
+  const feedbackEl = document.getElementById("prompt-polish-feedback");
+  if (btnPolish) {
+    btnPolish.disabled = true;
+    btnPolish.textContent = "⏳ 정석 포맷 변환 중...";
+  }
+
+  try {
+    const res = await fetch("/api/ai/polish-prompt", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: raw, useLLM }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "프롬프트 정제 실패");
+
+    if (data.normalizedPrompt && promptInput) {
+      promptInput.value = data.normalizedPrompt;
+    }
+
+    if (feedbackEl) {
+      feedbackEl.style.display = "block";
+      const hints = Array.isArray(data.addedHints) && data.addedHints.length > 0
+        ? data.addedHints.join(" | ")
+        : "작은따옴표(' ') 타겟/입력값 구분 및 화살표(->) 단계 체인 정규화 완료";
+      feedbackEl.innerHTML = `✨ <b>정석 포맷 다듬기 완료 (${data.steps ? data.steps.length : 0}단계):</b> ${hints}`;
+    }
+  } catch (err) {
+    alert("프롬프트 다듬기 오류: " + err.message);
+  } finally {
+    if (btnPolish) {
+      btnPolish.disabled = false;
+      btnPolish.textContent = "🪄 정석 포맷 다듬기";
+    }
+  }
+}
+
+// 9.5 Way A: Live Eyedropper & Action Demonstration Recorder
+let recorderEventSource = null;
+let recorderFinishing = false;
+
+function renderRecorderLiveEvents(status) {
+  const statusTextEl = document.getElementById("recorder-modal-status-text");
+  const badgeEl = document.getElementById("recorder-events-badge");
+  const listEl = document.getElementById("recorder-events-list");
+
+  if (statusTextEl && status.statusMessage) {
+    statusTextEl.textContent = status.statusMessage;
+  }
+  const events = Array.isArray(status.events) ? status.events : [];
+  if (badgeEl) {
+    badgeEl.textContent = `${events.length}개 감지됨`;
+  }
+  if (!listEl) return;
+
+  if (events.length === 0) {
+    listEl.innerHTML = `
+      <div style="color: var(--text-muted); text-align: center; padding: 32px 0;">
+        브라우저에서 클릭·입력·드래그를 수행하면 여기에 실시간으로 실제 DOM 셀렉터와 동작이 기록됩니다.
+      </div>
+    `;
+    return;
+  }
+
+  listEl.innerHTML = events
+    .map((ev) => {
+      const badgeColor =
+        ev.kind === "click"
+          ? "#38bdf8"
+          : ev.kind === "type"
+          ? "#a855f7"
+          : ev.kind === "dragAndDrop"
+          ? "#f59e0b"
+          : "#10b981";
+      const kindLabel =
+        ev.kind === "click"
+          ? "💧 클릭"
+          : ev.kind === "type"
+          ? "⌨️ 입력"
+          : ev.kind === "dragAndDrop"
+          ? "✊ 드래그"
+          : "🖱️ 동작";
+      const textPart = ev.text ? ` <strong style="color:#fde047;">'${ev.text}'</strong>` : "";
+      const iframePart = ev.iframe ? ` <span style="color:#94a3b8;">[${ev.iframe}]</span>` : "";
+      return `
+        <div style="display:flex; align-items:center; gap:8px; padding:5px 8px; background:rgba(15,23,42,0.85); border-left:3px solid ${badgeColor}; border-radius:4px;">
+          <span style="color:${badgeColor}; font-weight:700; min-width:64px;">#${ev.seq} ${kindLabel}</span>
+          <span style="color:#f8fafc; font-weight:500;">${ev.label}${textPart}</span>
+          <span style="margin-left:auto; color:#64748b; font-size:0.85em; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${(ev.selector || "").replace(/"/g, "&quot;")}">${ev.selector}${iframePart}</span>
+        </div>
+      `;
+    })
+    .join("");
+  listEl.scrollTop = listEl.scrollHeight;
+}
+
+async function startLiveDemoRecorder() {
+  const modalOverlay = document.getElementById("recorder-modal-overlay");
+  const btnConfirm = document.getElementById("btn-confirm-recorder-done");
+  const url = targetBaseUrlInput ? targetBaseUrlInput.value.trim() : "";
+  const slug = slugInput ? slugInput.value.trim() : "";
+
+  recorderFinishing = false;
+  if (modalOverlay) modalOverlay.classList.remove("hidden");
+  if (btnConfirm) {
+    btnConfirm.disabled = false;
+    btnConfirm.textContent = "✅ 시범 완료 및 AI 시나리오 변환";
+  }
+
+  // Connect SSE for live event updates
+  if (recorderEventSource) recorderEventSource.close();
+  recorderEventSource = new EventSource("/api/recorder/stream");
+  recorderEventSource.onmessage = (event) => {
+    try {
+      const status = JSON.parse(event.data);
+      renderRecorderLiveEvents(status);
+      if (status.finishedByBrowserHud && !recorderFinishing) {
+        finishLiveDemoRecorder();
+      }
+    } catch (e) {
+      console.warn("Recorder SSE parse error:", e);
+    }
+  };
+
+  try {
+    const res = await fetch("/api/recorder/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: url || undefined, slug: slug || undefined }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "스포이드 브라우저 실행 실패");
+    if (data.status) renderRecorderLiveEvents(data.status);
+  } catch (err) {
+    alert("스포이드 시범 모드 시작 실패: " + err.message);
+    cancelLiveDemoRecorder();
+  }
+}
+
+async function finishLiveDemoRecorder() {
+  if (recorderFinishing) return;
+  recorderFinishing = true;
+
+  const modalOverlay = document.getElementById("recorder-modal-overlay");
+  const btnConfirm = document.getElementById("btn-confirm-recorder-done");
+  const statusTextEl = document.getElementById("recorder-modal-status-text");
+
+  if (btnConfirm) {
+    btnConfirm.disabled = true;
+    btnConfirm.textContent = "⏳ AI가 시나리오로 정제 중...";
+  }
+  if (statusTextEl) {
+    statusTextEl.textContent = "✨ 캡처된 실제 DOM 셀렉터와 동작을 바탕으로 AI가 시나리오를 구성하고 있습니다...";
+  }
+
+  try {
+    const slug = slugInput ? slugInput.value.trim() : "";
+    const customTitleHint = promptInput ? promptInput.value.trim() : "";
+    const dirSelect = document.getElementById("directing-style-select");
+    const directingStyle = dirSelect ? dirSelect.value : "standard";
+    const res = await fetch("/api/recorder/stop", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        slug: slug || undefined,
+        customTitleHint: customTitleHint || undefined,
+        directingStyle,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "시나리오 변환 실패");
+
+    if (recorderEventSource) {
+      recorderEventSource.close();
+      recorderEventSource = null;
+    }
+    if (modalOverlay) modalOverlay.classList.add("hidden");
+
+    if (!data.events || data.events.length === 0) {
+      alert("감지된 클릭/입력 동작이 없습니다. 브라우저에서 최소 1개 이상의 동작을 수행해주세요.");
+      return;
+    }
+
+    currentPlan = data.plan;
+    currentSlug = data.suggestedSlug;
+    currentExplanation = data.explanation;
+
+    if (slugInput) slugInput.value = currentSlug;
+    if (promptInput && data.canonicalPrompt) {
+      promptInput.value = data.canonicalPrompt;
+    }
+
+    const polishFeedbackEl = document.getElementById("prompt-polish-feedback");
+    if (polishFeedbackEl) {
+      polishFeedbackEl.classList.remove("hidden");
+      polishFeedbackEl.style.display = "block";
+      polishFeedbackEl.innerHTML = `💧 <b>스포이드 시범 감지 완료 (${data.events.length}개 실제 동작 ➔ ${data.plan.actions.length}개 액션 정제):</b> 모든 셀렉터와 iframe이 실제 화면 DOM에서 100% 정확하게 추출되었습니다!`;
+    }
+
+    if (planSlugBadge) planSlugBadge.textContent = `시나리오: ${currentSlug} 💧 (스포이드 실측 완료 · 자동 저장됨)`;
+    if (explanationText) explanationText.textContent = currentExplanation;
+
+    renderActionCards();
+    fetchScenarios();
+    fetchStatus();
+
+    const editorCardEl = document.querySelector(".editor-card");
+    if (editorCardEl) {
+      editorCardEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  } catch (err) {
+    alert("시범 동작 변환 중 오류: " + err.message);
+    if (modalOverlay) modalOverlay.classList.add("hidden");
+  } finally {
+    recorderFinishing = false;
+  }
+}
+
+async function cancelLiveDemoRecorder() {
+  if (recorderEventSource) {
+    recorderEventSource.close();
+    recorderEventSource = null;
+  }
+  const modalOverlay = document.getElementById("recorder-modal-overlay");
+  if (modalOverlay) modalOverlay.classList.add("hidden");
+  await fetch("/api/recorder/cancel", { method: "POST" }).catch(() => {});
 }
 
 // 10. Action Manipulation & Rendering
@@ -782,12 +1062,21 @@ function renderActionCards() {
   const totalActions = currentPlan.actions.length;
 
   currentPlan.actions.forEach((act, idx) => {
+    // Auto-restore dragAndDrop type if previously overwritten to click by missing select option
+    if (act.type === "click" && act.sourceSelector && act.targetSelector) {
+      act.type = "dragAndDrop";
+    }
+
     const card = document.createElement("div");
     card.className = "action-item-card";
     card.draggable = true;
     card.dataset.index = idx;
 
-    const isMissingSelector = act.type !== "wait" && (!act.selector || act.selector.trim() === "");
+    const isMissingSelector =
+      act.type === "dragAndDrop"
+        ? (!act.sourceSelector || act.sourceSelector.trim() === "") ||
+          (!act.targetSelector || act.targetSelector.trim() === "")
+        : act.type !== "wait" && act.type !== "navigate" && (!act.selector || act.selector.trim() === "");
     if (isMissingSelector) {
       card.classList.add("needs-selector");
     }
@@ -810,6 +1099,7 @@ function renderActionCards() {
             <option value="wait" ${act.type === "wait" ? "selected" : ""}>WAIT</option>
             <option value="type" ${act.type === "type" ? "selected" : ""}>TYPE</option>
             <option value="hover" ${act.type === "hover" ? "selected" : ""}>HOVER</option>
+            <option value="dragAndDrop" ${act.type === "dragAndDrop" ? "selected" : ""}>DRAG & DROP</option>
             <option value="dblclick" ${act.type === "dblclick" ? "selected" : ""}>DBLCLICK</option>
             <option value="scroll" ${act.type === "scroll" ? "selected" : ""}>SCROLL</option>
             <option value="navigate" ${act.type === "navigate" ? "selected" : ""}>NAVIGATE</option>
@@ -829,7 +1119,24 @@ function renderActionCards() {
       </div>
 
       <div class="action-inputs-grid">
-        ${act.type !== "wait" ? `
+        ${act.type === "dragAndDrop" ? `
+          <div class="input-with-label">
+            <span class="input-label">✊ 드래그 출발지 (sourceSelector)</span>
+            <input type="text"
+              class="${!act.sourceSelector ? "input-needs-attention" : ""}"
+              placeholder="드래그할 요소 셀렉터 (예: .dynatree-title:has-text('test002'):visible)"
+              value="${escapeHtmlAttr(act.sourceSelector || act.selector || "")}"
+              data-field="sourceSelector">
+          </div>
+          <div class="input-with-label">
+            <span class="input-label">🎯 드롭 도착지 (targetSelector)</span>
+            <input type="text"
+              class="${!act.targetSelector ? "input-needs-attention" : ""}"
+              placeholder="드롭할 대상 영역 셀렉터 (예: #af_4)"
+              value="${escapeHtmlAttr(act.targetSelector || "")}"
+              data-field="targetSelector">
+          </div>
+        ` : act.type !== "wait" ? `
           <div class="input-with-label">
             <span class="input-label">🎯 대상 요소 (CSS 셀렉터)</span>
             <div class="selector-input-wrapper" style="display:flex; gap:8px; width:100%;">
@@ -1066,7 +1373,27 @@ function renderActionCards() {
         const colonClassMatch = trimmed.match(/\b(button|a|div|span|input|li):([a-zA-Z][a-zA-Z0-9_-]*)\b/);
         if (colonClassMatch) {
           const [full, tag, cls] = colonClassMatch;
-          const validPseudos = ["has-text", "visible", "first-child", "last-child", "nth-child", "not", "disabled", "checked"];
+          const validPseudos = [
+            "has",
+            "has-text",
+            "visible",
+            "first-child",
+            "last-child",
+            "nth-child",
+            "nth-of-type",
+            "first-of-type",
+            "last-of-type",
+            "only-child",
+            "only-of-type",
+            "not",
+            "disabled",
+            "checked",
+            "focus",
+            "hover",
+            "empty",
+            "text",
+            "text-is",
+          ];
           if (!validPseudos.includes(cls)) {
             const suggested = trimmed.replace(full, `${tag}.${cls}`);
             linterContainer.style.display = "block";
@@ -1112,14 +1439,23 @@ function renderActionCards() {
       card.querySelectorAll("[data-field]").forEach((input) => {
         input.addEventListener("input", () => {
           const field = input.getAttribute("data-field");
-          if (field === "selector") {
-            act.selector = input.value;
+          if (field === "selector" || field === "sourceSelector" || field === "targetSelector") {
+            act[field] = input.value;
+            if (field === "sourceSelector") {
+              act.selector = input.value;
+            }
             const trimmed = input.value.trim();
             if (trimmed.length > 0) {
-              card.classList.remove("needs-selector");
               input.classList.remove("input-needs-attention");
-              const badge = card.querySelector(".badge-needs-input");
-              if (badge) badge.remove();
+              const stillMissing =
+                act.type === "dragAndDrop"
+                  ? !act.sourceSelector?.trim() || !act.targetSelector?.trim()
+                  : !act.selector?.trim();
+              if (!stillMissing) {
+                card.classList.remove("needs-selector");
+                const badge = card.querySelector(".badge-needs-input");
+                if (badge) badge.remove();
+              }
             } else {
               card.classList.add("needs-selector");
               input.classList.add("input-needs-attention");
@@ -1142,6 +1478,9 @@ function renderActionCards() {
             act[field] = parseInt(input.value, 10);
           } else {
             act[field] = input.value;
+            if (field === "sourceSelector") {
+              act.selector = input.value;
+            }
             if (field === "type") renderActionCards();
           }
         });
@@ -1196,14 +1535,55 @@ function renderActionCards() {
   }
 
 // 11. Save Plan
+// 10.5 Sync DOM Card Inputs to currentPlan
+function syncCardsToPlan() {
+  if (!currentPlan || !currentPlan.actions) return;
+  const cards = actionsList.querySelectorAll(".action-item-card");
+  cards.forEach((card) => {
+    const idxAttr = card.getAttribute("data-index");
+    if (idxAttr === null) return;
+    const idx = parseInt(idxAttr, 10);
+    const act = currentPlan.actions[idx];
+    if (!act) return;
+    card.querySelectorAll("input, select, textarea").forEach((inp) => {
+      const field = inp.getAttribute("data-field");
+      if (!field) return;
+      if (inp.type === "checkbox") {
+        act[field] = inp.checked;
+      } else if (field === "cursorOffsetX" || field === "cursorOffsetY") {
+        if (!act.cursorOffset) act.cursorOffset = { x: 0, y: 0 };
+        const val = inp.value === "" ? 0 : parseInt(inp.value, 10);
+        if (field === "cursorOffsetX") act.cursorOffset.x = isNaN(val) ? 0 : val;
+        if (field === "cursorOffsetY") act.cursorOffset.y = isNaN(val) ? 0 : val;
+        if (act.cursorOffset.x === 0 && act.cursorOffset.y === 0 && inp.value === "") {
+          delete act.cursorOffset;
+        }
+      } else if (inp.type === "number") {
+        act[field] = parseInt(inp.value, 10);
+      } else {
+        act[field] = inp.value;
+        if (field === "sourceSelector") {
+          act.selector = inp.value;
+        }
+      }
+    });
+    if (act.type === "click" && act.sourceSelector && act.targetSelector) {
+      act.type = "dragAndDrop";
+    }
+  });
+}
+
+// 11. Save Plan
 async function handleSavePlan(silent = false) {
+  const isSilent = typeof silent === "boolean" ? silent : false;
+  syncCardsToPlan();
       const slug = slugInput.value.trim() || currentSlug;
       if (!slug) {
-        if (!silent) alert("시나리오 식별자(Slug)를 입력해주세요.");
+        if (!isSilent) alert("시나리오 식별자(Slug)를 입력해주세요.");
         return false;
       }
       if (!currentPlan) {
-        if (!silent) alert("저장할 플랜이 없습니다.");
+        if (!isSilent) alert("저장할 플랜이 없습니다.");
         return false;
       }
 
@@ -1215,14 +1595,23 @@ async function handleSavePlan(silent = false) {
         });
         const data = await res.json();
         if (data.success) {
-          if (!silent) {
+          if (btnSavePlan) {
+            const originalText = btnSavePlan.textContent;
+            btnSavePlan.textContent = "✅ 플랜 저장 완료!";
+            btnSavePlan.style.background = "#10b981";
+            setTimeout(() => {
+              btnSavePlan.textContent = originalText || "💾 플랜 저장";
+              btnSavePlan.style.background = "";
+            }, 2000);
+          }
+          if (!isSilent) {
             alert(`'${slug}' 브라우징 플랜이 성공적으로 저장되었습니다!`);
           }
           fetchScenarios();
           return true;
         }
       } catch (err) {
-        if (!silent) alert("저장 실패: " + err.message);
+        if (!isSilent) alert("저장 실패: " + err.message);
         return false;
       }
       return false;
@@ -1254,7 +1643,14 @@ async function handleRunPipeline() {
       if (currentPlan && currentPlan.actions) {
         const missingActions = currentPlan.actions
           .map((a, i) => ({ act: a, index: i + 1 }))
-          .filter(({ act }) => act.type !== "wait" && (!act.selector || act.selector.trim() === ""));
+          .filter(({ act }) => {
+            if (act.type === "wait" || act.type === "navigate") return false;
+            if (act.type === "dragAndDrop" || (act.sourceSelector && act.targetSelector)) {
+              return (!act.sourceSelector || act.sourceSelector.trim() === "") ||
+                     (!act.targetSelector || act.targetSelector.trim() === "");
+            }
+            return !act.selector || act.selector.trim() === "";
+          });
 
         if (missingActions.length > 0) {
           const summaryList = missingActions
@@ -1273,7 +1669,7 @@ async function handleRunPipeline() {
             const targetCard = actionsList.querySelector(`[data-index="${firstMissingIndex}"]`);
             if (targetCard) {
               targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
-              const selInput = targetCard.querySelector('[data-field="selector"]');
+              const selInput = targetCard.querySelector('[data-field="selector"], [data-field="sourceSelector"]');
               if (selInput) {
                 setTimeout(() => selInput.focus(), 300);
               }
@@ -1469,10 +1865,10 @@ function appendTerminalLog(text, className = "") {
 
 // 14. Event Bindings
 function bindEvents() {
-      btnValidateProject.addEventListener("click", handleSaveConfig);
-      btnGenerate.addEventListener("click", handleGeneratePlan);
-      btnSavePlan.addEventListener("click", handleSavePlan);
-      btnRunPipeline.addEventListener("click", handleRunPipeline);
+      if (btnValidateProject) btnValidateProject.addEventListener("click", handleSaveConfig);
+      if (btnGenerate) btnGenerate.addEventListener("click", handleGeneratePlan);
+      if (btnSavePlan) btnSavePlan.addEventListener("click", () => handleSavePlan(false));
+      if (btnRunPipeline) btnRunPipeline.addEventListener("click", handleRunPipeline);
       if (btnRenderVideo) {
         btnRenderVideo.addEventListener("click", () => handleRenderVideo());
       }
@@ -1499,15 +1895,93 @@ function bindEvents() {
 
       if (btnClearPrompt) {
         btnClearPrompt.addEventListener("click", () => {
-          promptInput.value = "";
-          slugInput.value = "";
+          if (promptInput) promptInput.value = "";
+          if (slugInput) slugInput.value = "";
+          const polishFeedbackEl = document.getElementById("prompt-polish-feedback");
+          if (polishFeedbackEl) polishFeedbackEl.style.display = "none";
+          if (promptInput) promptInput.focus();
+        });
+      }
+
+      // Method 1-A: Canonical Arrow-Chain Preset Chips
+      document.querySelectorAll(".prompt-preset-chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          const key = chip.getAttribute("data-preset-key") || chip.getAttribute("data-chain-preset");
+          const preset = PROMPT_CHAIN_PRESETS[key];
+          if (!preset || !promptInput) return;
+          promptInput.value = preset.prompt;
+          if (slugInput && !slugInput.value.trim()) {
+            slugInput.value = preset.slug;
+          }
+          const polishFeedbackEl = document.getElementById("prompt-polish-feedback");
+          if (polishFeedbackEl) {
+            polishFeedbackEl.classList.remove("hidden");
+            polishFeedbackEl.style.display = "block";
+            polishFeedbackEl.innerHTML = `📋 <b>[${chip.textContent.trim()}] 정석 화살표 체인 템플릿 적용됨</b> — 작은따옴표(' ') 안의 양식명·제목·결재자만 원하시는 값으로 바꿔 바로 생성하세요.`;
+          }
           promptInput.focus();
+        });
+      });
+
+      // Method 1-B: Interactive Step-Chain Builder Chips (appends " -> <step>")
+      document.querySelectorAll(".prompt-step-chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          const stepText = chip.getAttribute("data-step");
+          if (!stepText || !promptInput) return;
+          const current = promptInput.value.trim();
+          if (!current) {
+            promptInput.value = stepText;
+          } else if (current.endsWith("->")) {
+            promptInput.value = `${current} ${stepText}`;
+          } else {
+            promptInput.value = `${current} -> ${stepText}`;
+          }
+          promptInput.focus();
+          promptInput.scrollTop = promptInput.scrollHeight;
+        });
+      });
+
+      // Method 2: One-Click Prompt Polisher Button ("🪄 정석 포맷 다듬기")
+      const btnPolishPrompt = document.getElementById("btn-polish-prompt");
+      if (btnPolishPrompt) {
+        btnPolishPrompt.addEventListener("click", (e) => {
+          // Shift+Click uses LLM deep refinement; regular click uses instant deterministic + smart refinement
+          handlePolishPrompt(Boolean(e.shiftKey));
+        });
+      }
+
+      // Way A: Live Eyedropper & Action Demonstration Recorder Bindings
+      const btnLiveDemoRecorder = document.getElementById("btn-live-demo-recorder");
+      const btnConfirmRecorderDone = document.getElementById("btn-confirm-recorder-done");
+      const btnCancelRecorderModal = document.getElementById("btn-cancel-recorder-modal");
+      const btnCloseRecorderModal = document.getElementById("btn-close-recorder-modal");
+
+      if (btnLiveDemoRecorder) {
+        btnLiveDemoRecorder.addEventListener("click", () => {
+          startLiveDemoRecorder();
+        });
+      }
+      if (btnConfirmRecorderDone) {
+        btnConfirmRecorderDone.addEventListener("click", () => {
+          finishLiveDemoRecorder();
+        });
+      }
+      if (btnCancelRecorderModal) {
+        btnCancelRecorderModal.addEventListener("click", () => {
+          cancelLiveDemoRecorder();
+        });
+      }
+      if (btnCloseRecorderModal) {
+        btnCloseRecorderModal.addEventListener("click", () => {
+          cancelLiveDemoRecorder();
         });
       }
 
       if (pillGw) {
         pillGw.addEventListener("click", () => {
           switchTab("tab-generator");
+          const details = targetBaseUrlInput.closest("details");
+          if (details) details.open = true;
           targetBaseUrlInput.focus();
           targetBaseUrlInput.select();
         });
@@ -1558,6 +2032,12 @@ function bindEvents() {
 
       if (pillAuth) {
         pillAuth.addEventListener("click", async () => {
+          let url = targetBaseUrlInput ? targetBaseUrlInput.value.trim() : "";
+          if (url && !/^https?:\/\//i.test(url)) {
+            url = "http://" + url;
+            targetBaseUrlInput.value = url;
+          }
+
           const authLabel = document.getElementById("pill-auth-label");
           if (authLabel) authLabel.textContent = "로그인 창 여는 중...";
 
@@ -1565,7 +2045,7 @@ function bindEvents() {
           if (loginModalOverlay) {
             loginModalOverlay.classList.remove("hidden");
             if (loginModalStatusText) {
-              loginModalStatusText.textContent = "브라우저 창에서 로그인 대기 중... 완료 후 버튼을 눌러주세요";
+              loginModalStatusText.textContent = `브라우저 창(${url || '설정 URL'})에서 로그인 대기 중... 완료 후 버튼을 눌러주세요`;
             }
           }
 
@@ -1573,7 +2053,7 @@ function bindEvents() {
             const res = await fetch("/api/auth/login", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ url: targetBaseUrlInput ? targetBaseUrlInput.value : undefined }),
+              body: JSON.stringify({ url: url || undefined }),
             });
             const result = await res.json();
             closeLoginModal();

@@ -1,291 +1,316 @@
 {
-  "url": "https://gwdev.unison.co.kr",
+  "url": "https://gwdev.unison.co.kr/ekp/main/home/homGwMain",
   "viewport": {
     "width": 1920,
     "height": 1080
   },
-  "requiresLogin": true,
+  "recordedByEyedropper": true,
   "actions": [
     {
       "type": "wait",
-      "description": "메인 대시보드 로딩 및 시각적 앵커 인지 대기 (Phase 1: Visual Anchor & Landing)",
-      "ms": 1800
-    },
-    {
-      "type": "hover",
-      "description": "상단 포털 전체메뉴 버튼 탐색 및 호버 안내",
-      "selector": "button.btn_svc_open:visible, button[title='포탈 전체메뉴'], .btn_svc_open:visible"
-    },
-    {
-      "type": "wait",
-      "description": "호버 툴팁 인지 대기",
-      "ms": 1200
+      "ms": 1100,
+      "description": "초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기",
+      "force": false,
+      "recordedByEyedropper": true
     },
     {
       "type": "click",
-      "description": "상단 GNB '포탈 전체메뉴' 버튼 클릭하여 메뉴 서랍 열기",
-      "selector": "button.btn_svc_open:visible, button[title='포탈 전체메뉴'], .btn_svc_open:visible"
+      "selector": "a.nta.nta_drop:has-text('일정관리'):visible, ul#svc_lst > li.nt.nt_4:nth-of-type(4) > a.nta.nta_drop:visible",
+      "description": "'일정관리' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" title=\"일정관리\" class=\"nta nta_drop\" onclick=\"GwMainMenu.fn.openDropMenu(this, 'MNU9341424385435367603', 'https:/일정관리</a>",
+      "iframe": "",
+      "force": false
     },
     {
       "type": "wait",
-      "description": "전체메뉴 서랍 레이어 펼침 대기 (Phase 2)",
-      "ms": 1300
-    },
-    {
-      "type": "hover",
-      "description": "전체메뉴 서랍 내 '일정관리' 아이콘 및 링크 위치 호버 안내",
-      "selector": "#svc_box a:has-text(\"일정관리\"), #svc_box a:has-text(\"일정\"), a:has-text(\"일정관리\"):visible"
-    },
-    {
-      "type": "wait",
-      "description": "일정관리 링크 하이라이트 확인 대기",
-      "ms": 1200
+      "ms": 1100,
+      "description": "'일정관리' 메뉴/링크 클릭 후 화면/팝업 전환 대기",
+      "force": false,
+      "recordedByEyedropper": true
     },
     {
       "type": "click",
-      "description": "전체메뉴 내 '일정관리' 메뉴 클릭하여 화면 이동",
-      "selector": "#svc_box a:has-text(\"일정관리\"), #svc_box a:has-text(\"일정\"), a:has-text(\"일정관리\"):visible"
+      "selector": "button#reg_shedule_lefttop:visible, #reg_shedule_lefttop:visible, #snb button.btn.btn_block:has-text('일정 등록'):visible",
+      "description": "'일정 등록' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" id=\"reg_shedule_lefttop\" class=\"btn btn_block\"><i class=\"ico ico_write\"></i> 일정 등록</button>",
+      "iframe": "",
+      "force": false
     },
     {
       "type": "wait",
-      "description": "일정관리 메인 화면 및 캘린더 전체 로딩 대기",
-      "ms": 1800
-    },
-    {
-      "type": "hover",
-      "description": "좌측 사이드바(SNB) 상단 [일정 등록] 버튼 위치 호버 안내",
-      "selector": "button#reg_shedule_lefttop, #snb button:has-text('일정 등록'):visible, #snb button:has-text('일정등록'):visible, button:has-text('일정 등록'):visible"
-    },
-    {
-      "type": "wait",
-      "description": "일정 등록 버튼 포커스 대기",
-      "ms": 1200
-    },
-    {
-      "type": "click",
-      "description": "좌측 사이드바 [일정 등록] 버튼 클릭하여 등록 모달 호출 (Phase 3)",
-      "selector": "button#reg_shedule_lefttop, #snb button:has-text('일정 등록'):visible, #snb button:has-text('일정등록'):visible, button:has-text('일정 등록'):visible"
-    },
-    {
-      "type": "wait",
-      "description": "일정 등록 레이어 다이얼로그 로딩 대기",
-      "ms": 1600
-    },
-    {
-      "type": "hover",
-      "description": "등록 모달 내 대상 캘린더 선택 영역 호버 안내",
-      "selector": ".ui-dialog:visible select[name*='calendar'], .ui-dialog:visible #calendarId, .ui-dialog:visible select"
-    },
-    {
-      "type": "wait",
-      "description": "캘린더 선택 옵션 확인 대기",
-      "ms": 1200
-    },
-    {
-      "type": "click",
-      "description": "일정 제목 입력 필드 클릭하여 포커스",
-      "selector": ".ui-dialog:visible #subject, .ui-dialog:visible input#subject, input#subject:visible"
+      "ms": 1100,
+      "description": "'일정 등록' 버튼 클릭 후 화면/팝업 전환 대기",
+      "force": false,
+      "recordedByEyedropper": true
     },
     {
       "type": "type",
-      "description": "일정 제목 필드에 '2026 상반기 사업 전략 공유 회의' 입력",
-      "selector": ".ui-dialog:visible #subject, .ui-dialog:visible input#subject, input#subject:visible",
-      "text": "2026 상반기 사업 전략 공유 회의"
+      "selector": ".ui-dialog:visible input#subject:visible, .ui-dialog:visible input[name='subject']:visible, input#subject:visible",
+      "text": "test",
+      "description": "[일정 팝업] 'subject' 입력창에 'test' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input id=\"subject\" tabindex=\"1\" maxlength=\"100\" name=\"subject\" type=\"text\" class=\"input_txt\" style=\"width:480px;\" required=\"\" data-validation-required-message=\"제목을 입력하세요.\">",
+      "iframe": "",
+      "force": false
     },
     {
       "type": "wait",
-      "description": "제목 입력 상태 시각적 확인 대기",
-      "ms": 1300
-    },
-    {
-      "type": "wait",
-      "ms": 1200
-    },
-    {
-      "type": "wait",
-      "ms": 1400
-    },
-    {
-      "type": "hover",
-      "description": "공개 여부 설정 옵션 영역 호버 안내",
-      "selector": ".ui-dialog:visible label:has-text('공개'), .ui-dialog:visible label:has-text('비공개'), .ui-dialog:visible input[name*='publYn']"
-    },
-    {
-      "type": "wait",
-      "description": "공개 여부 옵션 확인 대기",
-      "ms": 1200
+      "ms": 600,
+      "description": "입력 텍스트 확인 여유 대기",
+      "force": false,
+      "recordedByEyedropper": true
     },
     {
       "type": "click",
-      "description": "중요도 '별표/중요' 표시 또는 상태 확인 클릭",
-      "selector": ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, button[id*='confirm']:visible, button[id*='Confirm']:visible, .ui-dialog:visible button.btn_pri:visible, .ui-dialog:visible button._confirm:visible"
+      "selector": ".ui-dialog:visible input#startDate1:visible, .ui-dialog:visible input[name='startDate1']:visible, input#startDate1:visible",
+      "description": "[일정 팝업] 'yyyy-mm-dd' 입력창 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input id=\"startDate1\" name=\"startDate1\" type=\"text\" title=\"시작일\" placeholder=\"yyyy-mm-dd\" class=\"input_date hasDatepicker\" readonly=\"\">",
+      "iframe": "",
+      "force": false
     },
     {
       "type": "wait",
-      "description": "중요도 설정 적용 대기",
-      "ms": 1300
-    },
-    {
-      "type": "hover",
-      "description": "자원예약 연동 체크박스 옵션 위치 호버 안내",
-      "selector": ".ui-dialog:visible label:has-text('예약사용'), .ui-dialog:visible label:has-text('예약 사용'), .ui-dialog:visible #scd_link_res_chk"
-    },
-    {
-      "type": "wait",
-      "description": "자원예약 연동 옵션 인지 대기",
-      "ms": 1200
+      "ms": 700,
+      "description": "[일정 팝업] 'yyyy-mm-dd' 입력창 반응 대기",
+      "force": false,
+      "recordedByEyedropper": true
     },
     {
       "type": "click",
-      "description": "'예약사용' 체크박스 클릭하여 시설/자원 예약 필드 활성화",
-      "selector": ".ui-dialog:visible label:has-text('예약사용'), .ui-dialog:visible label:has-text('예약 사용'), .ui-dialog:visible #scd_link_res_chk",
-      "force": true
+      "selector": ".ui-dialog:visible input#startHourMinute:visible, .ui-dialog:visible input[name='startHourMinute']:visible, input#startHourMinute:visible",
+      "description": "[일정 팝업] 'hh:mm' 입력창 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input id=\"startHourMinute\" name=\"startHourMinute\" type=\"text\" placeholder=\"hh:mm\" class=\"input_time ui-timepicker-input\" autocomplete=\"off\" lastval=\"00:00\">",
+      "iframe": "",
+      "force": false
     },
     {
       "type": "wait",
-      "description": "자원예약 모달 버튼 활성화 대기",
-      "ms": 1400
+      "ms": 700,
+      "description": "[일정 팝업] 'hh:mm' 입력창 반응 대기",
+      "force": false,
+      "recordedByEyedropper": true
     },
     {
-      "type": "hover",
-      "description": "자원 선택 팝업 호출 버튼 호버 안내",
-      "selector": ".ui-dialog:visible button#scd_link_res_select_button, .ui-dialog:visible button:has-text('예약 선택'), .ui-dialog:visible button:has-text('자원예약')"
+      "type": "fill",
+      "selector": ".ui-dialog:visible input#startHourMinute:visible, input#startHourMinute:visible",
+      "value": "17:10",
+      "description": "시작 시간 입력창에 '17:10' 직접 입력"
     },
     {
       "type": "wait",
-      "description": "자원 선택 버튼 확인 대기",
-      "ms": 1200
+      "ms": 500,
+      "description": "시간 입력값 반영 대기"
+    },
+    {
+      "type": "wait",
+      "ms": 700,
+      "description": "[시간 선택] '17:10' 시간 클릭 반응 대기",
+      "force": false,
+      "recordedByEyedropper": true
     },
     {
       "type": "click",
-      "description": "자원예약 연동 팝업 호출 버튼 클릭",
-      "selector": ".ui-dialog:visible button#scd_link_res_select_button, .ui-dialog:visible button:has-text('예약 선택'), .ui-dialog:visible button:has-text('자원예약')"
+      "selector": ".ui-dialog:visible input#endHourMinute:visible, .ui-dialog:visible input[name='endHourMinute']:visible, input#endHourMinute:visible",
+      "description": "[일정 팝업] 'hh:mm' 입력창 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input id=\"endHourMinute\" name=\"endHourMinute\" type=\"text\" placeholder=\"hh:mm\" class=\"input_time ui-timepicker-input\" autocomplete=\"off\" lastval=\"18:10\">",
+      "iframe": "",
+      "force": false
     },
     {
       "type": "wait",
-      "description": "자원예약 선택 팝업 레이어 로딩 대기",
-      "ms": 1600
+      "ms": 700,
+      "description": "[일정 팝업] 'hh:mm' 입력창 반응 대기",
+      "force": false,
+      "recordedByEyedropper": true
     },
     {
       "type": "click",
-      "description": "자원예약 팝업 탭 중 '시설' 또는 첫 번째 분류 탭 클릭",
-      "selector": ".ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:not(:has(ul)) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:last-child a.dynatree-title:visible, .ui-dialog:visible [class*='tree'] .dynatree-node:not(.dynatree-folder) a:visible, .ui-dialog:visible [class*='tree'] li:last-child a:visible, .ui-dialog:visible .dynatree-container a.dynatree-title:visible"
+      "selector": ".ui-timepicker-list:visible li:text-is('18:40'):visible, .ui-timepicker-wrapper:visible li:has-text('18:40'):visible",
+      "description": "[시간 선택] '18:40' 시간 클릭 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<li>18:40</li>",
+      "iframe": "",
+      "force": false
     },
     {
       "type": "wait",
-      "description": "예약 가능 시설/회의실 목록 로딩 대기",
-      "ms": 1400
+      "ms": 700,
+      "description": "[시간 선택] '18:40' 시간 클릭 반응 대기",
+      "force": false,
+      "recordedByEyedropper": true
     },
     {
       "type": "click",
-      "description": "목록 내 첫 번째 회의실 자원 선택",
-      "selector": ".ui-dialog:visible div[class*='lst'] > *:first-child, .ui-dialog:visible ul > li:first-child, .ui-dialog:visible table tr:first-child td a:visible"
+      "selector": ".ui-dialog:visible tr:has(th:has-text('중요도')) a:has-text('2'):visible, .ui-dialog:visible a:has-text('2'):visible, td#ipcr_td_id > span.star-rating-control > div.star-rating.rater-0:nth-of-type(3) > a:visible",
+      "description": "[일정 팝업] '2' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a title=\"중요도2\">2</a>",
+      "iframe": "",
+      "force": false
     },
     {
       "type": "wait",
-      "description": "선택된 회의실 항목 하이라이트 확인 대기",
-      "ms": 1200
+      "ms": 700,
+      "description": "[일정 팝업] '2' 메뉴/링크 반응 대기",
+      "force": false,
+      "recordedByEyedropper": true
     },
     {
       "type": "click",
-      "description": "자원예약 선택 팝업 하단 [확인] 버튼 클릭",
-      "selector": ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, button[id*='confirm']:visible, button[id*='Confirm']:visible, .ui-dialog:visible button.btn_pri:visible, .ui-dialog:visible button._confirm:visible"
+      "selector": ".ui-dialog:visible button#scdInsertScheduleDetailView_orgUIselectDialog:visible, .ui-dialog:visible tr:has(th:has-text('공유')) button.btn.btn_ico:has-text('조직도 선택'):visible, .ui-dialog:visible button.btn.btn_ico:has-text('조직도 선택'):visible",
+      "description": "[일정 팝업] '조직도 선택' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"scdInsertScheduleDetailView_orgUIselectDialog\" type=\"button\" title=\"조직도 선택\" class=\"btn btn_ico\"><i class=\"ico ico_org\"><span>조직도 선택</span></i></button>",
+      "iframe": "",
+      "force": false
     },
     {
       "type": "wait",
-      "description": "자원예약 선택 완료 및 등록 모달 반영 대기",
-      "ms": 1500
-    },
-    {
-      "type": "hover",
-      "description": "일정 내용 텍스트에어리어 필드 위치 호버 안내",
-      "selector": ".ui-dialog:visible #cn:visible, .ui-dialog:visible textarea:visible, .ui-dialog:visible textarea[placeholder*='내용']"
-    },
-    {
-      "type": "wait",
-      "description": "내용 입력란 인지 대기",
-      "ms": 1200
+      "ms": 700,
+      "description": "[일정 팝업] '조직도 선택' 버튼 반응 대기",
+      "force": false,
+      "recordedByEyedropper": true
     },
     {
       "type": "click",
-      "description": "일정 내용 입력 필드 클릭하여 포커스",
-      "selector": ".ui-dialog:visible #cn:visible, .ui-dialog:visible textarea:visible, .ui-dialog:visible textarea[placeholder*='내용']"
+      "selector": ".ui-dialog:visible a.dynatree-title[title='유니슨 그룹&gt;유니슨']:visible, .ui-dialog:visible .dynatree-title:text-is('유니슨'):visible, .ui-dialog:visible .dynatree-title:has-text('유니슨'):visible, .ui-dialog:visible a.dynatree-title[title='유니슨 그룹>유니슨']:visible",
+      "description": "[조직도 팝업] 트리 '유니슨' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"dynatree-title\" title=\"유니슨 그룹&gt;유니슨\"> 유니슨 </a>",
+      "iframe": "",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "ms": 700,
+      "description": "[조직도 팝업] 트리 '유니슨' 항목 반응 대기",
+      "force": false,
+      "recordedByEyedropper": true
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible a.dynatree-title[title='유니슨 그룹&gt;유니슨&gt;테스트 부서']:visible, .ui-dialog:visible .dynatree-title:text-is('테스트 부서'):visible, .ui-dialog:visible .dynatree-title:has-text('테스트 부서'):visible, .ui-dialog:visible a.dynatree-title[title='유니슨 그룹>유니슨>테스트 부서']:visible",
+      "description": "[조직도 팝업] 트리 '테스트 부서' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"dynatree-title\" title=\"유니슨 그룹&gt;유니슨&gt;테스트 부서\"> 테스트 부서 </a>",
+      "iframe": "",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "ms": 700,
+      "description": "[조직도 팝업] 트리 '테스트 부서' 항목 반응 대기",
+      "force": false,
+      "recordedByEyedropper": true
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible label.user_info.chkbox:has-text('test002 테스트 부서 (유니슨)'):visible, .ui-dialog:visible label.user_info.chkbox:has-text('test002'):visible, ul#orgUserList > li:nth-of-type(2) > label.user_info.chkbox:visible",
+      "description": "[조직도 팝업] 'test002 테스트 부서 (유니슨)' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<label class=\"user_info chkbox\">test002 테스트 부서 (유니슨)</label>",
+      "iframe": "",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "ms": 700,
+      "description": "[조직도 팝업] 'test002 테스트 부서 (유니슨)' 요소 반응 대기",
+      "force": false,
+      "recordedByEyedropper": true
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible input[title*='선택']:visible, .ui-dialog:visible li:has-text('test002 테스트 부서 (유니슨)') input[type='checkbox']:visible, .ui-dialog:visible li:has-text('test002') input[type='checkbox']:visible, ul#orgUserList > li:nth-of-type(2) > label.user_info.chkbox > span.chk:nth-of-type(1) > input.input_chk.lst_chk:visible",
+      "description": "[조직도 팝업] 'test002 테스트 부서 (유니슨)' 체크박스 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input type=\"checkbox\" value=\"\" title=\"선택\" class=\"input_chk lst_chk _chk\">",
+      "iframe": "",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "ms": 700,
+      "description": "[조직도 팝업] 'test002 테스트 부서 (유니슨)' 체크박스 반응 대기",
+      "force": false,
+      "recordedByEyedropper": true
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button.btn.btn_med:has-text('확인'):visible, div#btnArea > button.btn.btn_med:nth-of-type(1):visible",
+      "description": "[조직도 팝업] '확인' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"btn btn_med btn_pri _confirm\"><strong>확인</strong></button>",
+      "iframe": "",
+      "force": false
+    },
+    {
+      "type": "wait",
+      "ms": 1100,
+      "description": "[조직도 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
+      "force": false,
+      "recordedByEyedropper": true
     },
     {
       "type": "type",
-      "description": "일정 세부 내용 입력",
-      "selector": ".ui-dialog:visible #cn:visible, .ui-dialog:visible textarea:visible, .ui-dialog:visible textarea[placeholder*='내용']",
-      "text": "각 본부별 핵심 마일스톤 점검 및 2분기 예산 집행 계획 논의 일정입니다."
+      "selector": ".ui-dialog:visible textarea#cn:visible, .ui-dialog:visible textarea[name='cn']:visible, textarea#cn:visible",
+      "text": "참여하세요",
+      "description": "[일정 팝업] '일정 내용을 입력하세요' 입력창에 '참여하세요' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<textarea id=\"cn\" name=\"cn\" maxlength=\"4000\" cols=\"25\" rows=\"4\" placeholder=\"일정 내용을 입력하세요\" class=\"textarea\"></textarea>",
+      "iframe": "",
+      "force": false
     },
     {
       "type": "wait",
-      "description": "입력 내용 확인 대기",
-      "ms": 1300
-    },
-    {
-      "type": "hover",
-      "description": "등록 모달 하단/상단 [저장] 결정적 액션 버튼 위치 호버 안내 (Phase 4)",
-      "selector": ".ui-dialog:visible #savebtn, .ui-dialog:visible button#savebtn:visible, .ui-dialog:visible button:has-text('저장'):visible"
-    },
-    {
-      "type": "wait",
-      "description": "최종 저장 전 작성 폼 시각적 검토 대기",
-      "ms": 1400
+      "ms": 600,
+      "description": "입력 텍스트 확인 여유 대기",
+      "force": false,
+      "recordedByEyedropper": true
     },
     {
       "type": "click",
-      "description": "일정 등록 팝업 내 [저장] 버튼 클릭하여 일정 등록 실행",
-      "selector": ".ui-dialog:visible #savebtn, .ui-dialog:visible button#savebtn:visible, .ui-dialog:visible button:has-text('저장'):visible"
+      "selector": ".ui-dialog:visible button#savebtn:visible, .ui-dialog:visible button.btn.btn_med:has-text('저장'):visible, button#savebtn:visible",
+      "description": "[일정 팝업] '저장' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" id=\"savebtn\" class=\"btn btn_med btn_pri\"><strong>저장</strong></button>",
+      "iframe": "",
+      "force": false
     },
     {
       "type": "wait",
-      "description": "일정 등록 처리 및 모달 닫힘 대기 (Phase 5: Outcome & Wrap-up)",
-      "ms": 1800
-    },
-    {
-      "type": "wait",
-      "description": "캘린더 내 등록된 신규 일정 렌더링 확인 대기",
-      "ms": 1500
-    },
-    {
-      "type": "hover",
-      "description": "등록 완료된 일정 블록 항목 호버하여 등록 결과 확인",
-      "selector": ".fc-event:has-text('2026 상반기 사업 전략 공유 회의'):visible, .fc-event:last-child:visible, .fc-day-grid-event:visible"
-    },
-    {
-      "type": "wait",
-      "description": "등록된 일정 상세 호버 툴팁 확인 대기",
-      "ms": 1400
+      "ms": 1100,
+      "description": "[일정 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기",
+      "force": false,
+      "recordedByEyedropper": true
     },
     {
       "type": "click",
-      "description": "등록된 일정을 클릭하여 상세 조회 레이어 팝업 호출",
-      "selector": ".fc-event:has-text('2026 상반기 사업 전략 공유 회의'):visible, .fc-event:last-child:visible, .fc-day-grid-event:visible, table.tbl_lst tbody tr:first-child td.sub a:visible, table tbody tr:first-child td[class*='sub'] a:visible, table tbody tr:first-child a:visible, ul.lst_vr_ul li:first-child a.sub_tp:visible, ul.lst_vr_ul li:first-child .sub a:visible, ul[id*='List'] li:first-child a.sub_tp:visible, ul[class*='lst'] li:first-child a:visible, .lst_type1 li:first-child a:visible"
+      "selector": "a.fc-time-grid-event.fc-v-event:has-text('17:10 - 18:40 test'):visible, a.fc-time-grid-event.fc-v-event:has-text('17:10'):visible, tbody > tr > td:nth-of-type(8) > div.fc-content-col > div.fc-event-container:nth-of-type(2) > a.fc-time-grid-event.fc-v-event:nth-of-type(3):visible",
+      "description": "'17:10 - 18:40 test' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a class=\"fc-time-grid-event fc-v-event fc-event fc-start fc-end fc-event-share fc-draggable fc-resizable fc-allow-mouse-resize\" style=\"back17:10 - 18:40 test</a>",
+      "iframe": "",
+      "force": false
     },
     {
       "type": "wait",
-      "description": "일정 상세 레이어 팝업 로딩 대기",
-      "ms": 1600
-    },
-    {
-      "type": "hover",
-      "description": "일정 상세 레이어 내 제목, 일시, 자원예약 내용 점검 호버 안내",
-      "selector": ".ui-dialog:visible .view_info:visible, .ui-dialog:visible .sub_bar:visible, .ui-dialog:visible:has-text('2026 상반기 사업 전략 공유 회의')"
+      "ms": 700,
+      "description": "'17:10 - 18:40 test' 메뉴/링크 반응 대기",
+      "force": false,
+      "recordedByEyedropper": true
     },
     {
       "type": "wait",
-      "description": "상세 정보 검토 대기",
-      "ms": 1400
-    },
-    {
-      "type": "click",
-      "description": "일정 상세 팝업 닫기 버튼 클릭하여 캘린더 화면 복귀",
-      "selector": ".ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:not(:has(ul)) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container li:last-child a.dynatree-title:visible, .ui-dialog:visible [class*='tree'] .dynatree-node:not(.dynatree-folder) a:visible, .ui-dialog:visible [class*='tree'] li:last-child a:visible, .ui-dialog:visible .dynatree-container a.dynatree-title:visible, table.tbl_lst tbody tr:first-child td.sub a:visible, table tbody tr:first-child td[class*='sub'] a:visible, table tbody tr:first-child a:visible, ul.lst_vr_ul li:first-child a.sub_tp:visible, ul.lst_vr_ul li:first-child .sub a:visible, ul[id*='List'] li:first-child a.sub_tp:visible, ul[class*='lst'] li:first-child a:visible, .lst_type1 li:first-child a:visible"
-    },
-    {
-      "type": "wait",
-      "description": "캘린더 전체 와이드 뷰 아웃트로 화면 유지 및 튜토리얼 종료",
-      "ms": 1800
+      "ms": 1400,
+      "description": "최종 시연 결과 화면 클로즈업 확인 대기",
+      "force": false,
+      "recordedByEyedropper": true
     }
   ]
 }

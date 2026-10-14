@@ -1,6 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
 import type { BrowsePlan, EditPlan, MomentsFile } from "../types";
+import { ensureSessionForSlug } from "./authManager";
+import { sanitizeBrowsePlan } from "./planSanitizer";
 
 const DATA_DIR = path.resolve(__dirname, "..", "..", "data");
 const ROOT_TSX_PATH = path.resolve(__dirname, "..", "Root.tsx");
@@ -146,7 +148,12 @@ export function getScenarioDetails(slug: string) {
 
   if (fs.existsSync(browsePlanPath)) {
     try {
-      browsePlan = JSON.parse(fs.readFileSync(browsePlanPath, "utf-8"));
+      const rawPlan = JSON.parse(fs.readFileSync(browsePlanPath, "utf-8"));
+      const { plan: sanitized, report } = sanitizeBrowsePlan(rawPlan);
+      browsePlan = sanitized;
+      if (report.fixedActionsCount > 0 || report.removedActionsCount > 0) {
+        fs.writeFileSync(browsePlanPath, JSON.stringify(sanitized, null, 2), "utf-8");
+      }
     } catch {}
   }
   if (fs.existsSync(momentsPath)) {
@@ -183,7 +190,14 @@ export function saveBrowsePlan(slug: string, plan: BrowsePlan) {
     fs.mkdirSync(dirPath, { recursive: true });
   }
 
+  const { plan: sanitized } = sanitizeBrowsePlan(plan);
   const browsePlanPath = path.join(dirPath, "browse-plan.json");
-  fs.writeFileSync(browsePlanPath, JSON.stringify(plan, null, 2), "utf-8");
-  return { success: true, path: browsePlanPath };
+  fs.writeFileSync(browsePlanPath, JSON.stringify(sanitized, null, 2), "utf-8");
+
+  // Automatically attach active auth session so recording never asks for login again
+  try {
+    ensureSessionForSlug(slug);
+  } catch {}
+
+  return { success: true, path: browsePlanPath, plan: sanitized };
 }

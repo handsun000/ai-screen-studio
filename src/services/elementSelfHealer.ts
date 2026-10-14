@@ -1,16 +1,29 @@
 import { GoogleGenAI } from "@google/genai";
-import type { Page, Locator } from "playwright";
+import type { Page } from "playwright";
 import * as fs from "fs";
 import * as path from "path";
 import * as dotenv from "dotenv";
 import type { BrowsePlanAction, BrowsePlan } from "../types";
+import { getGroupwarePromptContext } from "./groupwareCatalog";
 
 dotenv.config({ override: true });
 
+export type SelfHealResolutionType =
+  | "PATCH_SELECTOR"
+  | "INSERT_BEFORE"
+  | "REPLACE_STEPS"
+  | "SKIP_AND_PRUNE"
+  | "ABORT";
+
 export interface SelfHealResult {
   success: boolean;
+  resolutionType?: SelfHealResolutionType;
   selector: string;
+  sourceSelector?: string;
+  targetSelector?: string;
   iframe?: string | null;
+  prerequisiteActions?: BrowsePlanAction[];
+  replacementActions?: BrowsePlanAction[];
   confidence: number;
   reason: string;
 }
@@ -26,6 +39,8 @@ export interface LiveDOMCandidate {
   placeholder?: string;
   title?: string;
   ariaLabel?: string;
+  disabled?: boolean;
+  rect?: { x: number; y: number; w: number; h: number };
   inModal?: string | boolean;
   inSidebar?: boolean;
   inHeader?: boolean;
@@ -34,9 +49,112 @@ export interface LiveDOMCandidate {
 }
 
 /**
- * Extracts visible interactive elements from the current page and all visible iframes (e.g. #subBody).
+ * Scores and prioritizes live DOM candidates so critical modal elements, main form buttons,
+ * and elements matching the current/next action descriptions are never truncated.
  */
-export async function extractLiveCandidates(page: Page): Promise<{
+function prioritizeSelfHealCandidates(
+  candidates: LiveDOMCandidate[],
+  currentAction: BrowsePlanAction,
+  nextAction?: BrowsePlanAction,
+  maxCount: number = 95
+): LiveDOMCandidate[] {
+  if (candidates.length <= maxCount) return candidates;
+
+  const extractKeywords = (act?: BrowsePlanAction): string[] => {
+    if (!act) return [];
+    const raw = `${act.description || ""} ${act.text || ""} ${act.selector || ""}`;
+    return raw
+      .replace(/[[\]()'".,:#>-]/g, " ")
+      .split(/\s+/)
+      .map((w) => w.trim().toLowerCase())
+      .filter(
+        (w) =>
+          w.length >= 2 &&
+          !["버튼", "클릭", "입력", "선택", "화면", "영역", "모달", "팝업", "visible", "has", "text", "button", "input"].includes(w)
+      );
+  };
+
+  const currKeywords = extractKeywords(currentAction);
+  const nextKeywords = extractKeywords(nextAction);
+  const descLower = (currentAction.description || "").toLowerCase();
+  const wantsGnb =
+    descLower.includes("전체메뉴") ||
+    descLower.includes("포탈") ||
+    descLower.includes("gnb") ||
+    descLower.includes("상단 헤더");
+
+  const scored = candidates.map((c, idx) => {
+    let score = 0;
+    const hay = `${c.text || ""} ${c.id || ""} ${c.name || ""} ${c.placeholder || ""} ${c.title || ""} ${c.className || ""} ${c.suggestedSelector || ""}`.toLowerCase();
+
+    // 1. Active modal elements get highest priority
+    if (c.inModal) {
+      score += 120;
+    }
+
+    // 2. Direct keyword match with current failed action
+    for (const kw of currKeywords) {
+      if (hay.includes(kw)) score += 85;
+    }
+
+    // 3. Keyword match with next action (essential for detecting SKIP_AND_PRUNE)
+    for (const kw of nextKeywords) {
+      if (hay.includes(kw)) score += 60;
+    }
+
+    // 4. Action type compatibility
+    if (currentAction.type === "type") {
+      if (["input", "textarea", "body"].includes(c.tag) || hay.includes("editor") || hay.includes("subject") || hay.includes("search")) {
+        score += 65;
+      } else if (c.tag === "button") {
+        score -= 30;
+      }
+    } else if (currentAction.type === "click" || currentAction.type === "dblclick") {
+      if (["button", "a", "label", "input", "span"].includes(c.tag)) {
+        score += 35;
+      }
+      if (
+        /저장|상신|기안|등록|작성|확인|검색|선택|신청|추가|결재|반려|승인|보내기|발송|예약|펼침|전체메뉴/.test(
+          `${c.text || ""} ${c.title || ""}`
+        )
+      ) {
+        score += 50;
+      }
+    } else if (currentAction.type === "dragAndDrop") {
+      if (hay.includes("dynatree") || hay.includes("af_") || hay.includes("app_flow") || hay.includes("line")) {
+        score += 80;
+      }
+    }
+
+    // 5. Unique ID bonus
+    if (c.id && !c.id.startsWith("ui-id-")) {
+      score += 25;
+    }
+
+    // 6. Sidebar write/action buttons vs GNB header noise
+    if (c.inSidebar && c.tag === "button") {
+      score += 35;
+    }
+    if (c.inHeader && !wantsGnb) {
+      score -= 45;
+    }
+
+    return { candidate: c, score, idx };
+  });
+
+  scored.sort((a, b) => (b.score !== a.score ? b.score - a.score : a.idx - b.idx));
+  return scored.slice(0, maxCount).map((s) => s.candidate);
+}
+
+/**
+ * Extracts visible interactive elements from the current page and all visible iframes (e.g. #subBody),
+ * including bounding box coordinates (rect) and disabled state, then prioritizes the top candidates.
+ */
+export async function extractLiveCandidates(
+  page: Page,
+  currentAction?: BrowsePlanAction,
+  nextAction?: BrowsePlanAction
+): Promise<{
   activeDialogTitle?: string;
   candidates: LiveDOMCandidate[];
 }> {
@@ -54,6 +172,8 @@ export async function extractLiveCandidates(page: Page): Promise<{
         placeholder?: string;
         title?: string;
         ariaLabel?: string;
+        disabled?: boolean;
+        rect?: { x: number; y: number; w: number; h: number };
         inModal?: string | boolean;
         inSidebar?: boolean;
         inHeader?: boolean;
@@ -63,9 +183,11 @@ export async function extractLiveCandidates(page: Page): Promise<{
 
       // Detect active top dialog / modal
       let activeDialogTitle = "";
-      const rawDialogs = Array.from(document.querySelectorAll(
-        ".ui-dialog, .modal, [role='dialog'], .layer_wrap, .equ_select_lyr, #alert_lyr, div[id*='Dialog'], div[class*='dialog']"
-      ));
+      const rawDialogs = Array.from(
+        document.querySelectorAll(
+          ".ui-dialog, .modal, [role='dialog'], .layer_wrap, .equ_select_lyr, #alert_lyr, div[id*='Dialog'], div[class*='dialog']"
+        )
+      );
       const visibleDialogs = rawDialogs.filter((d) => {
         const r = d.getBoundingClientRect();
         const s = window.getComputedStyle(d);
@@ -81,27 +203,18 @@ export async function extractLiveCandidates(page: Page): Promise<{
         }
       }
 
-      // Query visible interactive elements
+      // Query visible interactive elements (including approval flow slots & template cards)
       const query =
-        "button, a, input, select, textarea, [contenteditable='true'], [contenteditable=''], .note-editable, .ce-paragraph, div[role='textbox'], [role='button'], .dynatree-node, .dynatree-checkbox, .dynatree-title, .dynatree-expander, .fancytree-node, .fancytree-expander, .fancytree-title, [class*='expander'], [class*='tree-title'], [class*='node-title'], .fc-event, .fc-title, .fc-content, [class*='fc-event'], [class*='fc-daygrid'], label, li[class*='item'], li[class*='depth'], div[onclick], span[onclick]";
+        "button, a, input, select, textarea, [contenteditable='true'], [contenteditable=''], .note-editable, .ce-paragraph, div[role='textbox'], [role='button'], .dynatree-node, .dynatree-checkbox, .dynatree-title, .dynatree-expander, .fancytree-node, .fancytree-expander, .fancytree-title, [class*='expander'], [class*='tree-title'], [class*='node-title'], .fc-event, .fc-title, .fc-content, [class*='fc-event'], [class*='fc-daygrid'], .app_work_box, div.app_flow, td[id^='af_'], div[id^='af_'], label, li[class*='item'], li[class*='depth'], li.aw_li, div[onclick], span[onclick]";
       const elements = Array.from(document.querySelectorAll(query));
 
       for (const el of elements) {
         const rect = el.getBoundingClientRect();
-        if (
-          rect.width <= 0 ||
-          rect.height <= 0 ||
-          rect.bottom < 0 ||
-          rect.right < 0
-        ) {
+        if (rect.width <= 0 || rect.height <= 0 || rect.bottom < 0 || rect.right < 0) {
           continue;
         }
         const style = window.getComputedStyle(el);
-        if (
-          style.display === "none" ||
-          style.visibility === "hidden" ||
-          style.opacity === "0"
-        ) {
+        if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") {
           continue;
         }
 
@@ -117,21 +230,24 @@ export async function extractLiveCandidates(page: Page): Promise<{
             : undefined;
         const type = (el as HTMLInputElement).type || undefined;
         const name = (el as HTMLInputElement).name || undefined;
-        const value = (el as HTMLInputElement).value || undefined;
-        const placeholder =
-          (el as HTMLInputElement).placeholder || undefined;
+        const value = (el as HTMLInputElement).value
+          ? String((el as HTMLInputElement).value).slice(0, 40)
+          : undefined;
+        const placeholder = (el as HTMLInputElement).placeholder || undefined;
         const title = (el as HTMLElement).title || undefined;
         const ariaLabel = el.getAttribute("aria-label") || undefined;
+        const disabled =
+          (el as HTMLButtonElement).disabled ||
+          el.hasAttribute("disabled") ||
+          el.classList.contains("disabled") ||
+          undefined;
 
         // Context checks
-        const modalContainer = el.closest(
-          ".ui-dialog, .modal, [role='dialog'], .layer_wrap"
-        );
+        const modalContainer = el.closest(".ui-dialog, .modal, [role='dialog'], .layer_wrap");
         const inModal = modalContainer ? activeDialogTitle || true : false;
         const inSidebar = !!el.closest("#snb, .snb, .aside, .left_menu, aside");
         const inHeader = !!el.closest("header, #header, .gnb, .top_menu, nav");
 
-        // Synthesize smart candidate selector with accurate container scope prefix
         let scopePrefix = "";
         if (inModal) {
           scopePrefix = ".ui-dialog:visible ";
@@ -176,13 +292,20 @@ export async function extractLiveCandidates(page: Page): Promise<{
           placeholder,
           title,
           ariaLabel,
+          disabled,
+          rect: {
+            x: Math.round(rect.x),
+            y: Math.round(rect.y),
+            w: Math.round(rect.width),
+            h: Math.round(rect.height),
+          },
           inModal,
           inSidebar,
           inHeader,
           suggestedSelector,
         });
 
-        if (candidates.length >= 200) break;
+        if (candidates.length >= 450) break;
       }
 
       return {
@@ -210,7 +333,7 @@ export async function extractLiveCandidates(page: Page): Promise<{
       });
 
       for (const iframeSel of iframeSelectors) {
-        if (allCandidates.length >= 300) break;
+        if (allCandidates.length >= 600) break;
         try {
           const frameLocator = page.frameLocator(iframeSel);
           const bodyLoc = frameLocator.locator("body");
@@ -228,11 +351,7 @@ export async function extractLiveCandidates(page: Page): Promise<{
                 const rect = el.getBoundingClientRect();
                 if (rect.width <= 0 || rect.height <= 0) continue;
                 const style = window.getComputedStyle(el);
-                if (
-                  style.display === "none" ||
-                  style.visibility === "hidden" ||
-                  style.opacity === "0"
-                ) {
+                if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") {
                   continue;
                 }
 
@@ -248,9 +367,10 @@ export async function extractLiveCandidates(page: Page): Promise<{
                     : undefined;
                 const type = (el as HTMLInputElement).type || undefined;
                 const name = (el as HTMLInputElement).name || undefined;
-                const value = (el as HTMLInputElement).value || undefined;
-                const placeholder =
-                  (el as HTMLInputElement).placeholder || undefined;
+                const value = (el as HTMLInputElement).value
+                  ? String((el as HTMLInputElement).value).slice(0, 40)
+                  : undefined;
+                const placeholder = (el as HTMLInputElement).placeholder || undefined;
                 const title = (el as HTMLElement).title || undefined;
 
                 let suggestedSelector = "";
@@ -282,6 +402,12 @@ export async function extractLiveCandidates(page: Page): Promise<{
                   value,
                   placeholder,
                   title,
+                  rect: {
+                    x: Math.round(rect.x),
+                    y: Math.round(rect.y),
+                    w: Math.round(rect.width),
+                    h: Math.round(rect.height),
+                  },
                   frame: frameSel,
                   suggestedSelector,
                 });
@@ -298,9 +424,13 @@ export async function extractLiveCandidates(page: Page): Promise<{
       }
     } catch {}
 
+    const prioritized = currentAction
+      ? prioritizeSelfHealCandidates(allCandidates, currentAction, nextAction, 95)
+      : allCandidates.slice(0, 95);
+
     return {
       activeDialogTitle,
-      candidates: allCandidates,
+      candidates: prioritized,
     };
   } catch (err) {
     return { candidates: [] };
@@ -308,16 +438,18 @@ export async function extractLiveCandidates(page: Page): Promise<{
 }
 
 /**
- * AI Runtime Self-Healing Agent:
- * Takes the failed action, captures live browser screen + DOM candidates,
- * calls Gemini with a high-precision prompt, and returns a verified Playwright selector.
+ * AI Runtime Self-Healing & Dynamic Scenario Adjustment Architect:
+ * Takes the failed action + surrounding scenario timeline, captures the live browser screenshot + prioritized DOM candidates,
+ * cross-references the Naonsoft 18-module catalog, and either patches the selector, inserts missing prerequisite steps,
+ * replaces the step with a multi-step sequence, or prunes an already-completed/redundant step.
  */
 export async function selfHealElement(
   page: Page,
   action: BrowsePlanAction,
   stepIndex: number,
   totalSteps: number,
-  dataDir?: string
+  dataDir?: string,
+  plan?: BrowsePlan
 ): Promise<SelfHealResult | null> {
   const apiKeys = [
     process.env.GEMINI_API_KEY,
@@ -334,77 +466,143 @@ export async function selfHealElement(
   try {
     const screenshotBuffer = await page.screenshot({
       type: "jpeg",
-      quality: 60,
+      quality: 65,
     });
     screenshotBase64 = screenshotBuffer.toString("base64");
   } catch {}
 
-  // 2. Extract live interactive DOM candidates (top-level + visible iframes)
-  const { activeDialogTitle, candidates } = await extractLiveCandidates(page);
+  // 2. Identify surrounding scenario steps (prev 3 ~ current ~ next 3)
+  const actionsList = plan?.actions || [];
+  const currentZeroIdx = Math.max(0, stepIndex - 1);
+  const nextAction = actionsList[currentZeroIdx + 1];
+  const prevStepsSummary = actionsList
+    .slice(Math.max(0, currentZeroIdx - 3), currentZeroIdx)
+    .map(
+      (a, idx) =>
+        `  [Step #${Math.max(1, stepIndex - 3) + idx} (완료)] type="${a.type}", desc="${a.description || ""}", selector="${a.selector || a.sourceSelector || ""}"`
+    )
+    .join("\n");
+  const nextStepsSummary = actionsList
+    .slice(currentZeroIdx + 1, currentZeroIdx + 4)
+    .map(
+      (a, idx) =>
+        `  [Step #${stepIndex + 1 + idx} (예정)] type="${a.type}", desc="${a.description || ""}", selector="${a.selector || a.sourceSelector || ""}"`
+    )
+    .join("\n");
 
-  // 3. Assemble Extraordinary High-Precision Self-Healing Prompt
+  // 3. Extract prioritized live interactive DOM candidates (top-level + visible iframes)
+  const { activeDialogTitle, candidates } = await extractLiveCandidates(page, action, nextAction);
+
+  // 4. Match Groupware Module Catalog context
+  const currentUrl = page.url();
+  const catalogContext = getGroupwarePromptContext(
+    `${currentUrl} ${plan?.url || ""} ${action.description || ""} ${nextAction?.description || ""}`
+  );
+
+  // 5. Hybrid Prompting: English Control Logic + Korean Domain/UI Precision
   const systemInstruction = `
-당신은 Playwright 브라우저 자동화 녹화 도중 요소 탐색에 실패하거나 셀렉터가 누락되었을 때,
-실시간 브라우저 화면(스크린샷 이미지)과 실제 DOM 후보군을 정밀 교차 검증하여
-"오직 단 1번의 응답으로 100% 동작하는 완벽한 Playwright 셀렉터"를 복구해내는 [최고위 AI 런타임 자가 치유 아키텍트(Runtime Self-Healing Architect)]입니다.
+You are the **Runtime Self-Healing & Scenario Adjustment Architect** for a Playwright + Remotion enterprise video automation studio.
+During live browser recording, Step #${stepIndex} failed to locate its target element.
+Your job is to inspect the **Live Screenshot**, **Live Interactive DOM Candidates (with {x,y,w,h} coordinates)**, **Scenario Timeline (Previous/Current/Next Steps)**, and **Enterprise Module Catalog**, then return a **100% verified JSON recovery decision** in a single turn.
 
-### [자가 치유의 중요성]
-이 복구는 실시간 비디오 녹화 파이프라인의 생명선입니다. 실패 시 전체 녹화가 중단되므로,
-어설픈 추측이나 허위 ID 생성 없이, 현재 화면에 실제로 존재하는 대상을 정확하게 짚어내야 합니다.
+---
 
-### [5대 황금 복구 원칙 (Five Gold Rules)]
-1. 🚫 무추측 원칙 (Zero-Guessing Policy):
-   - 소스코드에 없거나 후보군 목록에 없는 가상 ID(예: #_DOC_TITLE_, #btn_submit, #user_input)를 절대로 지어내지 마십시오.
-   - 반드시 제공된 [Live Interactive Candidates] 목록의 실제 id, className, name, 또는 화면에 또렷이 보이는 한글 텍스트(:has-text('...'))를 사용하십시오.
-2. 🪟 모달/다이얼로그 팝업 스코핑 (Modal Dialog Isolation):
-   - 요소가 팝업/모달 다이얼로그 내부에 있는 경우(또는 현재 화면에 모달이 떠 있는 경우), 반드시 최상단 가시 다이얼로그 범위('.ui-dialog:visible', '.modal:visible', '[role="dialog"]:visible')를 접두사로 지정하십시오.
-   - 예: ".ui-dialog:visible button:has-text('확인')", ".ui-dialog:visible #savebtn"
-3. 🖼️ iframe 내부 요소 식별 (Iframe Context):
-   - 대상 요소가 iframe(예: iframe#subBody, iframe#contentFrame) 내부에 있는 경우, 'iframe' 필드에 해당 iframe 셀렉터를 명시하십시오. (후보군에 'frame' 값이 있으면 그 값을 우선 반영)
-4. 🎯 말단 인터랙티브 태그 핀포인트 (Atomic Interactive Element):
-   - 넓은 부모 div나 form 대신, 실제 클릭/입력 가능한 말단 태그(button, a, input, textarea, select, span.dynatree-checkbox 등)를 타겟팅하십시오.
-   - 텍스트 입력(type)인 경우: 제목이면 input[placeholder*='제목'] 또는 #subject, 본문/내용이면 textarea 또는 #cn 등을 정확히 매핑하십시오.
-5. 🛡️ 견고한 2중 방어선 셀렉터 (Robust Dual Fallback via Comma):
-   - 고유 식별자(ID 또는 특정 클래스)와 텍스트 매칭(:has-text)을 쉼표(,)로 연결하여 Playwright가 어떤 환경에서도 대상을 즉시 찾을 수 있게 하십시오.
-   - 예: ".ui-dialog:visible button#savebtn, .ui-dialog:visible button:has-text('저장')"
-   - 예: "button.btn_svc_open, button[title*='전체메뉴']"
-   - 예: "iframe#subBody 내의 button#reg_shedule_lefttop, button:has-text('일정 등록')"
-6. 🛑 포기 원칙 (Fail-Fast Policy):
-   - 현재 화면(스크린샷)이 의도한 페이지나 팝업 상태가 아니라서, 사용자가 지시한 "원래 목적(description)"을 수행할 대상 버튼/입력창이 아예 존재하지 않는다고 판단되면 억지로 대체 요소를 찾거나 이전 단계를 대신 누르지 마십시오.
-   - 반드시 "success": false 로 설정하고, selector는 빈 문자열로 반환하여 녹화가 안전하게 중단되도록 하십시오.
-7. 🔍 모듈 영역 vs 상단 GNB 포탈 헤더 검색/버튼 분리 원칙 (Module vs GNB Header Isolation):
-   - 업무 모듈(문서관리, 전자결재, 일정관리, 게시판 등) 내에서 검색어나 버튼을 다룰 때, 상단 포탈 공통 헤더(\`header\`, \`#header\`, \`.gnb\`, \`inHeader: true\`)에 위치한 전체 통합 검색창이나 포탈 헤더 버튼을 절대로 선택하지 마십시오!
-   - 모듈 내 검색창이나 버튼은 좌측 사이드바(\`inSidebar: true\`, \`#snb\`), 본문 상단(\`inHeader: false\`, \`#content\`, \`.srch_bar\`), 또는 모달(\`inModal: true\`)에 위치합니다.
-   - 후보군에 \`inHeader: true\`인 요소와 \`inSidebar: true\` 또는 본문 요소가 있을 경우, 헤더 요소는 전역 포탈 요소이므로 배제하고 모듈 내부 요소를 선택해야 합니다.
+### [1] 5-Mode Scenario Adjustment Matrix (\`resolutionType\`)
 
-### [응답 포맷 (Strict JSON Only)]
-반드시 아래 JSON 형식으로만 응답하십시오 (마크다운 코드블록이나 불필요한 설명 금지):
+Analyze WHY Step #${stepIndex} failed by comparing the Live Screenshot + DOM against the Scenario Timeline, and select **exact ONE** \`resolutionType\`:
+
+1. **\`"PATCH_SELECTOR"\` (Target IS Visible on Screen)**:
+   - The intended button/input/node IS currently visible in the Screenshot & DOM candidates, and only the CSS/Playwright selector (or \`iframe\`, \`sourceSelector\`, \`targetSelector\`) was inaccurate.
+   - Return \`"success": true, "resolutionType": "PATCH_SELECTOR", "selector": "..."\` (and \`"sourceSelector"\` / \`"targetSelector"\` if \`action.type === "dragAndDrop"\`).
+
+2. **\`"INSERT_BEFORE"\` (Target is Hidden Because a Prerequisite Step was Missed)**:
+   - The target element for Step #${stepIndex} is NOT on screen yet because an intermediate UI action must happen first!
+   - **Common Cases**:
+     • Trying to click a GNB module link (e.g., \`일정관리\`, \`전자결재\`, \`자원예약\`) while the Portal All-Menu Drawer (\`button.btn_svc_open:visible\`) is still closed -> Insert \`[{"type": "click", "selector": "button.btn_svc_open:visible", "description": "포탈 전체메뉴 열기"}, {"type": "wait", "ms": 1200, "description": "전체메뉴 서랍 열림 대기"}]\`!
+     • Trying to type the title (\`#eapDocReg_docSubject\`, \`#subject\`) in Electronic Approval (\`eap\`) while still on the Template Selection screen (\`#eapWorkSelect_workList\`) -> Insert clicking the inner **[작성]** button (\`{"type": "click", "selector": "ul.aw_ul li.aw_li button.btn_write:visible, .app_work_box button.btn_write:visible", "description": "양식 카드 내 작성 버튼 클릭"}, {"type": "wait", "ms": 3000, "description": "기안 작성 폼 로드 대기"}\` — NEVER click \`a._his\` as it only toggles history)!
+     • Trying to select a child folder/node in a Dynatree modal while the parent folder is collapsed -> Insert clicking the tree expander (\`.ui-dialog:visible #docSelect_expandTree:visible, .ui-dialog:visible .btn_fopn:visible, .ui-dialog:visible .dynatree-expander:visible\`) + \`wait: 800\`!
+     • Blocked by an unclosed modal/alert dialog from the previous step -> Insert clicking its confirm/close button (\`.ui-dialog:visible button._confirmBtn:visible, .ui-dialog:visible button:has-text('확인'):visible\`) + \`wait: 1000\`!
+   - Return \`"success": true, "resolutionType": "INSERT_BEFORE", "prerequisiteActions": [...], "selector": "patched_selector_for_current_step_if_known"\`.
+
+3. **\`"REPLACE_STEPS"\` (Coarse Step Must Be Split into 2~3 Atomic Steps)**:
+   - Step #${stepIndex} tries to do multiple interactions at once or needs a multi-step alternative (e.g., a failed \`dragAndDrop\` that can be cleanly achieved by \`[check user checkbox -> click role add button]\`).
+   - Return \`"success": true, "resolutionType": "REPLACE_STEPS", "replacementActions": [...] \`.
+
+4. **\`"SKIP_AND_PRUNE"\` (Step is Already Completed or Redundant on This Form)**:
+   - Looking at the Screenshot, DOM, and \`Next Steps\`, the UI has **ALREADY advanced past Step #${stepIndex}** (e.g., Step #${stepIndex} tries to click a modal \`[확인]\` button, but the modal is already closed and Step #${stepIndex + 1}'s target is already visible on screen), OR Step #${stepIndex} targets a non-mandatory sub-option (e.g., 보존기간, 공개범위, 태그) that does not exist on this specific form.
+   - Return \`"success": true, "resolutionType": "SKIP_AND_PRUNE", "selector": ""\`.
+
+5. **\`"ABORT"\` (Target Genuinely Cannot Be Found or Reached)**:
+   - If the user requested a specific named item (e.g., \`'테스트'\`, \`'김철수'\`, specific document title) that does NOT exist on screen and cannot be revealed by any prerequisite button on screen, DO NOT pick a random \`:first-child\` item to fake success!
+   - Return \`"success": false, "resolutionType": "ABORT", "selector": ""\`.
+
+---
+
+### [2] 7 Golden Selector Rules (Playwright Precision)
+
+1. 🚫 **Zero-Guessing Policy**: NEVER invent fake IDs (\`#_DOC_TITLE_\`, \`#btn_submit\`). Use ONLY real \`id\`, \`className\`, \`name\`, or visible Korean text (\`:has-text('...')\`) confirmed in \`[Live Interactive DOM Candidates]\`.
+2. 🪟 **Modal Dialog Isolation**: If \`activeDialogTitle\` is present or the target has \`inModal: true\`, ALWAYS prefix the selector with \`.ui-dialog:visible \` (or \`.modal:visible \`).
+   - Note: In Naonsoft Groupware, Schedule Registration (\`#dl_reg_schedule_form\`), Resource Reservation (\`#dl_reg_res_form\`), and Approval Opinion (\`#eapApproval\`) forms ARE inside \`.ui-dialog:visible\`!
+3. 🖼️ **Iframe Context**: If the candidate has a \`frame\` property (e.g., \`iframe#subBody\`), set \`"iframe": "iframe#subBody"\`.
+4. 🎯 **Atomic Interactive Leaf Tag**: Target actual clickable/typable leaf tags (\`button\`, \`a\`, \`input\`, \`textarea\`, \`select\`, \`span.dynatree-checkbox\`, \`a.dynatree-title\`), never wide wrapper \`div\` or \`form\` containers.
+5. 🛡️ **Robust Dual Fallback via Comma**: Combine exact ID/class and text matching with a comma (\`, \`) and append \`:visible\`.
+   - Example: \`".ui-dialog:visible button#savebtn:visible, .ui-dialog:visible button:has-text('저장'):visible"\`
+6. 🔍 **Module vs GNB Header Isolation**: Never pick global portal header (\`inHeader: true\`, \`#header\`) search bars or buttons when working inside a module's sidebar (\`inSidebar: true\`, \`#snb\`) or main content area (\`#content\`).
+7. 🇰🇷 **Korean Localization**: Write \`reason\` and any \`description\` inside \`prerequisiteActions\` / \`replacementActions\` in clear **Korean (한국어)**.
+
+---
+
+### [3] Strict JSON Response Schema
+Return ONLY a valid JSON object matching this exact structure (no markdown code fences):
 {
   "success": true,
-  "selector": ".ui-dialog:visible button#savebtn, .ui-dialog:visible button:has-text('저장')",
+  "resolutionType": "PATCH_SELECTOR",
+  "selector": ".ui-dialog:visible button#savebtn:visible, .ui-dialog:visible button:has-text('저장'):visible",
+  "sourceSelector": "",
+  "targetSelector": "",
   "iframe": null,
-  "confidence": 0.99,
-  "reason": "화면 중앙 '일정 등록' 모달 내에 우측 상단 '저장' 버튼(#savebtn)이 확인되어 핀포인트 타겟팅함"
+  "prerequisiteActions": [],
+  "replacementActions": [],
+  "confidence": 0.98,
+  "reason": "화면 중앙 '일정 등록' 모달 내부 우측 하단의 '저장' 버튼(#savebtn)이 확인되어 셀렉터를 보정함"
 }
 `;
 
   const userPrompt = `
-[실행 컨텍스트]
-- 현재 진행 단계: #${stepIndex} / 총 ${totalSteps}단계
-- 수행하려는 액션 타입: "${action.type}"
-- 액션 상세 설명: "${action.description}"
-${action.type === "type" ? `- 입력할 텍스트(value): "${action.text || ""}"` : ""}
-- 기존에 시도했으나 실패한 셀렉터: "${action.selector || "(비어 있음 - 사용자 입력 또는 AI 복구 대기)"}"
-- 기존 지정된 iframe: "${action.iframe || "없음 (최상위 페이지)"}"
-- 현재 화면에 열린 최상단 팝업/모달 제목: ${activeDialogTitle ? `"${activeDialogTitle}"` : "없음 (일반 페이지)"}
+### [Current Execution Context]
+- **Current URL**: ${currentUrl}
+- **Failed Step**: #${stepIndex} / Total ${totalSteps} steps
+- **Action Type**: "${action.type}"
+- **Action Description**: "${action.description || ""}"
+${action.type === "type" ? `- **Text to Type**: "${action.text || ""}"` : ""}
+${
+  action.type === "dragAndDrop"
+    ? `- **Failed Source Selector**: "${action.sourceSelector || action.selector || ""}"\n- **Failed Target Selector**: "${action.targetSelector || ""}"`
+    : `- **Failed Selector**: "${action.selector || "(empty)"}"`
+}
+- **Configured Iframe**: "${action.iframe || "none (top-level page)"}"
+- **Active Topmost Modal Title**: ${activeDialogTitle ? `"${activeDialogTitle}"` : "None (no modal open)"}
 
-[현재 화면에서 감지된 가시적 인터랙티브 DOM 후보군 (총 ${candidates.length}개)]:
+### [Scenario Timeline Context (Surrounding Steps)]
+- **Previous Completed Steps**:
+${prevStepsSummary || "  (None - this is the first step)"}
+- **👉 CURRENT FAILED STEP (#${stepIndex})**:
+  type="${action.type}", desc="${action.description || ""}", selector="${action.selector || action.sourceSelector || ""}"
+- **Upcoming Next Steps**:
+${nextStepsSummary || "  (None - this is the final step)"}
+
+${catalogContext ? `### [Enterprise Module Standard DOM Reference]\n${catalogContext}\n` : ""}
+### [Live Interactive DOM Candidates on Screen (Top ${candidates.length} Prioritized Elements)]
 ${JSON.stringify(candidates, null, 2)}
 
-[요청 사항]
-위의 실시간 브라우저 스크린샷과 DOM 후보군을 정밀 분석하여,
-"${action.description}" 작업을 수행하기 위해 지금 즉시 ${action.type === "type" ? "포커스하여 텍스트를 입력해야 할 입력창" : "클릭해야 할 실제 버튼/링크/요소"}의
-100% 유효한 Playwright 셀렉터를 JSON으로 반환해 주십시오.
+### [Task]
+Cross-examine the attached **Live Screenshot**, the **Scenario Timeline**, and the **Live Interactive DOM Candidates**.
+Determine whether to:
+1) \`PATCH_SELECTOR\` (target is visible on screen now),
+2) \`INSERT_BEFORE\` (insert 1~2 missing prerequisite actions like opening a drawer/modal/template before this step),
+3) \`REPLACE_STEPS\` (split this step into 2~3 concrete steps),
+4) \`SKIP_AND_PRUNE\` (this step is already completed or is an unrequested non-existent sub-option), or
+5) \`ABORT\` (\`"success": false\` if a specifically named target genuinely does not exist).
 `;
 
   const configuredModel = process.env.GEMINI_MODEL || "gemini-3.8-flash";
@@ -417,7 +615,9 @@ ${JSON.stringify(candidates, null, 2)}
     ])
   );
 
-  console.log(`  [🤖 AI 실시간 자가 치유] 화면 DOM 후보군 (${candidates.length}개) 추출 완료, AI 분석 요청 중...`);
+  console.log(
+    `  [🤖 AI 실시간 자가 치유 & 시나리오 조정] 화면 DOM 후보군 (${candidates.length}개) 및 전후 시나리오 맥락 추출 완료, AI 분석 요청 중...`
+  );
 
   for (const model of candidateModels) {
     for (const key of apiKeys) {
@@ -436,7 +636,7 @@ ${JSON.stringify(candidates, null, 2)}
         parts.push({ text: userPrompt });
 
         const aiStart = Date.now();
-        console.log(`  [🤖 AI 실시간 자가 치유] Gemini (${model}) AI 정밀 분석 요청 중...`);
+        console.log(`  [🤖 AI 실시간 자가 치유] Gemini (${model}) 멀티모달 시나리오 진단 요청 중...`);
 
         const response = await ai.models.generateContent({
           model,
@@ -449,7 +649,9 @@ ${JSON.stringify(candidates, null, 2)}
           },
         });
 
-        console.log(`  [🤖 AI 실시간 자가 치유] Gemini (${model}) 응답 수신 완료 (${Date.now() - aiStart}ms)`);
+        console.log(
+          `  [🤖 AI 실시간 자가 치유] Gemini (${model}) 응답 수신 완료 (${Date.now() - aiStart}ms)`
+        );
 
         const rawText = response.text || "";
         let parsed: any = null;
@@ -461,14 +663,22 @@ ${JSON.stringify(candidates, null, 2)}
             parsed = JSON.parse(rawText.trim());
           }
         } catch (jsonErr: any) {
-          console.warn(`  [AI 응답 파싱 경고] (${model}) JSON 파싱 오류: ${jsonErr.message}. 원문: ${rawText.slice(0, 120)}...`);
+          console.warn(
+            `  [AI 응답 파싱 경고] (${model}) JSON 파싱 오류: ${jsonErr.message}. 원문: ${rawText.slice(0, 120)}...`
+          );
         }
 
         if (parsed && typeof parsed.success === "boolean") {
-          if (!parsed.success) {
-            console.warn(`  [⚠️ AI 자가 치유 포기] AI가 대상 요소를 화면에서 찾을 수 없다고 판단했습니다. 사유: ${parsed.reason}`);
+          const resolutionType: SelfHealResolutionType =
+            parsed.resolutionType || (parsed.success ? "PATCH_SELECTOR" : "ABORT");
+
+          if (!parsed.success || resolutionType === "ABORT") {
+            console.warn(
+              `  [⚠️ AI 자가 치유 포기 (ABORT)] AI가 대상 요소를 화면에서 찾을 수 없다고 판단했습니다. 사유: ${parsed.reason}`
+            );
             return {
               success: false,
+              resolutionType: "ABORT",
               selector: "",
               iframe: null,
               confidence: 0,
@@ -476,63 +686,138 @@ ${JSON.stringify(candidates, null, 2)}
             };
           }
 
-          if (parsed.selector) {
-          // Guard: Type actions must NEVER target a button element
-          if (action.type === "type") {
-            const lowerSel = parsed.selector.toLowerCase();
+          // Handle SKIP_AND_PRUNE
+          if (resolutionType === "SKIP_AND_PRUNE") {
+            console.log(
+              `  [✂️ AI 시나리오 조정 - SKIP_AND_PRUNE] 현재 단계가 이미 완료되었거나 불필요한 단계로 진단됨: ${parsed.reason}`
+            );
+            return {
+              success: true,
+              resolutionType: "SKIP_AND_PRUNE",
+              selector: "",
+              iframe: null,
+              confidence: parsed.confidence || 0.95,
+              reason: parsed.reason || "이미 다음 화면 상태에 도달하여 불필요한 단계 프루닝",
+            };
+          }
+
+          // Handle INSERT_BEFORE
+          if (
+            resolutionType === "INSERT_BEFORE" &&
+            Array.isArray(parsed.prerequisiteActions) &&
+            parsed.prerequisiteActions.length > 0
+          ) {
+            console.log(
+              `  [➕ AI 시나리오 조정 - INSERT_BEFORE] 현재 단계 실행 전 누락된 선행 액션 ${parsed.prerequisiteActions.length}개를 삽입합니다: ${parsed.reason}`
+            );
+            return {
+              success: true,
+              resolutionType: "INSERT_BEFORE",
+              selector: parsed.selector || action.selector || "",
+              sourceSelector: parsed.sourceSelector || action.sourceSelector,
+              targetSelector: parsed.targetSelector || action.targetSelector,
+              iframe: parsed.iframe ?? action.iframe ?? null,
+              prerequisiteActions: parsed.prerequisiteActions,
+              confidence: parsed.confidence || 0.95,
+              reason: parsed.reason || "누락된 선행 화면 조작 단계 동적 삽입",
+            };
+          }
+
+          // Handle REPLACE_STEPS
+          if (
+            resolutionType === "REPLACE_STEPS" &&
+            Array.isArray(parsed.replacementActions) &&
+            parsed.replacementActions.length > 0
+          ) {
+            console.log(
+              `  [🔄 AI 시나리오 조정 - REPLACE_STEPS] 현재 액션을 ${parsed.replacementActions.length}개의 세부 단계로 분할 교체합니다: ${parsed.reason}`
+            );
+            return {
+              success: true,
+              resolutionType: "REPLACE_STEPS",
+              selector: parsed.selector || "",
+              iframe: parsed.iframe ?? action.iframe ?? null,
+              replacementActions: parsed.replacementActions,
+              confidence: parsed.confidence || 0.95,
+              reason: parsed.reason || "현재 액션을 다단계 세부 시퀀스로 분할 교정",
+            };
+          }
+
+          // Handle PATCH_SELECTOR (including dragAndDrop source/target patching)
+          if (parsed.selector || parsed.sourceSelector || parsed.targetSelector) {
+            const effectiveSelector = parsed.selector || action.selector || "";
+
+            // Guard 1: Type actions must NEVER target a button element
+            if (action.type === "type" && effectiveSelector) {
+              const lowerSel = effectiveSelector.toLowerCase();
+              if (
+                (lowerSel.includes("button") || lowerSel.includes(".btn")) &&
+                !lowerSel.includes("input") &&
+                !lowerSel.includes("textarea") &&
+                !lowerSel.includes("contenteditable") &&
+                !lowerSel.includes("body") &&
+                !lowerSel.includes("iframe")
+              ) {
+                console.warn(
+                  `  [⚠️ AI 자가 치유 거절] type(입력) 액션에 버튼 셀렉터('${effectiveSelector}')가 반환되어 적용을 거부합니다.`
+                );
+                continue;
+              }
+            }
+
+            // Guard 2: Only reject .ui-dialog on form registration actions if the active modal is strictly a folder/category picker
+            // (Do NOT reject when the registration form itself is a modal like '일정 등록', '예약 신청', '결재 의견'!)
+            const descLower = (action.description || "").toLowerCase();
+            const isFolderPickerModal =
+              activeDialogTitle &&
+              /문서함 선택|게시판 선택|분류 선택|폴더 선택/.test(activeDialogTitle);
+            const isMainFormFieldAction =
+              descLower.includes("제목") ||
+              descLower.includes("본문") ||
+              descLower.includes("내용");
+
             if (
-              (lowerSel.includes("button") || lowerSel.includes(".btn")) &&
-              !lowerSel.includes("input") &&
-              !lowerSel.includes("textarea") &&
-              !lowerSel.includes("contenteditable") &&
-              !lowerSel.includes("body") &&
-              !lowerSel.includes("iframe")
+              isMainFormFieldAction &&
+              isFolderPickerModal &&
+              effectiveSelector.includes(".ui-dialog")
             ) {
               console.warn(
-                `  [⚠️ AI 자가 치유 거절] type(입력) 액션에 버튼 셀렉터('${parsed.selector}')가 반환되어 적용을 거부합니다.`
+                `  [⚠️ AI 자가 치유 거절] 본문 입력 액션('${action.description}')이나 현재 폴더 선택 팝업('${activeDialogTitle}')이 열려 있어 모달 내부 셀렉터('${effectiveSelector}')를 거부합니다.`
               );
               continue;
             }
+
+            // Guard 3: Modal confirmation actions must NEVER target main document body or subBody iframe when a modal is actively open
+            const isModalConfirmAction =
+              Boolean(activeDialogTitle) &&
+              (descLower.includes("팝업") || descLower.includes("모달")) &&
+              (descLower.includes("확인") || descLower.includes("완료"));
+
+            if (
+              isModalConfirmAction &&
+              (parsed.iframe ||
+                effectiveSelector.includes("subBody") ||
+                effectiveSelector.includes("contentFrame"))
+            ) {
+              console.warn(
+                `  [⚠️ AI 자가 치유 거절] 모달 확인 액션('${action.description}')에 본문 프레임 셀렉터('${effectiveSelector}')가 반환되어 적용을 거부합니다.`
+              );
+              continue;
+            }
+
+            return {
+              success: true,
+              resolutionType: "PATCH_SELECTOR",
+              selector: effectiveSelector,
+              sourceSelector: parsed.sourceSelector || undefined,
+              targetSelector: parsed.targetSelector || undefined,
+              iframe: parsed.iframe || null,
+              confidence: parsed.confidence || 0.95,
+              reason:
+                parsed.reason ||
+                "AI 런타임 화면 분석을 통해 올바른 요소를 감지했습니다.",
+            };
           }
-
-          // Guard 2: Form registration actions (title, content, save) must NEVER target popup/modal dialog elements
-          const descLower = (action.description || "").toLowerCase();
-          const isPostModalAction =
-            descLower.includes("제목") ||
-            descLower.includes("본문") ||
-            descLower.includes("내용") ||
-            descLower.includes("공개") ||
-            (descLower.includes("저장") && !descLower.includes("팝업"));
-
-          if (isPostModalAction && (parsed.selector.includes(".ui-dialog") || parsed.selector.includes("문서함명") || parsed.selector.includes("role='dialog'"))) {
-            console.warn(
-              `  [⚠️ AI 자가 치유 거절] 본문 등록 액션('${action.description}')에 모달 팝업 내부 셀렉터('${parsed.selector}')가 반환되어 적용을 거부합니다.`
-            );
-            continue;
-          }
-
-          // Guard 3: Modal confirmation actions must NEVER target main document body or subBody iframe
-          const isModalConfirmAction =
-            (descLower.includes("팝업") || descLower.includes("모달") || descLower.includes("문서함")) &&
-            (descLower.includes("확인") || descLower.includes("완료"));
-
-          if (isModalConfirmAction && (parsed.iframe || parsed.selector.includes("subBody") || parsed.selector.includes("contentFrame"))) {
-            console.warn(
-              `  [⚠️ AI 자가 치유 거절] 모달 확인 액션('${action.description}')에 본문 프레임 셀렉터('${parsed.selector}')가 반환되어 적용을 거부합니다.`
-            );
-            continue;
-          }
-
-          return {
-            success: true,
-            selector: parsed.selector,
-            iframe: parsed.iframe || null,
-            confidence: parsed.confidence || 0.95,
-            reason:
-              parsed.reason ||
-              "AI 런타임 화면 분석을 통해 올바른 요소를 감지했습니다.",
-          };
-        }
         }
       } catch (err: any) {
         console.warn(`  [AI 자가 치유 호출 경고] 모델 ${model} 호출 오류: ${err.message}`);
@@ -544,15 +829,65 @@ ${JSON.stringify(candidates, null, 2)}
 }
 
 /**
- * Persists healed selector and iframe back into browse-plan.json so the fix is permanent.
+ * Persists healed selectors, inserted prerequisite actions, replaced step sequences,
+ * and pruned actions cleanly back into browse-plan.json so the scenario adjustment is permanent.
  */
 export function saveHealedPlan(dataDir: string, plan: BrowsePlan): void {
   try {
     const planPath = path.join(dataDir, "browse-plan.json");
-    if (fs.existsSync(planPath)) {
-      fs.writeFileSync(planPath, JSON.stringify(plan, null, 2), "utf-8");
-      console.log(`  [💾 영구 저장] 수정된 셀렉터가 browse-plan.json에 영구 반영되었습니다.`);
+    if (!fs.existsSync(planPath)) return;
+
+    const cleanActions: BrowsePlanAction[] = [];
+    for (const act of plan.actions) {
+      const anyAct = act as any;
+      if (anyAct._shouldPrune) {
+        continue;
+      }
+      if (Array.isArray(anyAct._insertBefore) && anyAct._insertBefore.length > 0) {
+        for (const pre of anyAct._insertBefore) {
+          const cleanPre = { ...pre };
+          delete (cleanPre as any)._insertBefore;
+          delete (cleanPre as any)._replaceWith;
+          delete (cleanPre as any)._shouldPrune;
+          delete (cleanPre as any)._wasSkipped;
+          delete (cleanPre as any)._lastHealReason;
+          delete (cleanPre as any)._hasReloadRetried;
+          cleanActions.push(cleanPre);
+        }
+      }
+      if (Array.isArray(anyAct._replaceWith) && anyAct._replaceWith.length > 0) {
+        for (const rep of anyAct._replaceWith) {
+          const cleanRep = { ...rep };
+          delete (cleanRep as any)._insertBefore;
+          delete (cleanRep as any)._replaceWith;
+          delete (cleanRep as any)._shouldPrune;
+          delete (cleanRep as any)._wasSkipped;
+          delete (cleanRep as any)._lastHealReason;
+          delete (cleanRep as any)._hasReloadRetried;
+          cleanActions.push(cleanRep);
+        }
+        continue;
+      }
+
+      const cleanAct = { ...act };
+      delete (cleanAct as any)._insertBefore;
+      delete (cleanAct as any)._replaceWith;
+      delete (cleanAct as any)._shouldPrune;
+      delete (cleanAct as any)._wasSkipped;
+      delete (cleanAct as any)._lastHealReason;
+      delete (cleanAct as any)._hasReloadRetried;
+      cleanActions.push(cleanAct);
     }
+
+    const cleanPlan: BrowsePlan = {
+      ...plan,
+      actions: cleanActions,
+    };
+
+    fs.writeFileSync(planPath, JSON.stringify(cleanPlan, null, 2), "utf-8");
+    console.log(
+      `  [💾 시나리오 영구 보정 완료] 조정된 시나리오(총 ${cleanActions.length}단계)가 browse-plan.json에 반영되었습니다.`
+    );
   } catch (err) {
     console.warn("  [주의] browse-plan.json 업데이트 실패:", err);
   }
