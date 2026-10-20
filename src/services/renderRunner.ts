@@ -3,6 +3,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { EventEmitter } from "events";
 import { setActiveSlug } from "./scenarioManager";
+import { ensurePublicNarrationAssets, getNarration, synthesizeNarrationAudio } from "./narrationService";
 
 export interface RenderTask {
   id: string;
@@ -86,6 +87,33 @@ class RenderRunner extends EventEmitter {
 
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    // 0. Ensure CFR H.264 video format, frame-accurate moment calibration, and up-to-date edit-plan.json
+    try {
+      spawnSync("python", ["scripts/calibrate-moments.py", slug], {
+        cwd: rootDir,
+        stdio: "ignore",
+      });
+    } catch (e) {
+      console.warn("사전 비디오/타임스탬프 보정 경고:", e);
+    }
+
+    // 0.5. Ensure narration TTS audio files (if narration.json exists) are synthesized & copied to public/narration/<slug>
+    try {
+      const existingNarration = getNarration(slug);
+      if (existingNarration && existingNarration.cues?.length) {
+        const missingAudio = existingNarration.cues.some(
+          (c) => !c.audioFile || !fs.existsSync(path.join(rootDir, "public", c.audioFile))
+        );
+        if (missingAudio) {
+          synthesizeNarrationAudio(slug, existingNarration.voice, existingNarration.rate);
+        } else {
+          ensurePublicNarrationAssets(slug);
+        }
+      }
+    } catch (e) {
+      console.warn("나레이션 오디오 에셋 동기화 경고:", e);
     }
 
     // 1. Sync Root.tsx to point to this slug

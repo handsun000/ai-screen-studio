@@ -46,18 +46,34 @@ playwright/.cache/
 # Audio / SFX binaries (unless tracked in assets)
 public/sfx/*.mp3
 public/sfx/*.wav
+public/narration/
 
-# Debug Screenshots, Verification Frames & Test Scenarios
+# Python bytecode cache
+__pycache__/
+*.pyc
+
+# Debug Screenshots, Verification Frames, Uploaded Attachments & Test Scenarios
 data/**/*.png
 data/**/*.jpg
 data/**/*.jpeg
 data/**/*.webm
+data/**/*.mp3
+data/**/*.wav
+data/**/audio/
+data/**/uploads/
+data/**/narration.json
 data/**/inspections/
 data/**/verification_frames/
 data/**/frames/
+data/_uploads/
 data/test-*/
 data/live-demo-*/
 data/visual-test-*/
+data/tutorial-address/
+data/tutorial-board/
+data/tutorial-filebox/
+data/tutorial-note/
+data/tutorial-resource/
 *.bak
 
 # IDE & OS Files

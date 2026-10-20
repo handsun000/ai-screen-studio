@@ -1,10 +1,13 @@
 import React from "react";
 import { useCurrentFrame, interpolate, Easing } from "remotion";
-import type { EditPlan, EditSegment, CursorPosition } from "../types";
+import type { EditPlan, EditSegment, CursorPosition, Moment } from "../types";
 import { WINDOW_WIDTH, WINDOW_HEIGHT } from "./FloatingWindow";
+import { frameToVideoTime } from "./FrameMapper";
+import { getCursorState } from "./SyntheticCursor";
 
 interface CameraTransformProps {
   editPlan: EditPlan;
+  moments?: Moment[];
   canvasWidth: number;
   canvasHeight: number;
   viewportWidth: number;
@@ -25,6 +28,19 @@ interface ZoomState {
  */
 const BASE_FPS = 30;
 
+// Central deadzone (in canvas px around screen center):
+// Any click/type inside this central workspace region keeps translateX = 0 / translateY = 0
+// so the camera stays locked like a tripod instead of swaying left/right on every mouse move.
+const DEADZONE_SCREEN_X = 500;
+const DEADZONE_SCREEN_Y = 220;
+const MAX_CAMERA_PAN_X = 42;
+const MAX_CAMERA_PAN_Y = 28;
+
+function applyDeadzone(delta: number, deadzone: number): number {
+  if (Math.abs(delta) <= deadzone) return 0;
+  return delta > 0 ? delta - deadzone : delta + deadzone;
+}
+
 function computeTranslate(
   point: CursorPosition,
   zoom: number,
@@ -43,12 +59,15 @@ function computeTranslate(
   const centerX = canvasWidth / 2;
   const centerY = canvasHeight / 2;
 
-  let tx = (centerX - targetScreenX) * zoom;
-  let ty = (centerY - targetScreenY) * zoom;
+  const rawDx = applyDeadzone(centerX - targetScreenX, DEADZONE_SCREEN_X);
+  const rawDy = applyDeadzone(centerY - targetScreenY, DEADZONE_SCREEN_Y);
 
-  // Clamp translation so the scaled window edges never pull inside the canvas (eliminates black/grey bars)
-  const maxTx = Math.max(0, (WINDOW_WIDTH * zoom - canvasWidth) / 2);
-  const maxTy = Math.max(0, (WINDOW_HEIGHT * zoom - canvasHeight) / 2);
+  let tx = rawDx * zoom * 0.35;
+  let ty = rawDy * zoom * 0.35;
+
+  // Clamp translation so the scaled window edges never pull inside the canvas AND never sway wildly
+  const maxTx = Math.min(MAX_CAMERA_PAN_X, Math.max(0, (WINDOW_WIDTH * zoom - canvasWidth) / 2));
+  const maxTy = Math.min(MAX_CAMERA_PAN_Y, Math.max(0, (WINDOW_HEIGHT * zoom - canvasHeight) / 2));
 
   tx = Math.max(-maxTx, Math.min(maxTx, tx));
   ty = Math.max(-maxTy, Math.min(maxTy, ty));
@@ -64,65 +83,56 @@ function computeZoomTarget(
   canvasWidth: number,
   canvasHeight: number,
   viewportWidth: number,
-  viewportHeight: number,
-  useEnd: boolean = false
+  viewportHeight: number
 ): { maxTranslateX: number; maxTranslateY: number } {
-  const target = (useEnd && seg.zoomTargetEnd) ? seg.zoomTargetEnd : seg.zoomTarget;
+  const target = seg.zoomTarget;
   if (!target) return { maxTranslateX: 0, maxTranslateY: 0 };
   const { translateX, translateY } = computeTranslate(
-    target, seg.zoom, canvasWidth, canvasHeight, viewportWidth, viewportHeight
+    target,
+    seg.zoom,
+    canvasWidth,
+    canvasHeight,
+    viewportWidth,
+    viewportHeight
   );
   return { maxTranslateX: translateX, maxTranslateY: translateY };
 }
 
 /**
- * If the total bounce time (ease-out + dead air + ease-in) between two
- * segments is under this threshold, pan directly instead of zooming out
- * and back in.
+ * Determine whether two consecutive zoom segments should smoothly glide/pan between each other
+ * rather than zooming all the way out to 1.0x and back in.
  */
-const MAX_PAN_DISTANCE_PX = 850;
-
-/**
- * Check if two zoom segments are close enough to pan between them
- * instead of zooming out to 1x and back in.
- *
- * Combines spatial proximity (pixel distance) with temporal proximity (bounce time).
- * - Distant targets (> 850px) zoom out to 1.0x wide screen to re-orient the viewer.
- * - Nearby targets (<= 750px, e.g. within the same dialog, form, or list) tolerate
- *   natural reading and typing pauses (up to 10.0s) and smoothly glide between elements
- *   without the dizzying in-and-out rollercoaster effect.
- */
-function shouldPanBetween(
+function shouldGlideBetween(
   prev: EditSegment,
   next: EditSegment,
-  fps: number,
-  fpsScale: number
+  fps: number
 ): boolean {
   if (!prev.zoomTarget || !next.zoomTarget) return false;
   if (prev.zoom <= 1 || next.zoom <= 1) return false;
+  const gapSeconds = Math.max(0, next.startFrame - prev.endFrame) / fps;
+  return gapSeconds <= 10.0;
+}
 
-  const prevPoint = prev.zoomTargetEnd || prev.zoomTarget;
-  const nextPoint = next.zoomTarget;
-  const dx = prevPoint.x - nextPoint.x;
-  const dy = prevPoint.y - nextPoint.y;
-  const dist = Math.hypot(dx, dy);
+/**
+ * Compute the transition window [panStart, panEnd] for gliding from seg[i] to seg[i+1].
+ * Ensures the camera arrives at seg[i+1]'s target slightly before seg[i+1].startFrame.
+ */
+function getPanWindow(
+  prev: EditSegment,
+  next: EditSegment,
+  fps: number
+): { panStart: number; panEnd: number } {
+  const preArrivalFrames = Math.max(1, Math.round(0.06 * fps));
+  const panEnd = Math.max(prev.startFrame + 2, next.startFrame - preArrivalFrames);
 
-  // If targets are farther apart than MAX_PAN_DISTANCE_PX (e.g. across screen), zoom out to wide view
-  if (dist > MAX_PAN_DISTANCE_PX) {
-    return false;
-  }
+  // Calm, smooth tripod pan (~0.62s) when moving between genuinely distinct regions
+  const idealPanFrames = Math.round(0.62 * fps);
+  const minHoldFrames = Math.round(0.25 * fps);
+  const maxAvailablePan = Math.max(4, panEnd - (prev.startFrame + minHoldFrames));
+  const panDuration = Math.min(idealPanFrames, maxAvailablePan);
+  const panStart = Math.max(prev.startFrame, panEnd - panDuration);
 
-  const easeOut = Math.round((prev.easeOutFrames ?? 20) * fpsScale);
-  const easeIn = Math.round((next.easeInFrames ?? 15) * fpsScale);
-  const gap = next.startFrame - prev.endFrame;
-  const totalBounceFrames = easeOut + Math.max(0, gap) + easeIn;
-  const totalBounceSeconds = totalBounceFrames / fps;
-
-  // Nearby targets (within same dialog/form, dist <= 750px) tolerate up to 10.0s of natural flow.
-  // Mid-distance targets (<= 850px) tolerate up to 6.5s.
-  const threshold = dist <= 750 ? 10.0 : 6.5;
-
-  return totalBounceSeconds <= threshold;
+  return { panStart, panEnd };
 }
 
 function getCameraState(
@@ -134,7 +144,8 @@ function getCameraState(
   viewportHeight: number
 ): ZoomState {
   const defaultState: ZoomState = { scale: 1, translateX: 0, translateY: 0 };
-  const fpsScale = editPlan.fps / BASE_FPS;
+  const fps = editPlan.fps;
+  const fpsScale = fps / BASE_FPS;
   const zoomSegments = editPlan.segments.filter(
     (s) => s.zoomTarget && s.zoom > 1
   );
@@ -146,142 +157,102 @@ function getCameraState(
     const prevSeg = i > 0 ? zoomSegments[i - 1] : null;
     const nextSeg = i < zoomSegments.length - 1 ? zoomSegments[i + 1] : null;
 
-    const easeIn = Math.round((seg.easeInFrames ?? 15) * fpsScale);
+    const glideFromPrev = Boolean(prevSeg && shouldGlideBetween(prevSeg, seg, fps));
+    const glideToNext = Boolean(nextSeg && shouldGlideBetween(seg, nextSeg, fps));
+
+    const easeIn = Math.round((seg.easeInFrames ?? 18) * fpsScale);
     const easeOut = Math.round((seg.easeOutFrames ?? 20) * fpsScale);
-    const zoomStart = seg.startFrame - easeIn;
-    const zoomEnd = seg.endFrame + easeOut;
 
     const { maxTranslateX, maxTranslateY } = computeZoomTarget(
-      seg, canvasWidth, canvasHeight, viewportWidth, viewportHeight
+      seg,
+      canvasWidth,
+      canvasHeight,
+      viewportWidth,
+      viewportHeight
     );
 
-    // Pan FROM previous segment into this one
-    const panFromPrev = prevSeg && shouldPanBetween(prevSeg, seg, editPlan.fps, fpsScale);
-    if (panFromPrev) {
-      const PAN_HALF = Math.round(10 * fpsScale);
-      const boundary = Math.round((prevSeg.endFrame + seg.startFrame) / 2);
-      const panStart = boundary - PAN_HALF;
-      const panEnd = boundary + PAN_HALF;
+    const holdStart = glideFromPrev
+      ? getPanWindow(prevSeg!, seg, fps).panEnd
+      : seg.startFrame;
 
-      if (frame >= panStart && frame <= panEnd) {
-        const prevTarget = computeZoomTarget(
-          prevSeg, canvasWidth, canvasHeight, viewportWidth, viewportHeight, true
+    const nextPan = glideToNext ? getPanWindow(seg, nextSeg!, fps) : null;
+    const holdEnd = nextPan ? nextPan.panStart : seg.endFrame;
+
+    // 1. Ease-in from 1.0x (only if not gliding from previous segment)
+    if (!glideFromPrev) {
+      const zoomStart = seg.startFrame - easeIn;
+      if (frame >= zoomStart && frame < seg.startFrame) {
+        const t = interpolate(frame, [zoomStart, seg.startFrame], [0, 1], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.out(Easing.cubic),
+        });
+        return {
+          scale: 1 + (seg.zoom - 1) * t,
+          translateX: maxTranslateX * t,
+          translateY: maxTranslateY * t,
+        };
+      }
+    }
+
+    // 2. Hold completely steady on current segment target (zero intra-segment drift)
+    if (frame >= holdStart && frame <= holdEnd) {
+      return {
+        scale: seg.zoom,
+        translateX: maxTranslateX,
+        translateY: maxTranslateY,
+      };
+    }
+
+    // 3. Smooth glide to next segment (if the next segment actually shifts camera translation)
+    if (glideToNext && nextPan) {
+      if (frame > nextPan.panStart && frame <= nextPan.panEnd) {
+        const toTarget = computeZoomTarget(
+          nextSeg!,
+          canvasWidth,
+          canvasHeight,
+          viewportWidth,
+          viewportHeight
         );
-        const t = interpolate(frame, [panStart, panEnd], [0, 1], {
+        const t = interpolate(frame, [nextPan.panStart, nextPan.panEnd], [0, 1], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
           easing: Easing.inOut(Easing.cubic),
         });
 
-        const scale = prevSeg.zoom + (seg.zoom - prevSeg.zoom) * t;
+        const scale = seg.zoom + (nextSeg!.zoom - seg.zoom) * t;
+
         return {
           scale,
-          translateX: prevTarget.maxTranslateX + (maxTranslateX - prevTarget.maxTranslateX) * t,
-          translateY: prevTarget.maxTranslateY + (maxTranslateY - prevTarget.maxTranslateY) * t,
+          translateX:
+            maxTranslateX +
+            (toTarget.maxTranslateX - maxTranslateX) * t,
+          translateY:
+            maxTranslateY +
+            (toTarget.maxTranslateY - maxTranslateY) * t,
         };
       }
+    }
 
-      // After pan finishes but before hold starts: hold at this segment's target
-      if (frame > panEnd && frame < seg.startFrame) {
-        return { scale: seg.zoom, translateX: maxTranslateX, translateY: maxTranslateY };
+    // 4. Ease-out back to 1.0x (only if not gliding to next segment)
+    if (!glideToNext) {
+      const zoomEnd = seg.endFrame + easeOut;
+      if (frame > seg.endFrame && frame <= zoomEnd) {
+        const t = interpolate(frame, [seg.endFrame, zoomEnd], [1, 0], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.in(Easing.cubic),
+        });
+        return {
+          scale: 1 + (seg.zoom - 1) * t,
+          translateX: maxTranslateX * t,
+          translateY: maxTranslateY * t,
+        };
       }
     }
-
-    // Pan TO next segment instead of easing out
-    if (nextSeg && shouldPanBetween(seg, nextSeg, editPlan.fps, fpsScale)) {
-      const PAN_HALF = Math.round(10 * fpsScale);
-      const boundary = Math.round((seg.endFrame + nextSeg.startFrame) / 2);
-      const panStart = boundary - PAN_HALF;
-
-      if (frame >= seg.startFrame && frame < panStart) {
-        return holdState(frame, seg, maxTranslateX, maxTranslateY,
-          canvasWidth, canvasHeight, viewportWidth, viewportHeight);
-      }
-      if (panFromPrev && frame < seg.startFrame) {
-        continue;
-      }
-    }
-
-    if (frame < zoomStart || frame > zoomEnd) continue;
-
-    // Ease in (only if not panning from previous)
-    if (frame < seg.startFrame) {
-      if (panFromPrev) {
-        continue;
-      }
-      const t = interpolate(frame, [zoomStart, seg.startFrame], [0, 1], {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-        easing: Easing.out(Easing.cubic),
-      });
-      return {
-        scale: 1 + (seg.zoom - 1) * t,
-        translateX: maxTranslateX * t,
-        translateY: maxTranslateY * t,
-      };
-    }
-
-    // Hold (with drag following)
-    if (frame <= seg.endFrame) {
-      return holdState(frame, seg, maxTranslateX, maxTranslateY,
-        canvasWidth, canvasHeight, viewportWidth, viewportHeight);
-    }
-
-    // Ease out (only if not panning to next)
-    if (nextSeg && shouldPanBetween(seg, nextSeg, editPlan.fps, fpsScale)) {
-      continue;
-    }
-
-    const t = interpolate(frame, [seg.endFrame, zoomEnd], [1, 0], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-      easing: Easing.in(Easing.cubic),
-    });
-    return {
-      scale: 1 + (seg.zoom - 1) * t,
-      translateX: maxTranslateX * t,
-      translateY: maxTranslateY * t,
-    };
   }
 
   return defaultState;
-}
-
-/**
- * Compute camera state during the hold phase.
- * If the segment has a zoomTargetEnd (drag), interpolate between start and end.
- * Otherwise, hold at the static zoomTarget.
- */
-function holdState(
-  frame: number,
-  seg: EditSegment,
-  staticTranslateX: number,
-  staticTranslateY: number,
-  canvasWidth: number,
-  canvasHeight: number,
-  viewportWidth: number,
-  viewportHeight: number
-): ZoomState {
-  if (!seg.zoomTargetEnd) {
-    return { scale: seg.zoom, translateX: staticTranslateX, translateY: staticTranslateY };
-  }
-
-  // Drag following: interpolate from zoomTarget to zoomTargetEnd over the hold duration
-  const endTranslate = computeTranslate(
-    seg.zoomTargetEnd, seg.zoom, canvasWidth, canvasHeight, viewportWidth, viewportHeight
-  );
-
-  const t = interpolate(frame, [seg.startFrame, seg.endFrame], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: Easing.inOut(Easing.cubic),
-  });
-
-  return {
-    scale: seg.zoom,
-    translateX: staticTranslateX + (endTranslate.translateX - staticTranslateX) * t,
-    translateY: staticTranslateY + (endTranslate.translateY - staticTranslateY) * t,
-  };
 }
 
 export const CameraTransform: React.FC<CameraTransformProps> = ({
@@ -294,7 +265,12 @@ export const CameraTransform: React.FC<CameraTransformProps> = ({
 }) => {
   const frame = useCurrentFrame();
   const { scale, translateX, translateY } = getCameraState(
-    frame, editPlan, canvasWidth, canvasHeight, viewportWidth, viewportHeight
+    frame,
+    editPlan,
+    canvasWidth,
+    canvasHeight,
+    viewportWidth,
+    viewportHeight
   );
 
   return (
@@ -311,3 +287,4 @@ export const CameraTransform: React.FC<CameraTransformProps> = ({
     </div>
   );
 };
+

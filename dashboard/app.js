@@ -6,6 +6,10 @@ let selectedScenario = null;
 let scenarioDetailsCache = {};
 let sseSource = null;
 let currentProjectAnalysis = null;
+let allScenariosList = [];
+let scenarioFilterMode = "all";
+let scenarioSearchQuery = "";
+let compactWaitsEnabled = true;
 
 // DOM Elements
 const tabBtns = document.querySelectorAll(".tab-btn");
@@ -47,6 +51,9 @@ const pillGw = document.getElementById("pill-gw");
 const actionsList = document.getElementById("actions-list");
 const planSlugBadge = document.getElementById("plan-slug-badge");
 const explanationText = document.getElementById("explanation-text");
+const editorScenarioSelect = document.getElementById("editor-scenario-select");
+const planStatsPills = document.getElementById("plan-stats-pills");
+const btnToggleCompactWaits = document.getElementById("btn-toggle-compact-waits");
 const btnAddAction = document.getElementById("btn-add-action");
 const btnAddActionTop = document.getElementById("btn-add-action-top");
 const btnBlockPresets = document.getElementById("btn-block-presets");
@@ -57,22 +64,36 @@ const btnRenderVideo = document.getElementById("btn-render-video");
 
 const scenarioCardsContainer = document.getElementById("scenario-cards-container");
 const scenariosCount = document.getElementById("scenarios-count");
+const scenarioSearchInput = document.getElementById("scenario-search-input");
+const scenarioFilterChips = document.querySelectorAll(".scenario-filter-chip");
 const playerTitle = document.getElementById("player-title");
+const playerStatusBadges = document.getElementById("player-status-badges");
+const playerFlowSubtitle = document.getElementById("player-flow-subtitle");
 const playerMeta = document.getElementById("player-meta");
 const videoPlayer = document.getElementById("demo-video-player");
 const videoEmpty = document.getElementById("video-empty");
+const videoTimecode = document.getElementById("video-timecode");
+const videoSpeedSelect = document.getElementById("video-speed-select");
 const btnSetActive = document.getElementById("btn-set-active");
 const btnReRecord = document.getElementById("btn-re-record");
+const btnDirectRerecord = document.getElementById("btn-direct-rerecord");
 const btnPlayerRender = document.getElementById("btn-player-render");
 const btnDownloadVideo = document.getElementById("btn-download-video");
 const btnModeRaw = document.getElementById("btn-mode-raw");
 const btnModeRendered = document.getElementById("btn-mode-rendered");
 const videoModeBadge = document.getElementById("video-mode-badge");
 let currentVideoMode = "raw"; // "raw" | "rendered"
+const timelineBarWrapper = document.getElementById("timeline-bar-wrapper");
 const timelineVisualBar = document.getElementById("timeline-visual-bar");
+const timelinePlayhead = document.getElementById("timeline-playhead");
 const timelineStats = document.getElementById("timeline-stats");
+const studioSubtabBtns = document.querySelectorAll(".studio-subtab-btn");
+const studioSubtabPanes = document.querySelectorAll(".studio-subtab-pane");
+const subtabMomentsCount = document.getElementById("subtab-moments-count");
+const momentsStepList = document.getElementById("moments-step-list");
 const jsonViewerContent = document.getElementById("json-viewer-content");
 const jsonTabBtns = document.querySelectorAll(".json-tab-btn");
+const btnCopyJson = document.getElementById("btn-copy-json");
 
 const terminalOutput = document.getElementById("terminal-output");
 const terminalStatusText = document.getElementById("terminal-status-text");
@@ -121,7 +142,7 @@ async function fetchTemplates() {
   // Removed per user request to simplify UI
 }
 
-// 3. Dynamic Project Config & Status
+// 3. Dynamic Target URL Config & Status
 async function fetchConfig() {
   try {
     const res = await fetch("/api/config");
@@ -130,63 +151,46 @@ async function fetchConfig() {
     const analysis = data.analysis;
     currentProjectAnalysis = analysis;
 
-    targetProjectPathInput.value = config.targetProjectPath || "";
+    if (targetProjectPathInput) {
+      targetProjectPathInput.value = "";
+    }
     targetBaseUrlInput.value = config.targetBaseUrl || "";
 
-    updateProjectAnalysisUI(analysis);
+    updateProjectAnalysisUI(analysis, config.targetBaseUrl);
   } catch (err) {
     console.error("fetchConfig failed:", err);
   }
 }
 
-function updateProjectAnalysisUI(analysis) {
-  if (!analysis) return;
-
-  const dot = projectStatusBadge.querySelector(".status-dot");
-
-  if (analysis.exists) {
-    if (!analysis.path) {
-      pillProjectName.textContent = `🌐 Live URL 모드`;
-      dot.style.background = "var(--success-color)";
-      dot.style.boxShadow = "0 0 8px var(--success-glow)";
-      projectStatusText.textContent = `Live Web 모드 (로컬 소스코드 불필요)`;
-      metaProjectType.textContent = `${analysis.projectType} - ${analysis.sourceSummary}`;
-      metaDocsTags.innerHTML = '<span style="color:var(--text-muted)">실시간 브라우저 DOM 자동 탐색 가동</span>';
-    } else {
-      pillProjectName.textContent = `${analysis.projectName} 연동됨`;
-      dot.style.background = "var(--success-color)";
-      dot.style.boxShadow = "0 0 8px var(--success-glow)";
-      projectStatusText.textContent = `${analysis.projectName} (${analysis.projectType})`;
-      metaProjectType.textContent = `${analysis.projectType} - ${analysis.sourceSummary}`;
-
-      metaDocsTags.innerHTML = "";
-      if (analysis.docFiles && analysis.docFiles.length > 0) {
-        analysis.docFiles.forEach((doc) => {
-          const span = document.createElement("span");
-          span.className = "doc-tag";
-          span.textContent = `📄 ${doc}`;
-          metaDocsTags.appendChild(span);
-        });
-      } else {
-        metaDocsTags.innerHTML = '<span style="color:var(--text-muted)">문서 파일 없음 (.md)</span>';
-      }
+function updateProjectAnalysisUI(analysis, targetUrlOverride) {
+  const dot = projectStatusBadge ? projectStatusBadge.querySelector(".status-dot") : null;
+  const rawUrl = targetUrlOverride || (targetBaseUrlInput ? targetBaseUrlInput.value.trim() : "");
+  let hostLabel = "Live URL 모드";
+  try {
+    if (rawUrl) {
+      hostLabel = new URL(rawUrl).host || rawUrl;
     }
-  } else {
-    pillProjectName.textContent = "경로 불일치";
-    dot.style.background = "var(--danger-color)";
-    dot.style.boxShadow = "0 0 8px rgba(239, 68, 68, 0.4)";
-    projectStatusText.textContent = "로컬 경로 확인 필요 (비워두면 Live URL 모드로 동작)";
-    metaProjectType.textContent = analysis.sourceSummary;
-    metaDocsTags.innerHTML = '<span style="color:var(--danger-color)">경로가 올바르지 않습니다 (비워두시면 자동 Live URL 모드로 전환됩니다)</span>';
+  } catch {
+    if (rawUrl) hostLabel = rawUrl;
+  }
+
+  if (pillProjectName) {
+    pillProjectName.textContent = `🌐 ${hostLabel}`;
+  }
+  if (dot) {
+    dot.style.background = "var(--success-color)";
+    dot.style.boxShadow = "0 0 8px var(--success-glow)";
+  }
+  if (projectStatusText) {
+    projectStatusText.textContent = `접속 대상: ${hostLabel}`;
   }
 }
 
 async function handleSaveConfig() {
-  const targetProjectPath = targetProjectPathInput.value.trim();
   let targetBaseUrl = targetBaseUrlInput.value.trim();
 
   if (!targetBaseUrl) {
-    alert("접속 대상 서비스 URL(Target Base URL)을 입력해주세요.");
+    alert("접속 대상 서비스 URL을 입력해주세요.");
     return;
   }
   if (!/^https?:\/\//i.test(targetBaseUrl)) {
@@ -201,24 +205,17 @@ async function handleSaveConfig() {
     const res = await fetch("/api/config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ targetProjectPath, targetBaseUrl }),
+      body: JSON.stringify({ targetProjectPath: "", targetBaseUrl }),
     });
 
     const data = await res.json();
-    updateProjectAnalysisUI(data.analysis);
-
-    if (!targetProjectPath) {
-      alert(`타겟 설정이 저장되었습니다!\n- 접속 URL: ${data.config.targetBaseUrl}\n- 동작 모드: 순수 실시간 웹(Live URL) 모드 (로컬 소스코드 불필요)`);
-    } else if (data.analysis.exists) {
-      alert(`타겟 프로젝트가 성공적으로 변경되었습니다!\n- 프로젝트: ${data.analysis.projectName}\n- 경로: ${data.analysis.path}\n- 타입: ${data.analysis.projectType}`);
-    } else {
-      alert(`경고: 입력하신 로컬 경로가 존재하지 않습니다.\n${targetProjectPath}\n(경로를 비워두시면 Live URL 모드로 동작합니다.)`);
-    }
+    updateProjectAnalysisUI(data.analysis, data.config.targetBaseUrl);
+    alert(`타겟 접속 URL이 저장되었습니다!\n- 접속 URL: ${data.config.targetBaseUrl}`);
   } catch (err) {
     alert("설정 저장 실패: " + err.message);
   } finally {
     btnValidateProject.disabled = false;
-    btnValidateProject.textContent = "💾 설정 저장";
+    btnValidateProject.textContent = "💾 URL 저장";
   }
 }
 
@@ -228,7 +225,9 @@ async function fetchStatus() {
     const res = await fetch("/api/status");
     const data = await res.json();
 
-    activeSlugLabel.textContent = data.activeSlug || "none";
+    if (activeSlugLabel) {
+      activeSlugLabel.textContent = data.activeSlug || "none";
+    }
 
     const pillAi = document.getElementById("pill-ai");
     if (data.geminiApiKeySet) {
@@ -257,45 +256,161 @@ async function fetchStatus() {
   }
 }
 
-// 5. Scenarios List
+// 5. Scenarios List & Quick Search / Filter
 async function fetchScenarios() {
   try {
     const res = await fetch("/api/scenarios");
     const data = await res.json();
-    const scenarios = data.scenarios || [];
+    allScenariosList = data.scenarios || [];
 
-    scenariosCount.textContent = `${scenarios.length}개`;
-    scenarioCardsContainer.innerHTML = "";
+    // Populate Tab 1 Quick Scenario Loader Dropdown
+    if (editorScenarioSelect) {
+      const prevVal = editorScenarioSelect.value || currentSlug || "";
+      editorScenarioSelect.innerHTML = `<option value="">📂 기존 시나리오 빠른 불러오기 (${allScenariosList.length}개)...</option>`;
+      allScenariosList.forEach((s) => {
+        const opt = document.createElement("option");
+        opt.value = s.slug;
+        const shortFlow = s.flowSummary
+          ? s.flowSummary.length > 32
+            ? s.flowSummary.slice(0, 32) + "…"
+            : s.flowSummary
+          : `${s.actionsCount}단계`;
+        opt.textContent = `${s.slug} — ${shortFlow}`;
+        editorScenarioSelect.appendChild(opt);
+      });
+      if (prevVal) editorScenarioSelect.value = prevVal;
+    }
 
-    scenarios.forEach((s) => {
-      const item = document.createElement("div");
-      item.className = `scenario-item ${s.isActive ? "active-scenario" : ""}`;
-      if (selectedScenario === s.slug) item.classList.add("selected");
+    renderScenarioList();
 
-      item.innerHTML = `
-        <div class="scenario-item-header">
-          <span class="scenario-slug">${s.slug}</span>
-          ${s.isActive ? '<span class="active-tag">Active</span>' : ""}
-        </div>
-        <div class="scenario-meta-row">
-          <span>액션: ${s.actionsCount}개</span>
-          <span>줌: ${s.zoomSegmentsCount}구간</span>
-          ${s.durationSec ? `<span>${s.durationSec}초</span>` : ""}
-          <span class="${s.hasVideo ? "has-video-tag" : ""}">${s.hasVideo ? "🎥 비디오 있음" : "녹화 전"}</span>
-        </div>
-      `;
-
-      item.addEventListener("click", () => selectScenario(s.slug));
-      scenarioCardsContainer.appendChild(item);
-    });
-
-    // Auto-select first or active
-    if (!selectedScenario && scenarios.length > 0) {
-      const target = scenarios.find((s) => s.isActive) || scenarios[0];
-      selectScenario(target.slug);
+    // Auto-select most recent scenario
+    if (!selectedScenario && allScenariosList.length > 0) {
+      selectScenario(allScenariosList[0].slug);
     }
   } catch (err) {
     console.error("fetchScenarios failed:", err);
+  }
+}
+
+function renderScenarioList() {
+  if (!scenarioCardsContainer) return;
+
+  const query = (scenarioSearchQuery || "").trim().toLowerCase();
+  const filtered = allScenariosList.filter((s) => {
+    if (scenarioFilterMode === "rendered" && !s.hasRenderedVideo) return false;
+    if (scenarioFilterMode === "recorded" && !s.hasVideo) return false;
+    if (scenarioFilterMode === "eyedropper" && !s.recordedByEyedropper) return false;
+    if (query) {
+      const slugMatch = (s.slug || "").toLowerCase().includes(query);
+      const flowMatch = (s.flowSummary || "").toLowerCase().includes(query);
+      return slugMatch || flowMatch;
+    }
+    return true;
+  });
+
+  if (scenariosCount) {
+    scenariosCount.textContent =
+      filtered.length === allScenariosList.length
+        ? `${allScenariosList.length}개`
+        : `${filtered.length} / ${allScenariosList.length}개`;
+  }
+
+  scenarioCardsContainer.innerHTML = "";
+
+  if (filtered.length === 0) {
+    scenarioCardsContainer.innerHTML = `
+      <div class="studio-empty-box" style="margin-top: 12px;">
+        조건에 맞는 시나리오가 없습니다.<br>검색어나 필터 칩을 변경해보세요.
+      </div>
+    `;
+    return;
+  }
+
+  filtered.forEach((s) => {
+    const item = document.createElement("div");
+    item.className = "scenario-item";
+    item.dataset.slug = s.slug;
+    if (selectedScenario === s.slug) item.classList.add("selected");
+
+    const statusBadgeHtml = s.hasRenderedVideo
+      ? '<span class="status-tag status-tag-rendered" title="줌/커서 합성 최종 MP4 완료">✨ 최종본</span>'
+      : s.hasVideo
+      ? '<span class="status-tag status-tag-raw" title="원본 브라우저 녹화 완료">📹 녹화됨</span>'
+      : '<span class="status-tag status-tag-empty">녹화 전</span>';
+
+    item.innerHTML = `
+      <div class="scenario-item-header">
+        <div class="scenario-title-stack">
+          <span class="scenario-topic-title" title="${escapeHtmlAttr(s.slug)}">${escapeHtmlAttr(s.slug)}</span>
+        </div>
+        <div class="scenario-badges-right">
+          ${s.recordedByEyedropper ? '<span class="status-tag status-tag-eye" title="스포이드 직접 시범 시나리오">💧</span>' : ""}
+          ${s.hasNarration ? '<span class="status-tag status-tag-tts" title="AI 나레이션 음성 합성됨">🎙️</span>' : ""}
+          ${statusBadgeHtml}
+        </div>
+      </div>
+      <div class="scenario-flow-summary" title="${escapeHtmlAttr(s.flowSummary || "")}">
+        ${escapeHtmlAttr(s.flowSummary || "동작 설명이 등록되지 않은 시나리오입니다.")}
+      </div>
+      <div class="scenario-meta-row">
+        <div class="scenario-meta-stats">
+          <span>🎯 ${s.actionsCount}단계</span>
+          <span>🔍 줌 ${s.zoomSegmentsCount}구간</span>
+          ${s.durationSec ? `<span>⏱️ ${s.durationSec}s</span>` : ""}
+        </div>
+        <button type="button" class="btn-card-edit" title="브라우징 플랜 편집기(탭 1)에서 이 시나리오 열기">✏️ 편집</button>
+      </div>
+    `;
+
+    const editBtn = item.querySelector(".btn-card-edit");
+    if (editBtn) {
+      editBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        loadScenarioIntoEditor(s.slug, true);
+      });
+    }
+
+    item.addEventListener("click", () => selectScenario(s.slug));
+    scenarioCardsContainer.appendChild(item);
+  });
+}
+
+async function loadScenarioIntoEditor(slug, switchToEditorTab = true) {
+  if (!slug) return;
+  try {
+    let details = scenarioDetailsCache[slug];
+    if (!details) {
+      const res = await fetch(`/api/scenarios/${slug}`);
+      if (!res.ok) throw new Error("시나리오 로드 실패");
+      details = await res.json();
+      scenarioDetailsCache[slug] = details;
+    }
+    if (details && details.browsePlan) {
+      currentPlan = JSON.parse(JSON.stringify(details.browsePlan));
+      currentSlug = slug;
+      if (slugInput) slugInput.value = slug;
+      if (editorScenarioSelect) editorScenarioSelect.value = slug;
+      const summaryObj = allScenariosList.find((x) => x.slug === slug);
+      const flowText = summaryObj?.flowSummary || "";
+      if (planSlugBadge) {
+        planSlugBadge.textContent = `📌 ${slug}${details.browsePlan.recordedByEyedropper ? " · 💧 스포이드 실측" : ""}`;
+      }
+      if (explanationText) {
+        explanationText.textContent = flowText
+          ? `📂 [${slug}] 시나리오를 불러왔습니다. 흐름: ${flowText}`
+          : `📂 기존 시나리오 '${slug}' (${details.browsePlan.actions?.length || 0}개 단계)를 불러왔습니다.`;
+      }
+      renderActionCards();
+      if (switchToEditorTab) {
+        switchTab("tab-generator");
+        const editorCardEl = document.querySelector(".editor-card");
+        if (editorCardEl) {
+          editorCardEl.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+    }
+  } catch (err) {
+    alert(`시나리오 불러오기 실패: ${err.message}`);
   }
 }
 
@@ -304,18 +419,38 @@ async function selectScenario(slug, preferMode = null) {
   selectedScenario = slug;
 
   document.querySelectorAll(".scenario-item").forEach((el) => {
-    el.classList.toggle("selected", el.querySelector(".scenario-slug").textContent === slug);
+    const itemSlug = el.dataset.slug || el.querySelector(".scenario-slug")?.textContent;
+    el.classList.toggle("selected", itemSlug === slug);
   });
 
-  playerTitle.textContent = slug;
-  playerMeta.textContent = "상세 정보 불러오는 중...";
+  const playerSlugChip = document.getElementById("player-slug-chip");
+  if (playerTitle) {
+    playerTitle.textContent = slug;
+  }
+  if (playerSlugChip) {
+    playerSlugChip.classList.add("hidden");
+  }
+  if (playerMeta) playerMeta.textContent = "상세 정보 불러오는 중...";
 
   try {
     const res = await fetch(`/api/scenarios/${slug}`);
     const details = await res.json();
     scenarioDetailsCache[slug] = details;
 
-    playerMeta.textContent = `액션 ${details.browsePlan?.actions?.length || 0}개 | 줌 세그먼트 ${details.editPlan?.segments?.length || 0}개`;
+    const actions = details.browsePlan?.actions || [];
+    const coreActionsCount = actions.filter((a) => a.type !== "wait" && a.type !== "navigate").length;
+    const zoomCount = details.editPlan?.segments?.length || 0;
+    const fps = details.editPlan?.fps || 60;
+    const totalFrames = details.editPlan?.totalDurationFrames || 0;
+    const durationSec = totalFrames > 0 ? (totalFrames / fps).toFixed(1) : null;
+    const summaryItem = allScenariosList.find((s) => s.slug === slug);
+
+    if (playerTitle) {
+      playerTitle.textContent = slug;
+    }
+    if (playerSlugChip) {
+      playerSlugChip.classList.add("hidden");
+    }
 
     // Check Rendered Video Info
     let renderInfo = { exists: false };
@@ -324,7 +459,45 @@ async function selectScenario(slug, preferMode = null) {
       if (renderRes.ok) {
         renderInfo = await renderRes.json();
       }
-    } catch { }
+    } catch {}
+
+    // Render Status Badges in Player Header
+    if (playerStatusBadges) {
+      const badges = [];
+      if (details.browsePlan?.recordedByEyedropper) {
+        badges.push('<span class="status-tag status-tag-eye">💧 스포이드 실측</span>');
+      }
+      if (renderInfo.exists) {
+        badges.push('<span class="status-tag status-tag-rendered">✨ 최종 MP4 보유</span>');
+      } else if (details.hasVideo) {
+        badges.push('<span class="status-tag status-tag-raw">📹 원본 녹화본 보유</span>');
+      } else {
+        badges.push('<span class="status-tag status-tag-empty">녹화 전</span>');
+      }
+      const hasTts = Boolean(details.narration?.cues?.length || details.editPlan?.narration?.cues?.length);
+      if (hasTts) {
+        badges.push('<span class="status-tag status-tag-tts">🎙️ AI 나레이션 포함</span>');
+      }
+      playerStatusBadges.innerHTML = badges.join("");
+    }
+
+    // Render Korean Flow Subtitle
+    if (playerFlowSubtitle) {
+      const flowStr =
+        summaryItem?.flowSummary ||
+        actions
+          .filter((a) => a.type !== "wait" && a.type !== "navigate" && a.description)
+          .slice(0, 6)
+          .map((a) => a.description)
+          .join(" ➔ ");
+      playerFlowSubtitle.textContent = flowStr || "등록된 단계별 한글 설명이 없습니다.";
+    }
+
+    if (playerMeta) {
+      playerMeta.textContent = `전체 액션 ${actions.length}개 (핵심 조작 ${coreActionsCount}개) · 카메라 줌 ${zoomCount}구간${
+        durationSec ? ` · 총 길이 ${durationSec}초` : ""
+      }`;
+    }
 
     if (btnDownloadVideo) {
       if (renderInfo.exists) {
@@ -343,6 +516,8 @@ async function selectScenario(slug, preferMode = null) {
     setVideoMode(targetMode, details, renderInfo);
 
     renderTimelineVisual(details);
+    renderMomentsStepList(details);
+    renderNarrationStudio(details);
     updateJsonViewer("browse");
   } catch (err) {
     console.error("selectScenario failed:", err);
@@ -360,8 +535,7 @@ function setVideoMode(mode, details = null, renderInfo = null) {
   if (btnModeRendered) btnModeRendered.classList.toggle("active", mode === "rendered");
 
   if (mode === "rendered") {
-    // Check if rendered video actually exists
-    const hasRendered = renderInfo ? renderInfo.exists : (d.hasRenderedVideo || false);
+    const hasRendered = renderInfo ? renderInfo.exists : d.hasRenderedVideo || false;
     if (!hasRendered) {
       if (videoModeBadge) videoModeBadge.textContent = "최종 렌더링 파일 없음 (렌더링 필요)";
       videoPlayer.style.display = "none";
@@ -376,7 +550,6 @@ function setVideoMode(mode, details = null, renderInfo = null) {
     videoPlayer.style.display = "block";
     videoPlayer.src = `/api/rendered-video/${slug}?t=${Date.now()}`;
   } else {
-    // Raw recording mode
     if (d.hasVideo) {
       if (videoModeBadge) videoModeBadge.textContent = "📹 원본 브라우저 녹화본 재생 중";
       videoEmpty.style.display = "none";
@@ -389,16 +562,23 @@ function setVideoMode(mode, details = null, renderInfo = null) {
       videoPlayer.src = "";
     }
   }
+  if (videoSpeedSelect && videoPlayer) {
+    videoPlayer.playbackRate = parseFloat(videoSpeedSelect.value) || 1.0;
+  }
 }
 
-// 7. Timeline Visual Bar
+// 7. Timeline Visual Bar & Step-by-Step Moment Cards
 function renderTimelineVisual(details) {
+  if (!timelineVisualBar) return;
   timelineVisualBar.innerHTML = "";
+  if (timelinePlayhead) timelinePlayhead.style.left = "0%";
+
   const editPlan = details.editPlan;
   const moments = details.moments;
+  const narration = details.narration || editPlan?.narration || null;
 
   if (!editPlan || !editPlan.totalDurationFrames) {
-    timelineStats.textContent = "플랜 데이터 없음";
+    if (timelineStats) timelineStats.textContent = "녹화 후 타임라인 생성됨";
     return;
   }
 
@@ -407,11 +587,17 @@ function renderTimelineVisual(details) {
   const totalMs = (totalFrames / fps) * 1000;
 
   const segments = editPlan.segments || [];
-  const clickMoments = moments?.moments?.filter((m) => m.type === "click") || [];
+  const allMoments = moments?.moments || [];
+  const interactiveMoments = allMoments.filter((m) => m.type !== "wait" && m.type !== "navigate");
+  const cues = narration?.cues || [];
 
-  timelineStats.textContent = `${segments.length} Segments, ${clickMoments.length} Clicks (${(totalFrames / fps).toFixed(1)}s)`;
+  if (timelineStats) {
+    timelineStats.textContent = `줌 ${segments.length}구간 · 동작 ${interactiveMoments.length}회 · 나레이션 ${cues.length}구간 (${(
+      totalFrames / fps
+    ).toFixed(1)}s)`;
+  }
 
-  // Draw Zoom Segments
+  // 1) Draw Zoom Segments
   segments.forEach((seg) => {
     const leftPercent = (seg.startFrame / totalFrames) * 100;
     const widthPercent = ((seg.endFrame - seg.startFrame) / totalFrames) * 100;
@@ -420,26 +606,167 @@ function renderTimelineVisual(details) {
     block.className = "segment-block";
     block.style.left = `${leftPercent}%`;
     block.style.width = `${Math.max(1, widthPercent)}%`;
-    block.title = `${seg.description} (${(seg.startFrame / fps).toFixed(1)}s - ${(seg.endFrame / fps).toFixed(1)}s, ${seg.zoom}x)`;
+    block.title = `[줌 ${seg.zoom}x] ${seg.description || "확대 구간"} (${(seg.startFrame / fps).toFixed(1)}s ~ ${(
+      seg.endFrame / fps
+    ).toFixed(1)}s)`;
     timelineVisualBar.appendChild(block);
   });
 
-  // Draw Click Moment Markers
-  clickMoments.forEach((m) => {
-    const leftPercent = (m.timestamp / totalMs) * 100;
+  // 2) Draw Narration TTS Segments at bottom of timeline
+  cues.forEach((cue, idx) => {
+    const startMs = cue.startMs || 0;
+    const endMs = cue.endMs || startMs + 2000;
+    const leftPercent = Math.min(99, Math.max(0, (startMs / totalMs) * 100));
+    const widthPercent = Math.max(1.2, ((endMs - startMs) / totalMs) * 100);
+
+    const nBlock = document.createElement("div");
+    nBlock.className = "narration-segment-block";
+    nBlock.style.left = `${leftPercent}%`;
+    nBlock.style.width = `${Math.min(100 - leftPercent, widthPercent)}%`;
+    nBlock.title = `[나레이션 #${idx + 1}] "${cue.text}" (${(startMs / 1000).toFixed(1)}s ~ ${(endMs / 1000).toFixed(1)}s)`;
+    timelineVisualBar.appendChild(nBlock);
+  });
+
+  // 3) Draw Interactive Action / Click Moment Markers
+  interactiveMoments.forEach((m, i) => {
+    const leftPercent = Math.min(99.5, Math.max(0, (m.timestamp / totalMs) * 100));
     const marker = document.createElement("div");
     marker.className = "moment-marker";
     marker.style.left = `${leftPercent}%`;
-    marker.title = `[Click #${m.id}] ${m.description} (${(m.timestamp / 1000).toFixed(2)}s)`;
+    marker.title = `[#${i + 1} ${(m.type || "click").toUpperCase()}] ${m.description || ""} (${(m.timestamp / 1000).toFixed(1)}s)`;
 
-    marker.addEventListener("click", () => {
-      if (videoPlayer.duration) {
+    marker.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (videoPlayer && videoPlayer.duration) {
         videoPlayer.currentTime = m.timestamp / 1000;
-        videoPlayer.play();
+        videoPlayer.play().catch(() => {});
       }
     });
 
     timelineVisualBar.appendChild(marker);
+  });
+}
+
+function renderMomentsStepList(details) {
+  if (!momentsStepList) return;
+
+  const rawMoments = details?.moments?.moments || [];
+  const interactiveMoments = rawMoments.filter((m) => m.type !== "wait");
+  const editSegments = details?.editPlan?.segments || [];
+  const fps = details?.editPlan?.fps || 60;
+
+  if (interactiveMoments.length > 0) {
+    if (subtabMomentsCount) subtabMomentsCount.textContent = `${interactiveMoments.length}단계`;
+    momentsStepList.innerHTML = "";
+
+    interactiveMoments.forEach((m, idx) => {
+      const timeSec = ((m.timestamp || 0) / 1000).toFixed(1);
+      const frame = Math.round(((m.timestamp || 0) / 1000) * fps);
+      const activeZoomSeg = editSegments.find((s) => frame >= s.startFrame && frame <= s.endFrame && s.zoom > 1.05);
+      const zoomLabel = activeZoomSeg ? `🔍 ${activeZoomSeg.zoom}x 줌` : "";
+      const coordsLabel = m.x && m.y ? `(${Math.round(m.x)}, ${Math.round(m.y)})` : "";
+      const typeUpper = (m.type || "click").toUpperCase();
+
+      const card = document.createElement("div");
+      card.className = "moment-step-card";
+      card.dataset.timestampMs = m.timestamp || 0;
+      card.innerHTML = `
+        <span class="moment-step-time">${timeSec}s</span>
+        <div class="moment-step-info">
+          <div class="moment-step-title" title="${escapeHtmlAttr(m.description || typeUpper)}">
+            <span style="color:#38BDF8; font-family:var(--font-mono); font-size:0.74rem; margin-right:4px;">#${idx + 1} ${typeUpper}</span>
+            ${escapeHtmlAttr(m.description || "동작 수행")}
+          </div>
+          <div class="moment-step-sub">
+            ${[zoomLabel, coordsLabel, m.selector || ""].filter(Boolean).join(" · ")}
+          </div>
+        </div>
+      `;
+
+      card.addEventListener("click", () => {
+        if (videoPlayer && videoPlayer.duration) {
+          videoPlayer.currentTime = (m.timestamp || 0) / 1000;
+          videoPlayer.play().catch(() => {});
+        }
+      });
+
+      momentsStepList.appendChild(card);
+    });
+    return;
+  }
+
+  // Fallback: if not recorded yet, show planned steps from browsePlan
+  const plannedActions = (details?.browsePlan?.actions || []).filter((a) => a.type !== "wait");
+  if (subtabMomentsCount) subtabMomentsCount.textContent = `${plannedActions.length}단계 (녹화 전)`;
+  if (plannedActions.length === 0) {
+    momentsStepList.innerHTML = `<div class="studio-empty-box">등록된 동작 모멘트가 없습니다.</div>`;
+    return;
+  }
+
+  momentsStepList.innerHTML = "";
+  plannedActions.forEach((act, idx) => {
+    const card = document.createElement("div");
+    card.className = "moment-step-card";
+    card.innerHTML = `
+      <span class="moment-step-time">#${idx + 1}</span>
+      <div class="moment-step-info">
+        <div class="moment-step-title" title="${escapeHtmlAttr(act.description || act.type)}">
+          <span style="color:#A5B4FC; font-family:var(--font-mono); font-size:0.74rem; margin-right:4px;">${(act.type || "CLICK").toUpperCase()}</span>
+          ${escapeHtmlAttr(act.description || "계획된 동작")}
+        </div>
+        <div class="moment-step-sub">${escapeHtmlAttr(act.selector || act.sourceSelector || "셀렉터 자동 탐색")}</div>
+      </div>
+    `;
+    momentsStepList.appendChild(card);
+  });
+}
+
+function formatTimecode(sec) {
+  if (!sec || isNaN(sec) || sec < 0) return "00:00.0";
+  const mins = Math.floor(sec / 60);
+  const rem = (sec % 60).toFixed(1);
+  return `${String(mins).padStart(2, "0")}:${rem.padStart(4, "0")}`;
+}
+
+function updateVideoPlaybackSync() {
+  if (!videoPlayer) return;
+  const cur = videoPlayer.currentTime || 0;
+  const dur = videoPlayer.duration || 0;
+
+  if (videoTimecode) {
+    videoTimecode.textContent = `${formatTimecode(cur)} / ${formatTimecode(dur)}`;
+  }
+
+  if (timelinePlayhead && dur > 0) {
+    const pct = Math.min(100, Math.max(0, (cur / dur) * 100));
+    timelinePlayhead.style.left = `${pct}%`;
+  }
+
+  const curMs = cur * 1000;
+
+  // Highlight active moment card
+  if (momentsStepList) {
+    const cards = momentsStepList.querySelectorAll(".moment-step-card[data-timestamp-ms]");
+    let activeCard = null;
+    cards.forEach((c) => {
+      const tMs = parseFloat(c.dataset.timestampMs || "0");
+      const isNear = Math.abs(curMs - tMs) <= 900;
+      c.classList.toggle("active-moment", isNear);
+      if (isNear) activeCard = c;
+    });
+    if (activeCard && !videoPlayer.paused) {
+      activeCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+
+  // Highlight active narration cue row
+  const cueRows = document.querySelectorAll("#narration-cues-container .narration-cue-row");
+  cueRows.forEach((row) => {
+    const startSec = parseFloat(row.querySelector(".cue-start-input")?.value || "0");
+    const endText = row.querySelector(".cue-jump-time")?.textContent || "0";
+    const endSec = parseFloat(endText.replace("s", "")) || startSec + 2.5;
+    const isSpeaking = cur >= startSec && cur <= endSec;
+    row.classList.toggle("active-cue", isSpeaking);
   });
 }
 
@@ -456,8 +783,444 @@ function updateJsonViewer(type) {
   if (type === "browse") data = details.browsePlan;
   else if (type === "edit") data = details.editPlan;
   else if (type === "moments") data = details.moments;
+  else if (type === "narration") data = details.narration || details.editPlan?.narration || null;
 
   jsonViewerContent.textContent = data ? JSON.stringify(data, null, 2) : "데이터가 없습니다.";
+}
+
+// 8.5 AI Narration Script & Edge Neural TTS Studio
+let activePreviewAudio = null;
+
+const STYLE_RECOMMENDED_PITCH = {
+  manual: "+0Hz",
+  friendly: "+4Hz",
+  presentation: "-3Hz",
+  compact: "+2Hz",
+};
+
+function getOpeningTemplateByStyle(style) {
+  switch (style) {
+    case "friendly":
+      return "안녕하세요! 지금부터 이 화면의 주요 기능을 함께 따라 해 볼게요.";
+    case "presentation":
+      return "지금부터 본 시나리오의 핵심 업무 처리 과정을 시연해 보시겠습니다.";
+    case "compact":
+      return "본 매뉴얼의 핵심 기능 실행 절차를 안내합니다.";
+    case "manual":
+    default:
+      return "이번 영상에서는 본 시나리오의 주요 기능과 사용 방법을 순서대로 안내합니다.";
+  }
+}
+
+function renderNarrationStudio(details, focusIndex = null) {
+  const container = document.getElementById("narration-cues-container");
+  const statusBadge = document.getElementById("narration-status-badge");
+  const styleSelect = document.getElementById("narration-style-select");
+  const voiceSelect = document.getElementById("narration-voice-select");
+  const pitchSelect = document.getElementById("narration-pitch-select");
+  const rateSelect = document.getElementById("narration-rate-select");
+  const enabledToggle = document.getElementById("narration-enabled-toggle");
+  const subtitleToggle = document.getElementById("narration-subtitle-toggle");
+
+  if (!container) return;
+
+  const narration = details?.narration || details?.editPlan?.narration || null;
+  if (!narration || !Array.isArray(narration.cues) || narration.cues.length === 0) {
+    if (statusBadge) {
+      statusBadge.textContent = "대본 없음";
+      statusBadge.style.background = "rgba(148, 163, 184, 0.16)";
+      statusBadge.style.color = "#cbd5e1";
+    }
+    container.innerHTML = `
+      <div class="studio-empty-box">
+        상단에서 <strong>말투(문체)</strong>와 <strong>음성/억양 톤</strong>을 선택한 뒤 <strong>[✨ AI 대본(오프닝 포함) 생성 &amp; 음성 합성]</strong>을 누르면, 영상 시작 시 어떤 매뉴얼인지 소개하는 오프닝 멘트와 단계별 나레이션이 자동 생성됩니다.
+      </div>
+    `;
+    return;
+  }
+
+  if (styleSelect && narration.style) styleSelect.value = narration.style;
+  if (voiceSelect && narration.voice) voiceSelect.value = narration.voice;
+  if (pitchSelect && narration.pitch) pitchSelect.value = narration.pitch;
+  if (rateSelect && narration.rate) rateSelect.value = narration.rate;
+  if (enabledToggle) enabledToggle.checked = narration.enabled !== false;
+  if (subtitleToggle) subtitleToggle.checked = narration.showSubtitles !== false;
+
+  const styleLabels = {
+    manual: "📘 정석 매뉴얼",
+    friendly: "😊 친절 가이드",
+    presentation: "🎙️ 시연 발표",
+    compact: "⚡ 핵심 브리핑",
+  };
+  const styleBadgeText = styleLabels[narration.style || "manual"] || "📘 정석 매뉴얼";
+
+  if (statusBadge) {
+    statusBadge.textContent = `${narration.cues.length}구간 · ${styleBadgeText}`;
+    statusBadge.style.background = "rgba(16, 185, 129, 0.2)";
+    statusBadge.style.color = "#6ee7b7";
+  }
+
+  container.innerHTML = "";
+  narration.cues.forEach((cue, idx) => {
+    const row = document.createElement("div");
+    row.className = "narration-cue-row";
+    row.dataset.origIdx = String(idx);
+    row.dataset.isIntro = cue.isIntro ? "true" : "false";
+
+    const startSec = ((cue.startMs || 0) / 1000).toFixed(1);
+    const endSec = ((cue.endMs || 0) / 1000).toFixed(1);
+    const audioFileName = cue.audioFile ? cue.audioFile.split("/").pop() : null;
+    const isOpeningCue = Boolean(cue.isIntro || (idx === 0 && (cue.startMs || 0) <= 600));
+
+    row.innerHTML = `
+      <span style="font-size: 0.78em; font-weight: 700; color: #818cf8; min-width: 26px; font-family: var(--font-mono);">#${idx + 1}</span>
+      ${
+        isOpeningCue
+          ? `<span class="status-tag status-tag-eye" title="영상 시작 시 어떤 매뉴얼인지 안내하는 오프닝 소개 구간" style="font-size: 0.7em; padding: 2px 6px;">🎬 오프닝</span>`
+          : ""
+      }
+      <input type="number" step="0.1" min="0" class="cue-start-input" value="${startSec}" title="시작 시간(초) — 변경 시 시간순으로 자동 정렬됩니다"
+        style="width: 66px; padding: 6px 6px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-input); color: #e2e8f0; font-size: 0.82em; text-align: center; font-family: var(--font-mono);" />
+      <span style="color: var(--text-muted); font-size: 0.8em;">~</span>
+      <span style="font-size: 0.8em; color: #38bdf8; min-width: 42px; cursor: pointer; font-family: var(--font-mono);" class="cue-jump-time" title="클릭하여 비디오 해당 위치로 이동">${endSec}s</span>
+      <input type="text" class="cue-text-input" value="${(cue.text || "").replace(/"/g, "&quot;")}" placeholder="나레이션 대본 문장을 입력하세요"
+        style="flex: 1; min-width: 180px; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-input); color: #f8fafc; font-size: 0.88em;" />
+      <div style="display: inline-flex; align-items: center; gap: 4px;">
+        <button type="button" class="btn btn-sm btn-outline btn-insert-cue-before" title="이 구간 바로 위(이전 시점)에 새 대본 구간 끼워넣기" style="padding: 4px 7px; font-size: 0.74em; color: #93c5fd;">+위</button>
+        <button type="button" class="btn btn-sm btn-outline btn-insert-cue-after" title="이 구간 바로 아래(다음 시점)에 새 대본 구간 끼워넣기" style="padding: 4px 7px; font-size: 0.74em; color: #93c5fd;">+아래</button>
+        ${
+          audioFileName
+            ? `<button type="button" class="btn btn-sm btn-outline btn-play-cue" title="합성된 음성 미리듣기" style="padding: 4px 9px; font-size: 0.76em;">▶️ 듣기</button>`
+            : ""
+        }
+        <button type="button" class="btn btn-sm btn-outline btn-delete-cue" title="구간 삭제" style="padding: 4px 8px; font-size: 0.78em; color: #f87171;">✕</button>
+      </div>
+    `;
+
+    const startInput = row.querySelector(".cue-start-input");
+    if (startInput) {
+      startInput.addEventListener("change", () => {
+        const updated = collectNarrationFromUI({ sortByStartTime: true });
+        if (scenarioDetailsCache[selectedScenario]) {
+          scenarioDetailsCache[selectedScenario].narration = updated;
+        }
+        renderNarrationStudio(scenarioDetailsCache[selectedScenario]);
+      });
+    }
+
+    const jumpEl = row.querySelector(".cue-jump-time");
+    if (jumpEl) {
+      jumpEl.addEventListener("click", () => {
+        if (videoPlayer && videoPlayer.duration) {
+          videoPlayer.currentTime = Number(row.querySelector(".cue-start-input").value) || 0;
+          videoPlayer.play().catch(() => {});
+        }
+      });
+    }
+
+    const insertBeforeBtn = row.querySelector(".btn-insert-cue-before");
+    if (insertBeforeBtn) {
+      insertBeforeBtn.addEventListener("click", () => {
+        insertNarrationCueRelative(idx, "before");
+      });
+    }
+
+    const insertAfterBtn = row.querySelector(".btn-insert-cue-after");
+    if (insertAfterBtn) {
+      insertAfterBtn.addEventListener("click", () => {
+        insertNarrationCueRelative(idx, "after");
+      });
+    }
+
+    const playBtn = row.querySelector(".btn-play-cue");
+    if (playBtn && audioFileName) {
+      playBtn.addEventListener("click", () => {
+        if (activePreviewAudio) {
+          activePreviewAudio.pause();
+          activePreviewAudio = null;
+        }
+        const url = `/api/narration/audio/${selectedScenario}/${audioFileName}?t=${Date.now()}`;
+        activePreviewAudio = new Audio(url);
+        activePreviewAudio.play().catch((err) => console.warn("오디오 재생 실패:", err));
+      });
+    }
+
+    const delBtn = row.querySelector(".btn-delete-cue");
+    if (delBtn) {
+      delBtn.addEventListener("click", () => {
+        row.remove();
+        const updated = collectNarrationFromUI();
+        if (scenarioDetailsCache[selectedScenario]) {
+          scenarioDetailsCache[selectedScenario].narration = updated;
+        }
+        renderNarrationStudio(scenarioDetailsCache[selectedScenario]);
+      });
+    }
+
+    container.appendChild(row);
+  });
+
+  if (focusIndex !== null) {
+    const targetRows = container.querySelectorAll(".narration-cue-row");
+    const targetRow = targetRows[focusIndex];
+    if (targetRow) {
+      targetRow.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      const textInput = targetRow.querySelector(".cue-text-input");
+      if (textInput) {
+        textInput.focus();
+        textInput.select();
+      }
+    }
+  }
+}
+
+function collectNarrationFromUI(options = {}) {
+  const details = scenarioDetailsCache[selectedScenario];
+  const existing = details?.narration || details?.editPlan?.narration || {};
+  const styleSelect = document.getElementById("narration-style-select");
+  const voiceSelect = document.getElementById("narration-voice-select");
+  const pitchSelect = document.getElementById("narration-pitch-select");
+  const rateSelect = document.getElementById("narration-rate-select");
+  const enabledToggle = document.getElementById("narration-enabled-toggle");
+  const subtitleToggle = document.getElementById("narration-subtitle-toggle");
+  const rows = document.querySelectorAll("#narration-cues-container .narration-cue-row");
+
+  const rawCues = [];
+  rows.forEach((row, idx) => {
+    const startSec = parseFloat(row.querySelector(".cue-start-input")?.value || "0");
+    const text = (row.querySelector(".cue-text-input")?.value || "").trim();
+    if (!text) return;
+    const origIdx = Number(row.dataset.origIdx ?? idx);
+    const prevCue = existing.cues?.[origIdx] || {};
+    const startMs = Math.max(0, Math.round(startSec * 1000));
+    const durMs = prevCue.audioDurationMs || 2500;
+    const textUnchanged = prevCue.text === text;
+    rawCues.push({
+      startMs,
+      endMs: startMs + durMs,
+      text,
+      isIntro: row.dataset.isIntro === "true" || prevCue.isIntro || false,
+      audioFile: textUnchanged ? prevCue.audioFile : undefined,
+      audioDurationMs: textUnchanged ? prevCue.audioDurationMs : undefined,
+    });
+  });
+
+  if (options.sortByStartTime) {
+    rawCues.sort((a, b) => a.startMs - b.startMs);
+  }
+
+  const cues = rawCues.map((c, i) => ({
+    ...c,
+    id: i + 1,
+  }));
+
+  return {
+    slug: selectedScenario,
+    style: styleSelect ? styleSelect.value : existing.style || "manual",
+    voice: voiceSelect ? voiceSelect.value : existing.voice || "ko-KR-SunHiNeural",
+    pitch: pitchSelect ? pitchSelect.value : existing.pitch || "+0Hz",
+    rate: rateSelect ? rateSelect.value : existing.rate || "+5%",
+    enabled: enabledToggle ? enabledToggle.checked : true,
+    showSubtitles: subtitleToggle ? subtitleToggle.checked : true,
+    updatedAt: new Date().toISOString(),
+    cues,
+  };
+}
+
+async function handleGenerateNarration() {
+  if (!selectedScenario) {
+    alert("먼저 좌측에서 시나리오를 선택해주세요.");
+    return;
+  }
+  const btn = document.getElementById("btn-generate-narration");
+  const style = document.getElementById("narration-style-select")?.value || "manual";
+  const voice = document.getElementById("narration-voice-select")?.value || "ko-KR-SunHiNeural";
+  const pitch = document.getElementById("narration-pitch-select")?.value || STYLE_RECOMMENDED_PITCH[style] || "+0Hz";
+  const rate = document.getElementById("narration-rate-select")?.value || "+5%";
+  const enabled = document.getElementById("narration-enabled-toggle")?.checked ?? true;
+  const showSubtitles = document.getElementById("narration-subtitle-toggle")?.checked ?? true;
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "⏳ AI 대본(오프닝+스타일) 생성 & 음성 합성 중...";
+  }
+  try {
+    const res = await fetch(`/api/narration/${selectedScenario}/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ style, voice, pitch, rate, enabled, showSubtitles }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "생성 실패");
+
+    if (scenarioDetailsCache[selectedScenario]) {
+      scenarioDetailsCache[selectedScenario].narration = data.narration;
+      if (scenarioDetailsCache[selectedScenario].editPlan) {
+        scenarioDetailsCache[selectedScenario].editPlan.narration = data.narration;
+      }
+    }
+    renderNarrationStudio(scenarioDetailsCache[selectedScenario]);
+    renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
+    updateJsonViewer("narration");
+    fetchScenarios();
+  } catch (err) {
+    alert(`나레이션 생성 오류: ${err.message}`);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "✨ AI 대본(오프닝 포함) 생성 & 음성 합성";
+    }
+  }
+}
+
+function insertNarrationCueRelative(targetIdx, position) {
+  if (!selectedScenario) return;
+  const current = collectNarrationFromUI();
+  const cues = current.cues;
+  const refCue = cues[targetIdx];
+  if (!refCue) return;
+
+  let newStartMs = 200;
+  let insertIndex = targetIdx;
+
+  if (position === "before") {
+    const prevCue = targetIdx > 0 ? cues[targetIdx - 1] : null;
+    if (!prevCue) {
+      newStartMs = Math.max(100, Math.round((refCue.startMs || 1000) / 2));
+      if (refCue.startMs < 1200) {
+        refCue.startMs = Math.max(refCue.startMs, newStartMs + 1500);
+        refCue.endMs = Math.max(refCue.endMs, refCue.startMs + 2000);
+      }
+    } else {
+      newStartMs = Math.round(((prevCue.startMs || 0) + (refCue.startMs || 0)) / 2);
+    }
+    insertIndex = targetIdx;
+  } else {
+    const nextCue = targetIdx < cues.length - 1 ? cues[targetIdx + 1] : null;
+    if (!nextCue) {
+      newStartMs = (refCue.endMs || refCue.startMs + 2500) + 400;
+    } else {
+      newStartMs = Math.round(((refCue.startMs || 0) + (nextCue.startMs || 0)) / 2);
+    }
+    insertIndex = targetIdx + 1;
+  }
+
+  cues.splice(insertIndex, 0, {
+    id: insertIndex + 1,
+    startMs: newStartMs,
+    endMs: newStartMs + 2400,
+    text: "새 나레이션 대본을 입력하세요.",
+    isIntro: insertIndex === 0 && newStartMs <= 600,
+  });
+
+  current.cues = cues.map((c, idx) => ({ ...c, id: idx + 1 }));
+  if (scenarioDetailsCache[selectedScenario]) {
+    scenarioDetailsCache[selectedScenario].narration = current;
+  }
+  renderNarrationStudio(scenarioDetailsCache[selectedScenario], insertIndex);
+}
+
+function handleAddNarrationIntro() {
+  if (!selectedScenario) return;
+  const current = collectNarrationFromUI();
+  const style = document.getElementById("narration-style-select")?.value || current.style || "manual";
+  const introStartMs = 200;
+  const introEndMs = 2800;
+
+  // 만약 첫 번째 구간이 너무 앞쪽(2.8초 미만)에 있으면 자연스럽게 뒤로 밀어줌
+  if (current.cues.length > 0 && current.cues[0].startMs < introEndMs) {
+    const shift = introEndMs - current.cues[0].startMs + 200;
+    current.cues[0].startMs += shift;
+    current.cues[0].endMs = Math.max(current.cues[0].endMs, current.cues[0].startMs + 2000);
+  }
+
+  current.cues.unshift({
+    id: 1,
+    startMs: introStartMs,
+    endMs: introEndMs,
+    text: getOpeningTemplateByStyle(style),
+    isIntro: true,
+  });
+  current.cues = current.cues.map((c, idx) => ({ ...c, id: idx + 1 }));
+
+  if (scenarioDetailsCache[selectedScenario]) {
+    scenarioDetailsCache[selectedScenario].narration = current;
+  }
+  renderNarrationStudio(scenarioDetailsCache[selectedScenario], 0);
+}
+
+function handleAddNarrationCue() {
+  if (!selectedScenario) return;
+  const current = collectNarrationFromUI();
+  const playheadMs =
+    videoPlayer && Number.isFinite(videoPlayer.currentTime) && videoPlayer.currentTime > 0.1
+      ? Math.round(videoPlayer.currentTime * 1000)
+      : null;
+
+  let nextStartMs;
+  let insertIndex = current.cues.length;
+
+  if (playheadMs !== null) {
+    nextStartMs = playheadMs;
+    const foundIdx = current.cues.findIndex((c) => c.startMs > nextStartMs);
+    insertIndex = foundIdx === -1 ? current.cues.length : foundIdx;
+  } else {
+    const lastCue = current.cues[current.cues.length - 1];
+    nextStartMs = lastCue ? lastCue.endMs + 400 : 200;
+    insertIndex = current.cues.length;
+  }
+
+  current.cues.splice(insertIndex, 0, {
+    id: insertIndex + 1,
+    startMs: nextStartMs,
+    endMs: nextStartMs + 2500,
+    text: "새 나레이션 대본을 입력하세요.",
+    isIntro: insertIndex === 0 && nextStartMs <= 600,
+  });
+  current.cues = current.cues.map((c, idx) => ({ ...c, id: idx + 1 }));
+
+  if (scenarioDetailsCache[selectedScenario]) {
+    scenarioDetailsCache[selectedScenario].narration = current;
+  }
+  renderNarrationStudio(scenarioDetailsCache[selectedScenario], insertIndex);
+}
+
+async function handleSaveNarration() {
+  if (!selectedScenario) return;
+  const btn = document.getElementById("btn-save-narration");
+  const narration = collectNarrationFromUI({ sortByStartTime: true });
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "⏳ 음성 재합성 및 저장 중...";
+  }
+  try {
+    const res = await fetch(`/api/narration/${selectedScenario}/save`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ narration, synthesize: true }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "저장 실패");
+
+    if (scenarioDetailsCache[selectedScenario]) {
+      scenarioDetailsCache[selectedScenario].narration = data.narration;
+      if (scenarioDetailsCache[selectedScenario].editPlan) {
+        scenarioDetailsCache[selectedScenario].editPlan.narration = data.narration;
+      }
+    }
+    renderNarrationStudio(scenarioDetailsCache[selectedScenario]);
+    renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
+    updateJsonViewer("narration");
+    fetchScenarios();
+  } catch (err) {
+    alert(`대본 저장 오류: ${err.message}`);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "💾 수정 대본 저장 & 음성 재합성";
+    }
+  }
 }
 
 // 9. Generate Browse Plan via Gemini (with 2-Stage Code Explorer Agent & Video Directing)
@@ -469,20 +1232,16 @@ async function handleGeneratePlan() {
     return;
   }
 
-  const targetProjectPath = targetProjectPathInput.value.trim();
+  const targetProjectPath = "";
   const targetUrl = targetBaseUrlInput.value.trim();
 
   btnGenerate.disabled = true;
-  generateBtnText.textContent = "AI 코드 분석 및 시나리오 연출 중...";
+  generateBtnText.textContent = "AI 시나리오 연출 중...";
 
   if (aiProgressBar) {
     aiProgressBar.classList.remove("hidden");
     if (aiProgressText) {
-      if (targetProjectPath) {
-        aiProgressText.textContent = "🔍 [1단계: 소스코드 역공학] 타겟 프로젝트 코드 및 DOM 셀렉터 탐색 시작...";
-      } else {
-        aiProgressText.textContent = "🌐 [Live Web 모드] 실시간 대상 웹 서비스 URL 기반 5단계 시나리오 연출 중...";
-      }
+      aiProgressText.textContent = "🌐 [Live Web 모드] 실시간 대상 웹 서비스 URL 기반 시나리오 연출 중...";
     }
   }
 
@@ -1041,10 +1800,87 @@ function escapeHtmlAttr(str) {
     .replace(/>/g, "&gt;");
 }
 
-// Render Editable Action Cards
+function extractHumanTargetLabel(act) {
+  if (!act) return "";
+  const sel = String(act.selector || "");
+  const patterns = [
+    /:text-is\(['"]([^'"]+)['"]\)/,
+    /:has-text\(['"]([^'"]+)['"]\)/,
+    /\[title\*?=['"]([^'"]+)['"]\]/,
+    /\[value=['"]([^'"]+)['"]\]/,
+  ];
+  for (const re of patterns) {
+    const m = sel.match(re);
+    if (m && m[1] && m[1].trim()) {
+      return m[1].trim();
+    }
+  }
+  const desc = String(act.description || "");
+  const qMatch = desc.match(/'([^']+)'/);
+  if (qMatch && qMatch[1] && qMatch[1].trim()) {
+    return qMatch[1].trim();
+  }
+  const bMatch = desc.match(/\[([^\]]+)\]/);
+  if (bMatch && bMatch[1] && bMatch[1].trim()) {
+    return bMatch[1].trim();
+  }
+  return "";
+}
+
+function applyHumanTargetLabelChange(act, newTargetRaw) {
+  const newTarget = String(newTargetRaw || "").trim();
+  if (!newTarget) return;
+  const oldTarget = act._lastHumanTarget || extractHumanTargetLabel(act);
+  const safeNew = newTarget.replace(/'/g, "");
+
+  if (oldTarget && oldTarget !== newTarget && act.selector && act.selector.includes(oldTarget)) {
+    const rawParts = act.selector
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const updatedParts = [];
+    for (const part of rawParts) {
+      if ((part.includes(":nth-of-type(") || part.includes(":nth-child(")) && !part.includes(oldTarget)) {
+        continue;
+      }
+      const replaced = part
+        .split(`'${oldTarget}'`).join(`'${safeNew}'`)
+        .split(`"${oldTarget}"`).join(`"${safeNew}"`)
+        .replace(/:nth-of-type\(\d+\)/g, "")
+        .replace(/:nth-child\(\d+\)/g, "");
+      if (replaced.trim()) {
+        updatedParts.push(replaced.trim());
+      }
+    }
+    if (updatedParts.length > 0) {
+      act.selector = updatedParts.join(", ");
+    } else {
+      act.selector = `button:has-text('${safeNew}'):visible, a:has-text('${safeNew}'):visible, [title='${safeNew}']:visible, :text-is('${safeNew}'):visible`;
+    }
+    delete act.targetHtml;
+    if (act.description && act.description.includes(oldTarget)) {
+      act.description = act.description.split(oldTarget).join(newTarget);
+    } else {
+      act.description = `'${newTarget}' 클릭`;
+    }
+  } else if (!act.selector || !act.selector.trim() || oldTarget !== newTarget) {
+    act.selector = `button:has-text('${safeNew}'):visible, a:has-text('${safeNew}'):visible, [title='${safeNew}']:visible, :text-is('${safeNew}'):visible`;
+    delete act.targetHtml;
+    if (!act.description || act.description === "새 액션" || (oldTarget && act.description.includes(oldTarget))) {
+      act.description =
+        oldTarget && act.description && act.description.includes(oldTarget)
+          ? act.description.split(oldTarget).join(newTarget)
+          : `'${newTarget}' 클릭`;
+    }
+  }
+  act._lastHumanTarget = newTarget;
+}
+
+// Render Editable Action Cards (1-Line Human Storyboard View)
 function renderActionCards() {
   actionsList.innerHTML = "";
   if (!currentPlan || !currentPlan.actions || currentPlan.actions.length === 0) {
+    if (planStatsPills) planStatsPills.innerHTML = "";
     actionsList.innerHTML = `
       <div class="empty-state">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
@@ -1056,19 +1892,40 @@ function renderActionCards() {
     return;
   }
 
-  // Divider at top (index 0)
-  actionsList.appendChild(createInsertDivider(0));
+  // Update Plan Breakdown Stats Pills
+  if (planStatsPills) {
+    const acts = currentPlan.actions;
+    const clickCount = acts.filter((a) => a.type === "click" || a.type === "dblclick" || a.type === "hover").length;
+    const typeCount = acts.filter((a) => a.type === "type").length;
+    const uploadCount = acts.filter((a) => a.type === "upload").length;
+    const dragCount = acts.filter((a) => a.type === "dragAndDrop" || (a.sourceSelector && a.targetSelector)).length;
+    const waitCount = acts.filter((a) => a.type === "wait").length;
+    planStatsPills.innerHTML = [
+      `<span class="plan-stat-pill">총 ${acts.length}단계</span>`,
+      clickCount > 0 ? `<span class="plan-stat-pill" style="color:#22D3EE;">🖱️ 클릭 ${clickCount}</span>` : "",
+      typeCount > 0 ? `<span class="plan-stat-pill" style="color:#34D399;">⌨️ 입력 ${typeCount}</span>` : "",
+      uploadCount > 0 ? `<span class="plan-stat-pill" style="color:#C084FC;">📎 첨부 ${uploadCount}</span>` : "",
+      dragCount > 0 ? `<span class="plan-stat-pill" style="color:#FB923C;">✊ 드래그 ${dragCount}</span>` : "",
+      waitCount > 0 ? `<span class="plan-stat-pill" style="color:#FBBF24;">⏳ 대기 ${waitCount}</span>` : "",
+    ]
+      .filter(Boolean)
+      .join("");
+  }
 
   const totalActions = currentPlan.actions.length;
 
   currentPlan.actions.forEach((act, idx) => {
-    // Auto-restore dragAndDrop type if previously overwritten to click by missing select option
     if (act.type === "click" && act.sourceSelector && act.targetSelector) {
       act.type = "dragAndDrop";
+    } else if (act.type === "click" && act.filePath) {
+      act.type = "upload";
     }
 
     const card = document.createElement("div");
-    card.className = "action-item-card";
+    card.className = "action-item-card storyboard-card";
+    if (compactWaitsEnabled && act.type === "wait") {
+      card.classList.add("compact-wait-card");
+    }
     card.draggable = true;
     card.dataset.index = idx;
 
@@ -1082,459 +1939,201 @@ function renderActionCards() {
     }
 
     const badgeClass = `badge-${act.type}`;
+    const humanTarget = extractHumanTargetLabel(act);
+    act._lastHumanTarget = humanTarget;
+    const waitSecVal = ((act.ms || 2000) / 1000).toFixed(1).replace(/\.0$/, "");
+
+    let inlineValueHtml = "";
+    if (act.type === "type") {
+      const displayVal = (act.text || "").replace(/\n/g, " ↵ ");
+      const tagLabel = act.pressEnter ? "📝 입력+⏎엔터" : act.text === "" ? "⌫ 지우기" : "📝 입력값";
+      inlineValueHtml = `
+        <div class="storyboard-inline-field storyboard-type-field">
+          <span class="storyboard-field-tag">${tagLabel}</span>
+          <input type="text" class="storyboard-inline-input" placeholder="⌫ 비워두면 기존 내용 지우기 (백스페이스)" value="${escapeHtmlAttr(displayVal)}" data-field="text">
+        </div>
+      `;
+    } else if (act.type === "wait") {
+      inlineValueHtml = `
+        <div class="storyboard-inline-field storyboard-wait-field">
+          <span class="storyboard-field-tag">⏱️ 대기</span>
+          <input type="number" step="0.5" min="0.1" max="30" class="storyboard-wait-input" value="${waitSecVal}" data-field="waitSec">
+          <span class="storyboard-unit">초</span>
+        </div>
+      `;
+    } else if (act.type === "upload") {
+      const fileDisplay = act.filePath || act.text || "";
+      inlineValueHtml = `
+        <div class="storyboard-inline-field storyboard-type-field">
+          <span class="storyboard-field-tag">📎 첨부파일</span>
+          <input type="text" class="storyboard-inline-input" placeholder="파일 경로 또는 파일명 (예: 샘플문서.pdf)" value="${escapeHtmlAttr(fileDisplay)}" data-field="filePath">
+        </div>
+      `;
+    } else if (act.type === "click" || act.type === "hover" || act.type === "dblclick") {
+      inlineValueHtml = `
+        <div class="storyboard-inline-field storyboard-target-field" title="클릭할 버튼이나 메뉴의 글자를 수정하면 내부 셀렉터가 자동으로 변경됩니다">
+          <span class="storyboard-field-tag">🎯 대상 글자</span>
+          <input type="text" class="storyboard-inline-input storyboard-target-input" placeholder="${isMissingSelector ? "누를 버튼/메뉴 이름 입력 (예: 저장)" : "자동 감지됨 (글자 수정 가능)"}" value="${escapeHtmlAttr(humanTarget)}" data-field="humanTarget">
+        </div>
+      `;
+    }
 
     card.innerHTML = `
-      <div class="action-top-row">
-        <div class="action-drag-handle" title="드래그하여 순서 변경 (Drag & Drop)">
+      <div class="action-top-row storyboard-main-row">
+        <div class="action-drag-handle" title="드래그하여 순서 변경">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
             <circle cx="9" cy="6" r="2"/><circle cx="15" cy="6" r="2"/>
             <circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/>
             <circle cx="9" cy="18" r="2"/><circle cx="15" cy="18" r="2"/>
           </svg>
         </div>
-        <div class="action-badge-group">
-          <span class="action-index">#${idx + 1}</span>
-          <select class="action-badge ${badgeClass}" data-field="type">
-            <option value="click" ${act.type === "click" ? "selected" : ""}>CLICK</option>
-            <option value="wait" ${act.type === "wait" ? "selected" : ""}>WAIT</option>
-            <option value="type" ${act.type === "type" ? "selected" : ""}>TYPE</option>
-            <option value="hover" ${act.type === "hover" ? "selected" : ""}>HOVER</option>
-            <option value="dragAndDrop" ${act.type === "dragAndDrop" ? "selected" : ""}>DRAG & DROP</option>
-            <option value="dblclick" ${act.type === "dblclick" ? "selected" : ""}>DBLCLICK</option>
-            <option value="scroll" ${act.type === "scroll" ? "selected" : ""}>SCROLL</option>
-            <option value="navigate" ${act.type === "navigate" ? "selected" : ""}>NAVIGATE</option>
-          </select>
-          ${isMissingSelector ? `<span class="badge-needs-input" title="소스코드에서 ID가 불확실하여 비워두었습니다. 직접 셀렉터나 버튼 텍스트를 입력해주세요.">⚠️ 셀렉터 입력 필요</span>` : ""}
-          <input type="text" placeholder="액션 설명 (한글)" value="${escapeHtmlAttr(act.description)}" data-field="description" style="width: 240px; font-weight: 500;">
-        </div>
+        <span class="action-index">#${idx + 1}</span>
+        <select class="action-badge ${badgeClass}" data-field="type">
+          <option value="click" ${act.type === "click" ? "selected" : ""}>🖱️ 클릭</option>
+          <option value="type" ${act.type === "type" ? "selected" : ""}>⌨️ 입력</option>
+          <option value="upload" ${act.type === "upload" ? "selected" : ""}>📎 파일 첨부</option>
+          <option value="wait" ${act.type === "wait" ? "selected" : ""}>⏳ 대기</option>
+          <option value="hover" ${act.type === "hover" ? "selected" : ""}>👆 마우스 올리기</option>
+          <option value="dragAndDrop" ${act.type === "dragAndDrop" ? "selected" : ""}>✊ 드래그 이동</option>
+          <option value="dblclick" ${act.type === "dblclick" ? "selected" : ""}>🖱️ 더블클릭</option>
+          <option value="navigate" ${act.type === "navigate" ? "selected" : ""}>🌐 페이지 이동</option>
+        </select>
+
+        <input type="text" class="storyboard-desc-input" placeholder="단계 설명 (예: '결재' 메뉴 클릭)" value="${escapeHtmlAttr(act.description || "")}" data-field="description">
+
+        ${inlineValueHtml}
+
         <div class="action-card-controls">
-          <button class="action-ctrl-btn action-move-up" title="한 단계 위로 이동" ${idx === 0 ? "disabled" : ""}>▲</button>
-          <button class="action-ctrl-btn action-move-down" title="한 단계 아래로 이동" ${idx === totalActions - 1 ? "disabled" : ""}>▼</button>
-          <button class="action-ctrl-btn action-ctrl-insert action-insert-btn" title="이 액션 바로 아래에 새 액션 삽입">+ 아래 추가</button>
-          <button class="action-ctrl-btn action-ctrl-duplicate action-duplicate-btn" title="이 액션 그대로 복제">복제</button>
-          <button class="action-delete-btn" title="삭제">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <button type="button" class="action-ctrl-btn action-move-up" title="위로 이동" ${idx === 0 ? "disabled" : ""}>▲</button>
+          <button type="button" class="action-ctrl-btn action-move-down" title="아래로 이동" ${idx === totalActions - 1 ? "disabled" : ""}>▼</button>
+          <button type="button" class="action-ctrl-btn action-ctrl-insert action-insert-btn" title="바로 아래에 새 단계 추가">+ 추가</button>
+          ${act.type !== "wait" ? `<button type="button" class="action-ctrl-btn btn-toggle-raw-selector" title="고급: 내부 CSS 셀렉터 확인/수정">🔧</button>` : ""}
+          <button type="button" class="action-delete-btn" title="이 단계 삭제">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
       </div>
 
-      <div class="action-inputs-grid">
-        ${act.type === "dragAndDrop" ? `
-          <div class="input-with-label">
-            <span class="input-label">✊ 드래그 출발지 (sourceSelector)</span>
-            <input type="text"
-              class="${!act.sourceSelector ? "input-needs-attention" : ""}"
-              placeholder="드래그할 요소 셀렉터 (예: .dynatree-title:has-text('test002'):visible)"
-              value="${escapeHtmlAttr(act.sourceSelector || act.selector || "")}"
-              data-field="sourceSelector">
-          </div>
-          <div class="input-with-label">
-            <span class="input-label">🎯 드롭 도착지 (targetSelector)</span>
-            <input type="text"
-              class="${!act.targetSelector ? "input-needs-attention" : ""}"
-              placeholder="드롭할 대상 영역 셀렉터 (예: #af_4)"
-              value="${escapeHtmlAttr(act.targetSelector || "")}"
-              data-field="targetSelector">
-          </div>
-        ` : act.type !== "wait" ? `
-          <div class="input-with-label">
-            <span class="input-label">🎯 대상 요소 (CSS 셀렉터)</span>
-            <div class="selector-input-wrapper" style="display:flex; gap:8px; width:100%;">
-              <input type="text" 
-                class="${isMissingSelector ? "input-needs-attention" : ""}"
-                placeholder="${isMissingSelector ? "⚠️ 셀렉터 직접 입력 또는 우측 [🎯 타겟 도우미]로 간편 생성" : "CSS 셀렉터 (예: button.btn_svc_open 또는 #savebtn)"}" 
-                value="${escapeHtmlAttr(act.selector)}" 
-                data-field="selector" style="flex:1;">
-              <button type="button" class="btn-open-builder btn-toggle-builder" title="복잡한 CSS 몰라도 클릭 한 번으로 특정 버튼 셀렉터 완성">🎯 타겟 도우미</button>
-            </div>
-          </div>` : ""}
-        ${act.type === "wait" ? `
-          <div class="input-with-label">
-            <span class="input-label">⏳ 딜레이 대기 시간 (ms)</span>
-            <input type="number" placeholder="대기 시간(ms)" value="${act.ms || 2000}" data-field="ms">
-          </div>` : ""}
-        ${act.type === "type" ? `
-          <div class="input-with-label">
-            <span class="input-label">⌨️ 키보드로 입력할 텍스트</span>
-            <input type="text" placeholder="입력할 텍스트" value="${escapeHtmlAttr(act.text)}" data-field="text">
-          </div>` : ""}
-        ${act.type !== "wait" ? `
-          <div class="input-with-label">
-            <span class="input-label">🪟 내부 iFrame (선택사항)</span>
-            <input type="text" placeholder="iFrame 셀렉터 (옵션)" value="${escapeHtmlAttr(act.iframe)}" data-field="iframe">
-          </div>` : ""}
-      </div>
-
       ${act.type !== "wait" ? `
-      <!-- 실시간 문법 린터 / 자동 교정 칩 컨테이너 -->
-      <div class="linter-container" style="display: none; margin-top: 4px;"></div>
-
-      <!-- 스마트 타겟 빌더 패널 (토글형) -->
-      <div class="smart-target-builder hidden">
-        <div class="builder-header">
-          <span class="builder-title">🎯 스마트 타겟 빌더 (다중 버튼 충돌 방지)</span>
-          <button type="button" class="builder-close-btn" title="닫기">✕</button>
-        </div>
-        
-        <!-- 퀵 엔터프라이즈 프리셋 칩 -->
-        <div class="builder-field-group">
-          <span class="builder-field-label">⚡ 주요 급소 버튼 원클릭 퀵 선택:</span>
-          <div class="builder-scope-chips">
-            <button type="button" class="builder-chip preset-chip" data-preset="portal-menu">🔝 포탈 전체메뉴</button>
-            <button type="button" class="builder-chip preset-chip" data-preset="appr-write">📑 결재 작성</button>
-            <button type="button" class="builder-chip preset-chip" data-preset="binder-sel">📂 기록물철(보관함)</button>
-            <button type="button" class="builder-chip preset-chip" data-preset="tree-expand">🌳 트리 펼침(.btn_fopn)</button>
-            <button type="button" class="builder-chip preset-chip" data-preset="appr-submit">📝 기안문 상신(._draftBtn)</button>
-            <button type="button" class="builder-chip preset-chip" data-preset="sched-reg">👈 일정 등록</button>
-            <button type="button" class="builder-chip preset-chip" data-preset="brd-write">📢 게시판 글작성</button>
-            <button type="button" class="builder-chip preset-chip" data-preset="doc-write">📁 문서 등록</button>
-            <button type="button" class="builder-chip preset-chip" data-preset="eml-write">✉️ 메일 쓰기</button>
-            <button type="button" class="builder-chip preset-chip" data-preset="modal-save">🪟 팝업 저장(#savebtn)</button>
-            <button type="button" class="builder-chip preset-chip" data-preset="modal-confirm">🪟 팝업 확인</button>
+      <div class="storyboard-raw-drawer hidden">
+        ${act.type === "dragAndDrop" ? `
+          <div class="raw-drawer-row">
+            <span class="raw-drawer-label">출발 셀렉터</span>
+            <input type="text" value="${escapeHtmlAttr(act.sourceSelector || act.selector || "")}" data-field="sourceSelector" placeholder="드래그할 출발 요소 셀렉터">
+            <span class="raw-drawer-label">도착 셀렉터</span>
+            <input type="text" value="${escapeHtmlAttr(act.targetSelector || "")}" data-field="targetSelector" placeholder="드롭할 대상 영역 셀렉터">
           </div>
-        </div>
-
-        <div class="builder-field-group">
-          <span class="builder-field-label">📍 대상 버튼이 위치한 화면 영역 (다른 화면/헤더 버튼과 겹침 원천 방지!):</span>
-          <div class="builder-scope-chips scope-selector-chips">
-            <button type="button" class="builder-chip scope-chip active" data-scope="global">🌐 전체화면 (자동)</button>
-            <button type="button" class="builder-chip scope-chip" data-scope="header">🔝 상단 헤더 / GNB</button>
-            <button type="button" class="builder-chip scope-chip" data-scope="sidebar">👈 좌측 사이드바</button>
-            <button type="button" class="builder-chip scope-chip" data-scope="modal">🪟 팝업 / 모달 내부</button>
-            <button type="button" class="builder-chip scope-chip" data-scope="body">📄 본문 / 목록 화면</button>
+        ` : `
+          <div class="raw-drawer-row">
+            <span class="raw-drawer-label">내부 타겟 셀렉터 (자동 생성됨)</span>
+            <input type="text" value="${escapeHtmlAttr(act.selector || "")}" data-field="selector" placeholder="스포이드 또는 대상 글자 입력 시 자동 생성됩니다">
           </div>
-        </div>
-
-        <div class="builder-field-group">
-          <span class="builder-field-label">🔍 누를 버튼의 이름 (한글 텍스트 또는 클래스명):</span>
-          <input type="text" class="builder-keyword-input" placeholder="예: 포탈 전체메뉴, 일정 등록, 저장, btn_svc_open" value="${escapeHtmlAttr(act.description ? act.description.replace(/[\[\]]/g, "").split(" ")[0] : "")}">
-        </div>
-
-        <div class="builder-preview-row">
-          <span class="builder-preview-code">...</span>
-          <button type="button" class="btn-apply-builder">✨ 이 셀렉터 적용</button>
-        </div>
+        `}
       </div>` : ""}
-
-      ${isMissingSelector ? `
-      <div class="quick-selector-hints">
-        <span class="hint-label">💡 퀵 입력 헬퍼:</span>
-        <button type="button" class="btn-quick-fill" data-fill="button.btn_svc_open, button[title='포탈 전체메뉴'], button:has-text('포탈 전체메뉴')">+ [포탈 전체메뉴] 버튼</button>
-        <button type="button" class="btn-quick-fill" data-fill="button#reg_shedule_lefttop, button:has-text('일정 등록'):visible">+ [일정 등록] 버튼</button>
-        <button type="button" class="btn-quick-fill" data-fill=".ui-dialog:visible #savebtn, .ui-dialog:visible button:has-text('저장')">+ [모달 저장] 버튼</button>
-        <button type="button" class="btn-quick-fill" data-fill=".ui-dialog:visible button:has-text('확인')">+ [모달 확인] 버튼</button>
-      </div>` : ""}
-
-      <div class="action-options-row">
-        <div class="action-checkboxes">
-          <label><input type="checkbox" data-field="force" ${act.force ? "checked" : ""}> Force Click (강제 클릭)</label>
-        </div>
-        ${["click", "dblclick", "hover", "type"].includes(act.type) ? `
-        <div class="action-offset-group" title="요소 중심점을 기준으로 마우스 클릭 및 카메라 줌 좌표를 미세 이동합니다 (예: X +10, Y -5)">
-          <span class="offset-label">🎯 커서 오프셋:</span>
-          <label class="offset-input-wrap">X <input type="number" class="offset-input" data-field="cursorOffsetX" placeholder="0" value="${act.cursorOffset?.x ?? ""}">px</label>
-          <label class="offset-input-wrap">Y <input type="number" class="offset-input" data-field="cursorOffsetY" placeholder="0" value="${act.cursorOffset?.y ?? ""}">px</label>
-        </div>` : ""}
-      </div>
     `;
 
-    // Bind Quick Fill Buttons
-    card.querySelectorAll(".btn-quick-fill").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const fillValue = btn.getAttribute("data-fill");
-        const selectorInput = card.querySelector('[data-field="selector"]');
-        if (selectorInput && fillValue) {
-          selectorInput.value = fillValue;
-          act.selector = fillValue;
+    const btnToggleRaw = card.querySelector(".btn-toggle-raw-selector");
+    const rawDrawer = card.querySelector(".storyboard-raw-drawer");
+    if (btnToggleRaw && rawDrawer) {
+      btnToggleRaw.addEventListener("click", () => {
+        rawDrawer.classList.toggle("hidden");
+        btnToggleRaw.classList.toggle("active-toggle", !rawDrawer.classList.contains("hidden"));
+      });
+    }
+
+    const descInputEl = card.querySelector('[data-field="description"]');
+    const selInputEl = card.querySelector('[data-field="selector"]');
+
+    card.querySelectorAll("[data-field]").forEach((input) => {
+      input.addEventListener("input", () => {
+        const field = input.getAttribute("data-field");
+        if (field === "humanTarget") {
+          applyHumanTargetLabelChange(act, input.value);
+          if (descInputEl) descInputEl.value = act.description || "";
+          if (selInputEl) selInputEl.value = act.selector || "";
+          card.classList.remove("needs-selector");
+        } else if (field === "text") {
+          act.text = input.value.replace(/\s*↵\s*/g, "\n");
+          if (act.description && /\('[^']*'\)$/.test(act.description)) {
+            act.description = act.description.replace(/\('[^']*'\)$/, `('${input.value}')`);
+            if (descInputEl) descInputEl.value = act.description;
+          }
+        } else if (field === "filePath") {
+          act.filePath = input.value.trim();
+        } else if (field === "waitSec") {
+          const sec = parseFloat(input.value);
+          if (!isNaN(sec) && sec > 0) {
+            act.ms = Math.round(sec * 1000);
+          }
+        } else if (field === "selector" || field === "sourceSelector" || field === "targetSelector") {
+          act[field] = input.value;
+          if (field === "sourceSelector") act.selector = input.value;
+          if (input.value.trim().length > 0) {
+            card.classList.remove("needs-selector");
+          }
+        } else if (field === "description") {
+          act.description = input.value;
+        }
+      });
+
+      input.addEventListener("change", () => {
+        const field = input.getAttribute("data-field");
+        if (field === "type") {
+          act.type = input.value;
           renderActionCards();
+        } else if (field === "filePath") {
+          act.filePath = input.value.trim();
+        } else if (field === "waitSec") {
+          const sec = parseFloat(input.value);
+          act.ms = !isNaN(sec) && sec > 0 ? Math.round(sec * 1000) : 2000;
         }
       });
     });
 
-    // --- Smart Target Builder & Realtime Linter Logic ---
-      const builderPanel = card.querySelector(".smart-target-builder");
-      const btnToggleBuilder = card.querySelector(".btn-toggle-builder");
-      const builderCloseBtn = card.querySelector(".builder-close-btn");
-      const linterContainer = card.querySelector(".linter-container");
-      const selectorInput = card.querySelector('[data-field="selector"]');
-      const keywordInput = card.querySelector(".builder-keyword-input");
-      const previewCode = card.querySelector(".builder-preview-code");
-      const btnApplyBuilder = card.querySelector(".btn-apply-builder");
-      let currentScope = "global";
+    // Control Button Listeners
+    card.querySelector(".action-move-up").addEventListener("click", () => moveAction(idx, idx - 1));
+    card.querySelector(".action-move-down").addEventListener("click", () => moveAction(idx, idx + 1));
+    card.querySelector(".action-insert-btn").addEventListener("click", () => insertActionAt(idx + 1));
+    card.querySelector(".action-delete-btn").addEventListener("click", () => deleteAction(idx));
 
-      function updateBuilderPreview() {
-        if (!keywordInput || !previewCode) return;
-        const kw = keywordInput.value.trim();
-        let generated = "";
-
-        if (!kw) {
-          generated = currentScope === "modal" ? ".ui-dialog:visible button" : "button";
-        } else {
-          const isClassLike = kw.startsWith(".") || (/^[a-zA-Z][a-zA-Z0-9_-]+$/.test(kw) && !kw.includes(" "));
-          const baseTarget = isClassLike
-            ? (kw.startsWith(".") ? kw : `.${kw}`)
-            : `button:has-text('${kw}'):visible, a:has-text('${kw}'):visible`;
-
-          switch (currentScope) {
-            case "header":
-              generated = `header ${baseTarget}, #header ${baseTarget}, .gnb ${baseTarget}, ${baseTarget}`;
-              break;
-            case "sidebar":
-              generated = `#snb ${baseTarget}, #left ${baseTarget}, aside ${baseTarget}, ${baseTarget}`;
-              break;
-            case "modal":
-              generated = `.ui-dialog:visible ${baseTarget}, .modal:visible ${baseTarget}`;
-              break;
-            case "body":
-              generated = `#content ${baseTarget}, .list_container ${baseTarget}, ${baseTarget}`;
-              break;
-            default:
-              generated = baseTarget;
-          }
-        }
-        previewCode.textContent = generated;
-      }
-
-      if (btnToggleBuilder && builderPanel) {
-        btnToggleBuilder.addEventListener("click", () => {
-          builderPanel.classList.toggle("hidden");
-          if (!builderPanel.classList.contains("hidden")) {
-            updateBuilderPreview();
-            if (keywordInput) keywordInput.focus();
-          }
-        });
-      }
-
-      if (builderCloseBtn && builderPanel) {
-        builderCloseBtn.addEventListener("click", () => builderPanel.classList.add("hidden"));
-      }
-
-      // Scope Chips Selection
-      card.querySelectorAll(".scope-chip").forEach((chip) => {
-        chip.addEventListener("click", () => {
-          card.querySelectorAll(".scope-chip").forEach((c) => c.classList.remove("active"));
-          chip.classList.add("active");
-          currentScope = chip.getAttribute("data-scope");
-          updateBuilderPreview();
-        });
-      });
-
-      if (keywordInput) {
-        keywordInput.addEventListener("input", updateBuilderPreview);
-      }
-
-      if (btnApplyBuilder && previewCode && selectorInput) {
-        btnApplyBuilder.addEventListener("click", () => {
-          const selVal = previewCode.textContent.trim();
-          if (selVal) {
-            selectorInput.value = selVal;
-            act.selector = selVal;
-            renderActionCards();
-          }
-        });
-      }
-
-      // Presets in Builder
-      const PRESET_SELECTORS = {
-        "portal-menu": "button.btn_svc_open, button[title='포탈 전체메뉴'], button:has-text('포탈 전체메뉴')",
-        "appr-write": "#eapLeft_workWriteBtn, #gapLeft_workWriteBtn, button:has-text('결재작성'):visible, button:has-text('기안작성'):visible",
-        "binder-sel": "button#eapDocReg_binderSelBtn, button#eapDocReg_bindBtn, button#gapDocReg_binderSelBtn, button:has-text('기록물철'):visible, button:has-text('문서보관함'):visible",
-        "tree-expand": ".ui-dialog:visible .btn_fopn, .ui-dialog:visible .dynatree-expander, .btn_fopn",
-        "appr-submit": "button._draftBtn, button._draft, button:has-text('결재상신'):visible, button:has-text('상신'):visible",
-        "sched-reg": "button#reg_shedule_lefttop, button#scheduleLayerBtn, button:has-text('일정등록'):visible",
-        "brd-write": "button#brdBoardLeft_writeBtn, .btn_write, button:has-text('글작성'):visible",
-        "doc-write": "button#docLeft_writeBtn, button#reg_doc_btn, button:has-text('문서등록'):visible",
-        "eml-write": "button#emlList_goWriteEmail, button#emlSideMenu_writeBtn, button:has-text('메일쓰기'):visible",
-        "modal-save": ".ui-dialog:visible #savebtn, .ui-dialog:visible button:has-text('저장'), button#savebtn:visible",
-        "modal-confirm": ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button._confirmBtn, .ui-dialog:visible button:has-text('확인'):visible",
-      };
-
-      card.querySelectorAll(".preset-chip").forEach((chip) => {
-        chip.addEventListener("click", () => {
-          const key = chip.getAttribute("data-preset");
-          const selVal = PRESET_SELECTORS[key];
-          if (selVal && selectorInput) {
-            selectorInput.value = selVal;
-            act.selector = selVal;
-            renderActionCards();
-          }
-        });
-      });
-
-      // Realtime Syntax Linter
-      function checkSelectorSyntax(val) {
-        if (!linterContainer) return;
-        linterContainer.innerHTML = "";
-        linterContainer.style.display = "none";
-        if (!val) return;
-
-        const trimmed = val.trim();
-        // 1. Detect button:class_name typo
-        const colonClassMatch = trimmed.match(/\b(button|a|div|span|input|li):([a-zA-Z][a-zA-Z0-9_-]*)\b/);
-        if (colonClassMatch) {
-          const [full, tag, cls] = colonClassMatch;
-          const validPseudos = [
-            "has",
-            "has-text",
-            "visible",
-            "first-child",
-            "last-child",
-            "nth-child",
-            "nth-of-type",
-            "first-of-type",
-            "last-of-type",
-            "only-child",
-            "only-of-type",
-            "not",
-            "disabled",
-            "checked",
-            "focus",
-            "hover",
-            "empty",
-            "text",
-            "text-is",
-          ];
-          if (!validPseudos.includes(cls)) {
-            const suggested = trimmed.replace(full, `${tag}.${cls}`);
-            linterContainer.style.display = "block";
-            linterContainer.innerHTML = `
-            <div class="syntax-linter-chip" title="클릭하여 즉시 교정">
-              <span>💡 문법 오타 감지: <strong>${full}</strong> ➡️ <strong>${tag}.${cls}</strong> (콜론 대신 점 사용)</span>
-              <span style="text-decoration: underline; font-weight: 700;">[✨ 자동 수정 적용]</span>
-            </div>
-          `;
-            linterContainer.querySelector(".syntax-linter-chip").addEventListener("click", () => {
-              selectorInput.value = suggested;
-              act.selector = suggested;
-              checkSelectorSyntax(suggested);
-            });
-            return;
-          }
-        }
-
-        // 2. Detect bare class without dot
-        if (/^[a-zA-Z][a-zA-Z0-9_-]+$/.test(trimmed) && !["button", "input", "textarea", "a", "select", "div"].includes(trimmed)) {
-          const suggested = `button.${trimmed}, .${trimmed}`;
-          linterContainer.style.display = "block";
-          linterContainer.innerHTML = `
-          <div class="syntax-linter-chip" title="클릭하여 즉시 교정">
-            <span>💡 클래스 점(.) 누락 감지: <strong>${trimmed}</strong> ➡️ <strong>.${trimmed}</strong></span>
-            <span style="text-decoration: underline; font-weight: 700;">[✨ 자동 수정 적용]</span>
-          </div>
-        `;
-          linterContainer.querySelector(".syntax-linter-chip").addEventListener("click", () => {
-            selectorInput.value = suggested;
-            act.selector = suggested;
-            checkSelectorSyntax(suggested);
-          });
-        }
-      }
-
-      if (selectorInput) {
-        selectorInput.addEventListener("input", (e) => checkSelectorSyntax(e.target.value));
-        checkSelectorSyntax(selectorInput.value);
-      }
-
-      // Bind Change Handlers
-      card.querySelectorAll("[data-field]").forEach((input) => {
-        input.addEventListener("input", () => {
-          const field = input.getAttribute("data-field");
-          if (field === "selector" || field === "sourceSelector" || field === "targetSelector") {
-            act[field] = input.value;
-            if (field === "sourceSelector") {
-              act.selector = input.value;
-            }
-            const trimmed = input.value.trim();
-            if (trimmed.length > 0) {
-              input.classList.remove("input-needs-attention");
-              const stillMissing =
-                act.type === "dragAndDrop"
-                  ? !act.sourceSelector?.trim() || !act.targetSelector?.trim()
-                  : !act.selector?.trim();
-              if (!stillMissing) {
-                card.classList.remove("needs-selector");
-                const badge = card.querySelector(".badge-needs-input");
-                if (badge) badge.remove();
-              }
-            } else {
-              card.classList.add("needs-selector");
-              input.classList.add("input-needs-attention");
-            }
-          }
-        });
-        input.addEventListener("change", () => {
-          const field = input.getAttribute("data-field");
-          if (input.type === "checkbox") {
-            act[field] = input.checked;
-          } else if (field === "cursorOffsetX" || field === "cursorOffsetY") {
-            if (!act.cursorOffset) act.cursorOffset = { x: 0, y: 0 };
-            const val = input.value === "" ? 0 : parseInt(input.value, 10);
-            if (field === "cursorOffsetX") act.cursorOffset.x = isNaN(val) ? 0 : val;
-            if (field === "cursorOffsetY") act.cursorOffset.y = isNaN(val) ? 0 : val;
-            if (act.cursorOffset.x === 0 && act.cursorOffset.y === 0 && input.value === "") {
-              delete act.cursorOffset;
-            }
-          } else if (input.type === "number") {
-            act[field] = parseInt(input.value, 10);
-          } else {
-            act[field] = input.value;
-            if (field === "sourceSelector") {
-              act.selector = input.value;
-            }
-            if (field === "type") renderActionCards();
-          }
-        });
-      });
-
-      // Control Button Listeners
-      card.querySelector(".action-move-up").addEventListener("click", () => moveAction(idx, idx - 1));
-      card.querySelector(".action-move-down").addEventListener("click", () => moveAction(idx, idx + 1));
-      card.querySelector(".action-insert-btn").addEventListener("click", () => insertActionAt(idx + 1));
-      card.querySelector(".action-duplicate-btn").addEventListener("click", () => duplicateAction(idx));
-      card.querySelector(".action-delete-btn").addEventListener("click", () => deleteAction(idx));
-
-      // HTML5 Drag & Drop
-      card.addEventListener("dragstart", (e) => {
-        draggedActionIndex = idx;
-        card.classList.add("is-dragging");
-        e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", String(idx));
-      });
-
-      card.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = "move";
-        if (draggedActionIndex !== null && draggedActionIndex !== idx) {
-          card.classList.add("drag-over");
-        }
-      });
-
-      card.addEventListener("dragleave", () => {
-        card.classList.remove("drag-over");
-      });
-
-      card.addEventListener("drop", (e) => {
-        e.preventDefault();
-        card.classList.remove("drag-over");
-        if (draggedActionIndex !== null && draggedActionIndex !== idx) {
-          moveAction(draggedActionIndex, idx);
-        }
-      });
-
-      card.addEventListener("dragend", () => {
-        card.classList.remove("is-dragging");
-        document.querySelectorAll(".action-item-card").forEach((c) => c.classList.remove("drag-over"));
-        draggedActionIndex = null;
-      });
-
-      actionsList.appendChild(card);
-
-      // Divider after this card (index idx + 1)
-      actionsList.appendChild(createInsertDivider(idx + 1));
+    // HTML5 Drag & Drop
+    card.addEventListener("dragstart", (e) => {
+      draggedActionIndex = idx;
+      card.classList.add("is-dragging");
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", String(idx));
     });
-  }
 
-// 11. Save Plan
+    card.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      if (draggedActionIndex !== null && draggedActionIndex !== idx) {
+        card.classList.add("drag-over");
+      }
+    });
+
+    card.addEventListener("dragleave", () => {
+      card.classList.remove("drag-over");
+    });
+
+    card.addEventListener("drop", (e) => {
+      e.preventDefault();
+      card.classList.remove("drag-over");
+      if (draggedActionIndex !== null && draggedActionIndex !== idx) {
+        moveAction(draggedActionIndex, idx);
+      }
+    });
+
+    card.addEventListener("dragend", () => {
+      card.classList.remove("is-dragging");
+      document.querySelectorAll(".action-item-card").forEach((c) => c.classList.remove("drag-over"));
+      draggedActionIndex = null;
+    });
+
+    actionsList.appendChild(card);
+  });
+}
+
 // 10.5 Sync DOM Card Inputs to currentPlan
 function syncCardsToPlan() {
   if (!currentPlan || !currentPlan.actions) return;
@@ -1547,19 +2146,18 @@ function syncCardsToPlan() {
     if (!act) return;
     card.querySelectorAll("input, select, textarea").forEach((inp) => {
       const field = inp.getAttribute("data-field");
-      if (!field) return;
-      if (inp.type === "checkbox") {
-        act[field] = inp.checked;
-      } else if (field === "cursorOffsetX" || field === "cursorOffsetY") {
-        if (!act.cursorOffset) act.cursorOffset = { x: 0, y: 0 };
-        const val = inp.value === "" ? 0 : parseInt(inp.value, 10);
-        if (field === "cursorOffsetX") act.cursorOffset.x = isNaN(val) ? 0 : val;
-        if (field === "cursorOffsetY") act.cursorOffset.y = isNaN(val) ? 0 : val;
-        if (act.cursorOffset.x === 0 && act.cursorOffset.y === 0 && inp.value === "") {
-          delete act.cursorOffset;
+      if (!field || field === "humanTarget") return;
+      if (field === "waitSec") {
+        const sec = parseFloat(inp.value);
+        if (!isNaN(sec) && sec > 0) {
+          act.ms = Math.round(sec * 1000);
         }
+      } else if (inp.type === "checkbox") {
+        act[field] = inp.checked;
       } else if (inp.type === "number") {
         act[field] = parseInt(inp.value, 10);
+      } else if (field === "text") {
+        act.text = inp.value.replace(/\s*↵\s*/g, "\n");
       } else {
         act[field] = inp.value;
         if (field === "sourceSelector") {
@@ -1569,6 +2167,8 @@ function syncCardsToPlan() {
     });
     if (act.type === "click" && act.sourceSelector && act.targetSelector) {
       act.type = "dragAndDrop";
+    } else if (act.type === "click" && act.filePath) {
+      act.type = "upload";
     }
   });
 }
@@ -2100,67 +2700,208 @@ function bindEvents() {
         });
       }
 
-      btnAddAction.addEventListener("click", () => {
-        const targetIdx = currentPlan && currentPlan.actions ? currentPlan.actions.length : 0;
-        insertActionAt(targetIdx);
-      });
+      if (btnAddAction) {
+        btnAddAction.addEventListener("click", () => {
+          const targetIdx = currentPlan && currentPlan.actions ? currentPlan.actions.length : 0;
+          insertActionAt(targetIdx);
+        });
+      }
 
-      btnClearTerminal.addEventListener("click", () => {
-        terminalOutput.innerHTML = "";
-      });
+      if (btnClearTerminal) {
+        btnClearTerminal.addEventListener("click", () => {
+          if (terminalOutput) terminalOutput.innerHTML = "";
+        });
+      }
 
-      btnStopTask.addEventListener("click", async () => {
-        btnStopTask.disabled = true;
-        btnStopTask.textContent = "중단 중...";
-        try {
-          await fetch("/api/scenarios/stop", { method: "POST" });
-          appendTerminalLog("⏹️ 작업 중단 요청이 전송되었습니다.", "system-line");
-        } finally {
-          setTimeout(() => {
-            btnStopTask.disabled = false;
-            btnStopTask.textContent = "⏹️ 작업 중단";
-          }, 1000);
-        }
-      });
-
-      btnSetActive.addEventListener("click", async () => {
-        if (!selectedScenario) return;
-        try {
-          const res = await fetch("/api/scenarios/activate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ slug: selectedScenario }),
-          });
-          const data = await res.json();
-          if (data.success) {
-            alert(`'${selectedScenario}'가 Remotion의 활성 컴포지션으로 설정되었습니다!`);
-            fetchStatus();
-            fetchScenarios();
+      if (btnStopTask) {
+        btnStopTask.addEventListener("click", async () => {
+          btnStopTask.disabled = true;
+          btnStopTask.textContent = "중단 중...";
+          try {
+            await fetch("/api/scenarios/stop", { method: "POST" });
+            appendTerminalLog("⏹️ 작업 중단 요청이 전송되었습니다.", "system-line");
+          } finally {
+            setTimeout(() => {
+              btnStopTask.disabled = false;
+              btnStopTask.textContent = "⏹️ 작업 중단";
+            }, 1000);
           }
-        } catch (err) {
-          alert("활성화 실패: " + err.message);
-        }
+        });
+      }
+
+      if (btnSetActive) {
+        btnSetActive.addEventListener("click", async () => {
+          if (!selectedScenario) return;
+          try {
+            const res = await fetch("/api/scenarios/activate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ slug: selectedScenario }),
+            });
+            const data = await res.json();
+            if (data.success) {
+              alert(`'${selectedScenario}'가 Remotion의 활성 컴포지션으로 설정되었습니다!`);
+              fetchStatus();
+              fetchScenarios();
+            }
+          } catch (err) {
+            alert("활성화 실패: " + err.message);
+          }
+        });
+      }
+
+      if (btnReRecord) {
+        btnReRecord.addEventListener("click", () => {
+          if (!selectedScenario) return;
+          loadScenarioIntoEditor(selectedScenario, true);
+        });
+      }
+
+      if (btnDirectRerecord) {
+        btnDirectRerecord.addEventListener("click", async () => {
+          if (!selectedScenario) {
+            alert("먼저 재녹화할 시나리오를 선택해주세요.");
+            return;
+          }
+          const slug = selectedScenario;
+          switchTab("tab-terminal");
+          appendTerminalLog(`🚀 '${slug}' 시나리오 즉시 재녹화 파이프라인 요청 중...`, "system-line");
+          try {
+            const res = await fetch("/api/scenarios/record", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                slug,
+                headed: headedToggle ? headedToggle.checked : true,
+                login: loginToggle ? loginToggle.checked : false,
+              }),
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error);
+            if (terminalStatusText) terminalStatusText.textContent = `실행 중 (${slug})`;
+          } catch (err) {
+            appendTerminalLog(`❌ 재녹화 시작 실패: ${err.message}`, "log-error");
+          }
+        });
+      }
+
+      if (editorScenarioSelect) {
+        editorScenarioSelect.addEventListener("change", (e) => {
+          const slug = e.target.value;
+          if (slug) {
+            loadScenarioIntoEditor(slug, false);
+          }
+        });
+      }
+
+      if (btnToggleCompactWaits) {
+        btnToggleCompactWaits.addEventListener("click", () => {
+          compactWaitsEnabled = !compactWaitsEnabled;
+          btnToggleCompactWaits.classList.toggle("active-toggle", compactWaitsEnabled);
+          btnToggleCompactWaits.textContent = compactWaitsEnabled
+            ? "⏳ 대기(WAIT) 간소화"
+            : "⏳ 대기(WAIT) 전체 펼침";
+          renderActionCards();
+        });
+      }
+
+      // Scenario Library Search & Filter Chips
+      if (scenarioSearchInput) {
+        scenarioSearchInput.addEventListener("input", (e) => {
+          scenarioSearchQuery = e.target.value || "";
+          renderScenarioList();
+        });
+      }
+
+      scenarioFilterChips.forEach((chip) => {
+        chip.addEventListener("click", () => {
+          scenarioFilterChips.forEach((c) => c.classList.remove("active"));
+          chip.classList.add("active");
+          scenarioFilterMode = chip.getAttribute("data-filter") || "all";
+          renderScenarioList();
+        });
       });
 
-      btnReRecord.addEventListener("click", () => {
-        if (!selectedScenario) return;
-        const details = scenarioDetailsCache[selectedScenario];
-        if (details && details.browsePlan) {
-          currentPlan = details.browsePlan;
-          currentSlug = selectedScenario;
-          slugInput.value = currentSlug;
-          planSlugBadge.textContent = `시나리오: ${currentSlug}`;
-          explanationText.textContent = `기존 시나리오 '${selectedScenario}'를 불러왔습니다.`;
-          renderActionCards();
-          switchTab("tab-generator");
-        }
+      // Studio Workspace Sub-Tabs (Moments / Narration / JSON)
+      studioSubtabBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const targetId = btn.getAttribute("data-subtab");
+          studioSubtabBtns.forEach((b) => b.classList.toggle("active", b === btn));
+          studioSubtabPanes.forEach((p) => p.classList.toggle("active", p.id === targetId));
+        });
       });
+
+      // Video Player Timecode, Playhead & Step Sync
+      if (videoPlayer) {
+        videoPlayer.addEventListener("timeupdate", updateVideoPlaybackSync);
+        videoPlayer.addEventListener("loadedmetadata", updateVideoPlaybackSync);
+      }
+
+      if (videoSpeedSelect && videoPlayer) {
+        videoSpeedSelect.addEventListener("change", () => {
+          videoPlayer.playbackRate = parseFloat(videoSpeedSelect.value) || 1.0;
+        });
+      }
+
+      if (timelineBarWrapper && videoPlayer) {
+        timelineBarWrapper.addEventListener("click", (e) => {
+          if (!videoPlayer.duration) return;
+          const rect = timelineBarWrapper.getBoundingClientRect();
+          const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+          videoPlayer.currentTime = ratio * videoPlayer.duration;
+          updateVideoPlaybackSync();
+        });
+      }
+
+      if (btnCopyJson && jsonViewerContent) {
+        btnCopyJson.addEventListener("click", () => {
+          const txt = jsonViewerContent.textContent || "";
+          navigator.clipboard.writeText(txt).then(() => {
+            const orig = btnCopyJson.textContent;
+            btnCopyJson.textContent = "✅ 복사 완료!";
+            setTimeout(() => {
+              btnCopyJson.textContent = orig || "📋 JSON 복사";
+            }, 1500);
+          });
+        });
+      }
 
       jsonTabBtns.forEach((btn) => {
         btn.addEventListener("click", () => {
           updateJsonViewer(btn.getAttribute("data-json"));
         });
       });
+
+      const narrationStyleSelect = document.getElementById("narration-style-select");
+      const narrationPitchSelect = document.getElementById("narration-pitch-select");
+      if (narrationStyleSelect && narrationPitchSelect) {
+        narrationStyleSelect.addEventListener("change", () => {
+          const recPitch = STYLE_RECOMMENDED_PITCH[narrationStyleSelect.value];
+          if (recPitch) {
+            narrationPitchSelect.value = recPitch;
+          }
+        });
+      }
+
+      const btnGenerateNarration = document.getElementById("btn-generate-narration");
+      if (btnGenerateNarration) {
+        btnGenerateNarration.addEventListener("click", handleGenerateNarration);
+      }
+
+      const btnAddNarrationIntro = document.getElementById("btn-add-narration-intro");
+      if (btnAddNarrationIntro) {
+        btnAddNarrationIntro.addEventListener("click", handleAddNarrationIntro);
+      }
+
+      const btnAddNarrationCue = document.getElementById("btn-add-narration-cue");
+      if (btnAddNarrationCue) {
+        btnAddNarrationCue.addEventListener("click", handleAddNarrationCue);
+      }
+
+      const btnSaveNarration = document.getElementById("btn-save-narration");
+      if (btnSaveNarration) {
+        btnSaveNarration.addEventListener("click", handleSaveNarration);
+      }
 
       // Terminal Enter & Interactive Input Bindings
       if (btnBannerEnter) {

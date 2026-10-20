@@ -31,6 +31,12 @@ import {
   normalizeTargetUrl,
 } from "../src/services/authManager";
 import { actionRecorderService } from "../src/services/actionRecorderService";
+import {
+  generateNarrationScript,
+  getNarration,
+  saveNarrationFile,
+  synthesizeNarrationAudio,
+} from "../src/services/narrationService";
 
 dotenv.config({ override: true });
 
@@ -589,6 +595,69 @@ app.get("/api/download/:slug", (req: Request, res: Response) => {
       if (!res.headersSent) res.status(500).send("다운로드 중 오류가 발생했습니다.");
     }
   });
+});
+
+// 11. AI Narration Script & Edge Neural TTS APIs
+app.get("/api/narration/:slug", (req: Request, res: Response) => {
+  try {
+    const slug = req.params.slug as string;
+    const narration = getNarration(slug);
+    res.json({ narration });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/narration/:slug/generate", async (req: Request, res: Response) => {
+  try {
+    const slug = req.params.slug as string;
+    const { voice, rate, pitch, style, enabled, showSubtitles } = req.body || {};
+    const narration = await generateNarrationScript(slug, {
+      voice,
+      rate,
+      pitch,
+      style,
+      enabled,
+      showSubtitles,
+      synthesizeAudio: true,
+    });
+    res.json({ success: true, narration });
+  } catch (err: any) {
+    console.error("[Narration Generate Error]", err);
+    res.status(500).json({ error: err.message || "AI 대본 생성 중 오류가 발생했습니다." });
+  }
+});
+
+app.post("/api/narration/:slug/save", (req: Request, res: Response) => {
+  try {
+    const slug = req.params.slug as string;
+    const { narration, synthesize } = req.body || {};
+    if (!narration) {
+      res.status(400).json({ error: "저장할 대본 데이터가 없습니다." });
+      return;
+    }
+    let saved = saveNarrationFile(slug, narration);
+    if (synthesize !== false) {
+      saved = synthesizeNarrationAudio(slug, saved.voice, saved.rate, saved.pitch) || saved;
+    }
+    res.json({ success: true, narration: saved });
+  } catch (err: any) {
+    console.error("[Narration Save Error]", err);
+    res.status(500).json({ error: err.message || "대본 저장 및 음성 합성 중 오류가 발생했습니다." });
+  }
+});
+
+app.get("/api/narration/audio/:slug/:filename", (req: Request, res: Response) => {
+  const slug = req.params.slug as string;
+  const filename = path.basename(req.params.filename as string);
+  const audioPath = path.join(DATA_DIR, slug, "audio", filename);
+  if (!fs.existsSync(audioPath)) {
+    res.status(404).send("오디오 파일을 찾을 수 없습니다.");
+    return;
+  }
+  res.setHeader("Content-Type", "audio/mpeg");
+  res.setHeader("Cache-Control", "no-store");
+  fs.createReadStream(audioPath).pipe(res);
 });
 
 // Static frontend serving

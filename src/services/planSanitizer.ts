@@ -18,6 +18,35 @@ export interface SanitizeReport {
  * 
  * 0% DOMAIN HARDCODING: Never overwrites AI-extracted DOM IDs with hardcoded module selectors!
  */
+export function splitSelectorCandidates(s: string): string[] {
+  if (!s) return [];
+  const result: string[] = [];
+  let cur = "";
+  let inSingle = false;
+  let inDouble = false;
+  let parenDepth = 0;
+  let bracketDepth = 0;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch === "'" && !inDouble && s[i - 1] !== "\\") inSingle = !inSingle;
+    else if (ch === '"' && !inSingle && s[i - 1] !== "\\") inDouble = !inDouble;
+    else if (!inSingle && !inDouble) {
+      if (ch === "(") parenDepth++;
+      else if (ch === ")" && parenDepth > 0) parenDepth--;
+      else if (ch === "[") bracketDepth++;
+      else if (ch === "]" && bracketDepth > 0) bracketDepth--;
+      else if (ch === "," && parenDepth === 0 && bracketDepth === 0) {
+        if (cur.trim()) result.push(cur.trim());
+        cur = "";
+        continue;
+      }
+    }
+    cur += ch;
+  }
+  if (cur.trim()) result.push(cur.trim());
+  return result;
+}
+
 export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report: SanitizeReport } {
   const changes: string[] = [];
   let fixedActionsCount = 0;
@@ -37,6 +66,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
   const normalizeSelectorSyntax = (rawSel: string): string => {
     if (!rawSel) return "";
     let s = rawSel
+
       .replace(/\\+"/g, "'")
       .replace(/\\+'/g, "'")
       .replace(/'{2,}/g, "'")
@@ -88,34 +118,58 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         .trim();
     }
 
-    // Strip transient Dynatree / Fancytree / jQuery UI runtime state classes that change depending on whether a folder is expanded/focused/selected
+    // Strip transient Dynatree / Fancytree / jQuery UI / Select2 / TouchPunch / Checkbox runtime classes that change depending on UI state or match every tree item
     s = s.replace(
-      /\.(?:dynatree-(?:expanded|has-children|folder|lastsib|focused|active|selected|partsel|loading|statusnode|exp-[a-zA-Z0-9_-]+|ico-[a-zA-Z0-9_-]+)|fancytree-(?:expanded|has-children|folder|lastsib|focused|active|selected|partsel|loading|statusnode|exp-[a-zA-Z0-9_-]+|ico-[a-zA-Z0-9_-]+)|ui-state-(?:hover|focus|active|highlight))\b/g,
+      /\.(?:_punchHandle|chkbox_on|rdobtn_on|ico_chk_on|dynatree-(?:expanded|has-children|folder|lastsib|focused|active|selected|partsel|loading|statusnode|exp-[a-zA-Z0-9_-]+|ico-[a-zA-Z0-9_-]+)|fancytree-(?:expanded|has-children|folder|lastsib|focused|active|selected|partsel|loading|statusnode|exp-[a-zA-Z0-9_-]+|ico-[a-zA-Z0-9_-]+)|ui-state-(?:hover|focus|active|highlight)|select2-(?:focused|active|dropdown-open|container-active|drop-above))\b/g,
       ""
     );
 
-    // Filter out dummy onclick='return false;' candidates and strip erroneous #header prefixes on content/form elements
-    const parts = s
-      .split(",")
-      .map((p) => p.trim())
-      .filter(Boolean)
+    // Decode HTML entities inside :text-is(...), :has-text(...), and [title=...] (e.g. &nbsp; -> space, &gt; -> >)
+    const decodeHtmlEntities = (str: string): string =>
+      str
+        .replace(/&nbsp;/gi, " ")
+        .replace(/&#160;/g, " ")
+        .replace(/&gt;/gi, ">")
+        .replace(/&lt;/gi, "<")
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&amp;/gi, "&");
+
+    s = s.replace(/(:(?:text-is|has-text)\(['"])([^'"]+)(['"]\))/g, (_m, pre, txt, post) => {
+      const cleanedTxt = decodeHtmlEntities(txt).replace(/\s+/g, " ").trim();
+      return `${pre}${cleanedTxt}${post}`;
+    });
+    s = s.replace(/(\[title\*?=['"])([^'"]+)(['"]\])/g, (_m, pre, txt, post) => {
+      const cleanedTxt = decodeHtmlEntities(txt).replace(/\s+/g, " ").trim();
+      return `${pre}${cleanedTxt}${post}`;
+    });
+
+    // Convert invalid CSS numeric-leading class selectors (e.g. dd.0220 -> dd[class~='0220'])
+    s = s.replace(/\b([a-zA-Z][a-zA-Z0-9_-]*)\.([0-9][a-zA-Z0-9_-]*)/g, "$1[class~='$2']");
+
+    // Filter out dummy onclick='return false;' candidates, fix inverted .ui-dialog:visible prefixes, and strip erroneous #header prefixes on content/form elements
+    const parts = splitSelectorCandidates(s)
       .filter((p) => !/\[onclick\*=['"]?(?:return\s+(?:false|true)|javascript:|void\s*\(0\))/i.test(p))
       .map((p) => {
+        let cleaned = p;
+        // Fix inverted prefix like "div#eapLineSelect_lineTrgtAdd .ui-dialog:visible button..." -> ".ui-dialog:visible div#eapLineSelect_lineTrgtAdd button..."
+        cleaned = cleaned.replace(/^([a-zA-Z0-9]*#[a-zA-Z0-9_-]+)\s+\.ui-dialog:visible\s+/, ".ui-dialog:visible $1 ");
         if (
-          p.startsWith("#header ") &&
-          /(input\[name|textarea|a:has-text\(['"]결재선|button:has-text\(['"]결재선|button\.btn\.btn_pri|a\.sub\._doc|#eapDocReg_|#eapWorkSelect_|eapHeader_option|_search_option_hide|\._eapSearch|\.tbl_lst|\.lst_type1)/i.test(p)
+          cleaned.startsWith("#header ") &&
+          /(input\[name|textarea|a:has-text\(['"]결재선|button:has-text\(['"]결재선|button\.btn\.btn_pri|a\.sub\._doc|#eapDocReg_|#eapWorkSelect_|eapHeader_option|_search_option_hide|\._eapSearch|\.tbl_lst|\.lst_type1)/i.test(cleaned)
         ) {
-          return p.replace(/^#header\s+/, "");
+          cleaned = cleaned.replace(/^#header\s+/, "");
         }
-        return p;
+        return cleaned;
       });
 
     return parts.length > 0 ? Array.from(new Set(parts)).join(", ") : s;
   };
 
+
   for (let i = 0; i < actualPlan.actions.length; i++) {
     const action = { ...actualPlan.actions[i] };
-    const desc = action.description || "";
+    let desc = action.description || "";
     let sel = action.selector || "";
 
     // 0. Ensure wait actions do NOT have selectors
@@ -124,19 +178,42 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       sel = "";
     }
 
-    // 0-A. Auto-restore dragAndDrop type if previously overwritten to "click" by older dashboard UI
+    // 0-A. Auto-restore dragAndDrop or upload type if previously overwritten to "click" by older dashboard UI or captured as C:\fakepath\
     if (action.type === "click" && action.sourceSelector && action.targetSelector) {
       action.type = "dragAndDrop";
       changes.push(`[타입 복원] '${desc}' 액션의 sourceSelector/targetSelector를 감지하여 type을 'dragAndDrop'으로 자동 복원했습니다.`);
       fixedActionsCount++;
+    } else if (action.type === "click" && action.filePath) {
+      action.type = "upload";
+      changes.push(`[타입 복원] '${desc}' 액션의 filePath를 감지하여 type을 'upload'로 자동 복원했습니다.`);
+      fixedActionsCount++;
+    } else if (action.type === "type" && action.text && /^C:\\fakepath\\/i.test(action.text.trim())) {
+      const fakeFileName = action.text.trim().replace(/^C:\\fakepath\\/i, "");
+      if (i + 1 < actualPlan.actions.length && actualPlan.actions[i + 1].type === "upload") {
+        removedActionsCount++;
+        if (i + 1 < actualPlan.actions.length && actualPlan.actions[i + 1].type === "wait") {
+          i++;
+        }
+        continue;
+      }
+      action.type = "upload";
+      action.filePath = `data/_uploads/${fakeFileName}`;
+      action.text = fakeFileName;
+      action.description = desc.replace(/에\s*'C:\\fakepath\\[^']+'\s*입력/i, `에 '${fakeFileName}' 첨부`);
+      desc = action.description;
+      fixedActionsCount++;
     }
 
-    // 0-B. Remove untrusted synthetic JS clicks on hidden #eapHeader_option / _search_option_hide
+    // 0-B. Remove untrusted synthetic JS clicks on hidden #eapHeader_option / _search_option_hide or whole-page background <article id="document_write"> wrapper
     if (
       action.type === "click" &&
-      (sel.includes("eapHeader_option") || sel.includes("_search_option_hide") || desc.includes("도움말 전체기간 검색 초기화"))
+      (sel.includes("eapHeader_option") ||
+        sel.includes("_search_option_hide") ||
+        desc.includes("도움말 전체기간 검색 초기화") ||
+        sel.startsWith("article#document_write") ||
+        action.targetHtml?.startsWith('<article id="document_write"'))
     ) {
-      changes.push(`[불필요 단계 제거] 페이지 내부 스크립트가 발생시킨 숨김 요소(#eapHeader_option) 클릭 단계를 제거했습니다.`);
+      changes.push(`[불필요 단계 제거] 비인터랙티브 배경 레이아웃/숨김 요소(${sel.split(",")[0]}) 클릭 단계를 제거했습니다.`);
       removedActionsCount++;
       if (i + 1 < actualPlan.actions.length && actualPlan.actions[i + 1].type === "wait") {
         i++; // Also skip its paired wait step
@@ -191,10 +268,37 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       }
     }
 
-    // Auto-inject preceding hover action if clicking a hover-revealed card button (e.g. button.btn_write inside .app_work_box / li.aw_li)
+    // Remove previously mis-injected form-card hover steps if the following click is NOT an approval form card (e.g. Wiki/Board button._write)
+    if (action.type === "hover" && desc.includes("양식 카드에 마우스 호버")) {
+      let nextNonWait: BrowsePlanAction | null = null;
+      for (let k = i + 1; k < actualPlan.actions.length; k++) {
+        if (actualPlan.actions[k].type !== "wait") {
+          nextNonWait = actualPlan.actions[k];
+          break;
+        }
+      }
+      const nextSel = (nextNonWait?.selector || "").toLowerCase();
+      const nextDesc = (nextNonWait?.description || "").toLowerCase();
+      const isNextRealWorkCard =
+        nextSel.includes("aw_li") ||
+        nextSel.includes("app_work_box") ||
+        nextSel.includes("workselect") ||
+        nextDesc.includes("양식 카드");
+      if (nextNonWait && !isNextRealWorkCard) {
+        changes.push(`[불필요 호버 제거] 양식 카드가 아닌 일반 작성 버튼('${nextNonWait.description || ""}') 앞에 잘못 삽입된 양식 카드 호버 단계를 제거했습니다.`);
+        removedActionsCount++;
+        if (i + 1 < actualPlan.actions.length && actualPlan.actions[i + 1].type === "wait") {
+          i++; // Also skip its paired wait step
+        }
+        continue;
+      }
+    }
+
+    // Auto-inject preceding hover action ONLY if clicking a genuine hover-revealed approval form card button (inside .app_work_box / li.aw_li)
     if (
       action.type === "click" &&
-      (sel.includes("btn_write") ||
+      ((sel.includes("btn_write") &&
+        (sel.includes("aw_li") || sel.includes("app_work_box") || sel.includes("WorkSelect"))) ||
         (sel.includes(".app_work_box") && sel.includes("button")) ||
         (desc.includes("양식 카드") && desc.includes("작성")))
     ) {
@@ -295,110 +399,944 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       fixedActionsCount++;
     }
 
-    // 1-E. Precision selector refinement from targetHtml & candidate ordering (applies to both Eyedropper and AI actions)
-    if (action.selector && action.type === "click") {
-      const rawParts = action.selector
-        .split(",")
-        .map((p) => p.trim())
-        .filter(Boolean);
+    // 1-E. Precision selector refinement from targetHtml & candidate ordering (applies to click, hover, type, and dragAndDrop sourceSelector)
+    const refineSelectorString = (rawSel: string, htmlHint?: string): string => {
+      if (!rawSel) return rawSel;
+      let workingSel = rawSel;
+
+      const decodeEntities = (str: string): string =>
+        str
+          .replace(/&nbsp;/gi, " ")
+          .replace(/&#160;/g, " ")
+          .replace(/&gt;/gi, ">")
+          .replace(/&lt;/gi, "<")
+          .replace(/&quot;/gi, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&amp;/gi, "&");
+
+      // Reconstruct legacy 140-char truncated targetHtml where opening tag was sliced at index 140 without closing '>'
+      let normalizedHtmlHint = htmlHint ? htmlHint.trim() : "";
+      if (normalizedHtmlHint) {
+        const closeTagMatch = normalizedHtmlHint.match(/<\/([a-zA-Z0-9]+)>$/);
+        if (closeTagMatch) {
+          const beforeClose = normalizedHtmlHint.slice(0, normalizedHtmlHint.length - closeTagMatch[0].length);
+          if (!beforeClose.includes(">") && beforeClose.length >= 140) {
+            let rawOpenPart = beforeClose.slice(0, 140);
+            rawOpenPart = rawOpenPart
+              .replace(/\s+[a-zA-Z0-9_:-]+=["'][^"']*$/, "")
+              .replace(/\s+[a-zA-Z0-9_:-]+=?$/, "");
+            const innerTxtPart = beforeClose.slice(140);
+            normalizedHtmlHint = `${rawOpenPart}>${innerTxtPart}${closeTagMatch[0]}`;
+          }
+        }
+      }
+
+      // If this is a 'type' action, normalize any UI '↵' symbols back to '\n', strip pre-existing editor template text captured in targetHtml, and strip self-referential :has-text('<typed text>')
+      if (action.type === "type" && action.text && action.text.trim()) {
+        if (action.text.includes("↵")) {
+          action.text = action.text.replace(/\s*↵\s*/g, "\n");
+        }
+        const isRichEditorTarget =
+          workingSel.includes("se-contents") ||
+          workingSel.includes("contenteditable") ||
+          workingSel.includes("ProseMirror") ||
+          Boolean(normalizedHtmlHint && /se-contents|contenteditable=["']true["']/i.test(normalizedHtmlHint));
+        if (isRichEditorTarget && normalizedHtmlHint) {
+          const pMatch = normalizedHtmlHint.match(/<p\b[^>]*>([^<]+)/i);
+          const initParaTxt = pMatch
+            ? decodeEntities(pMatch[1]).replace(/\u200B/g, "").replace(/\u00a0/g, " ").trim()
+            : "";
+          const normActionTxt = action.text.replace(/\u200B/g, "").replace(/\u00a0/g, " ");
+          if (
+            initParaTxt.length >= 2 &&
+            normActionTxt.startsWith(initParaTxt) &&
+            normActionTxt.trim() !== initParaTxt
+          ) {
+            let remainder = normActionTxt.slice(initParaTxt.length);
+            const hadNewline = /^\r?\n/.test(remainder);
+            remainder = remainder.replace(/^\r?\n/, "").trim();
+            if (remainder.length > 0) {
+              const oldFormatted = action.text.replace(/\n/g, " ↵ ");
+              action.text = remainder;
+              action.editorParaIndex = action.editorParaIndex ?? 0;
+              if (hadNewline || /^[■▶●◆★▣]/.test(initParaTxt)) {
+                action.editorInsertNewline = true;
+              }
+              if (action.description) {
+                action.description = action.description
+                  .replace(oldFormatted, remainder.replace(/\n/g, " ↵ "))
+                  .replace(normActionTxt, remainder);
+              }
+              changes.push(
+                `[에디터 기본 양식 분리] 에디터 기존 양식 문구('${initParaTxt}')를 제외하고 실제 입력 텍스트('${remainder}')만 타이핑하도록 보정했습니다.`
+              );
+            }
+          }
+        }
+        const escapedTxt = action.text.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        workingSel = workingSel.replace(new RegExp(`:(?:has-text|text-is)\\(['"]${escapedTxt}['"]\\)`, "g"), "");
+      }
+
+      let rawParts = splitSelectorCandidates(workingSel);
       const hasModalScope = rawParts.some((p) => p.startsWith(".ui-dialog"));
       const modalPrefix = hasModalScope ? ".ui-dialog:visible " : "";
 
-      // (a) If target is a .dynatree-title node, prepend exact [title='...'] and :text-is('...') so '유니슨' never collides with '유니슨 그룹'
-      if (action.selector.includes("dynatree-title") || (action.targetHtml && action.targetHtml.includes("dynatree-title"))) {
-        const htmlTitleMatch = action.targetHtml?.match(/\btitle=["']([^"']+)["']/i);
-        const htmlInnerMatch = action.targetHtml?.match(/>([^<]+)<\/a>/i);
-        const selTextMatch = action.selector.match(/dynatree-title:(?:has-text|text-is)\(['"]([^'"]+)['"]\)/);
-        const exactTitle = htmlTitleMatch ? htmlTitleMatch[1].replace(/'/g, "").trim() : "";
-        const exactText = (htmlInnerMatch ? htmlInnerMatch[1] : selTextMatch ? selTextMatch[1] : "").replace(/'/g, "").trim();
+      // (a) If target is a .dynatree-title node, place :text-is('...') and :has-text('...') FIRST,
+      // and ALWAYS pair [title='...'] with :has-text('...') so a department path title (e.g. title='유니슨 그룹>유니슨>테스트 부서' on user test002)
+      // never matches the department folder ('테스트 부서') instead of the user node ('test002')!
+      if (workingSel.includes("dynatree-title") || (normalizedHtmlHint && normalizedHtmlHint.includes("dynatree-title"))) {
+        const outerOpenMatch = normalizedHtmlHint.match(/^<[a-zA-Z0-9]+([^<>]*)/);
+        const outerOpenAttrs = outerOpenMatch ? outerOpenMatch[1] : "";
+        const htmlTitleMatch = outerOpenAttrs.match(/\btitle=["']([^"']+)["']/i);
+        const selTitleMatch = workingSel.match(/dynatree-title\[title=['"]([^'"]+)['"]\]/i);
+        const strippedInnerHtmlText = normalizedHtmlHint
+          ? decodeEntities(
+              normalizedHtmlHint
+                .replace(/^<[^>]+>/, "")
+                .replace(/<\/[a-zA-Z0-9]+>$/i, "")
+                .replace(/<[^>]+>/g, " ")
+            )
+              .replace(/\s+/g, " ")
+              .trim()
+          : "";
+        const selTextMatch =
+          workingSel.match(/dynatree-title[^,]*:(?:has-text|text-is)\(['"]([^'"]+)['"]\)/) ||
+          workingSel.match(/:(?:has-text|text-is)\(['"]([^'"]+)['"]\)/);
+        const descTextMatch = desc.match(/트리\s*['"]([^'"]+)['"]/);
+
+        const exactTitle = decodeEntities(htmlTitleMatch ? htmlTitleMatch[1] : selTitleMatch ? selTitleMatch[1] : "")
+          .replace(/'/g, "")
+          .replace(/\s+/g, " ")
+          .trim();
+        const exactText = decodeEntities(
+          strippedInnerHtmlText
+            ? strippedInnerHtmlText
+            : selTextMatch
+            ? selTextMatch[1]
+            : descTextMatch
+            ? descTextMatch[1]
+            : ""
+        )
+          .replace(/'/g, "")
+          .replace(/\s+/g, " ")
+          .trim();
+
+        // Upgrade any bare a.dynatree-title[title='...']:visible in rawParts so it includes :has-text(exactText)
+        if (exactText) {
+          rawParts = rawParts.map((part) => {
+            if (
+              part.includes("dynatree-title[title=") &&
+              !part.includes(":has-text(") &&
+              !part.includes(":text-is(")
+            ) {
+              return part.replace(/(:visible)?$/, `:has-text('${exactText}'):visible`);
+            }
+            return part;
+          });
+        }
 
         const treePriority: string[] = [];
-        if (exactTitle) {
-          treePriority.push(`${modalPrefix}a.dynatree-title[title='${exactTitle}']:visible`);
-        }
         if (exactText) {
           treePriority.push(`${modalPrefix}.dynatree-title:text-is('${exactText}'):visible`);
           treePriority.push(`${modalPrefix}.dynatree-title:has-text('${exactText}'):visible`);
+          const firstTok = exactText.split(/\s+/)[0];
+          if (firstTok && firstTok.length >= 2 && firstTok !== exactText) {
+            treePriority.push(`${modalPrefix}.dynatree-title:has-text('${firstTok}'):visible`);
+          }
+          if (exactTitle) {
+            treePriority.push(`${modalPrefix}a.dynatree-title[title='${exactTitle}']:has-text('${exactText}'):visible`);
+          }
+        } else if (exactTitle) {
+          treePriority.push(`${modalPrefix}a.dynatree-title[title='${exactTitle}']:visible`);
         }
+
         if (treePriority.length > 0) {
-          const merged = Array.from(new Set([...treePriority, ...rawParts]));
-          const newSel = merged.join(", ");
-          if (newSel !== action.selector) {
-            action.selector = newSel;
-            sel = newSel;
-            changes.push(`[트리 노드 정밀화] '${desc}' 셀렉터에 정확 일치(title/text-is) 후보를 최우선 배치했습니다.`);
-            fixedActionsCount++;
+          workingSel = Array.from(new Set([...treePriority, ...rawParts])).join(", ");
+        }
+      }
+
+      // (b) Extract attributes strictly from the OUTER opening tag of normalizedHtmlHint (never confusing data-*-id or nested child <input id> with outer id!)
+      if (normalizedHtmlHint) {
+        const openTagMatch = normalizedHtmlHint.match(/^<([a-zA-Z0-9]+)([^<>]*)/);
+        const tagName = openTagMatch ? openTagMatch[1].toLowerCase() : "";
+        const rawOpenTagAttrs = openTagMatch ? openTagMatch[2] : "";
+        const hasTooltipCacheAttr = /\b(?:oldtitle|data-original-title|data-qtip)=/i.test(rawOpenTagAttrs);
+        // Strip qTip2 / Bootstrap tooltip cached HTML attributes (oldtitle, data-original-title, data-qtip)
+        // which often contain entity-encoded inner HTML like "<div title='진행' ...>" or truncated trailing attributes,
+        // preventing false-positive title="..." or id="..." extraction!
+        const openTagAttrs = rawOpenTagAttrs
+          .replace(/\s+(?:oldtitle|data-original-title|data-qtip|aria-describedby)=["'][^"']*["']/gi, "")
+          .replace(/\s+(?:oldtitle|data-original-title|data-qtip|aria-describedby)=["'][^"']*$/gi, "");
+        const innerHtmlAfterOpen = openTagMatch ? normalizedHtmlHint.slice(openTagMatch[0].length) : "";
+        const rawIdContainerMatch = workingSel.match(
+          /(?:^|,\s*)(?:\.ui-dialog:visible\s+)?([a-zA-Z0-9]*#[a-zA-Z0-9_-]+)\s+(?:>\s*)?[a-zA-Z0-9_.\[#]/
+        );
+        const matchedContainerToken = rawIdContainerMatch ? rawIdContainerMatch[1].replace(/^\.ui-dialog:visible\s+/, "") : "";
+        const isWikiMenuTag = /\bdata-menu-id=["']wiki/i.test(openTagAttrs);
+        const idContainerPrefix = isWikiMenuTag
+          ? `${modalPrefix}#wikiMain_snb `
+          : matchedContainerToken && !/#th\d+$/i.test(matchedContainerToken)
+          ? `${modalPrefix}${matchedContainerToken} `
+          : modalPrefix;
+
+        // Strict outer tag id="..." match (requires leading whitespace, never matching data-menu-id or data-book-id!)
+        const idAttrMatch = openTagAttrs.match(/(?:^|\s)id=["']([^"']+)["']/i);
+        const outerIdVal = idAttrMatch ? idAttrMatch[1].trim() : "";
+
+        // Detect any data-*-id values on the outer tag or nested <input id="..."> / <ul id="..."> inside a <label>/<a>/<button>/<td> that may have polluted workingSel as bogus #id
+        const dataIdVals = Array.from(openTagAttrs.matchAll(/\bdata-[a-z0-9-]+-id=["']([^"']+)["']/gi)).map((m) => m[1].trim());
+        const childAnyIdMatch =
+          (tagName === "label" || tagName === "a" || tagName === "button" || tagName === "td" || tagName === "span") && !outerIdVal
+            ? innerHtmlAfterOpen.match(/<[a-zA-Z0-9]+\b[^<>]*?(?:^|\s)id=["']([^"']+)["']/i)
+            : null;
+        const childInputId = childAnyIdMatch ? childAnyIdMatch[1].trim() : "";
+
+        if (dataIdVals.length > 0 || childInputId) {
+          const bogusIds = new Set<string>([
+            ...dataIdVals.filter((v) => v !== outerIdVal),
+            ...(childInputId ? [childInputId] : []),
+          ]);
+          if (bogusIds.size > 0) {
+            const cleanedParts = splitSelectorCandidates(workingSel)
+              .filter((p) => {
+                for (const bId of bogusIds) {
+                  if (
+                    p === `#${bId}:visible` ||
+                    p === `#${bId}` ||
+                    p === `${tagName}#${bId}:visible` ||
+                    p === `${tagName}#${bId}` ||
+                    p === `.ui-dialog:visible #${bId}:visible` ||
+                    p === `.ui-dialog:visible ${tagName}#${bId}:visible`
+                  ) {
+                    return false;
+                  }
+                }
+                return true;
+              });
+            if (cleanedParts.length > 0) {
+              workingSel = cleanedParts.join(", ");
+            }
+          }
+        }
+
+        // Extract outer for="..." attribute on <label> (e.g. <label for="rb2">제목</label> in ul.drop_menu or form controls)
+        if (tagName === "label") {
+          const forAttrMatch = openTagAttrs.match(/(?:^|\s)for=["']([^"']+)["']/i);
+          const outerForVal = forAttrMatch ? forAttrMatch[1].replace(/'/g, "").trim() : "";
+          if (outerForVal && outerForVal.length >= 2 && outerForVal.length <= 64 && !/^(th\d+|[0-9]+)$/i.test(outerForVal)) {
+            const currentParts = splitSelectorCandidates(workingSel);
+            const forCands: string[] = [];
+            if (idContainerPrefix !== modalPrefix) {
+              forCands.push(`${idContainerPrefix}label[for='${outerForVal}']:visible`);
+            }
+            forCands.push(`${modalPrefix}label[for='${outerForVal}']:visible`);
+            workingSel = Array.from(new Set([...forCands, ...currentParts])).join(", ");
+          }
+        }
+
+        // Extract outer name="..." attribute and remove any contradicted [name='...'] in workingSel
+        // Never prepend bare [name='...'] for radio/checkbox inputs where all options share the same name!
+        const nameAttrMatch = openTagAttrs.match(/(?:^|\s)name=["']([^"']+)["']/i);
+        const outerNameVal = nameAttrMatch ? nameAttrMatch[1].replace(/'/g, "").trim() : "";
+        const outerTypeMatch = openTagAttrs.match(/(?:^|\s)type=["']([^"']+)["']/i);
+        const outerTypeVal = outerTypeMatch ? outerTypeMatch[1].toLowerCase().trim() : "";
+        const outerValMatch = openTagAttrs.match(/(?:^|\s)value=["']([^"']+)["']/i);
+        const outerValueVal = outerValMatch ? outerValMatch[1].replace(/'/g, "").trim() : "";
+        const isOuterRadioOrCheckbox = tagName === "input" && (outerTypeVal === "radio" || outerTypeVal === "checkbox");
+
+        if (outerNameVal && !/^(th\d+|[0-9]+|.*_ko)$/i.test(outerNameVal)) {
+          const currentParts = splitSelectorCandidates(workingSel)
+            .filter((p) => {
+              const m = p.match(/\[name=['"]([^'"]+)['"]\]/i);
+              if (m && m[1] !== outerNameVal) return false;
+              // Also remove bare input[name='...']:visible if it's a radio/checkbox without [value=...]
+              if (isOuterRadioOrCheckbox && m && !p.includes("[value=") && !p.includes(":has(")) return false;
+              return true;
+            });
+          if (isOuterRadioOrCheckbox) {
+            if (outerValueVal && outerValueVal.length <= 35 && !/^(on|true|false|y|n|1|0)$/i.test(outerValueVal)) {
+              const nameValCand = `${modalPrefix}input[name='${outerNameVal}'][value='${outerValueVal}']:visible`;
+              workingSel = Array.from(new Set([nameValCand, ...currentParts])).join(", ");
+            } else if (currentParts.length > 0) {
+              workingSel = currentParts.join(", ");
+            }
+          } else {
+            const nameCand = `${modalPrefix}${tagName ? `${tagName}[name='${outerNameVal}']` : `[name='${outerNameVal}']`}:visible`;
+            workingSel = Array.from(new Set([nameCand, ...currentParts])).join(", ");
+          }
+        }
+
+        // Extract outer title="..." attribute when specific (e.g. <a title="중요도5">5</a>) and place at the FRONT!
+        const titleAttrMatch = openTagAttrs.match(/(?:^|\s)title=["']([^"']+)["']/i);
+        const outerTitleVal = titleAttrMatch ? decodeEntities(titleAttrMatch[1]).replace(/'/g, "").replace(/\s+/g, " ").trim() : "";
+        if (hasTooltipCacheAttr) {
+          const cleanedTooltipParts = splitSelectorCandidates(workingSel).filter((p) => {
+            const tm = p.match(/\[title=['"]([^'"]+)['"]\]/i);
+            if (tm && tm[1] !== outerTitleVal) return false;
+            return true;
+          });
+          if (cleanedTooltipParts.length > 0) {
+            workingSel = cleanedTooltipParts.join(", ");
+          }
+        }
+        const isGenericSharedTitle =
+          /^(선택|체크|검색|초기화|삭제|수정|인쇄|별표|설정|관리|등록|추가|확인|취소|닫기|조직도|목록|조회|저장|옵션|비우기|접기\/펴기)$/i.test(
+            outerTitleVal
+          );
+        if (
+          outerTitleVal &&
+          outerTitleVal.length >= 2 &&
+          outerTitleVal.length <= 30 &&
+          !/^(선택|체크)$/i.test(outerTitleVal) &&
+          !openTagAttrs.includes("dynatree-title") &&
+          tagName !== "input"
+        ) {
+          const currentParts = splitSelectorCandidates(workingSel);
+          const alreadyHasTitleSel = currentParts.some((p) => p.includes(`[title='${outerTitleVal}']`));
+          const clsAttrForTitle = openTagAttrs.match(/\bclass=["']([^"']+)["']/i);
+          const semClsForTitle = clsAttrForTitle
+            ? clsAttrForTitle[1]
+                .split(/\s+/)
+                .find(
+                  (c) =>
+                    /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(c) &&
+                    !/^(btn|btn_ico|btn_pri|btn_med|btn_sml|btn_lar|btn_block|item|ico|active|selected|on|hover|focus|chkbox|rdobtn|_punchHandle)$/i.test(c)
+                )
+            : "";
+          const titleCandidates: string[] = [];
+          if (semClsForTitle) {
+            titleCandidates.push(`${idContainerPrefix}${tagName}.${semClsForTitle}[title='${outerTitleVal}']:visible`);
+          }
+          if (!isGenericSharedTitle || idContainerPrefix !== modalPrefix) {
+            titleCandidates.push(`${idContainerPrefix}${tagName}[title='${outerTitleVal}']:visible`);
+          }
+          if (!isGenericSharedTitle && !alreadyHasTitleSel && idContainerPrefix !== modalPrefix) {
+            titleCandidates.push(`${modalPrefix}${tagName}[title='${outerTitleVal}']:visible`);
+          }
+          if (titleCandidates.length > 0) {
+            workingSel = Array.from(new Set([...titleCandidates, ...currentParts])).join(", ");
+          }
+        }
+
+        // Strip any previously poisoned onclick*='if(' or checkedEditMode candidates
+        if (workingSel.includes("onclick*='if(") || workingSel.includes("checkedEditMode")) {
+          const cleanedOnclickParts = splitSelectorCandidates(workingSel).filter(
+            (p) => !p.includes("onclick*='if(") && !p.includes("checkedEditMode")
+          );
+          if (cleanedOnclickParts.length > 0) {
+            workingSel = cleanedOnclickParts.join(", ");
+          }
+        }
+
+        // Extract specific goPage('/ekp/scr/...') target or JS handler function (e.g. GwMainMenu.fn.goLogout()) from onclick attribute
+        const onclickAttrMatch = openTagAttrs.match(/\bonclick=(?:"([^"]*)"|'([^']*)')/i);
+        const onclickVal = (onclickAttrMatch?.[1] ?? onclickAttrMatch?.[2] ?? "").trim();
+        const onclickScrMatch = onclickVal.match(/(\/ekp\/(?:scr|view)\/[a-zA-Z0-9_/?=&.-]+)/i);
+        const onclickFnMatch = onclickVal.match(/^\s*([a-zA-Z0-9_$.]+\s*\([^"';)]*\))/i);
+        if (onclickScrMatch && onclickScrMatch[1]) {
+          const scrPath = onclickScrMatch[1];
+          const currentParts = splitSelectorCandidates(workingSel);
+          const onclickCandidates = [
+            ...(outerTitleVal
+              ? [
+                  `${idContainerPrefix}${tagName}[title='${outerTitleVal}'][onclick*='${scrPath}']:visible`,
+                  `${idContainerPrefix}${tagName}[title='${outerTitleVal}']:visible`,
+                ]
+              : []),
+            `${idContainerPrefix}${tagName}[onclick*='${scrPath}']:visible`,
+            ...(idContainerPrefix !== modalPrefix ? [`${modalPrefix}${tagName}[onclick*='${scrPath}']:visible`] : []),
+          ];
+          workingSel = Array.from(new Set([...onclickCandidates, ...currentParts])).join(", ");
+        } else if (onclickFnMatch && onclickFnMatch[1]) {
+          const fnCall = onclickFnMatch[1].replace(/'/g, "").trim();
+          if (
+            fnCall &&
+            !/^(javascript:|return\b|void\b|if\s*\(|for\s*\(|while\s*\(|switch\s*\()/i.test(fnCall) &&
+            !fnCall.includes("checkedEditMode")
+          ) {
+            const currentParts = splitSelectorCandidates(workingSel);
+            const onclickCandidates = [
+              `${idContainerPrefix}${tagName}[onclick*='${fnCall}']:visible`,
+              ...(idContainerPrefix !== modalPrefix ? [`${modalPrefix}${tagName}[onclick*='${fnCall}']:visible`] : []),
+            ];
+            workingSel = Array.from(new Set([...onclickCandidates, ...currentParts])).join(", ");
+          }
+        }
+
+        // Prioritize human-readable data-book-name / data-menu-id / data-menu-name before dynamic random IDs
+        const bookNameMatch = openTagAttrs.match(/\bdata-book-name=["']([^"']+)["']/i);
+        if (bookNameMatch && bookNameMatch[1].trim()) {
+          const bookName = bookNameMatch[1].replace(/'/g, "").trim();
+          const hasOpenBookCls = /\b_openBook\b/.test(openTagAttrs);
+          const bookCandidates = [
+            `${modalPrefix}${tagName}[data-book-name='${bookName}']:visible`,
+            ...(hasOpenBookCls ? [`${modalPrefix}${tagName}._openBook:has-text('${bookName}'):visible`] : []),
+          ];
+          const currentParts = splitSelectorCandidates(workingSel)
+            .filter(
+              (p) =>
+                p.includes("data-book-name") ||
+                p.includes("_openBook") ||
+                p.includes("sub_cover") ||
+                p.includes("_bookList") ||
+                p.includes("btn_lst") ||
+                p.includes("wikiBookList")
+            );
+          workingSel = Array.from(new Set([...bookCandidates, ...currentParts])).join(", ");
+        }
+
+        const dataAttrMatches = Array.from(
+          openTagAttrs.matchAll(
+            /\b(data-(?:menu-id|menu-name|res-id|dept-id|emp-id|cmp-id|cal-id|brd-id|trgt-id|work-id|app-type-ordr|app-type-se|app-type-id|addr-grpid|addr-grpname|column-id|value|tab))=["']([^"']+)["']/gi
+          )
+        );
+        if (dataAttrMatches.length > 0) {
+          const attrCandidates: string[] = [];
+          for (const dm of dataAttrMatches) {
+            const attrName = dm[1];
+            const attrVal = dm[2].replace(/'/g, "").trim();
+            if (attrVal && attrVal.toLowerCase() !== "empty") {
+              attrCandidates.push(`${idContainerPrefix}${tagName}[${attrName}='${attrVal}']:visible`);
+            }
+          }
+          if (attrCandidates.length > 0) {
+            const currentParts = splitSelectorCandidates(workingSel);
+            workingSel = Array.from(new Set([...attrCandidates, ...currentParts])).join(", ");
+          }
+        }
+
+        const classAttrMatch = openTagAttrs.match(/\bclass=["']([^"']+)["']/i);
+        if (classAttrMatch) {
+          const classTokens = classAttrMatch[1].split(/\s+/).filter(Boolean);
+          // Numeric-leading slot class (e.g. <dd class="1400"> in resource reservation timetable)
+          const numSlotCls = classTokens.find((c) => /^[0-9][a-zA-Z0-9_-]*$/.test(c));
+          if (numSlotCls && tagName) {
+            const slotCandidates = [
+              ...(rawIdContainerMatch ? [`${idContainerPrefix}${tagName}[class~='${numSlotCls}']:visible`] : []),
+              `${modalPrefix}${tagName}[class~='${numSlotCls}']:visible`,
+            ];
+            const currentParts = splitSelectorCandidates(workingSel);
+            workingSel = Array.from(new Set([...slotCandidates, ...currentParts])).join(", ");
+          }
+
+          // Specific action button classes on <a> or <button> (e.g. btn_logout, btn_login, btn_srch, btn_rfsh)
+          if (!outerIdVal && (tagName === "a" || tagName === "button")) {
+            const specificBtnCls = classTokens.find((c) =>
+              /^btn_(?:logout|login|srch|rfsh|setup|admin)$/i.test(c)
+            );
+            if (specificBtnCls) {
+              const isIconOnlyBtn = /^btn_logout$/i.test(specificBtnCls) || classTokens.includes("btn_ico");
+              let currentParts = splitSelectorCandidates(workingSel);
+              if (isIconOnlyBtn) {
+                currentParts = currentParts.filter((p) => !/:(?:has-text|text-is)\(/i.test(p));
+              }
+              const btnClsCandidates: string[] = [];
+              if (outerTitleVal) {
+                btnClsCandidates.push(`${idContainerPrefix}${tagName}.${specificBtnCls}[title='${outerTitleVal}']:visible`);
+                if (idContainerPrefix !== modalPrefix) {
+                  btnClsCandidates.push(`${modalPrefix}${tagName}.${specificBtnCls}[title='${outerTitleVal}']:visible`);
+                }
+              }
+              btnClsCandidates.push(`${idContainerPrefix}${tagName}.${specificBtnCls}:visible`);
+              if (idContainerPrefix !== modalPrefix) {
+                btnClsCandidates.push(`${modalPrefix}${tagName}.${specificBtnCls}:visible`);
+              }
+              workingSel = Array.from(new Set([...btnClsCandidates, ...currentParts])).join(", ");
+            }
+          }
+
+          if (!outerIdVal && dataAttrMatches.length === 0 && (tagName === "button" || tagName === "input")) {
+            const hookClasses = classTokens.filter(
+              (c) =>
+                /^_[a-zA-Z0-9_-]*(?:btn|button|search|srch|confirm|save|draft|send|write|ok|cancel|close|text|word)[a-zA-Z0-9_-]*$/i.test(c) &&
+                !/^_(?:search_option|blind|hide|hidden|punchHandle|appendBtn|writeBtn|lineSelect|addBtn|delBtn|selectBtn|setProcess|write)$/i.test(c)
+            );
+            if (hookClasses.length > 0) {
+              const hookCls = hookClasses[0];
+              const currentParts = splitSelectorCandidates(workingSel);
+              const hookCandidates: string[] = [];
+              if (rawIdContainerMatch) {
+                hookCandidates.push(`${idContainerPrefix}${tagName}.${hookCls}:visible`);
+              }
+              hookCandidates.push(`${modalPrefix}${tagName}.${hookCls}:visible`);
+              workingSel = Array.from(new Set([...hookCandidates, ...currentParts])).join(", ");
+            }
+          }
+        }
+
+        // Strip previously polluted bare multi-instance hook classes (e.g. button._appendBtn:visible, button._writeBtn:visible)
+        // and shared child icon classes (e.g. button:has(.ico_write):visible, button:has(.ico_org):visible)
+        // so they NEVER shadow data-app-type-se='A'/'H'/'X', data-tab='appLine', title='협조', or li.aw_li:has-text(...)!
+        {
+          const rawPartsForClean = splitSelectorCandidates(workingSel);
+          const cleanedHookIconParts = rawPartsForClean.filter((p) => {
+            if (
+              /^(?:\.ui-dialog:visible\s+)?(?:[a-zA-Z0-9]*#[a-zA-Z0-9_-]+\s+)?(?:button|a)\._(?:appendBtn|writeBtn|lineSelect|addBtn|delBtn|selectBtn|setProcess|write):visible$/i.test(
+                p
+              )
+            ) {
+              return false;
+            }
+            if (/:has\(\.ico_(?:hide|info|chk|rdo|user|dept|plus|write|org|add|del|fldr|srch|lst|f\d+)\)/i.test(p)) {
+              return false;
+            }
+            return true;
+          });
+          if (cleanedHookIconParts.length > 0) {
+            workingSel = cleanedHookIconParts.join(", ");
+          }
+        }
+
+        // Universal Child Fingerprinting for <label>, <a>, <button>, <td>, or <span> without its own id:
+        // prepend tag:has(#childId), tag:has(input[value='...']), or tag:has(.scvr*/.plt_*) so it uniquely targets that exact option!
+        if ((tagName === "label" || tagName === "a" || tagName === "button" || tagName === "td" || tagName === "span") && !outerIdVal) {
+          const isChkbox = /\bchkbox\b/i.test(openTagAttrs);
+          const isRdobtn = /\brdobtn\b/i.test(openTagAttrs);
+          const isFileBtn = /\bfileinput-button\b/i.test(openTagAttrs);
+          const baseCls =
+            tagName === "label"
+              ? isChkbox
+                ? "label.chkbox"
+                : isRdobtn
+                  ? "label.rdobtn"
+                  : "label"
+              : tagName === "span" && isFileBtn
+                ? "span.fileinput-button"
+                : tagName;
+          const hasChildCandidates: string[] = [];
+          if (childInputId) {
+            const isUnstableChildId =
+              /^(ui-id-|jqg|ext-gen|select2-|mceu_|cke_|tinymce|th\d+$|[0-9]+$)/i.test(childInputId) ||
+              /[0-9a-f]{8,}/i.test(childInputId);
+            if (!isUnstableChildId) {
+              hasChildCandidates.push(`${modalPrefix}${baseCls}:has(#${childInputId}):visible`);
+              if (baseCls !== tagName) {
+                hasChildCandidates.push(`${modalPrefix}${tagName}:has(#${childInputId}):visible`);
+              }
+            }
+          }
+          const childValMatch = innerHtmlAfterOpen.match(/<input\b[^<>]*?\bvalue=["']([^"']+)["']/i);
+          const childVal = childValMatch ? childValMatch[1].replace(/'/g, "").trim() : "";
+          const childNameMatch = innerHtmlAfterOpen.match(/<input\b[^<>]*?\bname=["']([^"']+)["']/i);
+          const childName = childNameMatch ? childNameMatch[1].replace(/'/g, "").trim() : "";
+          if (childVal && childVal.length <= 35 && !/^(on|true|false|y|n|1|0)$/i.test(childVal)) {
+            if (childName) {
+              hasChildCandidates.push(`${idContainerPrefix}${baseCls}:has(input[name='${childName}'][value='${childVal}']):visible`);
+            }
+            hasChildCandidates.push(`${idContainerPrefix}${baseCls}:has(input[value='${childVal}']):visible`);
+            if (idContainerPrefix !== modalPrefix) {
+              hasChildCandidates.push(`${modalPrefix}${baseCls}:has(input[value='${childVal}']):visible`);
+            }
+          }
+          const childDataMatch = innerHtmlAfterOpen.match(/\b(data-(?:task-subject|emp-id|trgt-id|res-id|dept-id))=["']([^"']+)["']/i);
+          if (childDataMatch && childDataMatch[1] && childDataMatch[2]) {
+            const cAttr = childDataMatch[1];
+            const cVal = childDataMatch[2].replace(/'/g, "").trim();
+            if (cVal && cVal.toLowerCase() !== "empty" && cVal.length <= 35) {
+              hasChildCandidates.unshift(`${idContainerPrefix}${baseCls}:has([${cAttr}='${cVal}']):visible`);
+            }
+          }
+          const childDistMatch = innerHtmlAfterOpen.match(/\bclass=["'][^"']*\b(scvr\d+|plt_\d+)\b/i);
+          if (childDistMatch && childDistMatch[1]) {
+            hasChildCandidates.push(`${idContainerPrefix}${baseCls}:has(.${childDistMatch[1]}):visible`);
+          }
+          const currentParts = splitSelectorCandidates(workingSel);
+          if (hasChildCandidates.length > 0 || currentParts.length > 0) {
+            workingSel = Array.from(new Set([...hasChildCandidates, ...currentParts])).join(", ");
+          }
+        }
+
+        // Re-assert distinguishing outer data-* attributes right before outerIdVal so data-app-type-se / data-tab / data-menu-id stay ahead of any child/hook candidates!
+        if (dataAttrMatches.length > 0) {
+          const attrCandidates: string[] = [];
+          for (const dm of dataAttrMatches) {
+            const attrName = dm[1];
+            const attrVal = dm[2].replace(/'/g, "").trim();
+            if (attrVal && attrVal.toLowerCase() !== "empty") {
+              attrCandidates.push(`${idContainerPrefix}${tagName}[${attrName}='${attrVal}']:visible`);
+            }
+          }
+          if (attrCandidates.length > 0) {
+            const currentParts = splitSelectorCandidates(workingSel);
+            workingSel = Array.from(new Set([...attrCandidates, ...currentParts])).join(", ");
+          }
+        }
+
+        // Keep stable outerIdVal at the VERY FRONT so unique IDs (e.g. button#notNoteReg_toAddressButton) always precede shared hook classes or [name='...']
+        if (outerIdVal) {
+          const isUnstableId =
+            /^(ui-id-|jqg|ext-gen|select2-|mceu_|cke_|tinymce|th\d+$|dp\d+$|ADRGR\d+$|[0-9]+$)/i.test(outerIdVal) ||
+            /[0-9a-f]{8,}/i.test(outerIdVal);
+          if (!isUnstableId) {
+            let currentParts = splitSelectorCandidates(workingSel);
+            // If this is a system alert/confirm button (#naon-cmm-confirm-ok or #naon-cmm-alert-confirm),
+            // strip generic .ui-dialog:visible button...:has-text('확인') fallbacks so it NEVER clicks an underlying form modal's confirm button!
+            if (/^naon-cmm-(?:confirm-ok|alert-confirm)$/i.test(outerIdVal)) {
+              currentParts = currentParts.filter(
+                (p) => p.includes(outerIdVal) || p.includes("#alert_lyr") || p.includes("#confirm_lyr")
+              );
+            }
+            const idCandidates = [`${modalPrefix}${tagName ? `${tagName}#${outerIdVal}` : `#${outerIdVal}`}:visible`];
+            if (!modalPrefix && tagName) {
+              idCandidates.push(`#${outerIdVal}:visible`);
+            }
+            workingSel = Array.from(new Set([...idCandidates, ...currentParts])).join(", ");
           }
         }
       }
 
-      // (b) If targetHtml has a distinguishing data-* attribute (e.g. data-res-id, data-dept-id, data-emp-id), prepend it
-      if (action.targetHtml) {
-        const dataAttrMatch = action.targetHtml.match(/\b(data-(?:res-id|dept-id|emp-id|cmp-id|cal-id|brd-id|trgt-id|work-id|app-type-ordr))=["']([^"']+)["']/i);
-        if (dataAttrMatch) {
-          const attrName = dataAttrMatch[1];
-          const attrVal = dataAttrMatch[2].replace(/'/g, "").trim();
-          const tagMatch = action.targetHtml.trim().match(/^<([a-zA-Z0-9]+)/);
-          const tagName = tagMatch ? tagMatch[1].toLowerCase() : "";
-          const attrSel = `${modalPrefix}${tagName}[${attrName}='${attrVal}']:visible`;
-          if (!action.selector.includes(`${attrName}='${attrVal}'`)) {
-            const currentParts = action.selector.split(",").map((p) => p.trim()).filter(Boolean);
-            action.selector = Array.from(new Set([attrSel, ...currentParts])).join(", ");
-            sel = action.selector;
-            changes.push(`[데이터 속성 보강] '${desc}' 셀렉터에 고유 속성(${attrName}='${attrVal}')을 최우선 추가했습니다.`);
-            fixedActionsCount++;
+      // (c) Reorder dynamic list candidates so specific :has-text / :text-is / [data-*] / #id-scoped containers come BEFORE positional :nth-of-type(n) or unfiltered list paths
+      let currentCandidates = splitSelectorCandidates(workingSel);
+
+
+      // Remove legacy duplicate #th\d+ or [name='th\d+'] when a row-scoped candidate exists, and demote ephemeral per-record IDs (data-atcl-id, data-folder-id, data-mail-id, data-addr-grpid) behind :has-text / data-addr-grpname
+      if (currentCandidates.length > 1) {
+        const filteredTh = currentCandidates.filter(
+          (c) => !/#th\d+\b/i.test(c) && !/\[name=['"]th\d+['"]\]/i.test(c)
+        );
+        if (filteredTh.length > 0) {
+          currentCandidates = filteredTh;
+        }
+        const hasTextCandidate = currentCandidates.some(
+          (c) =>
+            c.includes(":has-text(") ||
+            c.includes(":text-is(") ||
+            c.includes("data-addr-grpname=") ||
+            c.includes("data-task-subject=")
+        );
+        if (hasTextCandidate) {
+          const nonEphemeral = currentCandidates.filter(
+            (c) =>
+              !/\[data-(?:atcl|folder|mail|book)-id=|\[data-addr-grpid=|#ADRGR\d+|\[value=['"]TSK[0-9a-zA-Z]{10,}['"]\]/i.test(c)
+          );
+          if (nonEphemeral.length > 0) {
+            currentCandidates = nonEphemeral;
           }
         }
       }
 
-      // (c) Reorder dynamic list candidates so specific :has-text / :text-is / [data-*] come BEFORE positional :nth-of-type(n), and drop bare catch-all class selectors
-      const currentCandidates = action.selector.split(",").map((p) => p.trim()).filter(Boolean);
-      const hasSpecificTextOrAttr = currentCandidates.some(
-        (c) => c.includes(":has-text(") || c.includes(":text-is(") || /\[data-[a-z-]+=/i.test(c) || /#[a-zA-Z0-9_-]+:visible$/.test(c)
+      // Strip erroneous #snb prefix and enforce #wikiMain_snb scope when targeting Wiki main sidebar (#wikiMain_snb / #wikiSideMenu_menuList / data-menu-id='wiki...')
+      // so child popup sidebars (wikiBookMain) are never mistaken for the main Wiki sidebar!
+      const isWikiSidebarContext = currentCandidates.some(
+        (c) => c.includes("wikiSideMenu") || c.includes("wikiMain_snb") || c.includes("data-menu-id='wiki")
       );
-      const hasPositionalNth = currentCandidates.some((c) => /:(?:nth-of-type|nth-child)\(\d+\)/.test(c));
+      if (isWikiSidebarContext) {
+        currentCandidates = Array.from(
+          new Set(
+            currentCandidates.map((c) => {
+              const stripped = c.replace(/^#snb\s+/, "");
+              if (
+                !stripped.includes("#wikiMain_snb") &&
+                !stripped.includes("wikiSideMenu") &&
+                /^a(?:\.|\[|:)/.test(stripped)
+              ) {
+                return `#wikiMain_snb ${stripped}`;
+              }
+              return stripped;
+            })
+          )
+        );
+      }
+
+      // Handle Wiki Book Cover Image Selection Popup (ul#wikiBookReg_imgList) where all 28 radio items share the identical placeholder text '주제를 표시합니다.'
+      const isWikiImgListContext =
+        currentCandidates.some((c) => c.includes("wikiBookReg_imgList") || c.includes("주제를 표시합니다")) ||
+        normalizedHtmlHint.includes("wikiBookReg_imgList") ||
+        normalizedHtmlHint.includes("주제를 표시합니다");
+      if (isWikiImgListContext) {
+        let coverNum = "";
+        for (const cand of currentCandidates) {
+          const nthMatch = cand.match(/wikiBookReg_imgList\s*>\s*li:nth-of-type\((\d+)\)/i);
+          if (nthMatch && nthMatch[1]) {
+            coverNum = nthMatch[1];
+            break;
+          }
+          const scvrMatch = cand.match(/\bscvr(\d+)\b/i);
+          if (scvrMatch && scvrMatch[1]) {
+            coverNum = scvrMatch[1];
+            break;
+          }
+        }
+        const withoutDuplicatePlaceholderText = currentCandidates.filter(
+          (c) =>
+            !(
+              (c.includes(":has-text('주제를") || c.includes(':has-text("주제를')) &&
+              !c.includes(":nth-of-type(") &&
+              !c.includes("input[value=") &&
+              !c.includes(":has(.scvr")
+            )
+        );
+        if (coverNum) {
+          const coverPriority = [
+            `.ui-dialog:visible ul#wikiBookReg_imgList label.rdobtn:has(input[value='scvr${coverNum}']):visible`,
+            `.ui-dialog:visible ul#wikiBookReg_imgList label.rdobtn:has(.scvr${coverNum}):visible`,
+            `.ui-dialog:visible ul#wikiBookReg_imgList > li:nth-of-type(${coverNum}) > label.wiki_sub_box.rdobtn:visible`,
+            `ul#wikiBookReg_imgList > li:nth-of-type(${coverNum}) > label.wiki_sub_box.rdobtn:visible`,
+          ];
+          currentCandidates = Array.from(new Set([...coverPriority, ...withoutDuplicatePlaceholderText]));
+        } else if (withoutDuplicatePlaceholderText.length > 0) {
+          currentCandidates = withoutDuplicatePlaceholderText;
+        }
+      }
+
+      // Handle Wiki Book Cover Preview box in registration form (div#wikiBookReg_imgCover / #wikiBookReg_imgCoverSub)
+      if (
+        currentCandidates.some((c) => c.includes("wikiBookReg_imgCover")) ||
+        normalizedHtmlHint.includes("wikiBookReg_imgCoverSub")
+      ) {
+        currentCandidates = Array.from(
+          new Set([
+            ...currentCandidates,
+            "div#wikiBookReg_imgCover a.sub_cover:visible",
+            "a:has(#wikiBookReg_imgCoverSub):visible",
+          ])
+        );
+      }
+
+      // If any candidate has an ancestor [data-trgt-id='...'] (e.g. div.fbox._trgtBox[data-trgt-id='M438014134'] > ... > label.chkbox:visible),
+      // synthesize a direct [data-trgt-id='...'] leaf selector at the front and remove unscoped #eapLineSelect_line label.chkbox catch-alls!
+      for (const cand of currentCandidates) {
+        const trgtMatch = cand.match(/\[data-trgt-id=['"]([^'"]+)['"]\].*>\s*([a-zA-Z0-9_.-]+(?::visible)?)$/);
+        if (trgtMatch && trgtMatch[1] && trgtMatch[2]) {
+          const trgtId = trgtMatch[1];
+          const leafPart = trgtMatch[2].endsWith(":visible") ? trgtMatch[2] : `${trgtMatch[2]}:visible`;
+          const scopedTrgt = `${modalPrefix}[data-trgt-id='${trgtId}'] ${leafPart}`;
+          currentCandidates = [
+            scopedTrgt,
+            ...currentCandidates.filter(
+              (c) =>
+                c !== scopedTrgt &&
+                !(c.includes("label.chkbox") && !c.includes("data-trgt-id") && !c.includes(":has-text(") && !c.includes(":has(#"))
+            ),
+          ];
+          break;
+        }
+      }
+
+      // If a bare tag:has-text('X'):visible coexists with a structural path ending in > parentTag.cls > tag:visible (e.g. div.sub._openBook > a:visible),
+      // synthesize parentTag.cls tag:has-text('X'):visible before the bare tag:has-text('X'):visible to avoid clicking a sidebar/header duplicate!
+      const bareTagTextCand = currentCandidates.find((c) => /^(?:a|button|span|strong):has-text\(['"][^'"]+['"]\):visible$/.test(c));
+      if (bareTagTextCand) {
+        const bareMatch = bareTagTextCand.match(/^([a-z]+):has-text\(['"]([^'"]+)['"]\):visible$/);
+        if (bareMatch) {
+          const leafTag = bareMatch[1];
+          const leafText = bareMatch[2];
+          for (const cand of currentCandidates) {
+            const parentMatch = cand.match(new RegExp(`>\\s*([a-z]+\\.[a-zA-Z0-9_.-]+?)(?::nth-of-type\\(\\d+\\)|:nth-child\\(\\d+\\))?\\s*>\\s*${leafTag}(?::visible)?$`));
+            if (parentMatch && parentMatch[1]) {
+              const scopedLeaf = `${modalPrefix}${parentMatch[1]} ${leafTag}:has-text('${leafText}'):visible`;
+              if (!currentCandidates.includes(scopedLeaf)) {
+                currentCandidates.unshift(scopedLeaf);
+              }
+              break;
+            }
+          }
+        }
+      }
+
+      // Remove bogus '결재 이력' fallback AND unscoped catch-all card selectors if a real form card title candidate exists in the same selector
+      const realAwLiCardMatch = currentCandidates
+        .map((c) => c.match(/aw_li:has-text\(['"]([^'"]+)['"]\)/))
+        .find((m) => m && m[1] && m[1] !== "결재 이력");
+      const hasRealAwLiCard = Boolean(realAwLiCardMatch);
+      if (hasRealAwLiCard && realAwLiCardMatch) {
+        const cardTitle = realAwLiCardMatch[1];
+        currentCandidates = currentCandidates.filter((c) => {
+          if (c.includes("has-text('결재 이력')")) return false;
+          // Drop unscoped card fallbacks (e.g. "ul.aw_ul li.aw_li .app_work_box:visible" or "button._writeBtn:visible" or "button:text-is('결재작성'):visible")
+          if (!c.includes(cardTitle) && !/:(?:nth-of-type|nth-child)\(\d+\)/.test(c)) {
+            if (
+              c === "ul.aw_ul li.aw_li .app_work_box:visible" ||
+              c === "ul.aw_ul li.aw_li button.btn_write:visible" ||
+              /^button\b/i.test(c) ||
+              /^\.app_work_box\s+button\.btn/.test(c)
+            ) {
+              return false;
+            }
+          }
+          return true;
+        });
+        workingSel = currentCandidates.join(", ");
+      }
+
+      const hasSpecificTextOrAttr = currentCandidates.some(
+        (c) =>
+          c.includes(":has-text(") ||
+          c.includes(":text-is(") ||
+          /\[data-[a-z-]+=/i.test(c) ||
+          /#[a-zA-Z0-9_-]+/.test(c)
+      );
+      const hasPositionalNthOrUnfilteredList = currentCandidates.some(
+        (c) =>
+          /:(?:nth-of-type|nth-child)\(\d+\)/.test(c) ||
+          /^[a-z]+\[contenteditable=['"]true['"]\]:visible$/i.test(c) ||
+          /\[title\*?=['"]선택['"]\]/.test(c) ||
+          (/\b(?:li|tr)(?:\.[a-zA-Z0-9_-]+)*\s*>/.test(c) && !c.includes(":has-text(") && !c.includes(":text-is(") && !/\[data-[a-z-]+=/i.test(c))
+      );
+
+      // Strip any previously corrupted td#... tr:has(...) or th#... tr:has(...) candidates where a table cell was prepended before a table row!
+      currentCandidates = currentCandidates.filter(
+        (c) => !/\b(?:td|th)#[a-zA-Z0-9_-]+\s+tr:has\(/i.test(c)
+      );
+
+      // Extract any non-list #id container prefix (e.g. div#eapWorkSelect_searchBox) from structural DOM paths
+      // (ONLY genuine container tags div/form/table/section/nav/aside, NEVER td/th/span/a/label or paths traversing li/tr/dd/dynatree-node!)
+      const cleanContainerId = currentCandidates
+        .map((c) => {
+          const m = c.match(/^(?:\.ui-dialog:visible\s+)?((?:div|form|table|section|nav|aside)?#[a-zA-Z0-9_-]+)\s*>/i);
+          if (m && !/\b(?:li|tr|ul|ol|tbody|dd|\.dynatree-node)\b/i.test(c)) {
+            return m[1];
+          }
+          return "";
+        })
+        .find(Boolean);
 
       if (hasSpecificTextOrAttr && currentCandidates.length > 1) {
         const specificFirst: string[] = [];
         const positionalLater: string[] = [];
 
         for (const cand of currentCandidates) {
-          const isPositional = /:(?:nth-of-type|nth-child)\(\d+\)/.test(cand) && !cand.includes(":has-text(") && !cand.includes(":text-is(");
+          const hasSlotClassAttr = cand.includes("[class~=");
+          const hasDataAttr = /\[data-[a-z-]+=/i.test(cand) || cand.includes("input[value=") || cand.includes(":has(.scvr");
+          const isGenericContentEditable = /^(?:\.ui-dialog:visible\s+)?[a-z]+\[contenteditable=['"]true['"]\]:visible$/i.test(cand);
+          const isUnscopedGenericCheckbox =
+            /\[title\*?=['"]선택['"]\]/.test(cand) &&
+            !cand.includes(":has-text(") &&
+            !cand.includes(":text-is(") &&
+            !cand.includes("#") &&
+            !hasDataAttr;
+          const isUnfilteredListRowPath =
+            /\b(?:li|tr)(?:\.[a-zA-Z0-9_-]+)*\s*>/.test(cand) &&
+            !cand.includes(":has-text(") &&
+            !cand.includes(":text-is(") &&
+            !hasDataAttr &&
+            !cand.includes("[title=") &&
+            !isWikiImgListContext;
+          const isIdAnchoredNonListContainer =
+            Boolean(cleanContainerId) &&
+            cand.includes(`${cleanContainerId} >`) &&
+            !/\b(?:li|tr|ul|ol|tbody|dd|\.dynatree-node)\b/i.test(cand);
+          // Unscoped generic control text (e.g. label.chkbox:has-text('사용'):visible or button.btn:has-text('추가'):visible without row/ID/data-* scope)
+          // must go to positionalLater so row-scoped tr:has(th:...) or ID-anchored DOM paths are evaluated FIRST!
+          const isUnscopedGenericControlText =
+            /:(?:has-text|text-is)\(['"](?:사용|미사용|추가|선택|삭제|수정|등록|취소|닫기|초기화|목록|설정|변환|적용|주제를 표시합니다[^'"]*)['"]\)/i.test(cand) &&
+            !cand.includes("#") &&
+            !hasDataAttr &&
+            !cand.includes("tr:has(") &&
+            !cand.includes("li:has") &&
+            !cand.includes("aw_li") &&
+            !cand.includes("dynatree-") &&
+            !cand.includes(":nth-");
+          const isPositional =
+            isGenericContentEditable ||
+            isUnscopedGenericCheckbox ||
+            isUnfilteredListRowPath ||
+            isUnscopedGenericControlText ||
+            (/:(?:nth-of-type|nth-child)\(\d+\)/.test(cand) &&
+              !cand.includes(":has-text(") &&
+              !cand.includes(":text-is(") &&
+              !hasDataAttr &&
+              !hasSlotClassAttr &&
+              !isIdAnchoredNonListContainer &&
+              !isWikiImgListContext);
+          const isExplicitButtonHook = /(?:button|input)(?:\.[a-zA-Z0-9_-]+)*\.[_][a-zA-Z0-9_-]+/i.test(cand);
           const isBareClassCatchAll =
             !cand.includes("#") &&
             !cand.includes("[") &&
             !cand.includes(":has-text(") &&
             !cand.includes(":text-is(") &&
             !cand.includes(":nth-") &&
-            !cand.includes(">");
+            !cand.includes(">") &&
+            !isExplicitButtonHook;
 
           if (isBareClassCatchAll) {
-            // Skip bare catch-all class (e.g. .ui-dialog:visible label.user_info.chkbox:visible) when specific text/attr exists
+            // Skip bare catch-all class (e.g. .ui-dialog:visible a:visible, a.sub._doc:visible, label.user_info.chkbox:visible) when specific text/attr exists
             continue;
           }
-          if (isPositional) {
+          if (hasSlotClassAttr) {
+            specificFirst.unshift(cand);
+          } else if (isPositional) {
             positionalLater.push(cand);
           } else {
-            specificFirst.push(cand);
-            // If it's a multi-token user/item text like :has-text('test002 테스트 부서 (유니슨)'), also add core token match :has-text('test002')
+            // If an unscoped button/input selector (without #id, [data-*], or tr:has(...)) coexists with a specific #id search/toolbar container, prepend the #id-scoped version first while keeping .ui-dialog:visible at the very front!
+            if (
+              cleanContainerId &&
+              !cand.includes("#") &&
+              !hasDataAttr &&
+              !cand.includes(cleanContainerId) &&
+              !cand.includes("tr:has(")
+            ) {
+              const candHasModal = cand.startsWith(".ui-dialog:visible ");
+              const candBody = candHasModal ? cand.slice(".ui-dialog:visible ".length) : cand;
+              const prefixModal = hasModalScope || candHasModal ? ".ui-dialog:visible " : "";
+              specificFirst.push(`${prefixModal}${cleanContainerId} ${candBody}`);
+              positionalLater.push(cand);
+              continue;
+            }
+            // If :has-text('...') includes a trailing date/category suffix (e.g. '테스트 주제 2026-10-18 개인'), insert the core title match FIRST
             const textMatch = cand.match(/^(.*):has-text\(['"]([^'"]+)['"]\)(.*)$/);
             if (textMatch) {
+              const fullTxt = textMatch[2].trim();
+              const strippedDateTitle = fullTxt.replace(/\s+\d{4}[-.]\d{2}[-.]\d{2}(?:\s+.*)?$/, "").trim();
+              if (strippedDateTitle && strippedDateTitle.length >= 2 && strippedDateTitle !== fullTxt) {
+                specificFirst.push(`${textMatch[1]}:has-text('${strippedDateTitle}')${textMatch[3]}`);
+              }
+            }
+            specificFirst.push(cand);
+            // If it's a multi-token user/item text like :has-text('이지민 조교 건축과') or :has-text('test002 테스트 부서'), also add core first-token match
+            if (textMatch) {
               const firstToken = textMatch[2].trim().split(/\s+/)[0];
-              if (firstToken && firstToken.length >= 4 && firstToken !== textMatch[2].trim()) {
+              if (firstToken && firstToken.length >= 2 && firstToken !== textMatch[2].trim()) {
                 specificFirst.push(`${textMatch[1]}:has-text('${firstToken}')${textMatch[3]}`);
               }
             }
           }
         }
 
-        if (specificFirst.length > 0 && hasPositionalNth) {
-          const reordered = Array.from(new Set([...specificFirst, ...positionalLater])).join(", ");
-          if (reordered !== action.selector) {
-            action.selector = reordered;
-            sel = reordered;
-            changes.push(`[동적 목록 정밀화] '${desc}' 셀렉터에서 텍스트/속성 매칭을 위치 인덱스(:nth-of-type)보다 우선 배치했습니다.`);
-            fixedActionsCount++;
-          }
+        if (specificFirst.length > 0) {
+          workingSel = Array.from(new Set([...specificFirst, ...positionalLater])).join(", ");
+        } else {
+          workingSel = currentCandidates.join(", ");
+        }
+      } else {
+        workingSel = currentCandidates.join(", ");
+      }
+
+      return workingSel;
+    };
+
+    if (action.type === "click" || action.type === "hover" || action.type === "type" || action.type === "upload") {
+      if (action.selector) {
+        const refined = refineSelectorString(action.selector, action.targetHtml);
+        if (refined !== action.selector) {
+          action.selector = refined;
+          sel = refined;
+          changes.push(`[셀렉터 정밀화] '${desc}' 셀렉터에서 정확 일치 텍스트/속성 및 고유 컨테이너를 최우선 배치했습니다.`);
+          fixedActionsCount++;
+        }
+      }
+      if (
+        action.type === "type" &&
+        action.targetHtml &&
+        desc.includes("'에디터 본문' 입력 영역") &&
+        (/placeholder=["']([^"']+)["']/i.test(action.targetHtml) || /id=["'][^"']*(?:subject|title)[^"']*["']/i.test(action.targetHtml))
+      ) {
+        const phMatch = action.targetHtml.match(/placeholder=["']([^"']+)["']/i);
+        const fieldLabel = phMatch && phMatch[1].trim() ? phMatch[1].trim() : "제목";
+        action.description = action.description.replace("'에디터 본문' 입력 영역", `'${fieldLabel}' 입력창`);
+        desc = action.description;
+      }
+    } else if (action.type === "dragAndDrop") {
+      const srcToRefine = action.sourceSelector || action.selector || "";
+      if (srcToRefine) {
+        // Note: action.targetHtml on dragAndDrop belongs to the drop target, so pass undefined for sourceSelector refinement
+        const refinedSrc = refineSelectorString(srcToRefine, undefined);
+        if (refinedSrc !== srcToRefine) {
+          action.sourceSelector = refinedSrc;
+          action.selector = refinedSrc;
+          sel = refinedSrc;
+          changes.push(`[드래그 소스 정밀화] '${desc}' 출발지 셀렉터에서 정확 일치 텍스트 후보를 최우선 배치했습니다.`);
+          fixedActionsCount++;
         }
       }
     }
@@ -407,6 +1345,9 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
     // preserve its exact HTML/DOM selector and iframe 100% without any keyword-guessing overrides!
     if (actualPlan.recordedByEyedropper || action.recordedByEyedropper) {
       action.recordedByEyedropper = true;
+      if (action.iframe === "iframe#subBody, iframe#contentFrame, iframe") {
+        action.iframe = "iframe[name='setup_iframe'], iframe#subBody, iframe#contentFrame, iframe";
+      }
       if (action.type === "dragAndDrop" && !action.sourceSelector && action.selector) {
         action.sourceSelector = action.selector;
       }
@@ -462,6 +1403,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
     const isTreeExpandAction =
       action.type === "click" &&
       isModalContext &&
+      (desc.includes("트리") || desc.includes("부서") || desc.includes("조직도") || desc.includes("폴더") || desc.includes("모두펼침")) &&
       (desc.includes("펼침") || desc.includes("확장"));
 
     if (isTreeExpandAction) {
@@ -469,6 +1411,14 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       action.selector = ".ui-dialog:visible button.btn_fopn:visible, .ui-dialog:visible button:has-text('모두펼침'):visible, .ui-dialog:visible .dynatree-expander:visible";
       changes.push(`[정제] 트리 모달 모두펼침 버튼 셀렉터 정밀 보강: "${original}" -> "${action.selector}"`);
       fixedActionsCount++;
+      sel = action.selector;
+    } else if (
+      action.type === "click" &&
+      isModalContext &&
+      (desc.includes("상세 설정") || desc.includes("상세 등록")) &&
+      (desc.includes("펼침") || desc.includes("확장") || desc.includes("버튼"))
+    ) {
+      action.selector = ".ui-dialog:visible button:has(#detail_tgl):visible, .ui-dialog:visible button:has-text('상세 등록'):visible, .ui-dialog:visible button:has-text('상세'):visible";
       sel = action.selector;
     } else if (
       action.type === "click" &&
@@ -512,6 +1462,12 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
     if (
       action.type === "click" &&
       !desc.includes("확인") &&
+      !desc.includes("닫기") &&
+      !desc.includes("취소") &&
+      !desc.includes("보기") &&
+      !desc.includes("전환") &&
+      !desc.includes("프로필") &&
+      !desc.includes("레이어") &&
       isModalContext &&
       isUserSelection &&
       !desc.includes("추가") &&
@@ -791,9 +1747,18 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         sel = action.selector;
       }
       // 일정등록
-      else if ((desc.includes("일정등록") || desc.includes("일정 등록")) && !desc.includes("저장") && !desc.includes("완료") && !desc.includes("취소")) {
+      else if (
+        (desc.includes("일정등록") || desc.includes("일정 등록")) &&
+        !desc.includes("저장") &&
+        !desc.includes("완료") &&
+        !desc.includes("취소") &&
+        !desc.includes("확인") &&
+        !desc.includes("선택") &&
+        !desc.includes("팝업") &&
+        !desc.includes("모달")
+      ) {
         const original = action.selector;
-        action.selector = "button#reg_shedule_lefttop, button#scheduleLayerBtn, button:has-text('일정등록'):visible";
+        action.selector = "button#reg_shedule_lefttop:visible, button#scheduleLayerBtn:visible, button:has-text('일정 등록'):visible, button:has-text('일정등록'):visible";
         if (original !== action.selector) {
           changes.push(`[그룹웨어 정밀 매핑] 일정등록 버튼 보강: "${original}" -> "${action.selector}"`);
           fixedActionsCount++;
@@ -801,9 +1766,18 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         sel = action.selector;
       }
       // 게시판 글작성
-      else if ((desc.includes("글작성") || desc.includes("게시글 작성") || desc.includes("글 작성")) && !desc.includes("저장") && !desc.includes("취소")) {
+      else if (
+        (desc.includes("글작성") || desc.includes("게시글 작성") || desc.includes("글 작성")) &&
+        !desc.includes("저장") &&
+        !desc.includes("완료") &&
+        !desc.includes("취소") &&
+        !desc.includes("확인") &&
+        !desc.includes("선택") &&
+        !desc.includes("팝업") &&
+        !desc.includes("모달")
+      ) {
         const original = action.selector;
-        action.selector = "button#brdBoardLeft_writeBtn, .btn_write, button:has-text('글작성'):visible";
+        action.selector = "button#boardSideBar_write:visible, button#brdBoardLeft_writeBtn:visible, #snb button:has-text('글 작성'):visible, button:has-text('글작성'):visible";
         if (original !== action.selector) {
           changes.push(`[그룹웨어 정밀 매핑] 게시판 글작성 버튼 보강: "${original}" -> "${action.selector}"`);
           fixedActionsCount++;
@@ -811,9 +1785,18 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         sel = action.selector;
       }
       // 문서관리 문서등록
-      else if ((desc.includes("문서등록") || desc.includes("문서 등록")) && !desc.includes("저장") && !desc.includes("취소")) {
+      else if (
+        (desc.includes("문서등록") || desc.includes("문서 등록")) &&
+        !desc.includes("저장") &&
+        !desc.includes("완료") &&
+        !desc.includes("취소") &&
+        !desc.includes("확인") &&
+        !desc.includes("선택") &&
+        !desc.includes("팝업") &&
+        !desc.includes("모달")
+      ) {
         const original = action.selector;
-        action.selector = "button#docLeft_writeBtn, button#reg_doc_btn, button:has-text('문서등록'):visible";
+        action.selector = "button#docLeft_writeBtn:visible, button#reg_doc_btn:visible, #snb button:has-text('문서 등록'):visible, button:has-text('문서등록'):visible";
         if (original !== action.selector) {
           changes.push(`[그룹웨어 정밀 매핑] 문서관리 문서등록 버튼 보강: "${original}" -> "${action.selector}"`);
           fixedActionsCount++;
@@ -833,12 +1816,51 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         }
         sel = action.selector;
       }
-      // 문서 제목
+      // 제목 입력란 (일정/예약 vs 결재/문서/게시판/메일/쪽지 구분 및 기존 고유 셀렉터 우선 보존)
       else if (desc.includes("제목") && !desc.includes("검색") && !desc.includes("분류")) {
-        const original = action.selector;
-        action.selector = "input#eapDocReg_docSubject:visible, input#docTitle:visible, input[name*='Subject']:visible, input[placeholder*='제목']:visible, input#subject:visible";
+        const original = action.selector || "";
+        const descWithoutQuotes = desc.replace(/['"][^'"]*['"]/g, "");
+        const isMailOrNote =
+          descWithoutQuotes.includes("메일") ||
+          descWithoutQuotes.includes("쪽지") ||
+          /\b(?:emlMailReg|mail_subject|notNoteReg)\b/i.test(original);
+        const isScheduleOrRes =
+          !isMailOrNote &&
+          (descWithoutQuotes.includes("일정") ||
+            descWithoutQuotes.includes("예약") ||
+            /^(\.ui-dialog:visible\s+)?input#subject(:visible)?$/i.test(original.trim()));
+        const origParts = splitSelectorCandidates(original);
+        const baseCandidates = isScheduleOrRes
+          ? [
+              ".ui-dialog:visible input#subject:visible",
+              "input#subject:visible",
+              "input[name='subject']:visible",
+              "input[placeholder*='제목']:visible",
+            ]
+          : isMailOrNote
+            ? [
+                "input#emlMailReg_subject:visible",
+                "input#notNoteReg_subject:visible",
+                ...origParts,
+                "input[name*='subject']:visible",
+                "input[name*='Subject']:visible",
+                "input[placeholder*='제목']:visible",
+              ]
+            : [
+                ...origParts,
+                "input#_DOC_TITLE_:visible",
+                "input#eapDocReg_docSubject:visible",
+                "input#docTitle:visible",
+                "input#atclReg_subject:visible",
+                "input#atclWrite_subject:visible",
+                "input#smwWorkReg_subject:visible",
+                "input[name*='Subject']:visible",
+                "input[placeholder*='제목']:visible",
+                "input#subject:visible",
+              ];
+        action.selector = Array.from(new Set(baseCandidates)).join(", ");
         if (original !== action.selector) {
-          changes.push(`[그룹웨어 정밀 매핑] 문서 제목 입력란 보강: "${original}" -> "${action.selector}"`);
+          changes.push(`[그룹웨어 정밀 매핑] 제목 입력란 보강: "${original}" -> "${action.selector}"`);
           fixedActionsCount++;
         }
         sel = action.selector;
@@ -1081,10 +2103,12 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       }
     }
 
-    // 5. Clean hallucinated uppercase dummy IDs (#_DOC_TITLE_, #_SAVE_BTN_)
-    if (sel.includes("#_")) {
+    // 5. Clean hallucinated uppercase dummy IDs (#_SAVE_BTN_, etc. while preserving real Naonsoft #_DOC_TITLE_)
+    if (/#_(?!DOC_TITLE_)[A-Z0-9_]+_/i.test(sel)) {
       const original = sel;
-      sel = sel.replace(/input#_[A-Z0-9_]+_[,]?\s*/g, "").replace(/#_[A-Z0-9_]+_[,]?\s*/g, "").trim().replace(/,\s*$/, "");
+      sel = splitSelectorCandidates(sel)
+        .filter((c) => !/#_(?!DOC_TITLE_)[A-Z0-9_]+_/i.test(c) && c !== ":visible")
+        .join(", ");
       if (!sel) {
         if (desc.includes("제목") || desc.includes("title")) {
           sel = "input#subject:visible, input[name*='subject']:visible, input[name*='title']:visible, input:visible";
@@ -1159,6 +2183,243 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
 
     sanitizedActions.push(action);
   }
+
+  // 11. Universal Post-Loop Deduplication & Accidental Self-Drag Cleanup (applies to both Eyedropper & AI plans)
+  const cleanedSanitizedActions: BrowsePlanAction[] = [];
+  for (let idx = 0; idx < sanitizedActions.length; idx++) {
+    const act = { ...sanitizedActions[idx] };
+
+    // 11-A. Accidental Self-DragAndDrop on Same Tree Node Cleanup
+    if (act.type === "dragAndDrop") {
+      const srcSel = act.sourceSelector || act.selector || "";
+      const tgtSel = act.targetSelector || "";
+      const srcTxtMatch = srcSel.match(/:(?:text-is|has-text)\(['"]([^'"]+)['"]\)/);
+      const tgtTxtMatch = tgtSel.match(/:(?:text-is|has-text)\(['"]([^'"]+)['"]\)/);
+      const srcNodeTxt = srcTxtMatch ? srcTxtMatch[1].trim() : "";
+      const tgtNodeTxt = tgtTxtMatch ? tgtTxtMatch[1].trim() : "";
+
+      const isSelfTreeDrag =
+        Boolean(srcNodeTxt && tgtNodeTxt && srcNodeTxt === tgtNodeTxt) ||
+        Boolean(srcNodeTxt && tgtSel.includes("dynatree-node") && tgtSel.includes(srcNodeTxt));
+
+      if (isSelfTreeDrag && srcNodeTxt) {
+        // Check if there is an explicit retry click on the same tree node within the next 6 steps after a failed confirm/alert
+        let retryClickIdx = -1;
+        for (let look = idx + 1; look <= Math.min(sanitizedActions.length - 1, idx + 7); look++) {
+          const cand = sanitizedActions[look];
+          if (
+            cand.type === "click" &&
+            ((cand.selector || "").includes(srcNodeTxt) || (cand.description || "").includes(srcNodeTxt))
+          ) {
+            retryClickIdx = look;
+            break;
+          }
+        }
+
+        if (retryClickIdx !== -1) {
+          const betweenNonWaits = sanitizedActions
+            .slice(idx + 1, retryClickIdx)
+            .filter((b) => b.type !== "wait");
+          const allBetweenAreConfirmOrAlert = betweenNonWaits.every(
+            (b) =>
+              b.type === "click" &&
+              ((b.description || "").includes("확인") ||
+                (b.selector || "").includes("confirm") ||
+                (b.selector || "").includes("alert"))
+          );
+
+          if (allBetweenAreConfirmOrAlert) {
+            changes.push(
+              `[오탐 드래그 정리] 마우스 미세 이동으로 잘못 기록된 트리 자기 자신 드래그('${srcNodeTxt}') 및 그로 인한 알림 확인 단계를 제거하고 정상 클릭 단계로 직결했습니다.`
+            );
+            removedActionsCount += retryClickIdx - idx;
+            idx = retryClickIdx - 1;
+            continue;
+          }
+        }
+
+        // Otherwise, convert the accidental self-drag directly into a normal click action
+        act.type = "click";
+        delete act.sourceSelector;
+        delete act.targetSelector;
+        if (act.description) {
+          act.description = act.description
+            .replace(/항목을\(를\).*드래그 앤 드롭$/, "클릭")
+            .replace(/을\(를\).*드래그 앤 드롭$/, " 클릭");
+        }
+        changes.push(`[오탐 드래그 교정] 동일 트리 노드('${srcNodeTxt}') 내 드래그 앤 드롭을 일반 클릭 액션으로 자동 교정했습니다.`);
+        fixedActionsCount++;
+      }
+    }
+
+    // Find last two non-wait actions in cleanedSanitizedActions
+    let prev1: BrowsePlanAction | null = null;
+    let prev2: BrowsePlanAction | null = null;
+    for (let k = cleanedSanitizedActions.length - 1; k >= 0; k--) {
+      if (cleanedSanitizedActions[k].type !== "wait") {
+        if (!prev1) {
+          prev1 = cleanedSanitizedActions[k];
+        } else {
+          prev2 = cleanedSanitizedActions[k];
+          break;
+        }
+      }
+    }
+
+    // 11-B. Deduplicate consecutive identical 'type' (or 'type -> hover -> type -> hover' caused by Enter + blur)
+    if (act.type === "type" && act.text) {
+      const isDirectDupType =
+        prev1?.type === "type" &&
+        (prev1.selector || "") === (act.selector || "") &&
+        (prev1.editorParaIndex ?? -1) === (act.editorParaIndex ?? -1) &&
+        (prev1.text || "") === (act.text || "");
+      const isInterleavedHoverDupType =
+        prev1?.type === "hover" &&
+        prev2?.type === "type" &&
+        (prev2.selector || "") === (act.selector || "") &&
+        (prev2.editorParaIndex ?? -1) === (act.editorParaIndex ?? -1) &&
+        (prev2.text || "") === (act.text || "");
+
+      if (isDirectDupType || isInterleavedHoverDupType) {
+        changes.push(`[중복 타이핑 제거] 동일 입력창에 중복 기록된 '${act.text}' 입력 단계를 제거했습니다.`);
+        removedActionsCount++;
+        if (idx + 1 < sanitizedActions.length && sanitizedActions[idx + 1].type === "wait") {
+          idx++;
+          removedActionsCount++;
+        }
+        // If it was part of a 'type -> hover -> type -> hover' pair, also skip the immediately following duplicate hover
+        if (
+          isInterleavedHoverDupType &&
+          idx + 1 < sanitizedActions.length &&
+          sanitizedActions[idx + 1].type === "hover" &&
+          (sanitizedActions[idx + 1].selector || "") === (prev1?.selector || "")
+        ) {
+          idx++;
+          removedActionsCount++;
+          changes.push(`[중복 호버 제거] 중복 타이핑에 수반된 동일 양식 카드 마우스 호버 단계를 함께 제거했습니다.`);
+          if (idx + 1 < sanitizedActions.length && sanitizedActions[idx + 1].type === "wait") {
+            idx++;
+            removedActionsCount++;
+          }
+        }
+        continue;
+      }
+    }
+
+    // 11-C. Deduplicate consecutive identical 'hover' actions
+    if (
+      act.type === "hover" &&
+      prev1?.type === "hover" &&
+      (prev1.selector || "") === (act.selector || "")
+    ) {
+      changes.push(`[중복 호버 제거] 동일 대상에 연속 중복 기록된 '${act.description}' 단계를 제거했습니다.`);
+      removedActionsCount++;
+      if (idx + 1 < sanitizedActions.length && sanitizedActions[idx + 1].type === "wait") {
+        idx++;
+        removedActionsCount++;
+      }
+      continue;
+    }
+
+    // 11-D. Deduplicate consecutive <label class="...chkbox/rdobtn"> + <input type="checkbox/radio"> synthetic double-clicks
+    if (act.type === "click" && prev1?.type === "click") {
+      const prevHtml = prev1.targetHtml || "";
+      const prevSel = prev1.selector || "";
+      const actHtml = act.targetHtml || "";
+      const actSel = act.selector || "";
+
+      const prevIsLabelChk =
+        /^<label\b/i.test(prevHtml) ||
+        /\blabel[.#:\[]/i.test(prevSel);
+      const actIsInputChk =
+        (/^<input\b/i.test(actHtml) && /type=["'](?:checkbox|radio)["']/i.test(actHtml)) ||
+        /input\[type=['"](?:checkbox|radio)['"]\]/i.test(actSel);
+
+      if (prevIsLabelChk && actIsInputChk) {
+        const prevRowMatch = prevSel.match(/:has-text\(['"]([^'"]+)['"]\)/) || prev1.description?.match(/['"]([^'"]+)['"]/);
+        const actRowMatch = actSel.match(/:has-text\(['"]([^'"]+)['"]\)/) || act.description?.match(/['"]([^'"]+)['"]/);
+        const prevToken = prevRowMatch ? prevRowMatch[1].trim().split(/\s+/)[0] : "";
+        const actToken = actRowMatch ? actRowMatch[1].trim().split(/\s+/)[0] : "";
+
+        if ((prevToken && actToken && prevToken === actToken) || (!actToken && /lst_chk|_chk|input_chk/.test(actHtml + actSel))) {
+          changes.push(`[합성 더블클릭 제거] <label> 클릭 직후 브라우저가 합성 발생시킨 동일 항목('${prevToken || act.description}') 체크박스 중복 클릭을 제거했습니다.`);
+          removedActionsCount++;
+          if (idx + 1 < sanitizedActions.length && sanitizedActions[idx + 1].type === "wait") {
+            idx++;
+            removedActionsCount++;
+          }
+          continue;
+        }
+      }
+    }
+
+    // 11-E. Remove bogus unrecorded topMenu_logon or duplicate logout clicks following a recorded logout click,
+    // or unrecorded frmEditByDesign_btnSaveConfirm clicks injected after frmMainList_btnConfirm popup confirm
+    if (act.type === "click") {
+      const actSel = act.selector || "";
+      const actDesc = act.description || "";
+      const prevSel = prev1?.selector || "";
+      const prevDesc = prev1?.description || "";
+      const isActLogout =
+        actSel.includes("topMenu_logon") ||
+        actSel.includes("btn_logout") ||
+        actSel.includes("goLogout") ||
+        actDesc.includes("로그아웃");
+      const isPrevLogout =
+        prev1?.type === "click" &&
+        (prevSel.includes("btn_logout") || prevSel.includes("goLogout") || prevDesc.includes("로그아웃"));
+
+      if (isActLogout && (isPrevLogout || (!act.recordedByEyedropper && actSel.includes("topMenu_logon")))) {
+        changes.push(`[정제] 로그아웃 직후 중복/오류 삽입된 로그아웃 버튼 클릭 액션 제거: "${actDesc}"`);
+        removedActionsCount++;
+        if (idx + 1 < sanitizedActions.length && sanitizedActions[idx + 1].type === "wait") {
+          idx++;
+          removedActionsCount++;
+        }
+        continue;
+      }
+
+      const prevNonWait = prev1?.type === "wait" ? prev2 : prev1;
+      const prevNonWaitSel = prevNonWait?.selector || "";
+      if (
+        !act.recordedByEyedropper &&
+        actSel.includes("frmEditByDesign_btnSaveConfirm") &&
+        (prevSel.includes("frmMainList_btnConfirm") || prevNonWaitSel.includes("frmMainList_btnConfirm"))
+      ) {
+        changes.push(`[정제] 양식 선택 팝업 확인(#frmMainList_btnConfirm) 직후 오류 삽입된 폼 디자이너 확인 액션 제거: "${actDesc}"`);
+        removedActionsCount++;
+        if (idx + 1 < sanitizedActions.length && sanitizedActions[idx + 1].type === "wait") {
+          idx++;
+          removedActionsCount++;
+        }
+        continue;
+      }
+
+      // Clean up duplicate AI-injected [포탈 전체메뉴 열기 -> 모듈 선택] steps (lacking targetHtml) right after a recorded #all_svc_inner module click
+      if (
+        !act.targetHtml &&
+        Boolean(prevNonWait?.targetHtml) &&
+        prevNonWaitSel.includes("all_svc_inner") &&
+        (actSel.includes("btn_svc_open") ||
+          actDesc.includes("포탈 전체메뉴") ||
+          actSel.includes("all_svc_inner") ||
+          actSel.includes("#svc_box"))
+      ) {
+        changes.push(`[정제] 포탈 전체메뉴 모듈 이동 직후 중복 삽입된 전체메뉴 액션 제거: "${actDesc}"`);
+        removedActionsCount++;
+        if (idx + 1 < sanitizedActions.length && sanitizedActions[idx + 1].type === "wait") {
+          idx++;
+          removedActionsCount++;
+        }
+        continue;
+      }
+    }
+
+    cleanedSanitizedActions.push(act);
+  }
+
+  sanitizedActions.length = 0;
+  sanitizedActions.push(...cleanedSanitizedActions);
 
   if (actualPlan.recordedByEyedropper) {
     return {
@@ -1531,8 +2792,10 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
   // Post-pass cleanup:
   // 1) Remove accidental layout wrapper clicks (e.g. div#eapHeader_option) and their immediate wait
   // 2) Deduplicate consecutive card [작성] clicks (e.g. when a previous failed run inserted a duplicate card write action)
+  // 3) Remove bogus unrecorded topMenu_logon / duplicate logout clicks injected after an eyedropper-recorded logout click
   const finalActions: BrowsePlanAction[] = [];
   let lastWasCardWrite = false;
+  let lastWasLogoutClick = false;
 
   for (let i = 0; i < optimizedActions.length; i++) {
     const act = optimizedActions[i];
@@ -1549,6 +2812,27 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         i++; // skip trailing wait too
       }
       continue;
+    }
+
+    const isLogoutClick =
+      act.type === "click" &&
+      (sel.includes("btn_logout") ||
+        sel.includes("goLogout") ||
+        sel.includes("topMenu_logon") ||
+        desc.includes("로그아웃"));
+
+    if (isLogoutClick) {
+      if (lastWasLogoutClick || (!act.recordedByEyedropper && sel.includes("topMenu_logon"))) {
+        removedActionsCount++;
+        changes.push(`[정제] 로그아웃 직후 중복/오류 삽입된 로그아웃 버튼 클릭 액션 제거: "${desc}"`);
+        if (i + 1 < optimizedActions.length && optimizedActions[i + 1].type === "wait") {
+          i++; // skip trailing wait too
+        }
+        continue;
+      }
+      lastWasLogoutClick = true;
+    } else if (act.type !== "wait") {
+      lastWasLogoutClick = false;
     }
 
     const isCardWrite =
@@ -1570,6 +2854,18 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       lastWasCardWrite = true;
     } else if (act.type !== "wait") {
       lastWasCardWrite = false;
+    }
+
+    if (
+      act.type === "wait" &&
+      finalActions.length > 0 &&
+      finalActions[finalActions.length - 1].type === "wait" &&
+      i < optimizedActions.length - 1 &&
+      !desc.includes("최종 시연 결과")
+    ) {
+      removedActionsCount++;
+      changes.push(`[정제] 연속된 중복 대기(wait) 액션 병합: "${desc}"`);
+      continue;
     }
 
     finalActions.push(act);

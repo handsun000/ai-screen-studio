@@ -38,6 +38,7 @@ export interface LiveDOMCandidate {
   value?: string;
   placeholder?: string;
   title?: string;
+  onclick?: string;
   ariaLabel?: string;
   disabled?: boolean;
   rect?: { x: number; y: number; w: number; h: number };
@@ -62,7 +63,7 @@ function prioritizeSelfHealCandidates(
 
   const extractKeywords = (act?: BrowsePlanAction): string[] => {
     if (!act) return [];
-    const raw = `${act.description || ""} ${act.text || ""} ${act.selector || ""}`;
+    const raw = `${act.description || ""} ${act.text || ""} ${act.selector || ""} ${act.targetHtml || ""}`;
     return raw
       .replace(/[[\]()'".,:#>-]/g, " ")
       .split(/\s+/)
@@ -80,12 +81,13 @@ function prioritizeSelfHealCandidates(
   const wantsGnb =
     descLower.includes("전체메뉴") ||
     descLower.includes("포탈") ||
+    descLower.includes("로그아웃") ||
     descLower.includes("gnb") ||
     descLower.includes("상단 헤더");
 
   const scored = candidates.map((c, idx) => {
     let score = 0;
-    const hay = `${c.text || ""} ${c.id || ""} ${c.name || ""} ${c.placeholder || ""} ${c.title || ""} ${c.className || ""} ${c.suggestedSelector || ""}`.toLowerCase();
+    const hay = `${c.text || ""} ${c.id || ""} ${c.name || ""} ${c.placeholder || ""} ${c.title || ""} ${c.onclick || ""} ${c.className || ""} ${c.suggestedSelector || ""}`.toLowerCase();
 
     // 1. Active modal elements get highest priority
     if (c.inModal) {
@@ -114,8 +116,8 @@ function prioritizeSelfHealCandidates(
         score += 35;
       }
       if (
-        /저장|상신|기안|등록|작성|확인|검색|선택|신청|추가|결재|반려|승인|보내기|발송|예약|펼침|전체메뉴/.test(
-          `${c.text || ""} ${c.title || ""}`
+        /저장|상신|기안|등록|작성|확인|검색|선택|신청|추가|결재|반려|승인|보내기|발송|예약|펼침|전체메뉴|로그아웃/.test(
+          `${c.text || ""} ${c.title || ""} ${c.onclick || ""}`
         )
       ) {
         score += 50;
@@ -171,6 +173,7 @@ export async function extractLiveCandidates(
         value?: string;
         placeholder?: string;
         title?: string;
+        onclick?: string;
         ariaLabel?: string;
         disabled?: boolean;
         rect?: { x: number; y: number; w: number; h: number };
@@ -219,7 +222,11 @@ export async function extractLiveCandidates(
         }
 
         const tag = el.tagName.toLowerCase();
-        const text = (el.textContent || "")
+        const visibleInnerText = ((el as HTMLElement).innerText || "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 50);
+        const text = (visibleInnerText || el.textContent || "")
           .replace(/\s+/g, " ")
           .trim()
           .slice(0, 50);
@@ -235,6 +242,8 @@ export async function extractLiveCandidates(
           : undefined;
         const placeholder = (el as HTMLInputElement).placeholder || undefined;
         const title = (el as HTMLElement).title || undefined;
+        const rawOnclick = el.getAttribute("onclick") ? el.getAttribute("onclick")!.trim() : "";
+        const onclick = rawOnclick ? rawOnclick.slice(0, 60) : undefined;
         const ariaLabel = el.getAttribute("aria-label") || undefined;
         const disabled =
           (el as HTMLButtonElement).disabled ||
@@ -246,35 +255,45 @@ export async function extractLiveCandidates(
         const modalContainer = el.closest(".ui-dialog, .modal, [role='dialog'], .layer_wrap");
         const inModal = modalContainer ? activeDialogTitle || true : false;
         const inSidebar = !!el.closest("#snb, .snb, .aside, .left_menu, aside");
-        const inHeader = !!el.closest("header, #header, .gnb, .top_menu, nav");
+        const inHeader = !!el.closest("header, #header, .gnb, .top_menu, #gnb_menu, nav");
 
         let scopePrefix = "";
         if (inModal) {
           scopePrefix = ".ui-dialog:visible ";
         } else if (inSidebar) {
           scopePrefix = "#snb ";
+        } else if (el.closest("#gnb_menu")) {
+          scopePrefix = "div#gnb_menu ";
         } else if (inHeader) {
-          scopePrefix = "header ";
+          scopePrefix = "#header ";
         }
+
+        const firstMeaningfulClass = className
+          ? className
+              .split(/\s+/)
+              .find((c) => c && !/^(ui-|active|on|selected|hover|focus|btn$|btn_ico$|btn_med$|btn_pri$|btn_sml$)/i.test(c))
+          : "";
 
         let suggestedSelector = "";
         if (id && !id.startsWith("ui-id-") && !id.startsWith("_")) {
           suggestedSelector = `${scopePrefix}${tag}#${id}`;
-        } else if (text && text.length >= 2 && text.length <= 25) {
-          suggestedSelector = `${scopePrefix}${tag}:has-text('${text}')`;
+        } else if (firstMeaningfulClass && title && !title.includes("'")) {
+          suggestedSelector = `${scopePrefix}${tag}.${firstMeaningfulClass}[title='${title}']`;
+        } else if (onclick && !onclick.includes("'") && !/^(javascript:|return\s)/i.test(onclick)) {
+          const fnToken = onclick.split(";")[0].trim().slice(0, 30);
+          suggestedSelector = `${scopePrefix}${tag}[onclick*='${fnToken}']`;
         } else if (name && value) {
           suggestedSelector = `${scopePrefix}${tag}[name='${name}'][value='${value}']`;
         } else if (name) {
           suggestedSelector = `${scopePrefix}${tag}[name='${name}']`;
         } else if (placeholder) {
           suggestedSelector = `${scopePrefix}${tag}[placeholder*='${placeholder}']`;
-        } else if (title) {
-          suggestedSelector = `${scopePrefix}${tag}[title*='${title}']`;
-        } else if (className) {
-          const firstClass = className.split(/\s+/)[0];
-          if (firstClass && !firstClass.startsWith("ui-")) {
-            suggestedSelector = `${scopePrefix}${tag}.${firstClass}`;
-          }
+        } else if (title && !title.includes("'")) {
+          suggestedSelector = `${scopePrefix}${tag}[title='${title}']`;
+        } else if (visibleInnerText && visibleInnerText.length >= 2 && visibleInnerText.length <= 25 && !visibleInnerText.includes("'")) {
+          suggestedSelector = `${scopePrefix}${tag}:has-text('${visibleInnerText}')`;
+        } else if (firstMeaningfulClass) {
+          suggestedSelector = `${scopePrefix}${tag}.${firstMeaningfulClass}`;
         }
 
         if (!suggestedSelector) {
@@ -291,6 +310,7 @@ export async function extractLiveCandidates(
           value,
           placeholder,
           title,
+          onclick,
           ariaLabel,
           disabled,
           rect: {
@@ -356,7 +376,11 @@ export async function extractLiveCandidates(
                 }
 
                 const tag = el.tagName.toLowerCase();
-                const text = (el.textContent || "")
+                const visibleInnerText = ((el as HTMLElement).innerText || "")
+                  .replace(/\s+/g, " ")
+                  .trim()
+                  .slice(0, 50);
+                const text = (visibleInnerText || el.textContent || "")
                   .replace(/\s+/g, " ")
                   .trim()
                   .slice(0, 50);
@@ -372,23 +396,34 @@ export async function extractLiveCandidates(
                   : undefined;
                 const placeholder = (el as HTMLInputElement).placeholder || undefined;
                 const title = (el as HTMLElement).title || undefined;
+                const rawOnclick = el.getAttribute("onclick") ? el.getAttribute("onclick")!.trim() : "";
+                const onclick = rawOnclick ? rawOnclick.slice(0, 60) : undefined;
+                const firstMeaningfulClass = className
+                  ? className
+                      .split(/\s+/)
+                      .find((c) => c && !/^(ui-|active|on|selected|hover|focus|btn$|btn_ico$|btn_med$|btn_pri$|btn_sml$)/i.test(c))
+                  : "";
 
                 let suggestedSelector = "";
                 if (id && !id.startsWith("ui-id-") && !id.startsWith("_")) {
                   suggestedSelector = `${tag}#${id}`;
-                } else if (text && text.length >= 2 && text.length <= 25) {
-                  suggestedSelector = `${tag}:has-text('${text}')`;
+                } else if (firstMeaningfulClass && title && !title.includes("'")) {
+                  suggestedSelector = `${tag}.${firstMeaningfulClass}[title='${title}']`;
+                } else if (onclick && !onclick.includes("'") && !/^(javascript:|return\s)/i.test(onclick)) {
+                  const fnToken = onclick.split(";")[0].trim().slice(0, 30);
+                  suggestedSelector = `${tag}[onclick*='${fnToken}']`;
                 } else if (name && value) {
                   suggestedSelector = `${tag}[name='${name}'][value='${value}']`;
                 } else if (name) {
                   suggestedSelector = `${tag}[name='${name}']`;
                 } else if (placeholder) {
                   suggestedSelector = `${tag}[placeholder*='${placeholder}']`;
-                } else if (className) {
-                  const firstClass = className.split(/\s+/)[0];
-                  if (firstClass && !firstClass.startsWith("ui-")) {
-                    suggestedSelector = `${tag}.${firstClass}`;
-                  }
+                } else if (title && !title.includes("'")) {
+                  suggestedSelector = `${tag}[title='${title}']`;
+                } else if (visibleInnerText && visibleInnerText.length >= 2 && visibleInnerText.length <= 25 && !visibleInnerText.includes("'")) {
+                  suggestedSelector = `${tag}:has-text('${visibleInnerText}')`;
+                } else if (firstMeaningfulClass) {
+                  suggestedSelector = `${tag}.${firstMeaningfulClass}`;
                 }
                 if (!suggestedSelector) suggestedSelector = tag;
 
@@ -402,6 +437,7 @@ export async function extractLiveCandidates(
                   value,
                   placeholder,
                   title,
+                  onclick,
                   rect: {
                     x: Math.round(rect.x),
                     y: Math.round(rect.y),
@@ -540,7 +576,7 @@ Analyze WHY Step #${stepIndex} failed by comparing the Live Screenshot + DOM aga
 
 ### [2] 7 Golden Selector Rules (Playwright Precision)
 
-1. 🚫 **Zero-Guessing Policy**: NEVER invent fake IDs (\`#_DOC_TITLE_\`, \`#btn_submit\`). Use ONLY real \`id\`, \`className\`, \`name\`, or visible Korean text (\`:has-text('...')\`) confirmed in \`[Live Interactive DOM Candidates]\`.
+1. 🚫 **Zero-Guessing Policy**: NEVER invent fake IDs (\`#_DOC_TITLE_\`, \`#btn_submit\`, \`#topMenu_logon\`). Use ONLY real \`id\`, \`className\`, \`name\`, \`title\`, \`onclick\`, or visible Korean text (\`:has-text('...')\`) confirmed in \`[Live Interactive DOM Candidates]\`. For icon-only buttons where text is visually hidden (e.g. \`a.btn_logout\`), always use HTML attribute selectors (\`a.btn_logout[title='로그아웃']:visible, a[onclick*='goLogout']:visible, a.btn_logout:visible\`), NEVER \`:has-text(...)\`.
 2. 🪟 **Modal Dialog Isolation**: If \`activeDialogTitle\` is present or the target has \`inModal: true\`, ALWAYS prefix the selector with \`.ui-dialog:visible \` (or \`.modal:visible \`).
    - Note: In Naonsoft Groupware, Schedule Registration (\`#dl_reg_schedule_form\`), Resource Reservation (\`#dl_reg_res_form\`), and Approval Opinion (\`#eapApproval\`) forms ARE inside \`.ui-dialog:visible\`!
 3. 🖼️ **Iframe Context**: If the candidate has a \`frame\` property (e.g., \`iframe#subBody\`), set \`"iframe": "iframe#subBody"\`.
@@ -580,6 +616,7 @@ ${
     ? `- **Failed Source Selector**: "${action.sourceSelector || action.selector || ""}"\n- **Failed Target Selector**: "${action.targetSelector || ""}"`
     : `- **Failed Selector**: "${action.selector || "(empty)"}"`
 }
+${action.targetHtml ? `- **Recorded Target HTML**: \`${action.targetHtml}\`` : ""}
 - **Configured Iframe**: "${action.iframe || "none (top-level page)"}"
 - **Active Topmost Modal Title**: ${activeDialogTitle ? `"${activeDialogTitle}"` : "None (no modal open)"}
 
@@ -644,7 +681,8 @@ Determine whether to:
           config: {
             systemInstruction,
             temperature: 0.1,
-            maxOutputTokens: 4096,
+            maxOutputTokens: 8192,
+            thinkingConfig: { thinkingBudget: 0 },
             responseMimeType: "application/json",
           },
         });

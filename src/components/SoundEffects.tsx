@@ -42,15 +42,12 @@ function willPanBetween(
   prev: { endFrame: number; easeOutFrames?: number; zoom: number; zoomTarget: unknown },
   next: { startFrame: number; easeInFrames?: number; zoom: number; zoomTarget: unknown },
   fps: number,
-  fpsScale: number
+  _fpsScale: number
 ): boolean {
   if (!prev.zoomTarget || !next.zoomTarget) return false;
   if (prev.zoom <= 1 || next.zoom <= 1) return false;
-  const easeOut = Math.round((prev.easeOutFrames ?? 20) * fpsScale);
-  const easeIn = Math.round((next.easeInFrames ?? 15) * fpsScale);
-  const gap = next.startFrame - prev.endFrame;
-  const totalBounceFrames = easeOut + Math.max(0, gap) + easeIn;
-  return totalBounceFrames / fps <= 3.0;
+  const gapSeconds = Math.max(0, next.startFrame - prev.endFrame) / fps;
+  return gapSeconds <= 10.0;
 }
 
 export const SoundEffects: React.FC<SoundEffectsProps> = ({

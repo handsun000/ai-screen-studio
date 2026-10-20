@@ -16,6 +16,9 @@ export interface ScenarioSummary {
   videoSizeBytes?: number;
   hasRenderedVideo?: boolean;
   renderedVideoSizeBytes?: number;
+  hasNarration?: boolean;
+  recordedByEyedropper?: boolean;
+  flowSummary?: string;
   actionsCount: number;
   zoomSegmentsCount: number;
   durationSec?: number;
@@ -65,12 +68,14 @@ export function listScenarios(): ScenarioSummary[] {
     const browsePlanPath = path.join(dirPath, "browse-plan.json");
     const momentsPath = path.join(dirPath, "moments.json");
     const editPlanPath = path.join(dirPath, "edit-plan.json");
+    const narrationPath = path.join(dirPath, "narration.json");
     const videoPath = path.join(dirPath, "recording.mp4");
     const renderedVideoPath = path.join(path.resolve(__dirname, "..", "..", "output"), `${slug}.mp4`);
 
     const hasBrowsePlan = fs.existsSync(browsePlanPath);
     const hasMoments = fs.existsSync(momentsPath);
     const hasEditPlan = fs.existsSync(editPlanPath);
+    const hasNarration = fs.existsSync(narrationPath);
     const hasVideo = fs.existsSync(videoPath);
     const hasRenderedVideo = fs.existsSync(renderedVideoPath);
 
@@ -80,11 +85,42 @@ export function listScenarios(): ScenarioSummary[] {
     let videoSizeBytes = 0;
     let renderedVideoSizeBytes = 0;
     let lastModified = "";
+    let recordedByEyedropper = false;
+    let flowSummary = "";
 
     if (hasBrowsePlan) {
       try {
         const bp: BrowsePlan = JSON.parse(fs.readFileSync(browsePlanPath, "utf-8"));
         actionsCount = bp.actions?.length || 0;
+        recordedByEyedropper = Boolean(bp.recordedByEyedropper || bp.actions?.some((a) => a.recordedByEyedropper));
+        const stat = fs.statSync(browsePlanPath);
+        lastModified = stat.mtime.toISOString();
+
+        // Build a concise human-readable flow summary from non-wait actions
+        const meaningfulSteps = (bp.actions || [])
+          .filter((a) => a.type !== "wait")
+          .map((a) => {
+            const d = (a.description || "").trim();
+            const quoted = d.match(/'([^']+)'/);
+            if (quoted && quoted[1].length >= 2 && quoted[1].length <= 18) {
+              return a.type === "type" ? `'${quoted[1]}' 입력` : quoted[1];
+            }
+            return d.replace(/\s*(?:메뉴\/링크\s*클릭|버튼\s*클릭|클릭|반응\s*대기)$/g, "").slice(0, 18);
+          })
+          .filter(Boolean);
+        const dedupedSteps: string[] = [];
+        for (const s of meaningfulSteps) {
+          if (dedupedSteps[dedupedSteps.length - 1] !== s) {
+            dedupedSteps.push(s);
+          }
+        }
+        if (dedupedSteps.length > 0) {
+          const picked =
+            dedupedSteps.length <= 4
+              ? dedupedSteps
+              : [dedupedSteps[0], dedupedSteps[1], dedupedSteps[2], dedupedSteps[dedupedSteps.length - 1]];
+          flowSummary = picked.join(" ➔ ");
+        }
       } catch {}
     }
 
@@ -100,7 +136,9 @@ export function listScenarios(): ScenarioSummary[] {
       try {
         const stat = fs.statSync(videoPath);
         videoSizeBytes = stat.size;
-        lastModified = stat.mtime.toISOString();
+        if (!lastModified || stat.mtime.toISOString() > lastModified) {
+          lastModified = stat.mtime.toISOString();
+        }
       } catch {}
     }
 
@@ -116,10 +154,13 @@ export function listScenarios(): ScenarioSummary[] {
       hasBrowsePlan,
       hasMoments,
       hasEditPlan,
+      hasNarration,
       hasVideo,
       videoSizeBytes,
       hasRenderedVideo,
       renderedVideoSizeBytes,
+      recordedByEyedropper,
+      flowSummary,
       actionsCount,
       zoomSegmentsCount,
       durationSec: Math.round(durationSec * 10) / 10,
@@ -128,7 +169,9 @@ export function listScenarios(): ScenarioSummary[] {
     });
   }
 
-  return list.sort((a, b) => (b.isActive ? 1 : 0) - (a.isActive ? 1 : 0));
+  return list.sort((a, b) => {
+    return (b.lastModified || "").localeCompare(a.lastModified || "");
+  });
 }
 
 export function getScenarioDetails(slug: string) {
@@ -149,11 +192,8 @@ export function getScenarioDetails(slug: string) {
   if (fs.existsSync(browsePlanPath)) {
     try {
       const rawPlan = JSON.parse(fs.readFileSync(browsePlanPath, "utf-8"));
-      const { plan: sanitized, report } = sanitizeBrowsePlan(rawPlan);
+      const { plan: sanitized } = sanitizeBrowsePlan(rawPlan);
       browsePlan = sanitized;
-      if (report.fixedActionsCount > 0 || report.removedActionsCount > 0) {
-        fs.writeFileSync(browsePlanPath, JSON.stringify(sanitized, null, 2), "utf-8");
-      }
     } catch {}
   }
   if (fs.existsSync(momentsPath)) {
@@ -170,11 +210,20 @@ export function getScenarioDetails(slug: string) {
   const renderedVideoPath = path.join(path.resolve(__dirname, "..", "..", "output"), `${slug}.mp4`);
   const hasRenderedVideo = fs.existsSync(renderedVideoPath);
 
+  const narrationPath = path.join(dirPath, "narration.json");
+  let narration = null;
+  if (fs.existsSync(narrationPath)) {
+    try {
+      narration = JSON.parse(fs.readFileSync(narrationPath, "utf-8"));
+    } catch {}
+  }
+
   return {
     slug,
     browsePlan,
     moments,
     editPlan,
+    narration,
     hasVideo: fs.existsSync(videoPath),
     videoUrl: `/api/video/${slug}`,
     hasRenderedVideo,

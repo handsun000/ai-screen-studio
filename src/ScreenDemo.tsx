@@ -5,6 +5,7 @@ import { FloatingWindow, WINDOW_WIDTH, WINDOW_HEIGHT } from "./components/Floati
 import { SyntheticCursor } from "./components/SyntheticCursor";
 import { CameraTransform } from "./components/CameraTransform";
 import { SoundEffects } from "./components/SoundEffects";
+import { NarrationTrack } from "./components/NarrationTrack";
 import type { EditPlan, MomentsFile } from "./types";
 
 const WIDTH = 1920;
@@ -33,6 +34,7 @@ export const ScreenDemo: React.FC<ScreenDemoProps> = ({
 
       <CameraTransform
         editPlan={editPlan}
+        moments={moments.moments}
         canvasWidth={WIDTH}
         canvasHeight={HEIGHT}
         viewportWidth={moments.metadata.viewportWidth}
@@ -62,6 +64,8 @@ export const ScreenDemo: React.FC<ScreenDemoProps> = ({
           )}
         </FloatingWindow>
       </CameraTransform>
+
+      <NarrationTrack editPlan={editPlan} />
 
       {showSfx && (
         <SoundEffects editPlan={editPlan} moments={moments} />

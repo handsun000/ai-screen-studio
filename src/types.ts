@@ -27,6 +27,9 @@ export interface BrowsePlanAction {
   // Eyedropper Direct DOM Capture Metadata
   recordedByEyedropper?: boolean;
   targetHtml?: string;
+  pressEnter?: boolean;
+  editorParaIndex?: number;
+  editorInsertNewline?: boolean;
 }
 
 export interface CursorSettings {
@@ -110,6 +113,31 @@ export interface EditSegment {
   description: string;
 }
 
+export type NarrationStyle = "manual" | "friendly" | "presentation" | "compact";
+
+export interface NarrationCue {
+  id: number;
+  startMs: number;
+  endMs: number;
+  text: string;
+  isIntro?: boolean;
+  audioFile?: string;
+  audioDurationMs?: number;
+  playbackRate?: number;
+}
+
+export interface NarrationFile {
+  slug: string;
+  voice: string;
+  rate: string;
+  pitch?: string;
+  style?: NarrationStyle;
+  enabled: boolean;
+  showSubtitles: boolean;
+  updatedAt: string;
+  cues: NarrationCue[];
+}
+
 export interface EditPlan {
   totalDurationFrames: number;
   fps: number;
@@ -117,4 +145,5 @@ export interface EditPlan {
   timeRegions?: TimeRegion[];
   segments: EditSegment[];
   cursor?: CursorSettings;
+  narration?: NarrationFile;
 }
