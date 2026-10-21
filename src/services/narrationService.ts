@@ -5,6 +5,7 @@ import { spawnSync } from "child_process";
 import * as dotenv from "dotenv";
 import type {
   BrowsePlan,
+  BrowsePlanAction,
   EditPlan,
   Moment,
   MomentsFile,
@@ -62,8 +63,17 @@ interface StructuralMomentMeta {
   fieldLabel?: string;
   targetLabel?: string;
   sampleValue?: string;
+  isCommentOrTimeline?: boolean;
   aiFact: string;
   fallbackPhrase: string;
+}
+
+interface MomentAnalysisContext {
+  prevMoment?: Moment;
+  nextMoment?: Moment;
+  typedBefore?: string[];
+  planAction?: BrowsePlanAction;
+  afterMainSave?: boolean;
 }
 
 const STANDARD_UI_MENU_REGEX =
@@ -71,16 +81,20 @@ const STANDARD_UI_MENU_REGEX =
 
 /**
  * 특정 시나리오 하드코딩 없이, 액션의 구조적 형태(메뉴 이동, 팝업 열기/선택/닫기, 날짜 선택, 입력란 타이핑, 옵션 선택, 첨부, 저장/확인)와
- * 화면 라벨([항목명], [팝업명], '버튼명')만을 기반으로 객관적인 구조 메타데이터를 추출합니다.
+ * 화면 라벨([항목명], [팝업명], '버튼명') 및 DOM 문맥(본문 폼 vs 하단 타임라인/댓글 영역)을 기반으로 구조 메타데이터를 추출합니다.
  */
 function analyzeMomentStructure(
   m: Moment,
-  context?: { prevMoment?: Moment; nextMoment?: Moment; typedBefore?: string[] }
+  context?: MomentAnalysisContext
 ): StructuralMomentMeta {
   const desc = (m.description || "").trim();
   const keys = (m.keys || "").trim();
   const prevDesc = (context?.prevMoment?.description || "").trim();
   const nextDesc = (context?.nextMoment?.description || "").trim();
+  const domSignal = `${context?.planAction?.selector || ""} ${context?.planAction?.targetHtml || ""}`;
+  const isCommentOrTimeline =
+    /cmt_write|comment_write|smwTimeLine|cmtAtt|_addTimeLine|댓글|타임라인|의견/i.test(domSignal) ||
+    Boolean(context?.afterMainSave && /파일첨부|에디터\s*본문|['"]등록['"]\s*버튼/.test(desc));
 
   const bracketMatches = Array.from(desc.matchAll(/\[([^\]]+)\]/g)).map((x) => x[1].trim());
   const modalName = bracketMatches.find((b) => /팝업$/.test(b));
@@ -89,16 +103,34 @@ function analyzeMomentStructure(
   const quotedMatches = Array.from(desc.matchAll(/['"]([^'"]+)['"]/g)).map((x) => x[1].trim());
   const targetLabel = quotedMatches[quotedMatches.length - 1] || fieldLabel || "";
 
-  // 1. 파일 첨부 (upload)
-  if (m.type === "upload" || /파일\s*첨부|첨부파일|에\s*'[^']+'\s*첨부|파일\s*선택/i.test(desc)) {
-    const fileSample = quotedMatches[0] || "";
+  // 1. 파일 첨부 (upload 액션 또는 파일 선택 업로드)
+  if (m.type === "upload" || /에\s*'[^']+'\s*첨부/i.test(desc)) {
+    const fileSample = quotedMatches[quotedMatches.length - 1] || "";
     return {
       role: "file_upload",
-      modalName,
+      modalName: modalName || "파일 첨부 팝업",
       fieldLabel: fieldLabel || "첨부파일",
       sampleValue: fileSample,
-      aiFact: `[파일 첨부] '${fieldLabel || "파일 선택"}' 영역에서 첨부 파일을 업로드 (시연용 파일명 '${fileSample}'은 읽지 말 것)`,
-      fallbackPhrase: "관련 첨부 파일을 선택해 업로드",
+      isCommentOrTimeline,
+      aiFact: `[파일 업로드] ${modalName ? `(${modalName}) ` : ""}PC에서 첨부할 파일을 선택해 업로드 (시연용 파일명 '${fileSample}'은 읽지 말 것)`,
+      fallbackPhrase: "PC에서 첨부할 파일을 선택해 업로드",
+    };
+  }
+
+  // 1-B. '파일첨부' / '파일 선택' 버튼 클릭 (파일 첨부 팝업 열기 트리거)
+  if (/^['"]?(파일\s*첨부|파일첨부|파일\s*선택)['"]?\s*버튼\s*클릭/i.test(desc)) {
+    return {
+      role: "popup_open",
+      modalName: "파일 첨부 팝업",
+      fieldLabel: isCommentOrTimeline ? "타임라인(댓글) 첨부파일" : "첨부파일",
+      targetLabel: targetLabel || "파일첨부",
+      isCommentOrTimeline,
+      aiFact: isCommentOrTimeline
+        ? `[타임라인 파일첨부 창 열기] 등록된 문서 하단 타임라인(댓글) 영역의 '${targetLabel || "파일첨부"}' 버튼을 눌러 파일 첨부 팝업 열기`
+        : `[파일첨부 창 열기] '${targetLabel || "파일첨부"}' 버튼을 눌러 파일 첨부 팝업 열기`,
+      fallbackPhrase: isCommentOrTimeline
+        ? `하단 타임라인의 '${targetLabel || "파일첨부"}' 버튼을 눌러 첨부 창을 열기`
+        : `'${targetLabel || "파일첨부"}' 버튼을 눌러 첨부 창을 열기`,
     };
   }
 
@@ -122,51 +154,52 @@ function analyzeMomentStructure(
       .replace(/입력창|입력란|영역/g, "")
       .trim();
 
-    const readableField =
-      fieldLabel ||
-      (/search|srch|검색/i.test(rawField)
-        ? "검색창"
-        : /subject|제목/i.test(rawField)
-        ? "제목"
-        : /본문|에디터|내용/i.test(rawField)
-        ? "본문 내용"
-        : /설명|_desc/i.test(rawField)
-        ? "설명"
-        : /사유|why/i.test(rawField)
-        ? "사유"
-        : /장소/i.test(rawField)
-        ? "장소"
-        : /태그|tag/i.test(rawField)
-        ? "태그"
-        : /폴더|folder/i.test(rawField)
-        ? "폴더명"
-        : /한국어|다국어|명칭/i.test(rawField)
-        ? "명칭"
-        : /이메일|email|th7/i.test(rawField) || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(keys)
-        ? "이메일"
-        : /전화|휴대|mobile|phone|th6/i.test(rawField) || /^\d{2,3}-\d{3,4}-\d{4,5}$/.test(keys)
-        ? "전화번호"
-        : /비밀번호\s*확인|pwdvalid/i.test(rawField)
-        ? "비밀번호 확인"
-        : /비밀번호|pwd|password/i.test(rawField)
-        ? "비밀번호"
-        : /아이디|userid|\bid\b/i.test(rawField)
-        ? "아이디"
-        : /이름|성명|empname|givenname/i.test(rawField)
-        ? "이름"
-        : /부서|dept/i.test(rawField)
-        ? "부서"
-        : /직위|직책|pos/i.test(rawField)
-        ? "직위"
-        : /회사|cmp/i.test(rawField)
-        ? "회사"
-        : /시작\s*시간|종료\s*시간|hh:mm/i.test(rawField) || /^\d{1,2}:\d{2}$/.test(keys)
-        ? "시간"
-        : /시작\s*일|종료\s*일|yyyy-mm-dd|기한|날짜/i.test(rawField) || /^\d{4}-\d{2}-\d{2}$/.test(keys)
-        ? "날짜"
-        : rawField && !/^[a-z0-9_#-]+$/i.test(rawField)
-        ? rawField
-        : "세부 입력 항목");
+    const readableField = isCommentOrTimeline && /본문|에디터|내용/i.test(rawField)
+      ? "타임라인(댓글) 내용"
+      : fieldLabel ||
+        (/search|srch|검색/i.test(rawField)
+          ? "검색창"
+          : /subject|제목/i.test(rawField)
+          ? "제목"
+          : /본문|에디터|내용/i.test(rawField)
+          ? "본문 내용"
+          : /설명|_desc/i.test(rawField)
+          ? "설명"
+          : /사유|why/i.test(rawField)
+          ? "사유"
+          : /장소/i.test(rawField)
+          ? "장소"
+          : /태그|tag/i.test(rawField)
+          ? "태그"
+          : /폴더|folder/i.test(rawField)
+          ? "폴더명"
+          : /한국어|다국어|명칭/i.test(rawField)
+          ? "명칭"
+          : /이메일|email|th7/i.test(rawField) || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(keys)
+          ? "이메일"
+          : /전화|휴대|mobile|phone|th6/i.test(rawField) || /^\d{2,3}-\d{3,4}-\d{4,5}$/.test(keys)
+          ? "전화번호"
+          : /비밀번호\s*확인|pwdvalid/i.test(rawField)
+          ? "비밀번호 확인"
+          : /비밀번호|pwd|password/i.test(rawField)
+          ? "비밀번호"
+          : /아이디|userid|\bid\b/i.test(rawField)
+          ? "아이디"
+          : /이름|성명|empname|givenname/i.test(rawField)
+          ? "이름"
+          : /부서|dept/i.test(rawField)
+          ? "부서"
+          : /직위|직책|pos/i.test(rawField)
+          ? "직위"
+          : /회사|cmp/i.test(rawField)
+          ? "회사"
+          : /시작\s*시간|종료\s*시간|hh:mm/i.test(rawField) || /^\d{1,2}:\d{2}$/.test(keys)
+          ? "시간"
+          : /시작\s*일|종료\s*일|yyyy-mm-dd|기한|날짜/i.test(rawField) || /^\d{4}-\d{2}-\d{2}$/.test(keys)
+          ? "날짜"
+          : rawField && !/^[a-z0-9_#-]+$/i.test(rawField)
+          ? rawField
+          : "세부 입력 항목");
 
     const isDateOrTime = readableField === "시간" || readableField === "날짜";
     return {
@@ -174,10 +207,16 @@ function analyzeMomentStructure(
       modalName,
       fieldLabel: readableField,
       sampleValue: keys,
-      aiFact: `[텍스트 입력] ${modalName ? `(${modalName}) ` : ""}'${readableField}' 입력란에 값 작성 (시연 입력값 '${keys}'는 절대 그대로 읽지 말고 '${readableField}'을 입력한다고 설명할 것)`,
+      isCommentOrTimeline,
+      aiFact:
+        readableField === "타임라인(댓글) 내용"
+          ? `[타임라인 댓글 입력] 등록된 문서 하단의 타임라인(댓글/의견) 입력 영역에 코멘트 내용을 작성 (시연 입력값 '${keys}'는 절대 그대로 읽지 말고 댓글이나 추가 의견을 입력한다고 설명할 것)`
+          : `[텍스트 입력] ${modalName ? `(${modalName}) ` : ""}'${readableField}' 입력란에 값 작성 (시연 입력값 '${keys}'는 절대 그대로 읽지 말고 '${readableField}'을 입력한다고 설명할 것)`,
       fallbackPhrase:
         readableField === "검색창"
           ? "검색창에 키워드를 입력해 대상 항목을 조회"
+          : readableField === "타임라인(댓글) 내용"
+          ? "하단 타임라인(댓글) 입력란에 추가 의견이나 전달할 내용을 작성"
           : readableField === "본문 내용"
           ? "본문 에디터 영역에 상세 내용을 작성"
           : `${readableField} 입력란에 내용을 작성`,
@@ -231,13 +270,16 @@ function analyzeMomentStructure(
   // 6. 모달/팝업 내부 조작 ('[OOO 팝업] ...')
   if (modalName) {
     const cleanModalTitle = modalName.replace(/\s*팝업$/, "").trim();
-    if (/['"](확인|적용|선택\s*완료)['"]\s*버튼/i.test(desc)) {
+    const isFileUploadModal = /파일\s*첨부/.test(modalName);
+    if (/['"](확인|적용|선택\s*완료)['"]\s*버튼/i.test(desc) || (isFileUploadModal && /['"]저장['"]\s*버튼/i.test(desc))) {
+      const btnText = targetLabel || (isFileUploadModal ? "저장" : "확인");
       return {
         role: "popup_confirm",
         modalName,
-        targetLabel: targetLabel || "확인",
-        aiFact: `[팝업 확정 닫기] ${modalName}에서 '${targetLabel || "확인"}' 버튼을 눌러 선택한 설정을 반영`,
-        fallbackPhrase: `'${targetLabel || "확인"}'을 눌러 ${cleanModalTitle} 설정을 반영`,
+        targetLabel: btnText,
+        isCommentOrTimeline,
+        aiFact: `[팝업 확정 닫기] ${modalName}에서 '${btnText}' 버튼을 눌러 선택한 항목/파일을 반영`,
+        fallbackPhrase: `'${btnText}'을 눌러 ${cleanModalTitle} 설정을 반영`,
       };
     }
     if (/['"](저장|등록|생성)['"]\s*버튼/i.test(desc)) {
@@ -285,14 +327,13 @@ function analyzeMomentStructure(
     };
   }
 
-  // 7. 모달/팝업을 여는 트리거 버튼 클릭 (다음 액션이 '[OOO 팝업]'이거나 '선택'/'추가'/'조직도'/'결재선' 버튼인 경우)
+  // 7. 모달/팝업을 여는 트리거 버튼 클릭
   const nextModalMatch = nextDesc.match(/\[([^\]]+팝업)\]/);
   if (
     nextModalMatch ||
     (/['"](선택|추가|조직도|주소록|결재선|일감\s*선택)['"]\s*버튼/i.test(desc) && Boolean(fieldLabel || targetLabel))
   ) {
     const openedModal = nextModalMatch ? nextModalMatch[1].replace(/\s*팝업$/, "") : fieldLabel || targetLabel;
-    // 단, '업무 등록', '문서 등록', '연락처 등록', '주제 등록', '프로젝트 추가' 같은 최상위 작성 시작 버튼은 create_start로 분류
     if (!/^(업무\s*등록|일정\s*등록|예약\s*신청|결재\s*작성|기안\s*작성|주제\s*등록|글\s*등록|글\s*작성|문서\s*등록|쪽지\s*쓰기|쪽지쓰기|메일\s*쓰기|메일쓰기|연락처\s*등록|연락처등록|새\s*폴더|새폴더|프로젝트\s*추가|새\s*프로젝트\s*생성)$/i.test(targetLabel)) {
       return {
         role: "popup_open",
@@ -364,7 +405,18 @@ function analyzeMomentStructure(
     };
   }
 
-  // 10. 주요 작성/등록/생성 시작 버튼
+  // 10. 타임라인/댓글 영역의 '등록' 버튼 클릭 (이미 본문 저장이 끝난 뒤 하단 댓글 등록)
+  if (isCommentOrTimeline && /^['"]?등록['"]?\s*버튼\s*클릭$/i.test(desc)) {
+    return {
+      role: "submit_save",
+      targetLabel: "등록",
+      isCommentOrTimeline: true,
+      aiFact: `[타임라인 댓글 등록 완료] 하단 타임라인(댓글) 영역의 '등록' 버튼을 눌러 작성한 댓글(처리 의견)과 첨부파일을 타임라인에 등록 (주의: '새 업무 생성을 완료합니다'가 아니라 등록된 업무 하단에 타임라인 댓글/의견을 등록하는 단계임!)`,
+      fallbackPhrase: "하단 '등록' 버튼을 눌러 작성한 타임라인 댓글과 첨부파일을 등록",
+    };
+  }
+
+  // 11. 주요 작성/등록/생성 시작 버튼
   if (
     /^(업무\s*등록|일정\s*등록|예약\s*신청|결재\s*작성|기안\s*작성|업무\s*작성|주제\s*등록|글\s*등록|글\s*작성|문서\s*등록|쪽지\s*쓰기|쪽지쓰기|메일\s*쓰기|메일쓰기|연락처\s*등록|연락처등록|연락처\s*추가|새\s*폴더|새폴더|보고\s*등록|일감\s*등록|설문\s*등록|프로젝트\s*추가|새\s*프로젝트\s*생성|작성|추가)$/i.test(
       targetLabel
@@ -380,7 +432,7 @@ function analyzeMomentStructure(
     };
   }
 
-  // 11. 저장 / 상신 / 발송 / 삭제 / 생성 / 로그인 완료 버튼
+  // 12. 저장 / 상신 / 발송 / 삭제 / 생성 / 로그인 완료 버튼
   if (/^(저장|발송|보내기|기안상신|결재상신|상신|등록\s*완료|등록|프로젝트\s*생성|공동\s*편집|삭제|login|로그인)$/i.test(targetLabel)) {
     if (/login|로그인/i.test(targetLabel)) {
       return {
@@ -393,12 +445,12 @@ function analyzeMomentStructure(
     return {
       role: "submit_save",
       targetLabel,
-      aiFact: `[최종 처리 실행] '${targetLabel}' 버튼 클릭`,
-      fallbackPhrase: `입력을 마친 뒤 '${targetLabel}' 버튼을 클릭`,
+      aiFact: `[최종 처리 실행] '${targetLabel}' 버튼을 눌러 작성한 문서를 최종 저장/등록`,
+      fallbackPhrase: `입력을 마친 뒤 '${targetLabel}' 버튼을 눌러 등록을 완료`,
     };
   }
 
-  // 12. 확인 버튼 (팝업 외부 일반 확인창)
+  // 13. 확인 버튼 (팝업 외부 일반 확인창)
   if (/^확인$/.test(targetLabel)) {
     return {
       role: "popup_confirm",
@@ -408,19 +460,29 @@ function analyzeMomentStructure(
     };
   }
 
-  // 13. 체크박스 / 라디오 / 부가 옵션 선택 (특정 선택값만 콕 집어 읽지 않고 옵션 설정 가능함을 안내)
-  if (/체크박스|라디오|옵션/.test(desc) || /^(비공개|공개|예약사용|중요\s*공지|댓글\s*사용|사용|미사용)$/.test(targetLabel)) {
+  // 14. 드롭다운(<select> '요소에서 ... 선택'), 라디오 버튼, 체크박스, 부가 옵션 선택
+  if (
+    /요소에서\s*['"][^'"]+['"]\s*선택/.test(desc) ||
+    /<select\b|type=["']radio["']|type=["']checkbox["']|class=["'][^"']*(rdobtn|chkbox)/i.test(domSignal) ||
+    /체크박스|라디오|옵션/.test(desc) ||
+    /^(비공개|공개|예약사용|중요\s*공지|댓글\s*사용|사용|미사용|결함|개선)$/.test(targetLabel)
+  ) {
+    const isSelectDropdown = /요소에서\s*['"][^'"]+['"]\s*선택/.test(desc) || /<select\b/i.test(domSignal);
     return {
       role: "option_toggle",
       fieldLabel,
       targetLabel,
       sampleValue: targetLabel,
-      aiFact: `[세부 옵션 설정] ${desc} (시연자는 예시로 '${targetLabel}'을 선택했으나 시청자는 상황에 따라 다른 옵션도 선택할 수 있으므로, '${targetLabel}'이라는 특정 옵션값만 딱 집어 읽지 말고 공개 여부나 부가 기능 등 필요한 세부 옵션을 상황에 맞게 선택·설정한다고 안내할 것)`,
-      fallbackPhrase: "상황에 맞게 공개 여부나 필요한 세부 옵션을 선택해 설정",
+      aiFact: isSelectDropdown
+        ? `[드롭다운 분류/항목 선택] 드롭다운 선택 목록에서 해당하는 분류나 대상 항목을 선택 (시연에서 선택한 '${targetLabel}' 값을 그대로 읽지 말고 해당 선택 항목을 지정한다고 안내할 것)`
+        : `[세부 옵션/구분 선택] ${desc} (시연자는 예시로 '${targetLabel}'을 선택했으나 시청자는 상황에 따라 다른 옵션이나 구분도 선택할 수 있으므로, '${targetLabel}'이라는 특정 값만 딱 집어 읽지 말고 업무 구분이나 공개 여부 등 필요한 세부 옵션을 상황에 맞게 선택·설정한다고 안내할 것)`,
+      fallbackPhrase: isSelectDropdown
+        ? "드롭다운 목록에서 해당하는 세부 항목을 선택"
+        : "상황에 맞게 구분 항목이나 세부 옵션을 선택해 설정",
     };
   }
 
-  // 14. 트리 항목 선택
+  // 15. 트리 항목 선택
   if (/트리\s*['"][^'"]+['"]\s*항목/i.test(desc)) {
     return {
       role: "form_input",
@@ -431,7 +493,21 @@ function analyzeMomentStructure(
     };
   }
 
-  // 15. 일반 버튼 / 요소 클릭
+  // 16. 에디터 본문 영역 클릭 (직후 타이핑과 합쳐질 포커스 클릭)
+  if (/에디터\s*본문.*클릭/.test(desc)) {
+    return {
+      role: "form_input",
+      fieldLabel: isCommentOrTimeline ? "타임라인(댓글) 내용" : "본문 내용",
+      targetLabel: "에디터 본문",
+      isCommentOrTimeline,
+      aiFact: isCommentOrTimeline
+        ? `[타임라인 댓글 입력란 클릭] 하단 타임라인(댓글) 입력 영역 클릭`
+        : `[본문 에디터 클릭] 본문 입력 영역 클릭`,
+      fallbackPhrase: isCommentOrTimeline ? "하단 타임라인 댓글 입력란을 클릭" : "본문 에디터 영역을 클릭",
+    };
+  }
+
+  // 17. 일반 버튼 / 요소 클릭
   return {
     role: "general_action",
     modalName,
@@ -444,34 +520,47 @@ function analyzeMomentStructure(
 
 /**
  * 시나리오 전체 액션과 슬러그를 분석하여 매뉴얼의 핵심 주제를 도출합니다.
+ * 드롭다운(<select>) 옵션 문자열(예: '- 선택 - 전자결재 전자우편(메일) ...')이 모듈 판별을 오염시키지 않도록 정제하고,
+ * 시나리오 초반에 실제로 진입한 모듈 메뉴를 최우선으로 반영합니다.
  */
 export function deriveScenarioTopicSummary(
   slug: string,
   momentsFile: MomentsFile,
   browsePlan?: BrowsePlan | null
 ): { fullTopic: string; shortPurpose: string } {
+  const sanitizeDescForTopic = (d: string) =>
+    d
+      .replace(/에\s*['"][^'"]*['"]\s*입력.*$/i, "")
+      .replace(/['"][^'"]*['"]\s*요소에서\s*['"][^'"]*['"]\s*선택/gi, "드롭다운 항목 선택")
+      .replace(/\[사용자\s*(등록|추가)\s*팝업\]\s*['"][^'"]*['"]\s*요소\s*클릭/gi, "[사용자 등록 팝업] 라이선스 선택");
+
   const uiDescriptions: string[] = [];
   for (const m of momentsFile.moments || []) {
     if (m.description) {
-      const cleaned = m.description
-        .replace(/에\s*['"][^'"]*['"]\s*입력.*$/i, "")
-        .replace(/\[사용자\s*(등록|추가)\s*팝업\]\s*['"][^'"]*['"]\s*요소\s*클릭/gi, "[사용자 등록 팝업] 라이선스 선택");
-      uiDescriptions.push(cleaned);
+      uiDescriptions.push(sanitizeDescForTopic(m.description));
     }
   }
   const selectors: string[] = [];
   for (const a of browsePlan?.actions || []) {
     if (a.description) {
-      const cleaned = a.description
-        .replace(/에\s*['"][^'"]*['"]\s*입력.*$/i, "")
-        .replace(/\[사용자\s*(등록|추가)\s*팝업\]\s*['"][^'"]*['"]\s*요소\s*클릭/gi, "[사용자 등록 팝업] 라이선스 선택");
-      uiDescriptions.push(cleaned);
+      uiDescriptions.push(sanitizeDescForTopic(a.description));
     }
     if (a.selector) selectors.push(a.selector);
   }
 
   const uiJoined = `${slug} ${uiDescriptions.join(" ")}`;
   const fullJoined = `${uiJoined} ${selectors.join(" ")}`;
+
+  // 0. 스마트워크 (SmartWork) — 초반 메뉴 진입이 '스마트워크'이거나 smwWork* 셀렉터가 있는 경우 최우선 판별
+  if (/['"]스마트워크['"]\s*메뉴|업무\s*등록|업무함\s*선택\s*팝업|smwwork|smwintrst|tutorial-smartwork/i.test(fullJoined)) {
+    const hasTimelineComment = /smwtimeline|cmt_write_box|comment_write/i.test(fullJoined);
+    return {
+      fullTopic: hasTimelineComment
+        ? "스마트워크에서 새 업무를 등록하고 하단 타임라인에 첨부파일과 의견을 남기는 방법"
+        : "스마트워크에서 업무함을 선택하고 세부 내용을 입력해 새 업무를 등록하는 방법",
+      shortPurpose: hasTimelineComment ? "스마트워크 업무 및 타임라인 등록" : "스마트워크 새 업무 등록",
+    };
+  }
 
   if (/조직관리|사용자\s*등록\s*팝업|사용자\s*추가\s*팝업|orgmgt|orgusermng|orgempregform/i.test(fullJoined)) {
     const hasLogin = /btnlogin|로그아웃|login/i.test(fullJoined);
@@ -524,7 +613,7 @@ export function deriveScenarioTopicSummary(
     };
   }
 
-  if (/전자우편|웹메일|메일\s*쓰기|메일쓰기|보낸메일|받은메일|emlmain|emlmail|emllist|tutorial-mail/i.test(fullJoined)) {
+  if (/['"]전자우편['"]\s*메뉴|웹메일|메일\s*쓰기|메일쓰기|보낸메일|받은메일|emlmain|emlmail|emllist|tutorial-mail/i.test(fullJoined)) {
     return {
       fullTopic: "전자우편에서 수신자와 본문을 작성해 새 메일을 발송하는 방법",
       shortPurpose: "전자우편 메일 작성 및 발송",
@@ -554,7 +643,7 @@ export function deriveScenarioTopicSummary(
   }
 
   if (
-    /전자결재|['"]결재['"]\s*메뉴|결재\s*작성|결재작성|기안\s*작성|기안작성|결재선|결재상신|기안상신|기록물철|eapmain|eapdoc|eapwork|gapmain|gapdoc|gapwork|approval|tutorial-draft/i.test(
+    /['"](전자결재|기업결재|공공결재|결재)['"]\s*메뉴|결재\s*작성|결재작성|기안\s*작성|기안작성|결재선|결재상신|기안상신|기록물철|eapmain|eapdoc|eapwork|gapmain|gapdoc|gapwork|approval|tutorial-draft/i.test(
       fullJoined
     )
   ) {
@@ -575,13 +664,6 @@ export function deriveScenarioTopicSummary(
     return {
       fullTopic: "문서관리에서 문서함과 분류를 선택해 새 문서를 등록하고 조회하는 방법",
       shortPurpose: "문서관리 새 문서 등록 및 조회",
-    };
-  }
-
-  if (/스마트워크|업무\s*등록|업무등록|업무함|smartwork|smwwork|tutorial-smartwork/i.test(fullJoined)) {
-    return {
-      fullTopic: "스마트워크에서 업무함을 선택하고 담당자와 세부 내용을 입력해 새 업무를 등록하는 방법",
-      shortPurpose: "스마트워크 새 업무 등록",
     };
   }
 
@@ -650,7 +732,7 @@ function applyStyleEnding(basePhrase: string, style: NarrationStyle): string {
     if (clean.endsWith("입력") || clean.endsWith("작성")) return `${clean}해 주세요.`;
     if (clean.endsWith("업로드")) return `${clean.replace(/업로드$/, "업로드해 주세요")}.`;
     if (clean.endsWith("반영") || clean.endsWith("적용")) return `${clean}해 줄게요.`;
-    if (clean.endsWith("완료") || clean.endsWith("확인")) return `${clean}해 볼게요.`;
+    if (clean.endsWith("완료") || clean.endsWith("확인") || clean.endsWith("등록")) return `${clean}해 볼게요.`;
     return `${clean}해 볼게요.`;
   }
 
@@ -690,7 +772,20 @@ function composeFallbackFromMetas(
     }
   }
 
-  // 2) 팝업 열기/선택/확인 완결 단계
+  // 2) 파일 첨부 팝업 열기 + 파일 업로드 + 저장 완료 통합
+  if (roles.includes("file_upload")) {
+    const isTimeline = metas.some((m) => m.isCommentOrTimeline);
+    const hasConfirm = roles.includes("popup_confirm");
+    if (isTimeline && hasConfirm) {
+      return applyStyleEnding("하단 타임라인의 '파일첨부'를 눌러 PC에서 파일을 업로드하고 '저장'을 눌러 첨부", style);
+    }
+    if (hasConfirm) {
+      return applyStyleEnding("'파일첨부' 창에서 첨부할 파일을 업로드하고 '저장'을 눌러 반영", style);
+    }
+    return applyStyleEnding("PC에서 첨부할 파일을 선택해 업로드", style);
+  }
+
+  // 3) 팝업 열기/선택/확인 완결 단계
   if (roles.includes("popup_confirm") && (roles.includes("popup_open") || roles.includes("popup_select"))) {
     const openMeta = metas.find((m) => m.role === "popup_open" || m.role === "create_start");
     const confirmLabel = metas.find((m) => m.role === "popup_confirm")?.targetLabel || "확인";
@@ -704,18 +799,30 @@ function composeFallbackFromMetas(
     return applyStyleEnding(`${subject} 창에서 대상 항목을 선택한 뒤 '${confirmLabel}'을 눌러 반영`, style);
   }
 
-  // 3) 최종 저장/상신/삭제 + 알림 확인
+  // 4) 최종 저장/상신/삭제 + 알림 확인 (또는 타임라인 댓글 등록)
   if (roles.includes("submit_save")) {
-    const saveBtn = metas.find((m) => m.role === "submit_save")?.targetLabel || "저장";
-    if (roles.includes("popup_confirm")) {
-      return applyStyleEnding(`작성한 내용을 확인한 뒤 '${saveBtn}' 버튼을 누르고 확인 창을 승인하여 완료`, style);
+    const saveMeta = metas.find((m) => m.role === "submit_save");
+    const saveBtn = saveMeta?.targetLabel || "저장";
+    if (saveMeta?.isCommentOrTimeline) {
+      return applyStyleEnding("하단 '등록' 버튼을 눌러 작성한 타임라인 댓글과 첨부파일을 등록", style);
     }
-    return applyStyleEnding(`입력을 마친 뒤 '${saveBtn}' 버튼을 눌러 처리를 완료`, style);
+    if (roles.includes("popup_confirm")) {
+      return applyStyleEnding(`작성한 내용을 확인한 뒤 '${saveBtn}' 버튼을 누르고 확인 창을 승인하여 등록을 완료`, style);
+    }
+    return applyStyleEnding(`입력을 마친 뒤 '${saveBtn}' 버튼을 눌러 등록을 완료`, style);
   }
 
-  // 4) 일반 단일/복합 폴백
+  // 5) 일반 단일/복합 폴백
   const uniquePhrases: string[] = [];
   for (const m of metas) {
+    if (
+      m.fallbackPhrase.includes("입력란을 클릭") ||
+      m.fallbackPhrase.includes("영역을 클릭")
+    ) {
+      if (metas.some((other) => other !== m && other.role === "form_input")) {
+        continue;
+      }
+    }
     if (!uniquePhrases.includes(m.fallbackPhrase)) {
       uniquePhrases.push(m.fallbackPhrase);
     }
@@ -764,18 +871,57 @@ export function buildNarrationWindows(
     }
   }
 
-  // 각 액션 시점 이전에 타이핑된 값만 기록 (초반 메뉴명이 후반 타이핑 값과 겹쳐 오판되는 현상 방지)
-  const contextMap = new Map<Moment, { prevMoment?: Moment; nextMoment?: Moment; typedBefore?: string[] }>();
+  // browsePlan.actions의 의미 있는 액션들과 1:1 또는 description 기반으로 매칭하여 selector/targetHtml 문맥 확보
+  const planMeaningful = (browsePlan?.actions || []).filter(
+    (a) =>
+      a.type === "click" ||
+      a.type === "dblclick" ||
+      a.type === "type" ||
+      a.type === "dragAndDrop" ||
+      a.type === "upload"
+  );
+
+  const contextMap = new Map<Moment, MomentAnalysisContext>();
+  let hasSavedMainDocument = false;
+  let planCursor = 0;
+
   for (let i = 0; i < meaningful.length; i++) {
+    const m = meaningful[i];
     const typedBefore = meaningful
       .slice(0, i)
-      .map((m) => (m.keys || "").trim())
+      .map((x) => (x.keys || "").trim())
       .filter((v) => v.length >= 2);
-    contextMap.set(meaningful[i], {
+
+    // Match corresponding BrowsePlanAction
+    let matchedPlanAction: BrowsePlanAction | undefined;
+    for (let j = planCursor; j < planMeaningful.length; j++) {
+      if (planMeaningful[j].description === m.description && planMeaningful[j].type === m.type) {
+        matchedPlanAction = planMeaningful[j];
+        planCursor = j + 1;
+        break;
+      }
+    }
+    if (!matchedPlanAction && planMeaningful[i]?.description === m.description) {
+      matchedPlanAction = planMeaningful[i];
+    }
+
+    contextMap.set(m, {
       prevMoment: i > 0 ? meaningful[i - 1] : undefined,
       nextMoment: i + 1 < meaningful.length ? meaningful[i + 1] : undefined,
       typedBefore: Array.from(new Set(typedBefore)),
+      planAction: matchedPlanAction,
+      afterMainSave: hasSavedMainDocument,
     });
+
+    // 메인 문서의 '저장' / '상신' 클릭이 발생하면 이후 단계는 상세 조회/타임라인/후속 작업 문맥으로 표시
+    const desc = (m.description || "").trim();
+    if (
+      m.type === "click" &&
+      /^['"]?(저장|기안상신|결재상신|상신|발송|보내기|프로젝트\s*생성)['"]?\s*버튼\s*클릭$/i.test(desc) &&
+      !/팝업\]/.test(desc)
+    ) {
+      hasSavedMainDocument = true;
+    }
   }
 
   if (meaningful.length === 0) {
@@ -817,14 +963,26 @@ export function buildNarrationWindows(
     const currMeta = analyzeMomentStructure(m, contextMap.get(m));
     const nextMeta = nextM ? analyzeMomentStructure(nextM, contextMap.get(nextM)) : undefined;
 
-    // 1. 입력란 클릭 직후 해당 입력란에 타이핑하는 경우 하나로 결합
+    // 1. 동일한 입력란/에디터 영역을 클릭한 직후 해당 입력란에 타이핑하는 경우 결합 (드롭다운이나 옵션 선택과는 절대 결합하지 않음!)
     const isInputClickToType =
       prevM.type === "click" &&
       m.type === "type" &&
       sincePrev <= 3500 &&
-      (prevMeta.role === "general_action" || prevMeta.role === "form_input");
+      prevMeta.role === "form_input" &&
+      currMeta.role === "form_input" &&
+      prevMeta.fieldLabel === currMeta.fieldLabel;
 
-    // 2. 팝업/모달 생명주기 결합 (팝업 열기 -> 팝업 내부 항목 선택 -> 팝업 확인 닫기)
+    // 1-B. 동일한 본문/타임라인 에디터에 연속으로 여러 문단을 타이핑하는 경우 하나로 결합
+    const isSameEditorConsecutiveTyping =
+      prevM.type === "type" &&
+      m.type === "type" &&
+      prevMeta.role === "form_input" &&
+      currMeta.role === "form_input" &&
+      prevMeta.fieldLabel === currMeta.fieldLabel &&
+      sinceGroupStart < 8500 &&
+      sincePrev < 4500;
+
+    // 2. 팝업/모달/파일첨부/달력 생명주기 결합 (팝업 열기 -> 팝업 내부 선택/파일첨부 -> 팝업 확인/저장 닫기)
     const sameModalOrConfirm =
       firstMeta.role === "popup_open" ||
       !firstMeta.modalName ||
@@ -833,13 +991,20 @@ export function buildNarrationWindows(
       currMeta.role === "popup_confirm";
 
     const isPopupFlowContinuation =
-      ((firstMeta.role === "popup_open" || firstMeta.role === "popup_select" || prevMeta.role === "popup_select") &&
-        (currMeta.role === "popup_select" || currMeta.role === "popup_confirm") &&
+      ((firstMeta.role === "popup_open" ||
+        firstMeta.role === "popup_select" ||
+        firstMeta.role === "file_upload" ||
+        prevMeta.role === "popup_select" ||
+        prevMeta.role === "file_upload") &&
+        (currMeta.role === "popup_select" || currMeta.role === "file_upload" || currMeta.role === "popup_confirm") &&
         sameModalOrConfirm &&
         sinceGroupStart < 11000 &&
-        sincePrev < 4500) ||
+        sincePrev < 4800) ||
       (prevMeta.role === "date_open" && currMeta.role === "date_pick" && sincePrev < 4500) ||
-      (prevMeta.role === "date_pick" && (currMeta.role === "date_open" || currMeta.role === "date_pick") && sinceGroupStart < 8500 && sincePrev < 4000);
+      (prevMeta.role === "date_pick" &&
+        (currMeta.role === "date_open" || currMeta.role === "date_pick") &&
+        sinceGroupStart < 8500 &&
+        sincePrev < 4000);
 
     // 3. 저장/상신/삭제 직후 확인창/알림창 승인 결합
     const isSubmitToConfirm =
@@ -867,6 +1032,7 @@ export function buildNarrationWindows(
       ((currMeta.role === "form_input" && prevMeta.role === "form_input") ||
         (currMeta.role === "option_toggle" && prevMeta.role === "option_toggle")) &&
       currMeta.modalName === prevMeta.modalName &&
+      Boolean(currMeta.modalName) &&
       sinceGroupStart < 8500 &&
       sincePrev < 4200 &&
       currentGroup.length < 4;
@@ -885,18 +1051,19 @@ export function buildNarrationWindows(
       currMeta.role === "date_open" ||
       currMeta.role === "create_start" ||
       currMeta.role === "submit_save" ||
-      currMeta.role === "file_upload" ||
+      (currMeta.role === "file_upload" && prevMeta.role !== "popup_open") ||
       (currMeta.role === "popup_select" && prevMeta.role !== "popup_open" && prevMeta.role !== "popup_select");
 
     const isLeavingCompletedStage =
       prevMeta.role === "popup_confirm" ||
       prevMeta.role === "date_pick" ||
-      prevMeta.role === "file_upload" ||
+      (prevMeta.role === "file_upload" && currMeta.role !== "popup_confirm") ||
       (prevMeta.role === "nav_entry" && currMeta.role !== "nav_entry" && !isVerifyNavToItem) ||
       (prevMeta.role === "create_start" && currMeta.role === "popup_select" && nextMeta?.role === "popup_select");
 
     if (
       isInputClickToType ||
+      isSameEditorConsecutiveTyping ||
       isPopupFlowContinuation ||
       isSubmitToConfirm ||
       isNavChain ||
@@ -1058,7 +1225,7 @@ function getStylePromptInstruction(style: NarrationStyle): string {
     case "friendly":
       return `- 말투 스타일: [친절한 튜토리얼 강사형 (해요체)]
 - 첫 번째 구간(index: 1)은 "안녕하세요! 이번 영상에서는 ~하는 방법을 차근차근 알아볼게요."처럼 친근한 매뉴얼 소개로 시작하세요.
-- 이후 구간은 단순 버튼 읽기가 아니라 각 단계의 역할과 화면 흐름을 짚어주며 "~창을 열어 줄게요", "~지정해 줍니다", "~작성해 주세요", "~정상 반영되었는지 확인해 볼게요"처럼 자연스러운 강사 화법(해요체)을 사용하세요.`;
+- 이후 구간은 단순 버튼 읽기가 아니라 각 단계의 역할과 화면 흐름을 짚어주며 "~창을 열어 줄게요", "~지정해 줍니다", "~작성해 주세요", "~등록해 볼게요"처럼 자연스러운 강사 화법(해요체)을 사용하세요.`;
     case "presentation":
       return `- 말투 스타일: [전문 솔루션 시연 발표형 (하십시오체/발표체)]
 - 첫 번째 구간(index: 1)은 "지금부터 ~하는 전체 과정을 단계별로 시연하겠습니다."처럼 신뢰감 있는 발표 오프닝으로 시작하세요.
@@ -1138,13 +1305,14 @@ ${styleInstruction}
 1. **단순 '버튼 낭독기' 금지 — 단계의 목적과 화면 흐름(Why & Effect)으로 설명하세요**:
    - 나쁜 예: "'업무 등록' 버튼을 클릭합니다." / "'선택' 버튼을 클릭합니다." / "'확인' 버튼을 클릭합니다."
    - 좋은 예: "좌측의 '업무 등록' 버튼을 눌러 새 업무를 생성할 업무함 선택 창을 엽니다." / "담당자 '선택' 창을 열어 대상 사원을 지정하고 '확인'을 눌러 반영합니다."
-   - 한 구간에 [팝업 열기 + 항목 선택 + '확인' 클릭]이나 [저장 + 알림창 '확인' 클릭]이 함께 묶여 있으면, 각 클릭을 쪼개서 나열하지 말고 하나의 완결된 동작으로 매끄럽게 설명하세요.
-2. **선택형 옵션(공개 여부, 부가 기능, 권한 체크박스 등)은 클릭한 특정 옵션만 콕 집어 읽지 마세요**:
-   - 시연자가 화면에서 \`'비공개'\`, \`'댓글 사용'\`, \`'할일'\`, \`'그룹웨어'\` 같은 라디오 버튼이나 체크박스 옵션을 클릭했더라도, 실제 매뉴얼 시청자는 상황에 따라 다른 옵션을 선택할 수 있습니다.
-   - 따라서 "'비공개' 옵션을 체크합니다"처럼 시연자가 누른 특정 옵션만 딱 집어 읽지 말고, **"업무 성격에 맞게 공개 여부 등 세부 옵션을 설정합니다"**, **"필요한 부가 기능이나 서비스 권한 항목을 선택합니다"**처럼 시청자가 필요한 옵션을 선택할 수 있음을 안내하세요.
+   - 한 구간에 [팝업 열기 + 항목/파일 선택 + '확인'/'저장' 클릭]이나 [저장 + 알림창 '확인' 클릭]이 함께 묶여 있으면, 각 클릭을 쪼개서 나열하지 말고 하나의 완결된 동작으로 매끄럽게 설명하세요.
+   - 특히 본문 문서를 이미 '저장'한 이후에 이어지는 하단 타임라인(댓글/의견) 첨부 및 댓글 '등록' 단계는 새 문서 생성이 아니라 "등록된 업무 하단의 타임라인(댓글)에 첨부파일과 추가 의견을 남기는 과정"으로 정확히 구분해 설명하세요.
+2. **선택형 옵션(라디오, 체크박스, 드롭다운 항목 등)은 클릭한 특정 값만 콕 집어 읽지 마세요**:
+   - 시연자가 화면에서 \`'비공개'\`, \`'결함'\`, \`'댓글 사용'\`, \`'할일'\`, \`'그룹웨어'\`, 드롭다운 선택값 등을 클릭했더라도, 실제 매뉴얼 시청자는 상황에 따라 다른 옵션이나 분류를 선택할 수 있습니다.
+   - 따라서 "'비공개'를 선택합니다", "'결함'을 선택합니다"처럼 시연자가 누른 특정 옵션만 딱 집어 읽지 말고, **"업무 성격에 맞게 구분 항목이나 세부 옵션을 설정합니다"**, **"드롭다운 목록에서 해당하는 분류 항목을 선택합니다"**처럼 시청자가 필요한 옵션을 선택할 수 있음을 안내하세요.
 3. **고정 진입/실행 버튼명은 정확히 안내하되, 시연용 예시 데이터(\`sampleValuesToGeneralize\`)는 절대 그대로 읽지 마세요**:
-   - 반드시 눌러야 하는 고정 메뉴/버튼('전체메뉴', '스마트워크', '업무 등록', '전자결재', '일정관리', '위키', '조직도', '선택', '추가', '확인', '저장', '파일 선택' 등)은 시청자가 따라 눌러야 하므로 명칭을 정확히 언급하세요.
-   - 반면 시연자가 예시로 입력하거나 선택한 날짜/시간 숫자('16일', '26', '14:00'), 예시 부서/사원/회의실/분류명('공공기업팀', '김민준', '3층 회의실'), 선택형 옵션값('비공개', '할일', '그룹웨어'), 예시 입력 문자열, 예시 첨부파일명('test.txt') 등은 절대 대본에 노출하지 말고 해당 항목의 일반 역할(마감 기한, 담당 사원, 세부 옵션, 제목, 본문 내용, 첨부 파일 등)로 표현하세요.
+   - 반드시 눌러야 하는 고정 메뉴/버튼('전체메뉴', '스마트워크', '업무 등록', '전자결재', '일정관리', '위키', '조직도', '선택', '추가', '확인', '저장', '파일첨부', '등록' 등)은 시청자가 따라 눌러야 하므로 명칭을 정확히 언급하세요.
+   - 반면 시연자가 예시로 입력하거나 선택한 날짜/시간 숫자('16일', '23일', '14:00'), 예시 부서/사원/회의실/분류명('그룹웨어 A/S', '김민준', '3층 회의실'), 선택형 옵션값('비공개', '결함', '할일', '그룹웨어'), 예시 입력 문자열('그룹웨어 오류 일감', 'test'), 예시 첨부파일명('12343.png') 등은 절대 대본에 노출하지 말고 해당 항목의 일반 역할(마감 기한, 대상 업무함, 세부 옵션, 제목, 본문 내용, 댓글 내용, 첨부 파일 등)로 표현하세요.
 4. **"원하는 ~" 반복 금지 및 앞뒤 문맥 연결**:
    - 매 문장마다 기계적으로 "원하는 ~"을 반복하지 말고, 앞뒤 구간이 하나의 매뉴얼 강의처럼 자연스럽게 이어지도록 어휘와 연결어를 다양하게 구사하세요.
 5. **글자 수 및 JSON 출력 형식 준수**:
