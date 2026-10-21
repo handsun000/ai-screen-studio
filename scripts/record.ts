@@ -940,12 +940,18 @@ async function getSettledBoundingBox(
 async function resolveAtomicTarget(
   locator: Locator,
   isTypeAction: boolean = false,
-  desc: string = ""
+  desc: string = "",
+  isEyedropper: boolean = false
 ): Promise<{ locator: Locator; box: { x: number; y: number; width: number; height: number } | null }> {
   await locator.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
   let box = await getSettledBoundingBox(locator, 1000);
   if (!box) {
     return { locator, box: null };
+  }
+
+  // Respect exact DOM element captured by Eyedropper for click actions — never substitute a child link/button!
+  if (isEyedropper && !isTypeAction) {
+    return { locator, box };
   }
 
   try {
@@ -1509,8 +1515,19 @@ async function trySelfHealAction(
     }
   }
 
-  // 🩺 On-Demand Real-Time DB Scraping Fallback (ONLY triggered during Self-Healing when target card/item is missing in DB)
-  if (action.type === "hover" || action.type === "click") {
+  // For Eyedropper recordings, give slow AJAX lists/modals an extra settle retry before self-healing,
+  // and NEVER clear search inputs or overwrite browse-plan.json with a random 1st DB card!
+  if (action.recordedByEyedropper || plan.recordedByEyedropper) {
+    await page.waitForTimeout(900);
+    const delayedLoc = await getLocator(page, action);
+    if (delayedLoc && (await delayedLoc.isVisible().catch(() => false))) {
+      console.log(`  [✨ 지연 렌더링 요소 확인] 비동기 로딩 대기 후 원본 요소 '${action.selector}' 탐색을 완료했습니다.`);
+      return delayedLoc;
+    }
+  }
+
+  // 🩺 On-Demand Real-Time DB Scraping Fallback (AI-generated plans ONLY — never mutate Eyedropper plans!)
+  if (!action.recordedByEyedropper && !plan.recordedByEyedropper && (action.type === "hover" || action.type === "click")) {
     const selStr = action.selector || "";
     const descStr = action.description || "";
     const isWorkCardTarget =
@@ -4002,8 +4019,8 @@ async function main() {
 
           const topTreeDlg = page.locator(".ui-dialog:visible, .modal:visible, [role='dialog']:visible").last();
 
-          // If inside Resource Selection dialog (#resvn_select_lyr) and active tab is '관심' (empty), switch to '시설' tab if target is not visible
-          if (hasActiveTreeDialog && !(await isElVisible())) {
+          // If inside Resource Selection dialog (#resvn_select_lyr) and active tab is '관심' (empty), switch to '시설' tab if target is not visible (AI-generated plans ONLY)
+          if (!action.recordedByEyedropper && !plan.recordedByEyedropper && hasActiveTreeDialog && !(await isElVisible())) {
             const interestTabActive = await topTreeDlg
               .locator("#rmgResSelect_nav li.active a[data-value='interest']:visible")
               .isVisible()
@@ -4475,7 +4492,8 @@ async function main() {
           }
 
           await el.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => { });
-          const { locator: targetEl, box } = await resolveAtomicTarget(el, false, action.description);
+          const isEyedropperClick = Boolean(action.recordedByEyedropper || plan.recordedByEyedropper);
+          const { locator: targetEl, box } = await resolveAtomicTarget(el, false, action.description, isEyedropperClick);
           el = targetEl;
 
           if (box) {
@@ -4815,8 +4833,8 @@ async function main() {
             } catch {}
           }
 
-          // If a DynaTree folder title (e.g. '유니슨', '테스트 부서') was clicked and remains collapsed, expand its .dynatree-expander so child nodes become visible
-          if (selLower.includes("dynatree-title") || descLower.includes("부서")) {
+          // If a DynaTree folder title (e.g. '유니슨', '테스트 부서') was clicked in an AI plan and remains collapsed, expand its .dynatree-expander so child nodes become visible
+          if (!action.recordedByEyedropper && !plan.recordedByEyedropper && (selLower.includes("dynatree-title") || descLower.includes("부서"))) {
             try {
               const parentNode = el.locator("xpath=ancestor::span[contains(@class, 'dynatree-node')]").first();
               if (await parentNode.isVisible().catch(() => false)) {
@@ -4981,12 +4999,16 @@ async function main() {
             }
           }
 
-          // If this was resource reservation popup confirmation ([자원예약 팝업] '확인'), check if the selected resource shows [예약불가] due to a time slot conflict from previous test runs, and shift to a free time slot if needed
+          // If this was resource reservation popup confirmation ([자원예약 팝업] '확인') in an AI plan, check if the selected resource shows [예약불가] due to a time slot conflict from previous test runs, and shift to a free time slot if needed
           const isResourceConfirmClick =
             (descLower.includes("자원") && descLower.includes("확인")) ||
             selLower.includes("resselect_confirm") ||
             selLower.includes("scd_link_res");
-          if (isResourceConfirmClick || (descLower.includes("확인") && (await page.locator(".ui-dialog:visible #startDate1, .ui-dialog:visible #useBgnDe1").count().catch(() => 0)) > 0)) {
+          if (
+            !action.recordedByEyedropper &&
+            !plan.recordedByEyedropper &&
+            (isResourceConfirmClick || (descLower.includes("확인") && (await page.locator(".ui-dialog:visible #startDate1, .ui-dialog:visible #useBgnDe1").count().catch(() => 0)) > 0))
+          ) {
             await page.waitForTimeout(600);
             const hasResourceConflict = await page.evaluate(() => {
               const dialogs = Array.from(document.querySelectorAll(".ui-dialog:visible, .ui-dialog"));
@@ -5236,8 +5258,8 @@ async function main() {
                   break;
                 }
 
-                if (isValidationError) {
-                  // Auto-fill missing required expiration date (e.g. article.ntceEndDe) and re-click Save
+                if (isValidationError && !action.recordedByEyedropper && !plan.recordedByEyedropper) {
+                  // Auto-fill missing required expiration date (e.g. article.ntceEndDe) and re-click Save (AI plans ONLY)
                   await page.evaluate(() => {
                     const future = new Date(Date.now() + 30 * 86400000);
                     const yyyy = future.getFullYear();
@@ -5261,8 +5283,8 @@ async function main() {
                   }
                 }
 
-                // If the registration form dialog itself (e.g. Schedule registration dialog) remains open after "일정이 등록 되었습니다", close it so the calendar result is visible
-                if (isSuccessNotice) {
+                // If the registration form dialog itself (e.g. Schedule registration dialog) remains open after "일정이 등록 되었습니다", close it so the calendar result is visible (AI plans ONLY)
+                if (isSuccessNotice && !action.recordedByEyedropper && !plan.recordedByEyedropper) {
                   const openRegDialogClose = await findVisibleInPageOrFrames(
                     page,
                     ".ui-dialog:visible:has(#savebtn) .ui-dialog-titlebar-close:visible, .ui-dialog:visible:has(#savebtn) button:has-text('닫기'):visible"
@@ -6339,7 +6361,20 @@ async function main() {
                nextSel.includes("title='검색'") ||
                nextHtml.includes("ico_srch"));
 
-            if (!isNextExplicitSearchBtn) {
+            // For Eyedropper recordings, NEVER guess-press Enter before a click action unless pressEnter was explicitly recorded!
+            // (Only allow implicit search Enter on legacy Eyedropper plans when the very next action is hovering a filtered search result card.)
+            const isLegacyEyedropperCardHoverAfterSearch =
+              isEyedropperAction &&
+              isSearchField &&
+              nextNonWait?.type === "hover" &&
+              (nextSel.includes("aw_li") || nextSel.includes("app_work_box") || nextDescClean.includes("양식 카드"));
+
+            const shouldPressEnter =
+              hasExplicitEnter ||
+              (!isEyedropperAction && isSearchField && !isNextExplicitSearchBtn) ||
+              isLegacyEyedropperCardHoverAfterSearch;
+
+            if (shouldPressEnter && !isNextExplicitSearchBtn) {
               console.log(
                 hasExplicitEnter
                   ? `  [⏎ 엔터(Enter) 키 실행] 사용자가 입력 후 Enter 키를 눌렀으므로 Enter 키를 실행합니다.`
