@@ -1137,7 +1137,7 @@ export function buildNarrationWindows(
         rawActions,
         sampleValuesToGeneralize: sampleValues,
         actionsSummary: [
-          `[오프닝 매뉴얼 소개 필수] 매뉴얼 주제: ${combineIntroTopic.shortPurpose} (${combineIntroTopic.fullTopic})`,
+          `[오프닝 매뉴얼 소개 필수] 전체 시나리오 흐름을 파악하여 이 영상이 어떤 메뉴에서 어떤 업무를 처리하는 매뉴얼인지 소개하며 시작할 것`,
           ...aiFacts,
         ],
         fallbackLine: `이번 영상에서는 ${combineIntroTopic.shortPurpose} 방법을 알아보며, 먼저 ${firstActionFallback}`,
@@ -1171,7 +1171,9 @@ export function buildNarrationWindows(
       stageRole: "intro",
       rawActions: [],
       sampleValuesToGeneralize: [],
-      actionsSummary: [`[오프닝 매뉴얼 소개 필수] 매뉴얼 주제: ${topic.shortPurpose} (${topic.fullTopic})`],
+      actionsSummary: [
+        `[오프닝 매뉴얼 소개 필수] 전체 시나리오 흐름을 파악하여 이 영상이 어떤 메뉴에서 어떤 업무를 처리하는 매뉴얼인지 한 문장으로 명확히 소개할 것`,
+      ],
       fallbackLine:
         style === "friendly"
           ? `안녕하세요! 이번 영상에서는 ${topic.fullTopic}을 차근차근 알아볼게요.`
@@ -1291,12 +1293,19 @@ export async function generateNarrationScript(
       ])
     );
 
+    const fullWorkflowOverview = windows
+      .filter((w) => !w.isIntro || (w.rawActions && w.rawActions.length > 0))
+      .map((w) => `구간 #${w.index}: ${(w.rawActions || []).join(" -> ")}`)
+      .join("\n");
+
     const styleInstruction = getStylePromptInstruction(style);
     const prompt = `당신은 기업용 그룹웨어 교육 영상의 전문 매뉴얼 해설 작가입니다.
-시나리오 전체 주제: "${topic.fullTopic}"
+
+[전체 시나리오 원본 액션 흐름]
+${fullWorkflowOverview}
 
 아래는 화면 녹화 영상의 워크플로우 단계별(Stage) 구간 목록입니다.
-어떠한 시나리오가 들어오더라도 하드코딩된 문구 느낌이 나지 않도록, 전체 업무 흐름과 각 구간의 실제 화면 조작(\`rawActions\`, \`structuredFacts\`)을 읽고 시청자가 이해하기 쉬운 자연스러운 **매뉴얼 해설 내레이션 대본**을 구간마다 1문장씩 작성하세요.
+위 [전체 시나리오 원본 액션 흐름]을 통해 이 시나리오가 어떤 메뉴에 진입해서 처음부터 끝까지 어떤 업무를 수행하는지 스스로 정확히 파악한 뒤, 각 구간의 실제 화면 조작(\`rawActions\`, \`structuredFacts\`)에 맞춰 자연스러운 **매뉴얼 해설 내레이션 대본**을 구간마다 1문장씩 작성하세요.
 
 [말투 및 오프닝 작성 규칙]
 ${styleInstruction}
