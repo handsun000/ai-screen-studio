@@ -18,6 +18,7 @@ export interface ScenarioSummary {
   renderedVideoSizeBytes?: number;
   hasNarration?: boolean;
   recordedByEyedropper?: boolean;
+  mergedFromSlugs?: string[];
   flowSummary?: string;
   actionsCount: number;
   zoomSegmentsCount: number;
@@ -86,40 +87,48 @@ export function listScenarios(): ScenarioSummary[] {
     let renderedVideoSizeBytes = 0;
     let lastModified = "";
     let recordedByEyedropper = false;
+    let mergedFromSlugs: string[] | undefined = undefined;
     let flowSummary = "";
 
     if (hasBrowsePlan) {
       try {
-        const bp: BrowsePlan = JSON.parse(fs.readFileSync(browsePlanPath, "utf-8"));
+        const bp: any = JSON.parse(fs.readFileSync(browsePlanPath, "utf-8"));
         actionsCount = bp.actions?.length || 0;
-        recordedByEyedropper = Boolean(bp.recordedByEyedropper || bp.actions?.some((a) => a.recordedByEyedropper));
+        recordedByEyedropper = Boolean(bp.recordedByEyedropper || bp.actions?.some((a: any) => a.recordedByEyedropper));
+        if (Array.isArray(bp.mergedFromSlugs) && bp.mergedFromSlugs.length > 0) {
+          mergedFromSlugs = bp.mergedFromSlugs;
+        }
         const stat = fs.statSync(browsePlanPath);
         lastModified = stat.mtime.toISOString();
 
-        // Build a concise human-readable flow summary from non-wait actions
-        const meaningfulSteps = (bp.actions || [])
-          .filter((a) => a.type !== "wait")
-          .map((a) => {
-            const d = (a.description || "").trim();
-            const quoted = d.match(/'([^']+)'/);
-            if (quoted && quoted[1].length >= 2 && quoted[1].length <= 18) {
-              return a.type === "type" ? `'${quoted[1]}' 입력` : quoted[1];
+        if (mergedFromSlugs && mergedFromSlugs.length > 0) {
+          flowSummary = `🔗 챕터 병합 (${mergedFromSlugs.length}개): ${mergedFromSlugs.join(" ➔ ")}`;
+        } else {
+          // Build a concise human-readable flow summary from non-wait actions
+          const meaningfulSteps = (bp.actions || [])
+            .filter((a: any) => a.type !== "wait")
+            .map((a: any) => {
+              const d = (a.description || "").trim();
+              const quoted = d.match(/'([^']+)'/);
+              if (quoted && quoted[1].length >= 2 && quoted[1].length <= 18) {
+                return a.type === "type" ? `'${quoted[1]}' 입력` : quoted[1];
+              }
+              return d.replace(/\s*(?:메뉴\/링크\s*클릭|버튼\s*클릭|클릭|반응\s*대기)$/g, "").slice(0, 18);
+            })
+            .filter(Boolean);
+          const dedupedSteps: string[] = [];
+          for (const s of meaningfulSteps) {
+            if (dedupedSteps[dedupedSteps.length - 1] !== s) {
+              dedupedSteps.push(s);
             }
-            return d.replace(/\s*(?:메뉴\/링크\s*클릭|버튼\s*클릭|클릭|반응\s*대기)$/g, "").slice(0, 18);
-          })
-          .filter(Boolean);
-        const dedupedSteps: string[] = [];
-        for (const s of meaningfulSteps) {
-          if (dedupedSteps[dedupedSteps.length - 1] !== s) {
-            dedupedSteps.push(s);
           }
-        }
-        if (dedupedSteps.length > 0) {
-          const picked =
-            dedupedSteps.length <= 4
-              ? dedupedSteps
-              : [dedupedSteps[0], dedupedSteps[1], dedupedSteps[2], dedupedSteps[dedupedSteps.length - 1]];
-          flowSummary = picked.join(" ➔ ");
+          if (dedupedSteps.length > 0) {
+            const picked =
+              dedupedSteps.length <= 4
+                ? dedupedSteps
+                : [dedupedSteps[0], dedupedSteps[1], dedupedSteps[2], dedupedSteps[dedupedSteps.length - 1]];
+            flowSummary = picked.join(" ➔ ");
+          }
         }
       } catch {}
     }
@@ -146,6 +155,9 @@ export function listScenarios(): ScenarioSummary[] {
       try {
         const stat = fs.statSync(renderedVideoPath);
         renderedVideoSizeBytes = stat.size;
+        if (!lastModified || stat.mtime.toISOString() > lastModified) {
+          lastModified = stat.mtime.toISOString();
+        }
       } catch {}
     }
 
@@ -160,6 +172,7 @@ export function listScenarios(): ScenarioSummary[] {
       hasRenderedVideo,
       renderedVideoSizeBytes,
       recordedByEyedropper,
+      mergedFromSlugs,
       flowSummary,
       actionsCount,
       zoomSegmentsCount,
@@ -180,7 +193,7 @@ export function getScenarioDetails(slug: string) {
     throw new Error(`Scenario '${slug}' not found in data directory`);
   }
 
-  let browsePlan: BrowsePlan | null = null;
+  let browsePlan: any = null;
   let moments: MomentsFile | null = null;
   let editPlan: EditPlan | null = null;
 
@@ -192,8 +205,12 @@ export function getScenarioDetails(slug: string) {
   if (fs.existsSync(browsePlanPath)) {
     try {
       const rawPlan = JSON.parse(fs.readFileSync(browsePlanPath, "utf-8"));
-      const { plan: sanitized } = sanitizeBrowsePlan(rawPlan);
-      browsePlan = sanitized;
+      if (Array.isArray(rawPlan.mergedFromSlugs) && rawPlan.mergedFromSlugs.length > 0) {
+        browsePlan = rawPlan;
+      } else {
+        const { plan: sanitized } = sanitizeBrowsePlan(rawPlan);
+        browsePlan = sanitized;
+      }
     } catch {}
   }
   if (fs.existsSync(momentsPath)) {

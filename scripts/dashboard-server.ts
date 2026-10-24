@@ -31,7 +31,12 @@ import {
   normalizeTargetUrl,
 } from "../src/services/authManager";
 import { actionRecorderService } from "../src/services/actionRecorderService";
-import { getVideoEditStatus, cutVideoSegment, restoreVideoBackup } from "../src/services/videoEditorService";
+import {
+  getVideoEditStatus,
+  cutVideoSegment,
+  restoreVideoBackup,
+  mergeRenderedVideos,
+} from "../src/services/videoEditorService";
 import {
   generateNarrationScript,
   getNarration,
@@ -696,6 +701,18 @@ app.post("/api/video-edit/:slug/restore", (req: Request, res: Response) => {
   } catch (err: any) {
     console.error("[Video Restore Error]", err);
     res.status(400).json({ error: err.message || "영상 복원 중 오류가 발생했습니다." });
+  }
+});
+
+// 13. Rendered Videos Lossless Chapter Merge (Concat) API
+app.post("/api/video-edit/merge", (req: Request, res: Response) => {
+  try {
+    const { slugs, outputSlug } = req.body || {};
+    const result = mergeRenderedVideos({ slugs, outputSlug });
+    res.json(result);
+  } catch (err: any) {
+    console.error("[Video Merge Error]", err);
+    res.status(400).json({ error: err.message || "렌더링된 영상 합치기 중 오류가 발생했습니다." });
   }
 });
 

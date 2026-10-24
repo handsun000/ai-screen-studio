@@ -232,10 +232,14 @@ npx tsc --noEmit
       - `extractCleanDomSummary`에서 `href`, `data-*`, `childInputId`, 2~3순위 의미론적 셀렉터(`li._TOOLBOX` 등)까지 보존하여 AI가 기능적 목적을 정확히 파악하도록 개선했습니다.
       - `buildNarrationWindows`에서 모달 외부 일반 화면의 연속 폼 입력·옵션 선택, 입력 직후 실행 버튼(`로그인`, `검색`, `등록`, `양식 [작성]`), 사이드바/트리 메뉴 클릭 직후 목록 조회 등을 하나의 의미 구간으로 통합하여 자잘한 1클릭 쪼개기와 불필요한 영상 멈춤(`autoHoldMs`)을 제거했습니다.
       - 커서가 이미 보여주는 단순 조작법(How) 나열을 금지하고 **왜 해당 단계를 수행하는지(Why·업무적 목적·효과)**를 해설하도록 프롬프트 및 AI 인접 구간 병합(`windowIndices`)을 구현했습니다.
+15. **렌더링된 챕터 영상 무손실 합치기(Concat) 및 통합 타임라인/대본 병합 (`src/services/videoEditorService.ts`, `src/services/scenarioManager.ts`, `scripts/dashboard-server.ts`, `dashboard/`)**:
+    - 긴 시나리오 제작 시 중간 단계 실수로 전체를 다시 찍지 않도록, 챕터(모듈)별로 짧게 나누어 각각 최종 MP4(`output/<slug>.mp4`)를 렌더링한 뒤 원하는 순서대로 하나로 합치는 **`🔗 영상 합치기`(`mergeRenderedVideos`, `POST /api/video-edit/merge`)** 기능을 구현했습니다.
+    - 동일 규격(1920x1080@60fps H.264 + AAC) 렌더링 영상들은 FFmpeg `-f concat -c copy`로 0.5초 이내에 화질 저하 없이 무손실 병합하며, 오디오 유무나 해상도가 다른 영상이 섞여 있으면 자동으로 정규화(`-filter_complex` + 무음 트랙 보충)하여 병합합니다.
+    - 병합 완료 시 `output/<targetSlug>.mp4` 생성과 동시에 `data/<targetSlug>/`에 챕터별 누적 시간(`cumulativeMs`/`cumulativeFrames`)이 반영된 통합 `browse-plan.json`, `moments.json`, `edit-plan.json`, `narration.json`을 생성하여 시나리오 라이브러리에서 `🔗 병합본` 배지·통합 타임라인 이동·자막/모멘트 확인·최종 MP4 다운로드가 즉시 동작하도록 연동했습니다.
 
 ### 5.2 다음 세션에서 이어서 진행할 포인트
-* 동작 감지(클릭·호버·드래그·리치 에디터 타이핑·파일 첨부 `upload`), 셀렉터 정제, 1:1 브라우저 녹화, 매뉴얼 해설형 AI 대본, 정속 Edge-TTS 합성, 그리고 **실시간 구간 늘리기/줄이기 및 4대 트랙 100% 타임워프 싱크**까지 전 파이프라인이 완비되어 있습니다.
+* 동작 감지(클릭·호버·드래그·리치 에디터 타이핑·파일 첨부 `upload`), 셀렉터 정제, 1:1 브라우저 녹화, 매뉴얼 해설형 AI 대본, 정속 Edge-TTS 합성, 실시간 구간 늘리기/줄이기(4대 트랙 타임워프 싱크), 구간 잘라내기 및 **렌더링된 챕터 영상 무손실 합치기**까지 전 파이프라인이 완비되어 있습니다.
 * 향후 사용자가 원할 경우:
   1. 대본 탭(`subtab-narration`)뿐만 아니라 첫 번째 탭(`🎯 동작 모멘트 & 단계별 이동`)이나 비디오 플레이어 컨트롤 바에서도 바로 구간 늘리기/줄이기(`-0.5s` / `+0.5s` / `+1.0s`)를 조작할 수 있는 단축 UI 확장.
-  2. 15분 이상의 장편 다중 모듈 시나리오 제작 시 챕터(모듈)별 분할 녹화 후 FFmpeg `-c copy` 무손실 병합 아키텍처 또는 `scripts/record.ts` 내 잔여 레거시 하드코딩 클린업.
+  2. `scripts/record.ts` 내 잔여 레거시 하드코딩 클린업 또는 추가 모듈 고도화.
   등을 이 `AGENTS.md` 규격을 기준으로 즉시 이어서 진행하면 됩니다.

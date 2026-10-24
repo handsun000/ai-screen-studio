@@ -10,6 +10,7 @@ let allScenariosList = [];
 let scenarioFilterMode = "all";
 let scenarioSearchQuery = "";
 let compactWaitsEnabled = true;
+let videoMergeQueue = [];
 
 // DOM Elements
 const tabBtns = document.querySelectorAll(".tab-btn");
@@ -338,12 +339,27 @@ function renderScenarioList() {
       ? '<span class="status-tag status-tag-raw" title="원본 브라우저 녹화 완료">📹 녹화됨</span>'
       : '<span class="status-tag status-tag-empty">녹화 전</span>';
 
+    const mergedBadgeHtml =
+      Array.isArray(s.mergedFromSlugs) && s.mergedFromSlugs.length > 0
+        ? `<span class="status-tag status-tag-merged" title="병합된 챕터: ${escapeHtmlAttr(s.mergedFromSlugs.join(" + "))}">🔗 병합본</span>`
+        : "";
+
+    const queueIdx = videoMergeQueue.indexOf(s.slug);
+    const mergeBtnHtml = s.hasRenderedVideo
+      ? `<button type="button" class="btn-card-merge ${queueIdx >= 0 ? "in-queue" : ""}" title="${
+          queueIdx >= 0
+            ? `현재 합치기 목록 #${queueIdx + 1}번에 담겨 있습니다 (클릭 시 해제)`
+            : "이 최종 렌더링 영상을 합치기(병합) 목록에 추가합니다"
+        }">${queueIdx >= 0 ? `✓ 합치기 #${queueIdx + 1}` : "🔗 합치기+"}</button>`
+      : "";
+
     item.innerHTML = `
       <div class="scenario-item-header">
         <div class="scenario-title-stack">
           <span class="scenario-topic-title" title="${escapeHtmlAttr(s.slug)}">${escapeHtmlAttr(s.slug)}</span>
         </div>
         <div class="scenario-badges-right">
+          ${mergedBadgeHtml}
           ${s.recordedByEyedropper ? '<span class="status-tag status-tag-eye" title="스포이드 직접 시범 시나리오">💧</span>' : ""}
           ${s.hasNarration ? '<span class="status-tag status-tag-tts" title="AI 나레이션 음성 합성됨">🎙️</span>' : ""}
           ${statusBadgeHtml}
@@ -358,9 +374,20 @@ function renderScenarioList() {
           <span>🔍 줌 ${s.zoomSegmentsCount}구간</span>
           ${s.durationSec ? `<span>⏱️ ${s.durationSec}s</span>` : ""}
         </div>
-        <button type="button" class="btn-card-edit" title="브라우징 플랜 편집기(탭 1)에서 이 시나리오 열기">✏️ 편집</button>
+        <div class="scenario-card-actions-right">
+          ${mergeBtnHtml}
+          <button type="button" class="btn-card-edit" title="브라우징 플랜 편집기(탭 1)에서 이 시나리오 열기">✏️ 편집</button>
+        </div>
       </div>
     `;
+
+    const mergeBtn = item.querySelector(".btn-card-merge");
+    if (mergeBtn) {
+      mergeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleScenarioInMergeQueue(s.slug);
+      });
+    }
 
     const editBtn = item.querySelector(".btn-card-edit");
     if (editBtn) {
@@ -373,6 +400,162 @@ function renderScenarioList() {
     item.addEventListener("click", () => selectScenario(s.slug));
     scenarioCardsContainer.appendChild(item);
   });
+
+  renderMergeQueueUI();
+}
+
+function toggleMergeDrawer(forceOpen = null) {
+  const drawer = document.getElementById("video-merge-drawer");
+  const btn = document.getElementById("btn-toggle-merge-drawer");
+  if (!drawer) return;
+  const shouldOpen = forceOpen !== null ? Boolean(forceOpen) : drawer.classList.contains("hidden");
+  drawer.classList.toggle("hidden", !shouldOpen);
+  if (btn) btn.classList.toggle("active", shouldOpen);
+  renderMergeQueueUI();
+}
+
+function toggleScenarioInMergeQueue(slug) {
+  if (!slug) return;
+  const idx = videoMergeQueue.indexOf(slug);
+  if (idx >= 0) {
+    videoMergeQueue.splice(idx, 1);
+  } else {
+    videoMergeQueue.push(slug);
+    toggleMergeDrawer(true);
+  }
+  renderScenarioList();
+}
+
+function moveMergeQueueItem(idx, delta) {
+  const targetIdx = idx + delta;
+  if (idx < 0 || idx >= videoMergeQueue.length || targetIdx < 0 || targetIdx >= videoMergeQueue.length) {
+    return;
+  }
+  const tmp = videoMergeQueue[idx];
+  videoMergeQueue[idx] = videoMergeQueue[targetIdx];
+  videoMergeQueue[targetIdx] = tmp;
+  renderScenarioList();
+}
+
+function removeMergeQueueItem(idx) {
+  if (idx < 0 || idx >= videoMergeQueue.length) return;
+  videoMergeQueue.splice(idx, 1);
+  renderScenarioList();
+}
+
+function clearMergeQueue() {
+  videoMergeQueue = [];
+  renderScenarioList();
+}
+
+function renderMergeQueueUI() {
+  const listEl = document.getElementById("merge-queue-list");
+  const summaryEl = document.getElementById("merge-queue-summary");
+  const toggleBtn = document.getElementById("btn-toggle-merge-drawer");
+  const execBtn = document.getElementById("btn-execute-video-merge");
+
+  let totalDur = 0;
+  videoMergeQueue.forEach((slug) => {
+    const found = allScenariosList.find((x) => x.slug === slug);
+    if (found && found.durationSec) {
+      totalDur += Number(found.durationSec || 0);
+    }
+  });
+
+  if (summaryEl) {
+    summaryEl.textContent =
+      videoMergeQueue.length > 0
+        ? `${videoMergeQueue.length}개 챕터 · 약 ${totalDur.toFixed(1)}초`
+        : "0개 선택됨";
+  }
+
+  if (toggleBtn) {
+    toggleBtn.textContent =
+      videoMergeQueue.length > 0 ? `🔗 영상 합치기 (${videoMergeQueue.length})` : "🔗 영상 합치기";
+  }
+
+  if (execBtn) {
+    execBtn.disabled = videoMergeQueue.length < 2;
+  }
+
+  if (!listEl) return;
+  listEl.innerHTML = "";
+
+  if (videoMergeQueue.length === 0) {
+    listEl.innerHTML = `<div class="merge-queue-empty">선택된 영상이 없습니다. 아래 [✨ 최종본] 카드에서 [🔗 합치기+]를 눌러 추가하세요.</div>`;
+    return;
+  }
+
+  videoMergeQueue.forEach((slug, idx) => {
+    const found = allScenariosList.find((x) => x.slug === slug);
+    const durText = found?.durationSec ? `${found.durationSec}s` : "";
+    const row = document.createElement("div");
+    row.className = "merge-queue-item";
+    row.innerHTML = `
+      <div class="merge-queue-item-left">
+        <span class="merge-queue-order">${idx + 1}</span>
+        <span class="merge-queue-slug" title="${escapeHtmlAttr(slug)}">${escapeHtmlAttr(slug)}</span>
+        ${durText ? `<span class="merge-queue-dur">(${durText})</span>` : ""}
+      </div>
+      <div class="merge-queue-actions">
+        <button type="button" class="btn-merge-step btn-merge-up" title="위로 이동" ${idx === 0 ? "disabled" : ""}>↑</button>
+        <button type="button" class="btn-merge-step btn-merge-down" title="아래로 이동" ${
+          idx === videoMergeQueue.length - 1 ? "disabled" : ""
+        }>↓</button>
+        <button type="button" class="btn-merge-step btn-merge-remove" title="목록에서 제거">✕</button>
+      </div>
+    `;
+
+    row.querySelector(".btn-merge-up")?.addEventListener("click", () => moveMergeQueueItem(idx, -1));
+    row.querySelector(".btn-merge-down")?.addEventListener("click", () => moveMergeQueueItem(idx, 1));
+    row.querySelector(".btn-merge-remove")?.addEventListener("click", () => removeMergeQueueItem(idx));
+    listEl.appendChild(row);
+  });
+}
+
+async function handleExecuteVideoMerge() {
+  if (videoMergeQueue.length < 2) {
+    alert("합칠 최종본 영상을 최소 2개 이상 선택해주세요.");
+    return;
+  }
+
+  const slugInputEl = document.getElementById("merge-output-slug-input");
+  const execBtn = document.getElementById("btn-execute-video-merge");
+  const outputSlug = slugInputEl ? slugInputEl.value.trim() : "";
+
+  const origBtnHtml = execBtn ? execBtn.innerHTML : "";
+  if (execBtn) {
+    execBtn.disabled = true;
+    execBtn.innerHTML = "⏳ 영상 병합 중...";
+  }
+
+  try {
+    const res = await fetch("/api/video-edit/merge", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        slugs: videoMergeQueue,
+        outputSlug: outputSlug || undefined,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || "영상 합치기 실패");
+    }
+
+    const mergedSlug = data.outputSlug;
+    delete scenarioDetailsCache[mergedSlug];
+    await fetchScenarios();
+    await selectScenario(mergedSlug, "rendered");
+    if (slugInputEl) slugInputEl.value = mergedSlug;
+  } catch (err) {
+    alert(`영상 합치기 오류: ${err.message}`);
+  } finally {
+    if (execBtn) {
+      execBtn.disabled = videoMergeQueue.length < 2;
+      execBtn.innerHTML = origBtnHtml || "🔗 순서대로 하나로 합치기";
+    }
+  }
 }
 
 async function loadScenarioIntoEditor(slug, switchToEditorTab = true) {
@@ -4242,6 +4425,22 @@ function bindEvents() {
       const btnSaveNarration = document.getElementById("btn-save-narration");
       if (btnSaveNarration) {
         btnSaveNarration.addEventListener("click", handleSaveNarration);
+      }
+
+      // Rendered Video Chapter Merger Bindings
+      const btnToggleMergeDrawer = document.getElementById("btn-toggle-merge-drawer");
+      if (btnToggleMergeDrawer) {
+        btnToggleMergeDrawer.addEventListener("click", () => toggleMergeDrawer());
+      }
+
+      const btnClearMergeQueue = document.getElementById("btn-clear-merge-queue");
+      if (btnClearMergeQueue) {
+        btnClearMergeQueue.addEventListener("click", clearMergeQueue);
+      }
+
+      const btnExecuteVideoMerge = document.getElementById("btn-execute-video-merge");
+      if (btnExecuteVideoMerge) {
+        btnExecuteVideoMerge.addEventListener("click", handleExecuteVideoMerge);
       }
 
       // Terminal Enter & Interactive Input Bindings

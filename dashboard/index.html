@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261019_2">
+  <link rel="stylesheet" href="style.css?v=20261024_1">
 </head>
 <body>
   <div class="app-container">
@@ -196,7 +196,33 @@
                 <h2>시나리오 라이브러리</h2>
                 <p class="scenario-lib-sub">주제별 영상 · 대본 · 타임라인 통합 관리</p>
               </div>
-              <span class="count-badge" id="scenarios-count">0개</span>
+              <div class="scenario-lib-header-right">
+                <button type="button" class="btn-toggle-merge" id="btn-toggle-merge-drawer" title="렌더링된 여러 챕터 영상을 순서대로 하나로 합칩니다">
+                  🔗 영상 합치기
+                </button>
+                <span class="count-badge" id="scenarios-count">0개</span>
+              </div>
+            </div>
+
+            <!-- Collapsible Rendered Video Chapter Merger Drawer -->
+            <div class="video-merge-drawer hidden" id="video-merge-drawer">
+              <div class="merge-drawer-header">
+                <span class="merge-drawer-title">🔗 렌더링 영상 합치기 (챕터 병합)</span>
+                <span class="merge-queue-badge" id="merge-queue-summary">0개 선택됨</span>
+              </div>
+              <p class="merge-drawer-desc">
+                아래 목록에서 <strong>[✨ 최종본]</strong> 시나리오의 <strong>[🔗 합치기+]</strong> 버튼을 눌러 합칠 순서대로 담으세요.
+              </p>
+              <div class="merge-queue-list" id="merge-queue-list">
+                <div class="merge-queue-empty">선택된 영상이 없습니다. 아래 카드에서 [🔗 합치기+]를 눌러 추가하세요.</div>
+              </div>
+              <div class="merge-drawer-controls">
+                <input type="text" id="merge-output-slug-input" class="merge-slug-input" placeholder="합친 영상 ID (예: full-manual, 비워두면 자동 생성)" title="병합 후 생성될 시나리오/파일 ID" />
+                <div class="merge-drawer-btn-row">
+                  <button type="button" class="btn btn-sm btn-outline" id="btn-clear-merge-queue">초기화</button>
+                  <button type="button" class="btn btn-sm btn-primary btn-glow" id="btn-execute-video-merge">🔗 순서대로 하나로 합치기</button>
+                </div>
+              </div>
             </div>
 
             <!-- Search & Quick Filter Bar -->
@@ -543,6 +569,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=20261019_2"></script>
+  <script src="app.js?v=20261024_1"></script>
 </body>
 </html>

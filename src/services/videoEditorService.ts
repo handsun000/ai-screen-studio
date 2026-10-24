@@ -25,6 +25,17 @@ export interface VideoCutResult {
   narration?: any;
 }
 
+export interface VideoMergeResult {
+  success: boolean;
+  outputSlug: string;
+  mergedSlugs: string[];
+  totalDurationSec: number;
+  fileSizeBytes: number;
+  videoUrl: string;
+  downloadUrl: string;
+  usedFastCopy: boolean;
+}
+
 function probeVideoDurationSec(mp4Path: string): number {
   if (!fs.existsSync(mp4Path)) return 0;
   try {
@@ -437,5 +448,505 @@ export function restoreVideoBackup(slug: string, mode: "undo" | "orig"): VideoCu
     moments: readJsonSafe(path.join(sDir, "moments.json")),
     editPlan: readJsonSafe(path.join(sDir, "edit-plan.json")),
     narration: readJsonSafe(path.join(sDir, "narration.json")),
+  };
+}
+
+interface ProbedStreamMeta {
+  durationSec: number;
+  width: number;
+  height: number;
+  videoCodec: string;
+  hasAudio: boolean;
+}
+
+function probeClipMeta(mp4Path: string): ProbedStreamMeta {
+  const durationSec = probeVideoDurationSec(mp4Path);
+  let width = 1920;
+  let height = 1080;
+  let videoCodec = "h264";
+  let hasAudio = false;
+
+  try {
+    const res = spawnSync(
+      "ffprobe",
+      [
+        "-v",
+        "error",
+        "-show_entries",
+        "stream=codec_name,codec_type,width,height",
+        "-of",
+        "json",
+        mp4Path,
+      ],
+      { encoding: "utf-8" }
+    );
+    if (res.status === 0 && res.stdout) {
+      const parsed = JSON.parse(res.stdout);
+      const streams = Array.isArray(parsed.streams) ? parsed.streams : [];
+      for (const s of streams) {
+        if (s.codec_type === "video") {
+          width = Number(s.width || 1920);
+          height = Number(s.height || 1080);
+          videoCodec = String(s.codec_name || "h264");
+        } else if (s.codec_type === "audio") {
+          hasAudio = true;
+        }
+      }
+    }
+  } catch {}
+
+  return { durationSec, width, height, videoCodec, hasAudio };
+}
+
+function mapRawFrameToCompFrame(rawFrame: number, editPlan: any): number {
+  const regions = editPlan?.timeRegions;
+  if (!Array.isArray(regions) || regions.length === 0) {
+    return rawFrame;
+  }
+  for (const r of regions) {
+    const vStart = Number(r.videoStartFrame || 0);
+    const vEnd = Number(r.videoEndFrame || 0);
+    const cStart = Number(r.compStartFrame || 0);
+    const cEnd = Number(r.compEndFrame || 0);
+    if (rawFrame >= vStart && rawFrame <= vEnd) {
+      const vSpan = vEnd - vStart;
+      if (vSpan <= 0) return cStart;
+      const ratio = (rawFrame - vStart) / vSpan;
+      return Math.round(cStart + ratio * (cEnd - cStart));
+    }
+  }
+  const last = regions[regions.length - 1];
+  if (rawFrame > Number(last.videoEndFrame || 0)) {
+    return Number(last.compEndFrame || 0) + (rawFrame - Number(last.videoEndFrame || 0));
+  }
+  return rawFrame;
+}
+
+export function mergeRenderedVideos(options: {
+  slugs: string[];
+  outputSlug?: string;
+}): VideoMergeResult {
+  const rawSlugs = Array.isArray(options?.slugs)
+    ? options.slugs.map((s) => String(s || "").trim()).filter(Boolean)
+    : [];
+
+  if (rawSlugs.length < 2) {
+    throw new Error("합칠 시나리오 영상을 최소 2개 이상 선택해주세요.");
+  }
+
+  const outputDir = path.join(ROOT_DIR, "output");
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  // Validate all source rendered MP4 files exist
+  const sourceFiles: { slug: string; mp4Path: string; meta: ProbedStreamMeta }[] = [];
+  for (const slug of rawSlugs) {
+    const mp4Path = path.join(outputDir, `${slug}.mp4`);
+    if (!fs.existsSync(mp4Path)) {
+      throw new Error(
+        `'${slug}' 시나리오의 최종 렌더링 영상(output/${slug}.mp4)이 없습니다. 먼저 해당 시나리오의 [🎞️ 최종 MP4 렌더링]을 완료해주세요.`
+      );
+    }
+    const meta = probeClipMeta(mp4Path);
+    if (meta.durationSec <= 0.1) {
+      throw new Error(`'${slug}' 렌더링 영상(output/${slug}.mp4)의 길이를 읽을 수 없습니다.`);
+    }
+    sourceFiles.push({ slug, mp4Path, meta });
+  }
+
+  // Sanitize or generate target outputSlug
+  let targetSlug = (options.outputSlug || "")
+    .trim()
+    .replace(/\.mp4$/i, "")
+    .replace(/[^a-zA-Z0-9가-힣_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  if (!targetSlug) {
+    const suffix = String(Date.now()).slice(-6);
+    targetSlug = `merged-demo-${suffix}`;
+  }
+
+  if (rawSlugs.includes(targetSlug)) {
+    targetSlug = `${targetSlug}-merged`;
+  }
+
+  const outMp4Path = path.join(outputDir, `${targetSlug}.mp4`);
+  const tmpOutPath = path.join(outputDir, `${targetSlug}_concat_tmp.mp4`);
+  const concatListPath = path.join(outputDir, `${targetSlug}_concat_list.txt`);
+
+  // Check if all clips share identical video & audio specs for 0.5s lossless stream copy (-c copy)
+  const firstMeta = sourceFiles[0].meta;
+  const canTryFastCopy = sourceFiles.every(
+    (item) =>
+      item.meta.hasAudio === firstMeta.hasAudio &&
+      item.meta.videoCodec === firstMeta.videoCodec &&
+      item.meta.width === firstMeta.width &&
+      item.meta.height === firstMeta.height
+  );
+
+  let usedFastCopy = false;
+
+  if (canTryFastCopy) {
+    try {
+      const listContent = sourceFiles
+        .map((item) => {
+          const normalized = item.mp4Path.replace(/\\/g, "/").replace(/'/g, "'\\''");
+          return `file '${normalized}'`;
+        })
+        .join("\n");
+      fs.writeFileSync(concatListPath, listContent, "utf-8");
+
+      const copyRes = spawnSync(
+        "ffmpeg",
+        [
+          "-y",
+          "-v",
+          "error",
+          "-f",
+          "concat",
+          "-safe",
+          "0",
+          "-i",
+          concatListPath,
+          "-c",
+          "copy",
+          "-movflags",
+          "+faststart",
+          tmpOutPath,
+        ],
+        { encoding: "utf-8" }
+      );
+
+      if (copyRes.status === 0 && fs.existsSync(tmpOutPath) && probeVideoDurationSec(tmpOutPath) > 0.5) {
+        usedFastCopy = true;
+      }
+    } catch {} finally {
+      if (fs.existsSync(concatListPath)) {
+        try {
+          fs.unlinkSync(concatListPath);
+        } catch {}
+      }
+    }
+  }
+
+  // Fallback: Normalized filter_complex concat if stream specs differ or fast copy failed
+  if (!usedFastCopy) {
+    const inputArgs: string[] = ["-y", "-v", "error"];
+    for (const item of sourceFiles) {
+      inputArgs.push("-i", item.mp4Path);
+    }
+
+    const filterParts: string[] = [];
+    const concatInputs: string[] = [];
+
+    sourceFiles.forEach((item, idx) => {
+      filterParts.push(
+        `[${idx}:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,fps=60,format=yuv420p,setpts=PTS-STARTPTS[v${idx}]`
+      );
+      if (item.meta.hasAudio) {
+        filterParts.push(
+          `[${idx}:a]aformat=sample_rates=48000:channel_layouts=stereo,asetpts=PTS-STARTPTS[a${idx}]`
+        );
+      } else {
+        const dur = Math.max(0.2, item.meta.durationSec).toFixed(3);
+        filterParts.push(
+          `anullsrc=channel_layout=stereo:sample_rate=48000,atrim=0:${dur},asetpts=PTS-STARTPTS[a${idx}]`
+        );
+      }
+      concatInputs.push(`[v${idx}][a${idx}]`);
+    });
+
+    filterParts.push(`${concatInputs.join("")}concat=n=${sourceFiles.length}:v=1:a=1[outv][outa]`);
+
+    const reencodeArgs = [
+      ...inputArgs,
+      "-filter_complex",
+      filterParts.join(";"),
+      "-map",
+      "[outv]",
+      "-map",
+      "[outa]",
+      "-c:v",
+      "libx264",
+      "-preset",
+      "veryfast",
+      "-crf",
+      "18",
+      "-pix_fmt",
+      "yuv420p",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "192k",
+      "-movflags",
+      "+faststart",
+      tmpOutPath,
+    ];
+
+    const ffRes = spawnSync("ffmpeg", reencodeArgs, { encoding: "utf-8" });
+    if (ffRes.status !== 0 || !fs.existsSync(tmpOutPath)) {
+      throw new Error(`FFmpeg 영상 병합 실패: ${ffRes.stderr || "알 수 없는 오류"}`);
+    }
+  }
+
+  if (fs.existsSync(outMp4Path)) {
+    try {
+      fs.unlinkSync(outMp4Path);
+    } catch {}
+  }
+  fs.renameSync(tmpOutPath, outMp4Path);
+
+  // Create combined scenario folder in data/<targetSlug>/ so it appears in the Scenario Library with full timeline & download support
+  const mergedDataDir = path.join(DATA_DIR, targetSlug);
+  if (!fs.existsSync(mergedDataDir)) {
+    fs.mkdirSync(mergedDataDir, { recursive: true });
+  }
+  const mergedAudioDir = path.join(mergedDataDir, "audio");
+  const publicNarrationDir = path.join(PUBLIC_DIR, "narration", targetSlug);
+  if (!fs.existsSync(mergedAudioDir)) fs.mkdirSync(mergedAudioDir, { recursive: true });
+  if (!fs.existsSync(publicNarrationDir)) fs.mkdirSync(publicNarrationDir, { recursive: true });
+
+  // Copy merged MP4 to data/<targetSlug>/recording.mp4 as well so raw/rendered player modes both work
+  const mergedRecordingPath = path.join(mergedDataDir, "recording.mp4");
+  try {
+    fs.copyFileSync(outMp4Path, mergedRecordingPath);
+    syncPublicRecordingCopy(targetSlug, mergedRecordingPath);
+  } catch {}
+
+  const fps = 60;
+  let cumulativeMs = 0;
+  let cumulativeFrames = 0;
+
+  const combinedActions: any[] = [];
+  const combinedMoments: any[] = [];
+  const combinedSegments: any[] = [];
+  const combinedCues: any[] = [];
+  let firstBaseUrl = "";
+  let voice = "ko-KR-SunHiNeural";
+  let rate = "+5%";
+  let pitch = "+0Hz";
+  let style: any = "manual";
+
+  sourceFiles.forEach((item, chapterIdx) => {
+    const chSlug = item.slug;
+    const chDir = path.join(DATA_DIR, chSlug);
+    const chDurSec = item.meta.durationSec;
+    const chDurMs = Math.round(chDurSec * 1000);
+    const chDurFrames = Math.round(chDurSec * fps);
+
+    const readJson = (f: string) => {
+      const p = path.join(chDir, f);
+      if (!fs.existsSync(p)) return null;
+      try {
+        return JSON.parse(fs.readFileSync(p, "utf-8"));
+      } catch {
+        return null;
+      }
+    };
+
+    const bp = readJson("browse-plan.json");
+    const ep = readJson("edit-plan.json");
+    const mm = readJson("moments.json");
+    const nr = readJson("narration.json") || ep?.narration;
+
+    if (bp) {
+      if (!firstBaseUrl && bp.baseUrl) firstBaseUrl = bp.baseUrl;
+      if (Array.isArray(bp.actions)) {
+        bp.actions.forEach((act: any, idx: number) => {
+          combinedActions.push({
+            ...act,
+            description:
+              idx === 0
+                ? `[챕터 ${chapterIdx + 1}: ${chSlug}] ${act.description || act.type}`
+                : act.description,
+          });
+        });
+      }
+    }
+
+    if (mm && Array.isArray(mm.moments)) {
+      const chFps = Number(ep?.fps || 60);
+      for (const m of mm.moments) {
+        const rawTsMs = Number(m.timestamp || 0);
+        const rawFrame = Math.round((rawTsMs / 1000) * chFps);
+        const compFrame = mapRawFrameToCompFrame(rawFrame, ep);
+        const compTsMs = Math.min(chDurMs, Math.max(0, Math.round((compFrame / chFps) * 1000)));
+        combinedMoments.push({
+          ...m,
+          id: combinedMoments.length + 1,
+          timestamp: cumulativeMs + compTsMs,
+          description: `[챕터 ${chapterIdx + 1}: ${chSlug}] ${m.description || m.action || "동작"}`,
+        });
+      }
+    } else {
+      // Add at least a chapter marker moment at the start of the chapter
+      combinedMoments.push({
+        id: combinedMoments.length + 1,
+        action: "click",
+        timestamp: cumulativeMs + 200,
+        x: 960,
+        y: 540,
+        description: `🎬 챕터 ${chapterIdx + 1} 시작: ${chSlug}`,
+      });
+    }
+
+    if (ep && Array.isArray(ep.segments)) {
+      for (const seg of ep.segments) {
+        const sStart = mapRawFrameToCompFrame(Number(seg.startFrame || 0), ep);
+        const sEnd = mapRawFrameToCompFrame(Number(seg.endFrame || 0), ep);
+        if (sEnd > sStart) {
+          combinedSegments.push({
+            ...seg,
+            startFrame: cumulativeFrames + Math.min(chDurFrames, sStart),
+            endFrame: cumulativeFrames + Math.min(chDurFrames, sEnd),
+            description: `[${chSlug}] ${seg.description || ""}`.trim(),
+          });
+        }
+      }
+    }
+
+    if (nr && Array.isArray(nr.cues)) {
+      if (chapterIdx === 0) {
+        if (nr.voice) voice = nr.voice;
+        if (nr.rate) rate = nr.rate;
+        if (nr.pitch) pitch = nr.pitch;
+        if (nr.style) style = nr.style;
+      }
+      nr.cues.forEach((cue: any, cIdx: number) => {
+        const cStartMs = Number(cue.compStartMs ?? cue.startMs ?? cue.videoStartMs ?? 0);
+        const cEndMs = Number(cue.compEndMs ?? cue.endMs ?? cue.videoEndMs ?? cStartMs + 2500);
+        const shiftedStartMs = cumulativeMs + Math.min(chDurMs, Math.max(0, cStartMs));
+        const shiftedEndMs = cumulativeMs + Math.min(chDurMs, Math.max(cStartMs + 300, cEndMs));
+
+        let newAudioFile = cue.audioFile;
+        if (cue.audioFile) {
+          const baseName = path.basename(cue.audioFile);
+          const srcAudio = path.join(chDir, "audio", baseName);
+          const newFileName = `ch${chapterIdx + 1}_${String(cIdx + 1).padStart(2, "0")}_${baseName}`;
+          if (fs.existsSync(srcAudio)) {
+            try {
+              fs.copyFileSync(srcAudio, path.join(mergedAudioDir, newFileName));
+              fs.copyFileSync(srcAudio, path.join(publicNarrationDir, newFileName));
+              newAudioFile = `narration/${targetSlug}/${newFileName}`;
+            } catch {}
+          }
+        }
+
+        combinedCues.push({
+          ...cue,
+          id: combinedCues.length + 1,
+          isIntro: chapterIdx === 0 && Boolean(cue.isIntro),
+          startMs: shiftedStartMs,
+          endMs: shiftedEndMs,
+          videoStartMs: shiftedStartMs,
+          videoEndMs: shiftedEndMs,
+          compStartMs: shiftedStartMs,
+          compEndMs: shiftedEndMs,
+          autoHoldMs: 0,
+          extraHoldMs: 0,
+          audioFile: newAudioFile,
+        });
+      });
+    }
+
+    cumulativeMs += chDurMs;
+    cumulativeFrames += chDurFrames;
+  });
+
+  const actualTotalDurSec = probeVideoDurationSec(outMp4Path) || Number((cumulativeMs / 1000).toFixed(3));
+  const actualTotalMs = Math.round(actualTotalDurSec * 1000);
+  const actualTotalFrames = Math.max(60, Math.round(actualTotalDurSec * fps));
+
+  const mergedBrowsePlan = {
+    baseUrl: firstBaseUrl || "https://gwdev.bc.ac.kr",
+    viewport: { width: 1920, height: 1080 },
+    recordedByEyedropper: true,
+    mergedFromSlugs: rawSlugs,
+    actions:
+      combinedActions.length > 0
+        ? combinedActions
+        : rawSlugs.map((s, idx) => ({
+            type: "click",
+            description: `🔗 챕터 ${idx + 1}: ${s}`,
+          })),
+  };
+  fs.writeFileSync(
+    path.join(mergedDataDir, "browse-plan.json"),
+    JSON.stringify(mergedBrowsePlan, null, 2),
+    "utf-8"
+  );
+
+  const mergedMomentsFile = {
+    moments: combinedMoments,
+    cursorTrajectory: [],
+    metadata: {
+      totalDurationMs: actualTotalMs,
+      calibratedToVideoDurationMs: actualTotalMs,
+      viewport: { width: 1920, height: 1080 },
+      recordedAt: new Date().toISOString(),
+      mergedFromSlugs: rawSlugs,
+    },
+  };
+  fs.writeFileSync(
+    path.join(mergedDataDir, "moments.json"),
+    JSON.stringify(mergedMomentsFile, null, 2),
+    "utf-8"
+  );
+
+  const mergedNarration =
+    combinedCues.length > 0
+      ? {
+          enabled: true,
+          showSubtitles: true,
+          style,
+          voice,
+          rate,
+          pitch,
+          cues: combinedCues,
+          updatedAt: new Date().toISOString(),
+        }
+      : undefined;
+
+  if (mergedNarration) {
+    fs.writeFileSync(
+      path.join(mergedDataDir, "narration.json"),
+      JSON.stringify(mergedNarration, null, 2),
+      "utf-8"
+    );
+  }
+
+  const mergedEditPlan: any = {
+    fps,
+    width: 1920,
+    height: 1080,
+    totalDurationFrames: actualTotalFrames,
+    rawDurationFrames: actualTotalFrames,
+    segments: combinedSegments,
+    cursorStyle: {
+      size: 24,
+      color: "#000000",
+      rippleColor: "rgba(59, 130, 246, 0.45)",
+      rippleRadius: 36,
+    },
+    ...(mergedNarration ? { narration: mergedNarration } : {}),
+  };
+  fs.writeFileSync(
+    path.join(mergedDataDir, "edit-plan.json"),
+    JSON.stringify(mergedEditPlan, null, 2),
+    "utf-8"
+  );
+
+  const stat = fs.statSync(outMp4Path);
+
+  return {
+    success: true,
+    outputSlug: targetSlug,
+    mergedSlugs: rawSlugs,
+    totalDurationSec: actualTotalDurSec,
+    fileSizeBytes: stat.size,
+    videoUrl: `/api/rendered-video/${targetSlug}`,
+    downloadUrl: `/api/download/${targetSlug}`,
+    usedFastCopy,
   };
 }
