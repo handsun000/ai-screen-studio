@@ -107,7 +107,7 @@ class RenderRunner extends EventEmitter {
           (c) => !c.audioFile || !fs.existsSync(path.join(rootDir, "public", c.audioFile))
         );
         if (missingAudio) {
-          synthesizeNarrationAudio(slug, existingNarration.voice, existingNarration.rate);
+          synthesizeNarrationAudio(slug, existingNarration.voice, existingNarration.rate, existingNarration.pitch);
         } else {
           ensurePublicNarrationAssets(slug);
         }

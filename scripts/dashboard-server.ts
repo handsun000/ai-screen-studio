@@ -31,6 +31,7 @@ import {
   normalizeTargetUrl,
 } from "../src/services/authManager";
 import { actionRecorderService } from "../src/services/actionRecorderService";
+import { getVideoEditStatus, cutVideoSegment, restoreVideoBackup } from "../src/services/videoEditorService";
 import {
   generateNarrationScript,
   getNarration,
@@ -192,7 +193,7 @@ app.get("/api/scenarios/:slug", (req: Request, res: Response) => {
   try {
     const slug = req.params.slug as string;
     const details = getScenarioDetails(slug);
-    res.json(details);
+    res.json({ ...details, videoEditStatus: getVideoEditStatus(slug) });
   } catch (err: any) {
     res.status(404).json({ error: err.message });
   }
@@ -621,7 +622,9 @@ app.post("/api/narration/:slug/generate", async (req: Request, res: Response) =>
       showSubtitles,
       synthesizeAudio: true,
     });
-    res.json({ success: true, narration });
+    const editPlanPath = path.join(DATA_DIR, slug, "edit-plan.json");
+    const editPlan = fs.existsSync(editPlanPath) ? JSON.parse(fs.readFileSync(editPlanPath, "utf-8")) : undefined;
+    res.json({ success: true, narration, editPlan });
   } catch (err: any) {
     console.error("[Narration Generate Error]", err);
     res.status(500).json({ error: err.message || "AI 대본 생성 중 오류가 발생했습니다." });
@@ -640,7 +643,9 @@ app.post("/api/narration/:slug/save", (req: Request, res: Response) => {
     if (synthesize !== false) {
       saved = synthesizeNarrationAudio(slug, saved.voice, saved.rate, saved.pitch) || saved;
     }
-    res.json({ success: true, narration: saved });
+    const editPlanPath = path.join(DATA_DIR, slug, "edit-plan.json");
+    const editPlan = fs.existsSync(editPlanPath) ? JSON.parse(fs.readFileSync(editPlanPath, "utf-8")) : undefined;
+    res.json({ success: true, narration: saved, editPlan });
   } catch (err: any) {
     console.error("[Narration Save Error]", err);
     res.status(500).json({ error: err.message || "대본 저장 및 음성 합성 중 오류가 발생했습니다." });
@@ -658,6 +663,40 @@ app.get("/api/narration/audio/:slug/:filename", (req: Request, res: Response) =>
   res.setHeader("Content-Type", "audio/mpeg");
   res.setHeader("Cache-Control", "no-store");
   fs.createReadStream(audioPath).pipe(res);
+});
+
+// 12. Direct Video Cut & Undo/Restore APIs
+app.get("/api/video-edit/:slug/status", (req: Request, res: Response) => {
+  try {
+    const slug = req.params.slug as string;
+    res.json({ status: getVideoEditStatus(slug) });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/video-edit/:slug/cut", (req: Request, res: Response) => {
+  try {
+    const slug = req.params.slug as string;
+    const { startSec, endSec } = req.body || {};
+    const result = cutVideoSegment(slug, Number(startSec), Number(endSec));
+    res.json(result);
+  } catch (err: any) {
+    console.error("[Video Cut Error]", err);
+    res.status(400).json({ error: err.message || "구간 잘라내기 중 오류가 발생했습니다." });
+  }
+});
+
+app.post("/api/video-edit/:slug/restore", (req: Request, res: Response) => {
+  try {
+    const slug = req.params.slug as string;
+    const mode = req.body?.mode === "orig" ? "orig" : "undo";
+    const result = restoreVideoBackup(slug, mode);
+    res.json(result);
+  } catch (err: any) {
+    console.error("[Video Restore Error]", err);
+    res.status(400).json({ error: err.message || "영상 복원 중 오류가 발생했습니다." });
+  }
 });
 
 // Static frontend serving

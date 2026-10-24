@@ -12,6 +12,12 @@ import { findExistingAuthSession, syncAuthSession } from "../src/services/authMa
 
 // Universal runtime tracking for created entities across scenarios
 const currentRuntimeVariables = new Map<string, string>();
+// Maps demonstration-time entity IDs (that may have been deleted and recreated with a new ID during recording)
+// to their newly created live runtime IDs in the DOM: oldDemoId -> newRuntimeId
+const runtimeEntityIdMap = new Map<string, string>();
+// Tracks entity titles/names typed during the current recording session so that if both an old
+// leftover demo item and a newly created item with the same title exist on screen, the newly created one is preferred.
+const runtimeCreatedTitles = new Set<string>();
 
 /**
  * Computes a specificity score for candidate selectors.
@@ -81,23 +87,225 @@ function sortSelectorsBySpecificity(parts: string[]): string[] {
   });
 }
 
+interface TargetHtmlFingerprint {
+  tag: string;
+  id: string;
+  attrs: Record<string, string>;
+  classes: string[];
+  childHooks: string[];
+  childDataAttrs: Record<string, string>;
+  text: string;
+  compactText: string;
+}
+
+function parseTargetHtmlFingerprint(rawTargetHtml?: string): TargetHtmlFingerprint | null {
+  if (!rawTargetHtml || typeof rawTargetHtml !== "string") return null;
+  let targetHtml = rawTargetHtml;
+  for (const [oldId, newId] of runtimeEntityIdMap.entries()) {
+    if (oldId && newId && oldId !== newId && targetHtml.includes(oldId)) {
+      targetHtml = targetHtml.split(oldId).join(newId);
+    }
+  }
+  const decoded = targetHtml
+    .replace(/&nbsp;|&#160;/gi, " ")
+    .replace(/&gt;|&#62;/gi, ">")
+    .replace(/&lt;|&#60;/gi, "<")
+    .replace(/&quot;|&#34;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&amp;|&#38;/gi, "&")
+    .trim();
+  const openTagMatch = decoded.match(/^<([a-zA-Z0-9]+)([^<>]*)/);
+  if (!openTagMatch) return null;
+  const tag = openTagMatch[1].toLowerCase();
+  const rawAttrs = openTagMatch[2]
+    .replace(/\s+(?:oldtitle|data-original-title|data-qtip|aria-describedby)=["'][^"']*["']/gi, "")
+    .replace(/\s+(?:oldtitle|data-original-title|data-qtip|aria-describedby)=["'][^"']*$/gi, "");
+  const innerHtml = decoded.slice(openTagMatch[0].length);
+
+  const idMatch = rawAttrs.match(/(?:^|\s)id=["']([^"']+)["']/i);
+  const rawId = idMatch ? idMatch[1].trim() : "";
+  const isUnstableId =
+    /^(ui-id-|jqg|ext-gen|select2-|mceu_|cke_|tinymce|mentiony-|th\d+$|dp\d+$|ADRGR\d+$|[0-9]+$)/i.test(rawId) ||
+    /[0-9a-f]{8,}/i.test(rawId);
+  const id = !isUnstableId ? rawId : "";
+
+  const ignoredDataAttrRegex = /^data-(?:toggle|dismiss|backdrop|keyboard|spy|ride|slide|placement|original-title|qtip|tooltip|placeholder|i18n|bind|reactid|v-)/i;
+  const attrs: Record<string, string> = {};
+  for (const attrKey of ["name", "title", "type", "value", "role", "placeholder", "for"]) {
+    const m = rawAttrs.match(new RegExp(`(?:^|\\s)${attrKey}=["']([^"']+)["']`, "i"));
+    if (m && m[1].trim()) {
+      attrs[attrKey] = m[1].trim();
+    }
+  }
+  for (const dm of rawAttrs.matchAll(/\b(data-[a-zA-Z0-9_-]+)=["']([^"']+)["']/gi)) {
+    const k = dm[1].toLowerCase();
+    const v = dm[2].trim();
+    if (!ignoredDataAttrRegex.test(k) && v && v.toLowerCase() !== "empty") {
+      attrs[k] = v;
+    }
+  }
+
+  const transientClsRegex =
+    /^(?:active|hover|focus|open|on|selected|disabled|chkbox_on|rdobtn_on|ico_chk_on|dynatree-expanded|dynatree-active|dynatree-focused|dynatree-selected|ui-state-hover|ui-state-focus|ui-state-active|_toolTip)$/i;
+  const clsMatch = rawAttrs.match(/\bclass=["']([^"']+)["']/i);
+  const classes = clsMatch
+    ? clsMatch[1]
+        .split(/\s+/)
+        .map((c) => c.trim())
+        .filter((c) => c && !transientClsRegex.test(c))
+    : [];
+
+  const childHooks: string[] = [];
+  for (const cm of innerHtml.matchAll(/\bclass=["']([^"']+)["']/gi)) {
+    for (const tok of cm[1].split(/\s+/)) {
+      if (
+        /^(?:scvr\d+|plt_\d+|_[a-zA-Z0-9_-]{3,})$/.test(tok) &&
+        !/^_(?:search_option|search|blind|hide|hidden|punchHandle|appendBtn|writeBtn|lineSelect|addBtn|delBtn|selectBtn|setProcess|write|toolTip)$/i.test(tok)
+      ) {
+        if (!childHooks.includes(tok)) childHooks.push(tok);
+      }
+    }
+  }
+
+  const childDataAttrs: Record<string, string> = {};
+  for (const cdm of innerHtml.matchAll(/\b(data-[a-zA-Z0-9_-]+)=["']([^"']+)["']/gi)) {
+    const k = cdm[1].toLowerCase();
+    const v = cdm[2].trim();
+    if (!ignoredDataAttrRegex.test(k) && v && v.toLowerCase() !== "empty") {
+      childDataAttrs[k] = v;
+    }
+  }
+
+  const text = decoded
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const compactText = text.replace(/\s+/g, "");
+
+  return { tag, id, attrs, classes, childHooks, childDataAttrs, text, compactText };
+}
+
+async function pickBestVisibleCandidateByTargetHtml(
+  loc: Locator,
+  visibleIndices: number[],
+  fp: TargetHtmlFingerprint,
+  preferNewEntityIdOverOldDemoId: boolean = false
+): Promise<Locator> {
+  if (visibleIndices.length <= 1) {
+    return loc.nth(visibleIndices[0] ?? 0);
+  }
+  try {
+    const bestIndex = await loc.evaluateAll(
+      (els, { fp, indices, preferNewEntityIdOverOldDemoId }) => {
+        let bestIdx = indices[0];
+        let bestScore = -9999;
+
+        for (const idx of indices) {
+          const el = els[idx] as HTMLElement | undefined;
+          if (!el) continue;
+          let score = 0;
+
+          if (fp.id) {
+            if (el.id === fp.id) score += 500;
+            else score -= 300;
+          }
+
+          for (const [k, v] of Object.entries(fp.attrs)) {
+            const actual = (el.getAttribute(k) || "").trim();
+            if (k.startsWith("data-")) {
+              const isEntityIdAttr = k.endsWith("-id") && k !== "data-menu-id" && k !== "data-folder-id" && k !== "data-up-page-id";
+              if (preferNewEntityIdOverOldDemoId && isEntityIdAttr) {
+                // If this entity title was newly created in the current recording session and v is still the unmapped
+                // old demonstration ID, prefer the element with a NEW ID (actual !== v) over any leftover old demo item!
+                if (actual && actual !== v) score += 350;
+                else if (actual === v) score -= 250;
+              } else {
+                if (actual === v) score += 350;
+                else if (actual) score -= 300;
+                else score -= 120;
+              }
+            } else if (k === "name" || k === "for" || k === "value") {
+              if (actual === v) score += 240;
+              else if (actual) score -= 180;
+            } else if (k === "title" || k === "placeholder") {
+              const oldTitle = (el.getAttribute("data-original-title") || el.getAttribute("oldtitle") || "").trim();
+              if (actual === v || oldTitle === v) score += 200;
+              else if (actual && actual !== v) score -= 150;
+            } else if (actual === v) {
+              score += 50;
+            }
+          }
+
+          for (const cls of fp.classes) {
+            if (el.classList && el.classList.contains(cls)) {
+              score += 25;
+            }
+          }
+
+          for (const chCls of fp.childHooks) {
+            if (el.querySelector && el.querySelector(`.${chCls}`)) {
+              score += 280;
+            } else {
+              score -= 120;
+            }
+          }
+
+          for (const [ck, cv] of Object.entries(fp.childDataAttrs)) {
+            try {
+              if (el.querySelector && el.querySelector(`[${ck}='${cv.replace(/'/g, "\\'")}']`)) {
+                score += 280;
+              }
+            } catch {}
+          }
+
+          if (fp.compactText && el.tagName.toLowerCase() !== "input" && el.tagName.toLowerCase() !== "textarea") {
+            const rawElText = (el.innerText || el.textContent || "").replace(/\s+/g, "");
+            if (rawElText === fp.compactText) {
+              score += 220;
+            } else if (rawElText && (rawElText.includes(fp.compactText) || fp.compactText.includes(rawElText))) {
+              score += 90;
+            } else if (rawElText) {
+              score -= 120;
+            }
+          }
+
+          if (score > bestScore) {
+            bestScore = score;
+            bestIdx = idx;
+          }
+        }
+        return bestIdx;
+      },
+      { fp, indices: visibleIndices, preferNewEntityIdOverOldDemoId }
+    );
+    return loc.nth(typeof bestIndex === "number" ? bestIndex : visibleIndices[0]);
+  } catch {
+    return loc.nth(visibleIndices[0]);
+  }
+}
+
 async function getLocatorWithWait(page: Page, action: BrowsePlanAction, isFastCheck: boolean = false): Promise<Locator | null> {
+  // Ensure newly opened popup windows or navigating frames have reached DOM readiness before querying
+  const readyState = await page.evaluate(() => document.readyState).catch(() => "complete");
+  if (readyState === "loading") {
+    await page.waitForLoadState("domcontentloaded", { timeout: 3500 }).catch(() => {});
+  }
+
   const originalSelector = action.selector;
   const rawParts = splitSelectorCandidates(action.selector || "");
   const parts = action.recordedByEyedropper ? rawParts : sortSelectorsBySpecificity(rawParts);
 
-  
   const topAttempts = isFastCheck ? 1 : 2;
   const allAttempts = isFastCheck ? 2 : 5;
 
   // 1. 초기 시도는 가장 구체적인 상위 셀렉터(우선순위 최고)만으로 탐색하여,
   // 화면 로딩 중 덜 구체적인 Fallback 셀렉터가 먼저 매칭되어 잘못된 요소를 클릭하는 현상을 방지
-  // (반드시 el.isVisible()이 실제로 true일 때만 조기 반환하여 후속 후보 셀렉터가 누락되지 않도록 보장!)
+  // (onlyExplicitParts=true 로 설정하여 3-B-TargetHtml / 3-C / 4 폴백으로 조기 이탈하지 않도록 보장)
   if (parts.length > 1) {
-    const topCandidates = parts.slice(0, Math.min(2, parts.length)).join(", ");
-    action.selector = topCandidates; 
+    const topCandidates = parts.slice(0, Math.min(6, parts.length)).join(", ");
+    action.selector = topCandidates;
     for (let i = 0; i < topAttempts; i++) {
-      const el = await getLocator(page, action);
+      const el = await getLocator(page, action, false, i >= 1, true);
       if (el && (await el.isVisible().catch(() => false))) {
         action.selector = originalSelector;
         return el;
@@ -108,10 +316,13 @@ async function getLocatorWithWait(page: Page, action: BrowsePlanAction, isFastCh
   }
 
   // 2. 구체적 셀렉터가 당장 보이지 않으면, 모든 후보 셀렉터(parts 전체)를 순서대로 탐색
+  // (카드/행 마우스 호버 노출은 즉시 허용하되, 드롭다운 클릭은 마지막 회차에만 허용)
   let el: Locator | null = null;
   action.selector = parts.join(", ");
   for (let i = 0; i < allAttempts; i++) {
-    el = await getLocator(page, action);
+    const allowSideEffects = i === allAttempts - 1;
+    const allowHoverReveal = true;
+    el = await getLocator(page, action, allowSideEffects, allowHoverReveal, false);
     if (el && (await el.isVisible().catch(() => false))) {
       action.selector = originalSelector;
       return el;
@@ -206,11 +417,114 @@ async function findVisibleInPageOrFrames(
   return null;
 }
 
-async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator | null> {
+async function getLocator(
+  page: Page,
+  action: BrowsePlanAction,
+  allowSideEffectRecovery: boolean = false,
+  allowHoverReveal: boolean = allowSideEffectRecovery,
+  onlyExplicitParts: boolean = false
+): Promise<Locator | null> {
   const desc = (action.description || "").toLowerCase();
+  const rawOriginalSelector = (action.selector || "").trim();
+  const targetHtmlFp = parseTargetHtmlFingerprint(action.targetHtml);
 
   // 1. Syntax Auto-Fixer (Heals common user input syntax errors like button:btn_svc_open -> button.btn_svc_open)
-  let selector = (action.selector || "").trim();
+  let selector = rawOriginalSelector;
+
+  // Apply dynamic runtime Entity ID remapping (when an item created in demonstration was deleted and recreated with a new ID during recording)
+  if (runtimeEntityIdMap.size > 0) {
+    for (const [oldId, newId] of runtimeEntityIdMap.entries()) {
+      if (oldId && newId && oldId !== newId) {
+        if (selector.includes(oldId)) {
+          selector = selector.split(oldId).join(newId);
+        }
+        if (targetHtmlFp) {
+          if (targetHtmlFp.id && targetHtmlFp.id.includes(oldId)) {
+            targetHtmlFp.id = targetHtmlFp.id.split(oldId).join(newId);
+          }
+          for (const [k, v] of Object.entries(targetHtmlFp.attrs)) {
+            if (v && v.includes(oldId)) {
+              targetHtmlFp.attrs[k] = v.split(oldId).join(newId);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Helper to automatically learn oldDemoId -> newRuntimeId whenever an action's element is resolved via its name/card scope
+  const learnRuntimeEntityIdIfChanged = async (resolvedLoc: Locator): Promise<Locator> => {
+    const candidateIdPairs = new Map<string, string>();
+    if (targetHtmlFp && targetHtmlFp.attrs) {
+      for (const [attrKey, oldVal] of Object.entries(targetHtmlFp.attrs)) {
+        if (
+          attrKey.startsWith("data-") &&
+          attrKey.endsWith("-id") &&
+          attrKey !== "data-menu-id" &&
+          attrKey !== "data-folder-id" &&
+          attrKey !== "data-up-page-id" &&
+          oldVal &&
+          oldVal.length >= 5 &&
+          oldVal !== "ROOT"
+        ) {
+          candidateIdPairs.set(attrKey, oldVal);
+        }
+      }
+    }
+    for (const m of rawOriginalSelector.matchAll(/\[(data-[a-zA-Z0-9_-]*id)=['"]([^'"]+)['"]\]/gi)) {
+      const attrKey = m[1].toLowerCase();
+      const oldVal = m[2].trim();
+      if (
+        attrKey !== "data-menu-id" &&
+        attrKey !== "data-folder-id" &&
+        attrKey !== "data-up-page-id" &&
+        oldVal &&
+        oldVal.length >= 5 &&
+        oldVal !== "ROOT" &&
+        !candidateIdPairs.has(attrKey)
+      ) {
+        candidateIdPairs.set(attrKey, oldVal);
+      }
+    }
+
+    if (candidateIdPairs.size > 0) {
+      for (const [attrKey, oldVal] of candidateIdPairs.entries()) {
+        if (runtimeEntityIdMap.has(oldVal)) continue;
+        const liveVal = await resolvedLoc
+          .evaluate((el, key) => {
+            const direct = el.getAttribute(key);
+            if (direct && direct.trim()) return direct.trim();
+            const closestEl = el.closest(`[${key}]`);
+            if (closestEl) {
+              const cVal = closestEl.getAttribute(key);
+              if (cVal && cVal.trim()) return cVal.trim();
+            }
+            const childEl = el.querySelector(`[${key}]`);
+            if (childEl) {
+              const chVal = childEl.getAttribute(key);
+              if (chVal && chVal.trim()) return chVal.trim();
+            }
+            if (key === "data-org-page-id" || key === "data-page-id") {
+              const altKey = key === "data-org-page-id" ? "data-page-id" : "data-org-page-id";
+              const altClosest = el.closest(`[${altKey}]`);
+              if (altClosest) {
+                const aVal = altClosest.getAttribute(altKey);
+                if (aVal && aVal.trim()) return aVal.trim();
+              }
+            }
+            return null;
+          }, attrKey)
+          .catch(() => null);
+        if (liveVal && liveVal !== oldVal && !runtimeEntityIdMap.has(oldVal)) {
+          runtimeEntityIdMap.set(oldVal, liveVal);
+          console.log(
+            `  [🔄 신규 생성 ID 동적 매핑] 시연 중 삭제·재생성된 항목 ID를 현재 런타임 ID로 자동 연결합니다 (${attrKey}: ${oldVal} ➔ ${liveVal})`
+          );
+        }
+      }
+    }
+    return resolvedLoc;
+  };
 
   // Restore previously corrupted .nth-of-type / .first-of-type / .last-of-type back to valid CSS pseudo-classes
   selector = selector.replace(
@@ -289,16 +603,19 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
   }
   action.selector = selector;
 
-  // Build candidate bases: prioritized by action.iframe, active child frames (page.frames()), and fallback to page and common iframes
+  // Build candidate bases: prioritized by action.iframe (only if present on current page!), active child frames (page.frames()), and fallback to page and common iframes
   const candidateBases: Array<{ name: string; locator: (sel: string) => Locator }> = [];
   if (action.iframe) {
     const iframeParts = splitSelectorCandidates(action.iframe);
     for (const fSel of iframeParts) {
       if (!fSel) continue;
-      candidateBases.push({
-        name: `iframe(${fSel})`,
-        locator: (sel: string) => page.frameLocator(fSel).first().locator(sel),
-      });
+      const frameCount = await page.locator(fSel).count().catch(() => 0);
+      if (frameCount > 0) {
+        candidateBases.push({
+          name: `iframe(${fSel})`,
+          locator: (sel: string) => page.frameLocator(fSel).first().locator(sel),
+        });
+      }
     }
     // Also traverse all active child frames in page.frames() (handles setup_iframe, dynamic iframe names, or nested frames)
     for (const frame of page.frames()) {
@@ -309,7 +626,7 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
         });
       }
     }
-    // Fallback to top-level page in case iframe isn't used or already busted
+    // Fallback to top-level page in case iframe isn't used or was opened as a top-level popup window
     candidateBases.push({
       name: "page(top-level fallback)",
       locator: (sel: string) => page.locator(sel),
@@ -376,11 +693,30 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
         if (!cleanSel) continue;
 
         try {
-          let cand = topDialog.locator(cleanSel);
-          cand = isLast ? cand.last() : cand.first();
-          if (await cand.isVisible().catch(() => false)) {
-            console.log(`  [🎯 최상단 모달 요소 감지] 활성 팝업(z-index 우선) 내부에서 '${cleanSel}' 요소를 우선 선택합니다.`);
-            return cand;
+          const candLoc = topDialog.locator(cleanSel);
+          const cCount = await candLoc.count().catch(() => 0);
+          if (cCount > 0) {
+            if (isLast) {
+              const lastCand = candLoc.last();
+              if (await lastCand.isVisible().catch(() => false)) {
+                console.log(`  [🎯 최상단 모달 요소 감지] 활성 팝업(z-index 우선) 내부에서 '${cleanSel}' 요소를 우선 선택합니다.`);
+                return lastCand;
+              }
+            }
+            const visIndices: number[] = [];
+            for (let ci = 0; ci < Math.min(cCount, 15); ci++) {
+              if (await candLoc.nth(ci).isVisible().catch(() => false)) {
+                visIndices.push(ci);
+              }
+            }
+            if (visIndices.length > 0) {
+              const chosen =
+                visIndices.length > 1 && targetHtmlFp
+                  ? await pickBestVisibleCandidateByTargetHtml(candLoc, visIndices, targetHtmlFp)
+                  : candLoc.nth(visIndices[0]);
+              console.log(`  [🎯 최상단 모달 요소 감지] 활성 팝업(z-index 우선) 내부에서 '${cleanSel}' 요소를 우선 선택합니다.`);
+              return chosen;
+            }
           }
         } catch {
           // Gracefully skip invalid selector syntax
@@ -417,10 +753,24 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
             let cleanS = s.replace(/:first\b/g, "").replace(/:last\b/g, "").trim();
             if (!cleanS) continue;
             try {
-              let directLoc = baseObj.locator(cleanS);
-              directLoc = isLast ? directLoc.last() : directLoc.first();
-              if (await directLoc.isVisible().catch(() => false)) {
-                return directLoc;
+              const directLoc = baseObj.locator(cleanS);
+              const dCount = await directLoc.count().catch(() => 0);
+              if (dCount > 0) {
+                if (isLast) {
+                  const lastCand = directLoc.last();
+                  if (await lastCand.isVisible().catch(() => false)) return lastCand;
+                }
+                const visIndices: number[] = [];
+                for (let di = 0; di < Math.min(dCount, 15); di++) {
+                  if (await directLoc.nth(di).isVisible().catch(() => false)) {
+                    visIndices.push(di);
+                  }
+                }
+                if (visIndices.length > 0) {
+                  return visIndices.length > 1 && targetHtmlFp
+                    ? await pickBestVisibleCandidateByTargetHtml(directLoc, visIndices, targetHtmlFp)
+                    : directLoc.nth(visIndices[0]);
+                }
               }
             } catch {}
           }
@@ -506,47 +856,135 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
       }
     }
 
+    // Determine if this action targets a specific entity (has data-*-id / data-*-name / data-subject or row-scoped :has-text)
+    // and whether that entity was newly created in the current recording session (so unmapped old demo IDs are deprioritized)
+    const hasSpecificEntityInAction =
+      Boolean(
+        targetHtmlFp &&
+          Object.keys(targetHtmlFp.attrs).some(
+            (k) =>
+              k.startsWith("data-") &&
+              !/^data-(?:menu-id|menu-name|folder-id|folder-name|folder-type|page-mode|tab|search-type|app-type-se|app-type-ordr|up-page-id)$/i.test(
+                k
+              )
+          )
+      ) || parts.some((p) => /\b(?:li|tr):has-text\(['"][^'"]+['"]\)/i.test(p));
+
+    const targetsNewlyCreatedEntityInRun =
+      runtimeCreatedTitles.size > 0 &&
+      Array.from(runtimeCreatedTitles).some(
+        (title) =>
+          selector.includes(title) ||
+          (action.targetHtml && action.targetHtml.includes(title)) ||
+          (action.description && action.description.includes(title))
+      );
+
+    const hasUnmappedOldDemoId = (partStr: string): boolean => {
+      if (!targetsNewlyCreatedEntityInRun) return false;
+      for (const m of partStr.matchAll(/\[data-[a-zA-Z0-9_-]*id=['"]([^'"]+)['"]\]/gi)) {
+        const idVal = m[1].trim();
+        const isMappedNewId = Array.from(runtimeEntityIdMap.values()).includes(idVal);
+        if (idVal && !isMappedNewId && !runtimeEntityIdMap.has(idVal)) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    const isUnscopedGenericActionButtonPart = (partStr: string): boolean => {
+      if (!hasSpecificEntityInAction) return false;
+      if (/\[data-[a-zA-Z0-9_-]+=/i.test(partStr)) return false;
+      if (/\b(?:li|tr|dd|td):has-text\(/i.test(partStr)) return false;
+      if (/:(?:nth-of-type|nth-child)\(/i.test(partStr)) return false;
+      // Check if there is an #id on the target leaf element itself (as opposed to only a container prefix like ul#wikiBookList_list)
+      const leafSegment = partStr.trim().split(/\s+/).pop() || "";
+      if (leafSegment.includes("#")) return false;
+      const textOrTitleM = partStr.match(/(?::(?:has-text|text-is)\(['"]([^'"]+)['"]\)|\[title=['"]([^'"]+)['"]\])/i);
+      const txtVal = (textOrTitleM?.[1] || textOrTitleM?.[2] || "").trim();
+      if (txtVal && !/^(?:목록|삭제|옵션|수정|메뉴|더보기|설정|선택|보기|추가|확인)$/i.test(txtVal)) {
+        return false;
+      }
+      return true;
+    };
+
+    // Order parts so unmapped old demo IDs are tried ONLY after entity-name / row-scoped candidates when the entity was created in this run
+    const primaryParts = targetsNewlyCreatedEntityInRun ? parts.filter((p) => !hasUnmappedOldDemoId(p)) : parts;
+    const deferredOldIdParts = targetsNewlyCreatedEntityInRun ? parts.filter((p) => hasUnmappedOldDemoId(p)) : [];
+    const orderedParts = [...primaryParts, ...deferredOldIdParts];
+
     // 3-B. Prioritize elements that are currently visible on screen across bases
-    for (const rawPart of parts) {
+    for (const rawPart of orderedParts) {
       const isLast = rawPart.endsWith(":last") || rawPart.includes(":last");
       const cleanPart = rawPart.replace(/:first\b/g, "").replace(/:last\b/g, "").trim();
       if (!cleanPart) continue;
+      const isUnscopedGenericBtn = isUnscopedGenericActionButtonPart(cleanPart);
 
       for (const baseObj of candidateBases) {
         try {
           const loc = baseObj.locator(cleanPart);
           const count = await loc.count().catch(() => 0);
           if (count > 0) {
+            // Never let an unscoped generic button fallback (e.g. ul#wikiBookList_list button._deleteBook:visible)
+            // guess the 1st item in a multi-item list when the action targets a specific entity!
+            if (isUnscopedGenericBtn) {
+              const totalDomButtons = await baseObj
+                .locator(cleanPart.replace(/:visible\s*$/i, "").trim())
+                .count()
+                .catch(() => count);
+              if (totalDomButtons > 1) {
+                continue;
+              }
+            }
             if (isLast) {
               const lastCand = loc.last();
               if (await lastCand.isVisible().catch(() => false)) return lastCand;
             }
-            for (let i = 0; i < count; i++) {
-              const candidate = loc.nth(i);
-              if (await candidate.isVisible().catch(() => false)) {
-                return candidate;
+            const visIndices: number[] = [];
+            for (let i = 0; i < Math.min(count, 15); i++) {
+              if (await loc.nth(i).isVisible().catch(() => false)) {
+                visIndices.push(i);
               }
+            }
+            if (visIndices.length > 0) {
+              if (visIndices.length > 1 && targetHtmlFp) {
+                return await learnRuntimeEntityIdIfChanged(
+                  await pickBestVisibleCandidateByTargetHtml(
+                    loc,
+                    visIndices,
+                    targetHtmlFp,
+                    targetsNewlyCreatedEntityInRun
+                  )
+                );
+              }
+              return await learnRuntimeEntityIdIfChanged(loc.nth(visIndices[0]));
             }
           }
         } catch {}
       }
     }
 
-    // 3-B-Hover. Resolve CSS-hidden checkbox/radio to wrapping <label>, or Auto-Hover Parent Container to Reveal CSS :hover Hidden Buttons
+    // 3-B-Hover. Resolve CSS-hidden checkbox/radio to wrapping <label>, Auto-Hover Item/Card Container, or (on final retry) Expand Closed Dropdown
+    // Runs BEFORE 3-B-TargetHtml so hover-revealed buttons inside cards/rows (#52 '목록', #88 '삭제', #148 '옵션') are revealed on their exact card/row!
     if (action.type === "click" || action.type === "dblclick") {
-      for (const rawPart of parts) {
+      const testedHoverKeys = new Set<string>();
+      for (const rawPart of orderedParts) {
         const cleanPart = rawPart
           .replace(/:first\b/g, "")
           .replace(/:last\b/g, "")
           .replace(/:visible\s*$/i, "")
           .trim();
         if (!cleanPart) continue;
+        const isUnscopedGenericBtn = isUnscopedGenericActionButtonPart(cleanPart);
 
         for (const baseObj of candidateBases) {
           try {
             const hiddenLoc = baseObj.locator(cleanPart);
             const hiddenCount = await hiddenLoc.count().catch(() => 0);
             if (hiddenCount > 0) {
+              // Never hover the 1st card/row in a multi-item list using an unscoped generic button fallback!
+              if (isUnscopedGenericBtn && hiddenCount > 1) {
+                continue;
+              }
               for (let i = 0; i < Math.min(hiddenCount, 4); i++) {
                 const candidate = hiddenLoc.nth(i);
                 const tagAndType = await candidate
@@ -554,8 +992,15 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
                     tag: el.tagName.toLowerCase(),
                     type: ((el as HTMLInputElement).type || "").toLowerCase(),
                     id: el.id || "",
+                    isInsideMenu: Boolean(el.closest(".options, .select_list, .drop_menu, .dropdown-menu")),
+                    isTriggerItself: Boolean(
+                      el.classList.contains("drop_value") ||
+                        el.classList.contains("drop_tgl") ||
+                        el.classList.contains("select_Value") ||
+                        el.classList.contains("select_btn")
+                    ),
                   }))
-                  .catch(() => ({ tag: "", type: "", id: "" }));
+                  .catch(() => ({ tag: "", type: "", id: "", isInsideMenu: false, isTriggerItself: false }));
 
                 // If target is a CSS-hidden checkbox/radio input (e.g. input.input_chk inside label.chkbox), target its visible wrapping <label>
                 if (tagAndType.tag === "input" && (tagAndType.type === "checkbox" || tagAndType.type === "radio")) {
@@ -577,62 +1022,234 @@ async function getLocator(page: Page, action: BrowsePlanAction): Promise<Locator
                   continue;
                 }
 
-                // If candidate is inside a custom dropdown (.Selected > .options, .select_box, .combobox, .btn_drop) whose options are hidden until clicked, click the trigger first!
-                const dropdownTrigger = candidate
-                  .locator(
-                    "xpath=ancestor::*[contains(@class,'Selected') or contains(@class,'select_box') or contains(@class,'combobox') or contains(@class,'btn_drop')][1]"
-                  )
-                  .first();
-                if (await dropdownTrigger.isVisible().catch(() => false)) {
-                  console.log(
-                    `  [🔽 커스텀 드롭다운 자동 펼침] '${cleanPart}' 옵션이 드롭다운 내부에 숨겨져 있어 상위 트리거를 먼저 클릭합니다.`
-                  );
-                  await dropdownTrigger.click({ timeout: 1500 }).catch(() => {});
-                  await page.waitForTimeout(350);
-                  if (await candidate.isVisible().catch(() => false)) {
-                    return candidate;
-                  }
-                  // If jQuery toggle requires showing .options directly as fallback
-                  await dropdownTrigger
+                // Only click a custom dropdown trigger on the final retry if candidate is an option INSIDE a hidden menu AND the dropdown is currently closed!
+                if (allowSideEffectRecovery && tagAndType.isInsideMenu && !tagAndType.isTriggerItself) {
+                  const dropdownTrigger = candidate
+                    .locator(
+                      "xpath=ancestor::*[contains(@class,'Selected') or contains(@class,'select_box') or contains(@class,'combobox') or contains(@class,'btn_drop')][1]"
+                    )
+                    .first();
+                  const isDropdownClosed = await dropdownTrigger
                     .evaluate((node) => {
-                      const opts = node.querySelector(".options, .select_list, .drop_menu") as HTMLElement | null;
-                      if (opts) opts.style.display = "block";
+                      if (node.classList.contains("open")) return false;
+                      const menu = node.querySelector(".options, .select_list, .drop_menu, .dropdown-menu") as HTMLElement | null;
+                      if (menu && window.getComputedStyle(menu).display !== "none" && menu.offsetWidth > 0) return false;
+                      return true;
                     })
-                    .catch(() => {});
-                  await page.waitForTimeout(150);
-                  if (await candidate.isVisible().catch(() => false)) {
-                    return candidate;
+                    .catch(() => false);
+
+                  if (isDropdownClosed && (await dropdownTrigger.isVisible().catch(() => false))) {
+                    console.log(
+                      `  [🔽 커스텀 드롭다운 자동 펼침] '${cleanPart}' 옵션이 닫힌 드롭다운 내부에 숨겨져 있어 상위 트리거를 먼저 클릭합니다.`
+                    );
+                    await dropdownTrigger.click({ timeout: 1500 }).catch(() => {});
+                    await page.waitForTimeout(350);
+                    if (await candidate.isVisible().catch(() => false)) {
+                      return await learnRuntimeEntityIdIfChanged(candidate);
+                    }
                   }
                 }
 
-                const hoverParent = candidate
-                  .locator(
-                    "xpath=ancestor::*[contains(@class,'app_work_box') or contains(@class,'aw_li') or contains(@class,'card') or self::li or self::tr][1]"
-                  )
-                  .first();
-                if (await hoverParent.isVisible().catch(() => false)) {
-                  console.log(
-                    `  [🖱️ 호버 노출 자동 실행] '${cleanPart}' 요소가 마우스 호버 전 숨김 상태이므로 부모 카드/컨테이너에 먼저 마우스를 올립니다.`
-                  );
-                  await hoverParent.scrollIntoViewIfNeeded({ timeout: 1500 }).catch(() => {});
-                  const pBox = await hoverParent.boundingBox().catch(() => null);
-                  if (pBox) {
-                    await page.mouse.move(
-                      Math.round(pBox.x + pBox.width / 2),
-                      Math.round(pBox.y + pBox.height / 2)
-                    ).catch(() => {});
-                  }
-                  await hoverParent.hover({ timeout: 1500, force: true }).catch(() => {});
-                  await page.waitForTimeout(400);
-                  if (await candidate.isVisible().catch(() => false)) {
-                    console.log(`  [✨ 호버 노출 성공] 부모 컨테이너 호버 후 나타난 '${cleanPart}' 요소를 정확히 타겟팅합니다!`);
-                    return candidate;
+                // Universal Item/Card Hover-Reveal: If candidate exists in DOM inside a visible item/card/row (li, tr, dd, td, or card box)
+                // and no intermediate panel/section ancestor is hidden, move the mouse over that item container to trigger CSS :hover reveal!
+                if (allowHoverReveal && !tagAndType.isInsideMenu) {
+                  const hoverTargetBox = await candidate
+                    .evaluate((el) => {
+                      let cur: HTMLElement | null = el.parentElement;
+                      let depth = 0;
+                      let hoverEl: HTMLElement | null = null;
+                      while (cur && cur !== document.body && depth < 6) {
+                        const st = window.getComputedStyle(cur);
+                        const r = cur.getBoundingClientRect();
+                        const isVis =
+                          st.display !== "none" &&
+                          st.visibility !== "hidden" &&
+                          st.opacity !== "0" &&
+                          r.width > 0 &&
+                          r.height > 0;
+                        if (!isVis) {
+                          const tag = cur.tagName.toLowerCase();
+                          if (
+                            tag === "form" ||
+                            tag === "section" ||
+                            tag === "article" ||
+                            tag === "ul" ||
+                            tag === "table" ||
+                            cur.classList.contains("ui-dialog") ||
+                            cur.classList.contains("drop_menu") ||
+                            cur.classList.contains("dropdown-menu") ||
+                            (cur.id && !cur.classList.contains("btn_area") && !cur.classList.contains("optn"))
+                          ) {
+                            return null;
+                          }
+                        } else {
+                          const tag = cur.tagName.toLowerCase();
+                          const isItemContainer =
+                            tag === "li" ||
+                            tag === "tr" ||
+                            tag === "dd" ||
+                            tag === "td" ||
+                            cur.classList.contains("app_work_box") ||
+                            cur.classList.contains("wiki_sub_box") ||
+                            cur.classList.contains("sub_box") ||
+                            cur.classList.contains("mn") ||
+                            cur.classList.contains("card_item") ||
+                            cur.classList.contains("hover_box") ||
+                            cur.classList.contains("lst_box") ||
+                            (r.width >= 40 && r.width <= 680 && r.height >= 20 && r.height <= 480);
+                          if (isItemContainer && r.width <= 1900 && r.height <= 550) {
+                            hoverEl = cur;
+                            break;
+                          }
+                        }
+                        cur = cur.parentElement;
+                        depth++;
+                      }
+                      if (!hoverEl) return null;
+                      hoverEl.scrollIntoView({ block: "nearest", inline: "nearest" });
+                      const hr = hoverEl.getBoundingClientRect();
+                      if (hr.width <= 0 || hr.height <= 0) return null;
+                      return {
+                        x: Math.round(hr.left + hr.width / 2),
+                        y: Math.round(hr.top + hr.height / 2),
+                        key: `${hoverEl.tagName}#${hoverEl.id}.${Array.from(hoverEl.classList).join(".")}@${Math.round(hr.left)},${Math.round(hr.top)}`,
+                      };
+                    })
+                    .catch(() => null);
+
+                  if (hoverTargetBox && !testedHoverKeys.has(hoverTargetBox.key)) {
+                    testedHoverKeys.add(hoverTargetBox.key);
+                    await page.mouse.move(hoverTargetBox.x, hoverTargetBox.y).catch(() => {});
+                    await page.waitForTimeout(350);
+                    if (await candidate.isVisible().catch(() => false)) {
+                      console.log(
+                        `  [✨ 호버 노출 자동 실행] 부모 항목 마우스 호버로 숨김 상태였던 '${cleanPart}' 요소를 노출시켰습니다!`
+                      );
+                      return await learnRuntimeEntityIdIfChanged(candidate);
+                    }
                   }
                 }
               }
             }
           } catch {}
         }
+      }
+    }
+
+    if (onlyExplicitParts) {
+      return null;
+    }
+
+    // 3-B-TargetHtml. Fast Direct DOM Fingerprint Match via action.targetHtml (after 3-B-Hover, before AI Self-Healer)
+    if (action.recordedByEyedropper && targetHtmlFp && targetHtmlFp.tag) {
+      for (const baseObj of candidateBases) {
+        try {
+          const tagLoc = baseObj.locator(`${targetHtmlFp.tag}:visible`);
+          const tCount = await tagLoc.count().catch(() => 0);
+          if (tCount > 0 && tCount <= 120) {
+            const matchedIdx = await tagLoc
+              .evaluateAll(
+                (els, fp) => {
+                  const dataAttrEntries = Object.entries(fp.attrs).filter(([k]) => k.startsWith("data-"));
+                  let bestIdx = -1;
+                  let bestScore = 179; // Require at least 180 points (exact id, data-*, title, child hook, or class+text)
+                  for (let i = 0; i < els.length; i++) {
+                    const el = els[i] as HTMLElement | undefined;
+                    if (!el) continue;
+                    let score = 0;
+
+                    if (fp.id) {
+                      if (el.id === fp.id) score += 500;
+                      else continue;
+                    }
+
+                    if (dataAttrEntries.length > 0) {
+                      let matchedAnyDataAttr = false;
+                      let hadConflictingDataAttr = false;
+                      for (const [dk, dv] of dataAttrEntries) {
+                        const actualD = (el.getAttribute(dk) || "").trim();
+                        if (actualD === dv) {
+                          matchedAnyDataAttr = true;
+                        } else if (actualD && actualD !== dv) {
+                          hadConflictingDataAttr = true;
+                        }
+                      }
+                      if (!matchedAnyDataAttr || hadConflictingDataAttr) {
+                        continue;
+                      }
+                    }
+
+                    for (const [k, v] of Object.entries(fp.attrs)) {
+                      const actual = (el.getAttribute(k) || "").trim();
+                      if (k.startsWith("data-")) {
+                        if (actual === v) score += 350;
+                        else if (actual) score -= 350;
+                        else score -= 180;
+                      } else if (k === "name" || k === "for" || k === "value") {
+                        if (actual === v) score += 240;
+                        else if (actual) score -= 220;
+                      } else if (k === "title" || k === "placeholder") {
+                        const oldTitle = (el.getAttribute("data-original-title") || el.getAttribute("oldtitle") || "").trim();
+                        if (actual === v || oldTitle === v) score += 200;
+                        else if (actual && actual !== v) score -= 180;
+                      }
+                    }
+
+                    for (const cls of fp.classes) {
+                      if (el.classList && el.classList.contains(cls)) {
+                        score += 25;
+                      }
+                    }
+
+                    for (const chCls of fp.childHooks) {
+                      if (el.querySelector && el.querySelector(`.${chCls}`)) {
+                        score += 280;
+                      } else {
+                        score -= 150;
+                      }
+                    }
+
+                    for (const [ck, cv] of Object.entries(fp.childDataAttrs)) {
+                      try {
+                        if (el.querySelector && el.querySelector(`[${ck}='${cv.replace(/'/g, "\\'")}']`)) {
+                          score += 280;
+                        }
+                      } catch {}
+                    }
+
+                    if (fp.compactText && el.tagName.toLowerCase() !== "input" && el.tagName.toLowerCase() !== "textarea") {
+                      const rawElText = (el.innerText || el.textContent || "").replace(/\s+/g, "");
+                      if (rawElText === fp.compactText) {
+                        score += 220;
+                      } else if (rawElText && (rawElText.includes(fp.compactText) || fp.compactText.includes(rawElText))) {
+                        score += 80;
+                      } else if (rawElText) {
+                        score -= 200;
+                      }
+                    }
+
+                    if (score > bestScore) {
+                      bestScore = score;
+                      bestIdx = i;
+                    }
+                  }
+                  return bestIdx;
+                },
+                targetHtmlFp
+              )
+              .catch(() => -1);
+
+            if (matchedIdx >= 0) {
+              const matchedCand = tagLoc.nth(matchedIdx);
+              if (await matchedCand.isVisible().catch(() => false)) {
+                console.log(
+                  `  [🎯 targetHtml 지문 직접 매칭] 스포이드 원본 HTML 속성/텍스트 지문으로 '${action.description || targetHtmlFp.tag}' 요소를 즉시 특정했습니다.`
+                );
+                return await learnRuntimeEntityIdIfChanged(matchedCand);
+              }
+            }
+          }
+        } catch {}
       }
     }
   }
@@ -1669,20 +2286,23 @@ async function trySelfHealAction(
   }
 
   // 3. Handle INSERT_BEFORE (Missing prerequisite steps injected before current step)
+  const isEyedropperPlan = Boolean(action.recordedByEyedropper || plan.recordedByEyedropper);
   if (
     healResult?.success &&
     healResult.resolutionType === "INSERT_BEFORE" &&
     Array.isArray(healResult.prerequisiteActions) &&
-    healResult.prerequisiteActions.length > 0
+    healResult.prerequisiteActions.length > 0 &&
+    !(action as any)._attemptedInsertBefore
   ) {
-    totalHealedCount++;
+    (action as any)._attemptedInsertBefore = true;
+    const prevSelector = action.selector;
+    const prevSourceSelector = action.sourceSelector;
+    const prevTargetSelector = action.targetSelector;
+    const prevIframe = action.iframe;
+
     console.log(
-      `  [➕ AI 시나리오 동적 조정 (INSERT_BEFORE)] 누락된 선행 단계 ${healResult.prerequisiteActions.length}개를 먼저 실행하고 시나리오에 영구 삽입합니다!`
+      `  [➕ AI 시나리오 동적 조정 (INSERT_BEFORE)] 누락된 선행 단계 ${healResult.prerequisiteActions.length}개를 먼저 실행하여 타겟 노출을 시도합니다...`
     );
-    (action as any)._insertBefore = [
-      ...((action as any)._insertBefore || []),
-      ...healResult.prerequisiteActions,
-    ];
     if (healResult.selector) {
       action.selector = healResult.selector;
     }
@@ -1697,38 +2317,60 @@ async function trySelfHealAction(
     }
 
     await executeInjectedActionsOnPage(page, healResult.prerequisiteActions, moments, startTime, plan);
-    saveHealedPlan(dataDir, plan);
 
-    const afterInsertLoc = await getLocator(page, action);
+    const afterInsertLoc = await getLocator(page, action, true);
+    let insertSucceeded = false;
     if (afterInsertLoc) {
       if (await afterInsertLoc.isVisible().catch(() => false)) {
-        return afterInsertLoc;
+        insertSucceeded = true;
+      } else {
+        try {
+          await afterInsertLoc.waitFor({ state: "visible", timeout: 3500 });
+          insertSucceeded = true;
+        } catch {}
       }
-      try {
-        await afterInsertLoc.waitFor({ state: "visible", timeout: 4000 });
-        return afterInsertLoc;
-      } catch {}
     }
 
-    // Re-run self-heal once on the newly opened screen if selector still needs refinement
+    if (insertSucceeded && afterInsertLoc) {
+      totalHealedCount++;
+      // Only permanently inject prerequisite steps into browse-plan.json for AI-generated plans (never corrupt user Eyedropper action lists!)
+      if (!isEyedropperPlan) {
+        (action as any)._insertBefore = [
+          ...((action as any)._insertBefore || []),
+          ...healResult.prerequisiteActions,
+        ];
+        saveHealedPlan(dataDir, plan);
+      }
+      return afterInsertLoc;
+    }
+
+    // Re-run self-heal once on the newly opened screen if selector still needs refinement (PATCH_SELECTOR only — never a recursive INSERT_BEFORE!)
     console.log(`  [🤖 선행 단계 실행 완료 후 본 단계 타겟 재탐색] 새로 열린 화면에서 '${action.description}' 요소를 확정합니다...`);
-    healResult = await selfHealElement(page, action, momentId, plan.actions.length, dataDir, plan);
+    const retryHeal = await selfHealElement(page, action, momentId, plan.actions.length, dataDir, plan);
+    if (retryHeal && retryHeal.resolutionType !== "INSERT_BEFORE") {
+      healResult = retryHeal;
+    } else {
+      // Roll back speculative selector mutations if INSERT_BEFORE failed to reveal the target element
+      action.selector = prevSelector;
+      action.sourceSelector = prevSourceSelector;
+      action.targetSelector = prevTargetSelector;
+      action.iframe = prevIframe;
+      healResult = null;
+    }
   }
 
-  // 4. Handle REPLACE_STEPS (Current coarse step decomposed into multiple steps)
+  // 4. Handle REPLACE_STEPS (Current coarse step decomposed into multiple steps — AI plans only)
   if (
+    !isEyedropperPlan &&
     healResult?.success &&
     healResult.resolutionType === "REPLACE_STEPS" &&
     Array.isArray(healResult.replacementActions) &&
     healResult.replacementActions.length > 0
   ) {
-    totalHealedCount++;
     console.log(
       `  [🔄 AI 시나리오 동적 조정 (REPLACE_STEPS)] 현재 단계를 ${healResult.replacementActions.length}개의 세부 단계로 분할 교체합니다!`
     );
-    (action as any)._replaceWith = healResult.replacementActions;
 
-    // Execute all replacement steps except the last interactive step (or all if types differ), then return locator for the last step
     const reps = healResult.replacementActions;
     const lastRep = reps[reps.length - 1];
     const leadingReps = reps.slice(0, reps.length - 1);
@@ -1737,17 +2379,29 @@ async function trySelfHealAction(
       await executeInjectedActionsOnPage(page, leadingReps, moments, startTime, plan);
     }
 
+    const prevSel = action.selector;
+    const prevDesc = action.description;
+    const prevText = action.text;
+    const prevIframe = action.iframe;
+
     if (lastRep && lastRep.selector) {
       action.selector = lastRep.selector;
       if (lastRep.description) action.description = lastRep.description;
       if (lastRep.text) action.text = lastRep.text;
       if (lastRep.iframe) action.iframe = lastRep.iframe;
     }
-    saveHealedPlan(dataDir, plan);
 
-    const repLoc = await getLocator(page, action);
+    const repLoc = await getLocator(page, action, true);
     if (repLoc && (await repLoc.isVisible().catch(() => false))) {
+      totalHealedCount++;
+      (action as any)._replaceWith = healResult.replacementActions;
+      saveHealedPlan(dataDir, plan);
       return repLoc;
+    } else {
+      action.selector = prevSel;
+      action.description = prevDesc;
+      action.text = prevText;
+      action.iframe = prevIframe;
     }
   }
 
@@ -1800,40 +2454,51 @@ async function trySelfHealAction(
   }
 
   if (healResult && healResult.success && (healResult.selector || healResult.sourceSelector || healResult.targetSelector)) {
-    totalHealedCount++;
-    console.log(`  [✨ AI 자가 치유 성공 (${healResult.resolutionType || "PATCH_SELECTOR"})] 자동 교정 완료! (누적 치유: ${totalHealedCount}건)`);
-    if (healResult.selector) {
-      console.log(`     ➡️ 복구된 셀렉터: ${healResult.selector}`);
-      action.selector = healResult.selector;
-    }
-    if (healResult.sourceSelector) {
-      console.log(`     ➡️ 복구된 드래그 시작 셀렉터: ${healResult.sourceSelector}`);
-      action.sourceSelector = healResult.sourceSelector;
-    }
-    if (healResult.targetSelector) {
-      console.log(`     ➡️ 복구된 드래그 도착 셀렉터: ${healResult.targetSelector}`);
-      action.targetSelector = healResult.targetSelector;
-    }
-    if (healResult.iframe) {
-      console.log(`     ➡️ iframe 스코프: ${healResult.iframe}`);
-      action.iframe = healResult.iframe;
-    }
-    console.log(`     💡 AI 판단 사유: ${healResult.reason}`);
+    const candidateAction: BrowsePlanAction = {
+      ...action,
+      selector: healResult.selector || action.selector,
+      sourceSelector: healResult.sourceSelector || action.sourceSelector,
+      targetSelector: healResult.targetSelector || action.targetSelector,
+      iframe: healResult.iframe || action.iframe,
+    };
 
-    // Persist permanently back to browse-plan.json
-    saveHealedPlan(dataDir, plan);
-
-    // Re-resolve locator with healed selector
-    const healedLoc = await getLocator(page, action);
+    // Verify that the healed selector actually resolves to a visible element BEFORE overwriting browse-plan.json!
+    const healedLoc = await getLocator(page, candidateAction, true);
+    let isHealedVisible = false;
     if (healedLoc) {
-      const isVis = await healedLoc.isVisible().catch(() => false);
-      if (isVis) {
-        return healedLoc;
+      isHealedVisible = await healedLoc.isVisible().catch(() => false);
+      if (!isHealedVisible) {
+        try {
+          await healedLoc.waitFor({ state: "visible", timeout: 3500 });
+          isHealedVisible = true;
+        } catch {}
       }
-      try {
-        await healedLoc.waitFor({ state: "visible", timeout: 4000 });
-        return healedLoc;
-      } catch {}
+    }
+
+    if (isHealedVisible && healedLoc) {
+      totalHealedCount++;
+      console.log(`  [✨ AI 자가 치유 성공 (${healResult.resolutionType || "PATCH_SELECTOR"})] 자동 교정 완료! (누적 치유: ${totalHealedCount}건)`);
+      if (healResult.selector) {
+        console.log(`     ➡️ 복구된 셀렉터: ${healResult.selector}`);
+        action.selector = healResult.selector;
+      }
+      if (healResult.sourceSelector) {
+        console.log(`     ➡️ 복구된 드래그 시작 셀렉터: ${healResult.sourceSelector}`);
+        action.sourceSelector = healResult.sourceSelector;
+      }
+      if (healResult.targetSelector) {
+        console.log(`     ➡️ 복구된 드래그 도착 셀렉터: ${healResult.targetSelector}`);
+        action.targetSelector = healResult.targetSelector;
+      }
+      if (healResult.iframe) {
+        console.log(`     ➡️ iframe 스코프: ${healResult.iframe}`);
+        action.iframe = healResult.iframe;
+      }
+      console.log(`     💡 AI 판단 사유: ${healResult.reason}`);
+
+      // Persist permanently back to browse-plan.json ONLY after visibility verification succeeded
+      saveHealedPlan(dataDir, plan);
+      return healedLoc;
     }
   } else if (healResult && !healResult.success) {
     console.warn(`  [AI 자가 치유 포기] 💡 사유: ${healResult.reason}`);
@@ -2475,13 +3140,20 @@ async function main() {
 
   const authPath = path.join(dataDir, "auth.json");
   const forceLogin = process.argv.includes("--login");
-  const requiresLogin = plan.requiresLogin !== false || forceLogin;
+  const firstNonWaitAction = plan.actions.find((a) => a.type !== "wait");
+  const startsWithExplicitLogin = Boolean(
+    firstNonWaitAction &&
+      /#userId|name=['"]userId['"]|#password|type=['"]password['"]|#btnLogin|btn_login/i.test(
+        `${firstNonWaitAction.selector || ""} ${firstNonWaitAction.targetHtml || ""} ${firstNonWaitAction.description || ""}`
+      )
+  );
+  const requiresLogin = (plan.requiresLogin !== false && !startsWithExplicitLogin) || forceLogin;
 
   const isHeadless = process.argv.includes("--headless");
   const isHeaded = !isHeadless;
 
-  // Auto-reuse existing auth session if available and not forced
-  if (!fs.existsSync(authPath) && !forceLogin) {
+  // Auto-reuse existing auth session if available and not forced (skip if scenario explicitly starts by demonstrating login)
+  if (!startsWithExplicitLogin && !fs.existsSync(authPath) && !forceLogin) {
     const existingCandidate = findExistingAuthSession(slug);
     if (existingCandidate && fs.existsSync(existingCandidate)) {
       console.log(`🔑 [세션 자동 연동] 기존 인증 세션(${path.basename(path.dirname(existingCandidate))}/auth.json)을 감지하여 '${slug}' 시나리오로 즉시 연결합니다.`);
@@ -2493,8 +3165,13 @@ async function main() {
 
   // 1. Automatic Pre-flight Session Check
   let isSessionActive = false;
-  if (!forceLogin && fs.existsSync(authPath)) {
+  if (!startsWithExplicitLogin && !forceLogin && fs.existsSync(authPath)) {
     isSessionActive = await isSessionValid(plan.url, authPath, plan.viewport);
+  } else if (startsWithExplicitLogin) {
+    console.log("\n=======================================================");
+    console.log("🔐 [로그인 시연 포함 감지] 시나리오 시작 부분에 로그인 동작이 포함되어 있습니다.");
+    console.log("👉 로그인 화면부터 그대로 녹화하기 위해 사전 로그인 세션을 주입하지 않고 시작합니다.");
+    console.log("=======================================================\n");
   }
 
   const needsLogin = forceLogin || !isSessionActive;
@@ -2692,7 +3369,7 @@ async function main() {
     },
   };
 
-  if (fs.existsSync(authPath)) {
+  if (!startsWithExplicitLogin && fs.existsSync(authPath)) {
     contextOptions.storageState = authPath;
     console.log(`저장된 로그인 세션을 불러옵니다: ${authPath}`);
   }
@@ -2700,177 +3377,18 @@ async function main() {
   const context: BrowserContext = await browser.newContext(contextOptions);
   await context.addInitScript("window.__name = (fn) => fn;");
 
-  // --- 🪟 Layer 1: Universal Same-Page Redirection for Popups (window.open & target="_blank") ---
-  // Keeps the screen recording seamless on a single 1920x1080 canvas without multi-window splits
+  // --- 🪟 Layer 1: Background Notification Popup Filter (Preserving Native Multi-Window Popups) ---
+  // Real popups (window.open & target="_blank") open as actual child Page instances in pageStack
+  // so the parent window's live SPA/DOM state and window.opener reference are never destroyed by URL reloads!
   await context.addInitScript(() => {
-    try {
-      if (window.location.pathname.includes("/ekp/scr/")) {
-        sessionStorage.setItem("__studio_active_module_url__", window.location.href);
-      }
-      if (sessionStorage.getItem("__studio_simulated_popup__") === "1") {
-        window.opener = window.opener || window;
-      }
-      const origClose = window.close;
-      window.close = function () {
-        const isSimulatedPopup = sessionStorage.getItem("__studio_simulated_popup__") === "1";
-        if (
-          !isSimulatedPopup ||
-          !window.opener ||
-          window.name === "hiddenFrm" ||
-          window.location.href === "about:blank" ||
-          window !== window.top
-        ) {
-          window.onbeforeunload = null;
-          try { origClose.call(window); } catch (e) { }
-          return;
-        }
-        window.onbeforeunload = null;
-        const openerUrl = sessionStorage.getItem("__studio_popup_opener_url__");
-        sessionStorage.removeItem("__studio_simulated_popup__");
-        console.log(`[Studio Popup] window.close() 호출 감지 -> 부모 페이지(${openerUrl || "history.back"})로 자동 복귀`);
-        if (openerUrl) {
-          window.location.href = openerUrl;
-        } else if (window.history.length > 1) {
-          window.history.back();
-        } else {
-          try { origClose.call(window); } catch (e) { }
-        }
-      };
-    } catch { }
-
     try {
       const origOpen = window.open;
       window.open = function (url, target, features) {
         if (/homGwPushPopup|PushPopup|notiPopup|alarmPopup/i.test(`${url || ""} ${target || ""}`)) {
           return null as any;
         }
-        if (target === "hiddenFrm" || (features && features.includes("width=0"))) {
-          return origOpen ? origOpen.apply(window, arguments as any) : window;
-        }
-        console.log(`[Studio Popup] window.open("${url}") 호출 감지 -> 단일 화면 녹화를 위해 동일 창으로 부드럽게 전환`);
-        if (url && typeof url === "string" && url !== "about:blank") {
-          try {
-            const resolvedTargetUrl = new URL(url, window.location.origin).href;
-            const isMainModuleScreen =
-              /\/ekp\/scr\/[^?#]*Main(?:\b|$)/i.test(resolvedTargetUrl) &&
-              !/Popup|newWindowYn=Y/i.test(resolvedTargetUrl);
-            if (isMainModuleScreen) {
-              sessionStorage.setItem("__studio_active_module_url__", resolvedTargetUrl);
-              sessionStorage.removeItem("__studio_simulated_popup__");
-              sessionStorage.removeItem("__studio_opener_active_menu__");
-            } else {
-              // Snapshot active sidebar/view state on the opener module screen before navigating away
-              if (sessionStorage.getItem("__studio_simulated_popup__") !== "1") {
-                try {
-                  const bookListEl = document.getElementById("wikiBookList_list");
-                  if (bookListEl && bookListEl.offsetWidth > 0 && !sessionStorage.getItem("__studio_opener_active_menu__")) {
-                    sessionStorage.setItem(
-                      "__studio_opener_active_menu__",
-                      "#wikiMain_snb a[data-menu-id='wikiBookList']:visible, a[data-menu-id='wikiBookList']:visible"
-                    );
-                  } else {
-                    const activeMenuEl = document.querySelector(
-                      "#snb li.active a[data-menu-id], [id$='_snb'] li.active a[data-menu-id], .snb li.active a[data-menu-id], ul[id*='SideMenu'] li.active a[data-menu-id]"
-                    );
-                    const menuId = activeMenuEl ? activeMenuEl.getAttribute("data-menu-id") : "";
-                    if (menuId) {
-                      sessionStorage.setItem("__studio_opener_active_menu__", `a[data-menu-id='${menuId}']:visible`);
-                    }
-                  }
-                } catch {}
-              }
-              let openerUrl = window.location.href;
-              if (openerUrl.includes("/homGwMain") && !openerUrl.includes("#at=")) {
-                const activeModUrl = sessionStorage.getItem("__studio_active_module_url__");
-                if (activeModUrl) {
-                  openerUrl = activeModUrl;
-                } else {
-                  const modMatch = url.match(/\/ekp\/view\/(eml|not|scd|bod|doc|rmg|smw|fbx|addr|wiki)\//i);
-                  if (modMatch) {
-                    const mod = modMatch[1].toLowerCase();
-                    openerUrl = new URL(`/ekp/scr/${mod}/${mod}Main`, window.location.origin).href;
-                  } else if (/\/ekp\/view\/app\/eap\//i.test(url)) {
-                    openerUrl = new URL("/ekp/scr/app/eap/eapMain", window.location.origin).href;
-                  }
-                }
-              }
-              sessionStorage.setItem("__studio_popup_opener_url__", openerUrl);
-              sessionStorage.setItem("__studio_simulated_popup__", "1");
-            }
-          } catch {}
-          window.location.href = url;
-          return window;
-        }
-        return origOpen ? origOpen.apply(window, arguments as any) : window;
+        return origOpen ? origOpen.apply(window, arguments as any) : null;
       };
-    } catch { }
-
-    try {
-      document.addEventListener(
-        "click",
-        (e) => {
-          const rawEl = e.target as HTMLElement | null;
-          const target = rawEl?.closest("a");
-          if (target) {
-            const onclickAttr = target.getAttribute("onclick") || "";
-            if (onclickAttr.includes("GwMainMenu")) {
-              const mnuMatch = onclickAttr.match(/goPage\(\s*['"](MNU[0-9a-zA-Z_-]+)['"]/i);
-              const m = onclickAttr.match(/['"](https?:\/\/[^'"]+\/ekp\/scr\/[^'"]+|\/ekp\/scr\/[^'"]+)['"]/i);
-              if (mnuMatch && mnuMatch[1] && window.location.pathname.includes("/homGwMain")) {
-                try {
-                  const hashAt = encodeURIComponent(btoa(mnuMatch[1]));
-                  sessionStorage.setItem(
-                    "__studio_active_module_url__",
-                    `${window.location.origin}/ekp/main/home/homGwMain#at=${hashAt}`
-                  );
-                  sessionStorage.removeItem("__studio_opener_active_menu__");
-                } catch {}
-              } else if (m && m[1]) {
-                try {
-                  const resolved = new URL(m[1], window.location.origin).href;
-                  sessionStorage.setItem("__studio_active_module_url__", resolved);
-                  sessionStorage.removeItem("__studio_opener_active_menu__");
-                } catch {}
-              }
-            }
-            if (target.getAttribute("target") === "_blank") {
-              target.setAttribute("target", "_self");
-            }
-          }
-
-          // Track sidebar menu clicks on main module pages so we can restore the exact sub-view after returning from a popup
-          if (rawEl && sessionStorage.getItem("__studio_simulated_popup__") !== "1" && !rawEl.closest(".ui-dialog")) {
-            const snbContainer = rawEl.closest("#snb, [id$='_snb'], .snb, [id*='SideMenu']");
-            const menuItem = rawEl.closest("a, button");
-            if (snbContainer && menuItem) {
-              const snbId = snbContainer.getAttribute("id") || "";
-              const prefix = snbId ? `#${snbId} ` : "";
-              const menuId = menuItem.getAttribute("data-menu-id");
-              const menuName = menuItem.getAttribute("data-menu-name");
-              if (menuId) {
-                sessionStorage.setItem(
-                  "__studio_opener_active_menu__",
-                  `${prefix}a[data-menu-id='${menuId}']:visible, a[data-menu-id='${menuId}']:visible`
-                );
-              } else if (menuName) {
-                sessionStorage.setItem(
-                  "__studio_opener_active_menu__",
-                  `${prefix}a[data-menu-name='${menuName}']:visible, a[data-menu-name='${menuName}']:visible`
-                );
-              } else if (menuItem.classList.contains("dynatree-title")) {
-                const txt = (menuItem.textContent || "").replace(/\s+/g, " ").trim();
-                if (txt) {
-                  sessionStorage.setItem(
-                    "__studio_opener_active_menu__",
-                    `${prefix}.dynatree-title:has-text('${txt}'):visible, .snb .dynatree-title:has-text('${txt}'):visible`
-                  );
-                }
-              }
-            }
-          }
-        },
-        true
-      );
     } catch { }
   });
 
@@ -2890,7 +3408,7 @@ async function main() {
     targetAction?: BrowsePlanAction
   ): Promise<boolean> {
     try {
-      // 1. If targetPage was already closed, pop closed pages from pageStack and switch back to the active parent page
+      // 1. If targetPage was already closed (e.g. via native window.close()), pop closed pages from pageStack and switch back to the untouched parent page
       if (targetPage.isClosed()) {
         while (pageStack.length > 1 && pageStack[pageStack.length - 1].isClosed()) {
           pageStack.pop();
@@ -2901,13 +3419,16 @@ async function main() {
       }
 
       // 2. If a real child popup window (pageStack.length > 1) is still open, check if targetAction belongs to a parent window in pageStack
+      // (Never call page.goto(openerUrl) — switching back to candidateParent preserves its exact SPA DOM state without resetting to Groupware main!)
       if (pageStack.length > 1 && targetAction && targetAction.selector) {
         for (let pIdx = pageStack.length - 2; pIdx >= 0; pIdx--) {
           const candidateParent = pageStack[pIdx];
           if (!candidateParent || candidateParent.isClosed()) continue;
-          const parentEl = await getLocator(candidateParent, targetAction);
+          const parentEl =
+            (await getLocator(candidateParent, targetAction, false, false, true)) ||
+            (await getLocator(candidateParent, targetAction, false, true, false));
           if (parentEl && (await parentEl.isVisible().catch(() => false))) {
-            console.log(`  [🪟 팝업 자동 닫기 및 부모 창 복귀] ${reason} -> 자식 팝업 창을 닫고 부모 브라우저 창으로 복귀합니다.`);
+            console.log(`  [🪟 팝업 자동 닫기 및 부모 창 복귀] ${reason} -> 자식 팝업 창을 닫고 상태가 보존된 부모 브라우저 창으로 복귀합니다.`);
             while (pageStack.length - 1 > pIdx) {
               const childPage = pageStack.pop();
               if (childPage && !childPage.isClosed()) {
@@ -2926,70 +3447,6 @@ async function main() {
             return true;
           }
         }
-      }
-
-      // 3. Simulated same-page popup restoration
-      const popupState = await targetPage.evaluate(() => {
-        const isSimPopup =
-          sessionStorage.getItem("__studio_simulated_popup__") === "1" ||
-          /Popup|newWindowYn=Y/i.test(window.location.href);
-        if (!isSimPopup) return null;
-        let openerUrl = sessionStorage.getItem("__studio_popup_opener_url__") || sessionStorage.getItem("__studio_active_module_url__") || "";
-        if (!openerUrl || (openerUrl.includes("/homGwMain") && !openerUrl.includes("#at="))) {
-          const modMatch = window.location.pathname.match(/\/ekp\/view\/(eml|not|scd|bod|doc|rmg|smw|fbx|addr)\//i);
-          if (modMatch) {
-            const mod = modMatch[1].toLowerCase();
-            openerUrl = `${window.location.origin}/ekp/scr/${mod}/${mod}Main`;
-          } else if (/\/ekp\/view\/app\/eap\//i.test(window.location.pathname)) {
-            openerUrl = `${window.location.origin}/ekp/scr/app/eap/eapMain`;
-          }
-        }
-        const openerMenu = sessionStorage.getItem("__studio_opener_active_menu__") || "";
-        window.onbeforeunload = null;
-        sessionStorage.removeItem("__studio_simulated_popup__");
-        return { openerUrl, currentUrl: window.location.href, openerMenu };
-      }).catch(() => null);
-
-      if (popupState && popupState.openerUrl && popupState.openerUrl !== popupState.currentUrl) {
-        console.log(`  [🪟 팝업 닫힘 및 부모 창 복귀] ${reason} -> 부모 모듈 화면(${popupState.openerUrl})으로 복귀합니다.`);
-        await targetPage.goto(popupState.openerUrl, { waitUntil: "domcontentloaded", timeout: 15000 }).catch(() => {});
-        await targetPage.waitForLoadState("networkidle", { timeout: 3000 }).catch(() => {});
-        await targetPage.waitForTimeout(800);
-
-        if (targetAction && targetAction.selector) {
-          const immediateEl = await getLocator(targetPage, targetAction);
-          const alreadyVisible = Boolean(immediateEl && (await immediateEl.isVisible().catch(() => false)));
-          if (!alreadyVisible) {
-            const selAndHtml = `${targetAction.selector || ""} ${targetAction.targetHtml || ""}`;
-            const isWikiBookCardTarget =
-              (selAndHtml.includes("data-book-name") || selAndHtml.includes("sub_cover") || selAndHtml.includes("wikiBookList")) &&
-              !selAndHtml.includes("div.sub._openBook");
-            const menuToRestore =
-              popupState.openerMenu ||
-              (isWikiBookCardTarget ? "#wikiMain_snb a[data-menu-id='wikiBookList']:visible, a[data-menu-id='wikiBookList']:visible" : "");
-
-            if (menuToRestore) {
-              for (const mPart of menuToRestore.split(",").map((s) => s.trim()).filter(Boolean)) {
-                const mLoc = targetPage.locator(mPart).first();
-                if (await mLoc.isVisible().catch(() => false)) {
-                  console.log(`  [🔄 부모 창 서브메뉴 상태 복원] 팝업 진입 전 활성화되어 있던 메뉴(${mPart})를 다시 선택하여 목록 화면을 복원합니다.`);
-                  await mLoc.click({ timeout: 3000 }).catch(() => {});
-                  await targetPage.waitForLoadState("networkidle", { timeout: 2500 }).catch(() => {});
-                  for (let poll = 0; poll < 12; poll++) {
-                    await targetPage.waitForTimeout(250);
-                    const restoredTarget = await getLocator(targetPage, targetAction);
-                    if (restoredTarget && (await restoredTarget.isVisible().catch(() => false))) {
-                      break;
-                    }
-                  }
-                  await targetPage.waitForTimeout(400);
-                  break;
-                }
-              }
-            }
-          }
-        }
-        return true;
       }
     } catch {}
     return false;
@@ -3096,6 +3553,8 @@ async function main() {
   let momentId = 0;
   const runtimeVariables = new Map<string, string>();
   currentRuntimeVariables.clear();
+  runtimeEntityIdMap.clear();
+  runtimeCreatedTitles.clear();
 
   // 🚨 Canon 2: Relation-Based Proximity & Multi-Input Tracking
   let lastTypedInput: Locator | null = null;
@@ -5337,24 +5796,17 @@ async function main() {
               }
             }
 
-            // If this final save/send happened inside a simulated popup (e.g. emlMailRegPopup) and there are subsequent steps targeting the parent window
-            if (actionIdx < plan.actions.length - 1 && !hasExplicitUpcomingConfirmStep) {
-              const isInsideSimPopup = await page.evaluate(() => {
-                return (
-                  sessionStorage.getItem("__studio_simulated_popup__") === "1" ||
-                  /Popup|newWindowYn=Y/i.test(window.location.href)
-                );
-              }).catch(() => false);
+            // If this final save/send happened inside a child popup window (e.g. emlMailRegPopup) and there are subsequent steps targeting the parent window
+            if (actionIdx < plan.actions.length - 1 && !hasExplicitUpcomingConfirmStep && pageStack.length > 1) {
+              // Wait briefly for completion view (e.g. #emlMailSendComplete_selfWindow) to render so the video captures the success state
+              await page
+                .locator("#emlMailSendComplete_selfWindow:visible, #emlMailSendComplete_resultMessage:visible, .system_msg_box:visible")
+                .first()
+                .waitFor({ state: "visible", timeout: 2500 })
+                .catch(() => {});
+              await page.waitForTimeout(1000);
 
-              if (isInsideSimPopup) {
-                // Wait briefly for completion view (e.g. #emlMailSendComplete_selfWindow) to render so the video captures the success state
-                await page
-                  .locator("#emlMailSendComplete_selfWindow:visible, #emlMailSendComplete_resultMessage:visible, .system_msg_box:visible")
-                  .first()
-                  .waitFor({ state: "visible", timeout: 2500 })
-                  .catch(() => {});
-                await page.waitForTimeout(1000);
-
+              if (!page.isClosed()) {
                 const nextNonWaitAct = plan.actions.slice(actionIdx + 1).find((a) => a.type !== "wait");
                 const nextElInPopup = nextNonWaitAct?.selector ? await getLocator(page, { ...nextNonWaitAct }) : null;
                 const isNextVisibleInPopup = Boolean(nextElInPopup && (await nextElInPopup.isVisible().catch(() => false)));
@@ -5698,7 +6150,19 @@ async function main() {
 
           const desc = (action.description || "").toLowerCase();
           const sel = (action.selector || "").toLowerCase();
-          const isEditorAction = desc.includes("내용") || desc.includes("본문") || desc.includes("에디터") || desc.includes("content") || sel.includes("cn") || sel.includes("editor") || sel.includes("se-contents");
+          const isMentionyOrChatInput =
+            sel.includes("mentiony-content") ||
+            desc.includes("질문을 입력") ||
+            Boolean(action.targetHtml && /mentiony-content|data-placeholder=["'][^"']*질문/i.test(action.targetHtml));
+          const isEditorAction =
+            !isMentionyOrChatInput &&
+            (desc.includes("내용") ||
+              desc.includes("본문") ||
+              desc.includes("에디터") ||
+              desc.includes("content") ||
+              sel.includes("cn") ||
+              sel.includes("editor") ||
+              sel.includes("se-contents"));
 
           // When typing content/body, ensure we are targeting the actual editable canvas, not an outer toolbar
           if (isEditorAction) {
@@ -6115,10 +6579,16 @@ async function main() {
               await page.keyboard.type(text, { delay: 40 });
             }
           } else {
-            // Check existing text in the input/textarea/contenteditable
+            // Check existing text in the input/textarea/contenteditable without waiting 500ms timeout on contenteditable divs
             let existingVal = "";
             try {
-              existingVal = await el.inputValue({ timeout: 500 }).catch(() => "");
+              existingVal = await el
+                .evaluate((node) => {
+                  const h = node as HTMLInputElement;
+                  if (typeof h.value === "string") return h.value;
+                  return ((node as HTMLElement).innerText || node.textContent || "").replace(/\u200B/g, "");
+                })
+                .catch(() => "");
             } catch {}
 
             if (!text) {
@@ -6133,11 +6603,17 @@ async function main() {
                     });
                   }
                 }
-                await el.selectText({ timeout: 500 }).catch(() => {});
-                await el.press("Backspace").catch(async () => {
-                  await page.keyboard.press("Backspace").catch(() => {});
-                });
-                await el.fill("").catch(() => {});
+                if (existingVal && existingVal.trim().length > 0) {
+                  await el.selectText({ timeout: 500 }).catch(() => {});
+                  await el.press("Backspace").catch(async () => {
+                    await page.keyboard.press("Backspace").catch(() => {});
+                  });
+                  await el.fill("").catch(() => {});
+                } else {
+                  await el.press("Backspace").catch(async () => {
+                    await page.keyboard.press("Backspace").catch(() => {});
+                  });
+                }
                 await el.evaluate((node) => {
                   node.dispatchEvent(new KeyboardEvent("keydown", { key: "Backspace", code: "Backspace", keyCode: 8, which: 8, bubbles: true }));
                   node.dispatchEvent(new KeyboardEvent("keyup", { key: "Backspace", code: "Backspace", keyCode: 8, which: 8, bubbles: true }));
@@ -6196,7 +6672,13 @@ async function main() {
               // and ALWAYS dispatch keyup/input/change because Playwright's pressSequentially uses Input.insertText
               // for Korean Hangul characters without firing keyup (which Naonsoft search bars need to sync .srch_optn_box .keywd)
               try {
-                const actualTyped = await el.inputValue({ timeout: 500 }).catch(() => null);
+                const actualTyped = await el
+                  .evaluate((node) => {
+                    const h = node as HTMLInputElement;
+                    if (typeof h.value === "string") return h.value;
+                    return null;
+                  })
+                  .catch(() => null);
                 if (actualTyped !== null && actualTyped !== text) {
                   await el.fill(text).catch(() => {});
                 }
@@ -6388,6 +6870,9 @@ async function main() {
           }
 
           moment.keys = text;
+          if (!isSearchField && !isRichTextEditor && text && text.trim().length >= 2 && text.trim().length <= 40 && !text.includes("\n")) {
+            runtimeCreatedTitles.add(text.trim());
+          }
           // 🚨 Canon 2: Track last typed input and its box for adjacent search button binding
           lastTypedInput = el;
           lastTypedBox = box;

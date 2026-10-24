@@ -1,7 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Audio, Sequence, staticFile, useCurrentFrame } from "remotion";
 import type { EditPlan, NarrationCue } from "../types";
-import { frameToVideoTime } from "./FrameMapper";
 
 interface NarrationTrackProps {
   editPlan: EditPlan;
@@ -25,17 +24,19 @@ export const NarrationTrack: React.FC<NarrationTrackProps> = ({ editPlan }) => {
     return null;
   }
 
-  const videoTimeMs = frameToVideoTime(frame, editPlan) * 1000;
+  // Both audio <Sequence> and subtitles run on the composition timeline (compTimeMs),
+  // where cue.startMs and cue.endMs are synchronized with editPlan.timeRegions.
+  const compTimeMs = (frame / editPlan.fps) * 1000;
 
   let activeCue: NarrationCue | null = null;
   let subtitleOpacity = 0;
 
   if (showSubtitles) {
     for (const cue of narration.cues) {
-      if (videoTimeMs >= cue.startMs && videoTimeMs <= cue.endMs) {
+      if (compTimeMs >= cue.startMs && compTimeMs <= cue.endMs) {
         activeCue = cue;
-        const intoMs = videoTimeMs - cue.startMs;
-        const remainMs = cue.endMs - videoTimeMs;
+        const intoMs = compTimeMs - cue.startMs;
+        const remainMs = cue.endMs - compTimeMs;
         const fadeIn = Math.min(1, Math.max(0, intoMs / FADE_IN_MS));
         const fadeOut = Math.min(1, Math.max(0, remainMs / FADE_OUT_MS));
         subtitleOpacity = Math.min(fadeIn, fadeOut);

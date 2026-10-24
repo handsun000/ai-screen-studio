@@ -63,6 +63,131 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
   const sanitizedActions: BrowsePlanAction[] = [];
   let isInsideModal = false;
 
+  // Pre-scan the scenario timeline in two passes to build a universal Entity ID -> Human-Readable Name map
+  // so that even if an item created during demonstration (with a dynamic DB ID) was deleted and
+  // recreated with a new ID during recording, subsequent actions referencing the old ID can
+  // automatically scope by the item's human-readable name/title before falling back to generic selectors.
+  const entityIdToNameMap = new Map<string, string>();
+  {
+    const genericActionWords =
+      /^(?:목록|삭제|수정|작성|옵션|저장|확인|취소|선택|등록|추가|설정|더보기|메뉴|닫기|조회|검색|파일|첨부|초기화|인쇄|별표|비우기|조직도)$/i;
+
+    // Pass 1: Bind IDs directly from explicit data-*-name/subject/title attributes, non-generic inner text, or parent selector [data-*-id] on the same action
+    for (const act of actualPlan.actions) {
+      const rawHtml = (act.targetHtml || "").trim();
+      const rawSel = (act.selector || "").trim();
+      const openTagM = rawHtml.match(/^<([a-zA-Z0-9]+)([^<>]*)/);
+      const openAttrs = openTagM ? openTagM[2] : "";
+      const idMatches = [
+        ...Array.from(openAttrs.matchAll(/\b(data-[a-zA-Z0-9_-]*id)=["']([^"']+)["']/gi)),
+        ...Array.from(rawSel.matchAll(/\[(data-[a-zA-Z0-9_-]*id)=['"]([^'"]+)['"]\]/gi)),
+      ];
+      if (idMatches.length === 0) continue;
+
+      const explicitNameMatch = openAttrs.match(
+        /\bdata-(?!folder-name|menu-name)(?:[a-zA-Z0-9_-]*name|subject|title)=["']([^"']+)["']/i
+      );
+      const explicitName = explicitNameMatch ? explicitNameMatch[1].replace(/'/g, "").trim() : "";
+
+      const innerTxt = rawHtml
+        .replace(/^<[^>]+>/, "")
+        .replace(/<\/[a-zA-Z0-9]+>$/i, "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .replace(/'/g, "")
+        .trim();
+
+      const rowScopedNameM = rawSel.match(/\b(?:li|tr):has-text\(['"]([^'"]{2,40})['"]\)/i);
+      const rowScopedName = rowScopedNameM ? rowScopedNameM[1].trim() : "";
+
+      for (const im of idMatches) {
+        const attrKey = im[1].toLowerCase();
+        const idVal = im[2].trim();
+        if (
+          idVal.length < 5 ||
+          /^(?:ROOT|empty|none|null|true|false)$/i.test(idVal) ||
+          attrKey === "data-menu-id" ||
+          attrKey === "data-folder-id" ||
+          attrKey === "data-up-page-id"
+        ) {
+          continue;
+        }
+        if (explicitName && explicitName.length >= 2 && explicitName.length <= 40) {
+          entityIdToNameMap.set(idVal, explicitName);
+        } else if (
+          innerTxt &&
+          innerTxt.length >= 2 &&
+          innerTxt.length <= 35 &&
+          !genericActionWords.test(innerTxt) &&
+          !/\d{4}-\d{2}-\d{2}/.test(innerTxt)
+        ) {
+          entityIdToNameMap.set(idVal, innerTxt);
+        } else if (
+          rowScopedName &&
+          rowScopedName.length >= 2 &&
+          !genericActionWords.test(rowScopedName)
+        ) {
+          entityIdToNameMap.set(idVal, rowScopedName);
+        }
+      }
+    }
+
+    // Pass 2: For any newly created entity ID that had no explicit name/innerTxt in Pass 1,
+    // correlate it with the most recent title/subject typed AFTER all pre-existing IDs
+    let lastTypedEntityTitle = "";
+    const preCreationSeenIds = new Set<string>();
+    const currentRunIdsBeforeType = new Set<string>();
+    for (const act of actualPlan.actions) {
+      const rawHtml = (act.targetHtml || "").trim();
+      const rawSel = (act.selector || "").trim();
+      const openTagM = rawHtml.match(/^<([a-zA-Z0-9]+)([^<>]*)/);
+      const openAttrs = openTagM ? openTagM[2] : "";
+      const idMatches = [
+        ...Array.from(openAttrs.matchAll(/\b(data-[a-zA-Z0-9_-]*id)=["']([^"']+)["']/gi)),
+        ...Array.from(rawSel.matchAll(/\[(data-[a-zA-Z0-9_-]*id)=['"]([^'"]+)['"]\]/gi)),
+      ];
+
+      if (act.type === "type" && act.text && act.text.trim()) {
+        const cleanTxt = act.text.replace(/\s*↵\s*/g, "\n").trim();
+        const combinedCtx = `${act.selector || ""} ${act.description || ""} ${act.targetHtml || ""}`;
+        const isSearchField = /(?:search|srch|검색|schword)/i.test(combinedCtx);
+        const isBodyOrCommentEditor =
+          cleanTxt.includes("\n") ||
+          /(?:ProseMirror|se-contents|bn-editor|ck-editor|npage_editor|본문|내용|댓글|의견|cmnt|comment|mentiony|cmmAiChat|프롬프트)/i.test(
+            combinedCtx
+          );
+        const isTitleOrNameField =
+          /(?:제목|주제|업무명|일정명|폴더명|분류명|그룹명|라벨명|태그명|캘린더명|자원명|프로젝트명|스페이스명|위키명|subject|title|bookName|brdName|fldName|wksName|prjName|cldrName)/i.test(
+            combinedCtx
+          );
+        if (!isSearchField && !isBodyOrCommentEditor && isTitleOrNameField && cleanTxt.length >= 2 && cleanTxt.length <= 40) {
+          lastTypedEntityTitle = cleanTxt.replace(/'/g, "");
+          for (const seenId of currentRunIdsBeforeType) {
+            preCreationSeenIds.add(seenId);
+          }
+        }
+      }
+
+      for (const im of idMatches) {
+        const attrKey = im[1].toLowerCase();
+        const idVal = im[2].trim();
+        if (
+          idVal.length < 5 ||
+          /^(?:ROOT|empty|none|null|true|false)$/i.test(idVal) ||
+          attrKey === "data-menu-id" ||
+          attrKey === "data-folder-id" ||
+          attrKey === "data-up-page-id"
+        ) {
+          continue;
+        }
+        currentRunIdsBeforeType.add(idVal);
+        if (!entityIdToNameMap.has(idVal) && !preCreationSeenIds.has(idVal) && lastTypedEntityTitle) {
+          entityIdToNameMap.set(idVal, lastTypedEntityTitle);
+        }
+      }
+    }
+  }
+
   const normalizeSelectorSyntax = (rawSel: string): string => {
     if (!rawSel) return "";
     let s = rawSel
@@ -136,7 +261,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         .replace(/&amp;/gi, "&");
 
     s = s.replace(/(:(?:text-is|has-text)\(['"])([^'"]+)(['"]\))/g, (_m, pre, txt, post) => {
-      const cleanedTxt = decodeHtmlEntities(txt).replace(/\s+/g, " ").trim();
+      const cleanedTxt = decodeHtmlEntities(txt).replace(/^>\s*/, "").replace(/\s+/g, " ").trim();
       return `${pre}${cleanedTxt}${post}`;
     });
     s = s.replace(/(\[title\*?=['"])([^'"]+)(['"]\])/g, (_m, pre, txt, post) => {
@@ -442,12 +567,38 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
           workingSel.includes("ProseMirror") ||
           Boolean(normalizedHtmlHint && /se-contents|contenteditable=["']true["']/i.test(normalizedHtmlHint));
         if (isRichEditorTarget && normalizedHtmlHint) {
-          const pMatch = normalizedHtmlHint.match(/<p\b[^>]*>([^<]+)/i);
+          // Restore multi-paragraph text if an earlier sanitizer pass mistakenly stripped the user's 1st paragraph from a placeholder <p data-placeholder="...">
+          const placeholderMultiParaMatch = normalizedHtmlHint.match(
+            /<p\b[^>]*\b(?:data-placeholder|placeholder)=[^>]*>([^<]+)<\/p>\s*<p\b[^>]*>([^<]+)<\/p>/i
+          );
+          if (placeholderMultiParaMatch && action.editorInsertNewline) {
+            const firstUserPara = decodeEntities(placeholderMultiParaMatch[1]).replace(/\u200B/g, "").replace(/\u00a0/g, " ").trim();
+            const secondUserPara = decodeEntities(placeholderMultiParaMatch[2]).replace(/\u200B/g, "").replace(/\u00a0/g, " ").trim();
+            if (firstUserPara && secondUserPara && action.text.trim() === secondUserPara) {
+              const restoredText = `${firstUserPara}\n${secondUserPara}`;
+              action.text = restoredText;
+              delete action.editorInsertNewline;
+              delete action.editorParaIndex;
+              if (action.description) {
+                action.description = action.description.replace(secondUserPara, `${firstUserPara} ↵ ${secondUserPara}`);
+              }
+              changes.push(
+                `[에디터 다중 문단 복원] 플레이스홀더 문단에서 누락되었던 첫 문단('${firstUserPara}')을 포함하여 전체 입력 텍스트를 복원했습니다.`
+              );
+            }
+          }
+
+          const pMatch = normalizedHtmlHint.match(/<p(\b[^>]*)>([^<]+)/i);
+          const firstPAttrs = pMatch ? pMatch[1] : "";
+          const hasPlaceholderAttr = /\b(?:data-placeholder|placeholder)=/i.test(firstPAttrs);
           const initParaTxt = pMatch
-            ? decodeEntities(pMatch[1]).replace(/\u200B/g, "").replace(/\u00a0/g, " ").trim()
+            ? decodeEntities(pMatch[2]).replace(/\u200B/g, "").replace(/\u00a0/g, " ").trim()
             : "";
           const normActionTxt = action.text.replace(/\u200B/g, "").replace(/\u00a0/g, " ");
+          // Only strip initParaTxt if it is a genuine pre-existing form template heading (starts with template marker ■/▶/●/◆/★/▣/※ and is NOT a placeholder paragraph)
           if (
+            !hasPlaceholderAttr &&
+            /^[■▶●◆★▣※]/.test(initParaTxt) &&
             initParaTxt.length >= 2 &&
             normActionTxt.startsWith(initParaTxt) &&
             normActionTxt.trim() !== initParaTxt
@@ -459,7 +610,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
               const oldFormatted = action.text.replace(/\n/g, " ↵ ");
               action.text = remainder;
               action.editorParaIndex = action.editorParaIndex ?? 0;
-              if (hadNewline || /^[■▶●◆★▣]/.test(initParaTxt)) {
+              if (hadNewline || /^[■▶●◆★▣※]/.test(initParaTxt)) {
                 action.editorInsertNewline = true;
               }
               if (action.description) {
@@ -567,17 +718,89 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         const openTagAttrs = rawOpenTagAttrs
           .replace(/\s+(?:oldtitle|data-original-title|data-qtip|aria-describedby)=["'][^"']*["']/gi, "")
           .replace(/\s+(?:oldtitle|data-original-title|data-qtip|aria-describedby)=["'][^"']*$/gi, "");
-        const innerHtmlAfterOpen = openTagMatch ? normalizedHtmlHint.slice(openTagMatch[0].length) : "";
+        const innerHtmlAfterOpen = openTagMatch
+          ? normalizedHtmlHint.slice(openTagMatch[0].length).replace(/^\s*>/, "")
+          : "";
+        const innerTextClean = decodeEntities(
+          innerHtmlAfterOpen
+            .replace(/<\/[a-zA-Z0-9]+>\s*$/i, "")
+            .replace(/<[^>]+>/g, " ")
+        )
+          .replace(/'/g, "")
+          .replace(/\s+/g, " ")
+          .trim();
+
+        // Strip previously mis-injected #wikiMain_snb prefixes on non-sidebar elements (e.g. _page links or admin nav tabs)
+        if (
+          workingSel.includes("#wikiMain_snb ") &&
+          !openTagAttrs.includes("_menu") &&
+          !workingSel.includes("wikiSideMenu")
+        ) {
+          const strippedSnbParts = splitSelectorCandidates(workingSel).map((p) =>
+            p.replace(/^(\.ui-dialog:visible\s+)?#wikiMain_snb\s+/, "$1")
+          );
+          workingSel = Array.from(new Set(strippedSnbParts)).join(", ");
+        }
+
         const rawIdContainerMatch = workingSel.match(
           /(?:^|,\s*)(?:\.ui-dialog:visible\s+)?([a-zA-Z0-9]*#[a-zA-Z0-9_-]+)\s+(?:>\s*)?[a-zA-Z0-9_.\[#]/
         );
         const matchedContainerToken = rawIdContainerMatch ? rawIdContainerMatch[1].replace(/^\.ui-dialog:visible\s+/, "") : "";
-        const isWikiMenuTag = /\bdata-menu-id=["']wiki/i.test(openTagAttrs);
-        const idContainerPrefix = isWikiMenuTag
-          ? `${modalPrefix}#wikiMain_snb `
-          : matchedContainerToken && !/#th\d+$/i.test(matchedContainerToken)
-          ? `${modalPrefix}${matchedContainerToken} `
-          : modalPrefix;
+        const idContainerPrefix =
+          matchedContainerToken && !/#th\d+$/i.test(matchedContainerToken)
+            ? `${modalPrefix}${matchedContainerToken} `
+            : modalPrefix;
+
+        const classAttrMatch = openTagAttrs.match(/\bclass=["']([^"']+)["']/i);
+        const classTokens = classAttrMatch ? classAttrMatch[1].split(/\s+/).filter(Boolean) : [];
+        const hasClassAttrInHtml = Boolean(classAttrMatch);
+
+        // Strip AI-corrupted candidates in workingSel whose terminal tag or terminal classes contradict targetHtml
+        if (
+          (action.type === "click" || action.type === "hover") &&
+          (tagName === "button" || tagName === "a" || tagName === "select" || tagName === "textarea")
+        ) {
+          const extractLastSegment = (cand: string): string => {
+            let core = cand
+              .replace(/:visible\s*$/i, "")
+              .replace(/:(?:has-text|text-is|has)\([^)]*\)/gi, "")
+              .trim();
+            let lastSplit = 0;
+            let bDepth = 0;
+            let pDepth = 0;
+            for (let ci = 0; ci < core.length; ci++) {
+              const ch = core[ci];
+              if (ch === "[") bDepth++;
+              else if (ch === "]" && bDepth > 0) bDepth--;
+              else if (ch === "(") pDepth++;
+              else if (ch === ")" && pDepth > 0) pDepth--;
+              else if (bDepth === 0 && pDepth === 0 && (ch === " " || ch === ">")) {
+                lastSplit = ci + 1;
+              }
+            }
+            return core.slice(lastSplit).trim();
+          };
+
+          const consistentParts = splitSelectorCandidates(workingSel).filter((p) => {
+            const termSeg = extractLastSegment(p);
+            if (!termSeg) return false;
+            const termTagMatch = termSeg.match(/^([a-zA-Z][a-zA-Z0-9]*)/);
+            if (termTagMatch && termTagMatch[1].toLowerCase() !== tagName) {
+              return false;
+            }
+            if (hasClassAttrInHtml) {
+              const segWithoutAttrs = termSeg.replace(/\[[^\]]*\]/g, "").replace(/:[a-zA-Z-]+(?:\([^)]*\))?/g, "");
+              const termClasses = Array.from(segWithoutAttrs.matchAll(/\.([a-zA-Z0-9_-]+)/g)).map((m) => m[1]);
+              for (const tc of termClasses) {
+                if (!classTokens.includes(tc) && !/^(?:active|on|focus|hover|selected|unfd|trs)$/i.test(tc)) {
+                  return false;
+                }
+              }
+            }
+            return true;
+          });
+          workingSel = consistentParts.join(", ");
+        }
 
         // Strict outer tag id="..." match (requires leading whitespace, never matching data-menu-id or data-book-id!)
         const idAttrMatch = openTagAttrs.match(/(?:^|\s)id=["']([^"']+)["']/i);
@@ -763,51 +986,230 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
           }
         }
 
-        // Prioritize human-readable data-book-name / data-menu-id / data-menu-name before dynamic random IDs
-        const bookNameMatch = openTagAttrs.match(/\bdata-book-name=["']([^"']+)["']/i);
-        if (bookNameMatch && bookNameMatch[1].trim()) {
-          const bookName = bookNameMatch[1].replace(/'/g, "").trim();
-          const hasOpenBookCls = /\b_openBook\b/.test(openTagAttrs);
-          const bookCandidates = [
-            `${modalPrefix}${tagName}[data-book-name='${bookName}']:visible`,
-            ...(hasOpenBookCls ? [`${modalPrefix}${tagName}._openBook:has-text('${bookName}'):visible`] : []),
-          ];
-          const currentParts = splitSelectorCandidates(workingSel)
-            .filter(
-              (p) =>
-                p.includes("data-book-name") ||
-                p.includes("_openBook") ||
-                p.includes("sub_cover") ||
-                p.includes("_bookList") ||
-                p.includes("btn_lst") ||
-                p.includes("wikiBookList")
-            );
-          workingSel = Array.from(new Set([...bookCandidates, ...currentParts])).join(", ");
+        const ignoredDataAttrRegex =
+          /^data-(?:toggle|dismiss|backdrop|keyboard|spy|ride|slide|placement|original-title|qtip|tooltip|placeholder|i18n|bind|reactid|v-)/i;
+        const tier3SharedAttrRegex =
+          /^data-(?!app-type-se$|app-type-ordr$|search-type$)(?:.*status|.*type|.*mode|.*yn|up-.*|parent-.*|reg-emp-id)$/i;
+        const hasOwnEntityAttr = /\bdata-(?:book|page|wks|atcl|doc|work|scd|res)-/i.test(openTagAttrs);
+
+        const distinguishingClsTokens = classTokens.filter(
+          (c) =>
+            /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(c) &&
+            !/^(?:btn|btn_ico|btn_pri|btn_med|btn_sml|btn_lar|btn_block|item|ico|active|selected|on|hover|focus|chkbox|rdobtn|_punchHandle|scvr\d+|plt_\d+|unfd|trs)$/i.test(
+              c
+            )
+        );
+        const actionClsSelector =
+          (tagName === "button" || tagName === "a") && distinguishingClsTokens.length > 0
+            ? "." + distinguishingClsTokens.slice(0, 2).join(".")
+            : "";
+        const primaryHookOrBtnCls = distinguishingClsTokens.find((c) => c.startsWith("_")) || distinguishingClsTokens[0] || "";
+
+        // Clean existing workingSel of bare Tier-3 shared status/type/parent attributes and qualify shared menu attributes with innerTextClean
+        {
+          const cleanedExisting = splitSelectorCandidates(workingSel)
+            .filter((p) => {
+              if (/:has\(\[data-(?:reg-emp-id|.*status|.*type|.*yn)=/i.test(p)) return false;
+              const dataM = p.match(/\[(data-[a-zA-Z0-9_-]+)=['"]([^'"]+)['"]\]/i);
+              if (dataM) {
+                const dName = dataM[1].toLowerCase();
+                const dVal = dataM[2].trim();
+                const hasTextQual = /:(?:has-text|text-is)\(/i.test(p);
+                if (!hasTextQual && (tier3SharedAttrRegex.test(dName) || dVal === "ROOT" || dVal.endsWith("/ROOT"))) {
+                  return false;
+                }
+                if (
+                  !hasTextQual &&
+                  hasOwnEntityAttr &&
+                  (dName === "data-folder-id" || dName === "data-folder-name")
+                ) {
+                  return false;
+                }
+              }
+              return true;
+            })
+            .map((p) => {
+              // If a menu link has specific visible text (e.g. '회사', '더보기', '최신 페이지') that differs from its shared data-menu-id / data-menu-name, qualify with :has-text
+              const menuAttrM = p.match(/\[(data-(?:menu-id|menu-name|folder-id|folder-type|page-mode))=['"]([^'"]+)['"]\]/i);
+              if (
+                menuAttrM &&
+                innerTextClean &&
+                innerTextClean.length >= 2 &&
+                innerTextClean.length <= 25 &&
+                menuAttrM[2].trim() !== innerTextClean &&
+                !/:(?:has-text|text-is)\(/i.test(p)
+              ) {
+                return p.replace(/(:visible)?$/, `:has-text('${innerTextClean}'):visible`);
+              }
+              // If an action button/link has a distinguishing class (e.g. .btn_del._deleteBook or ._delete), qualify bare tag[data-*-id='...'] so sibling actions on the same entity never collide
+              if (
+                actionClsSelector &&
+                new RegExp(`(?:^|\\s)${tagName}\\[data-[a-z0-9_-]+-id=`, "i").test(p)
+              ) {
+                return p.replace(
+                  new RegExp(`(^|\\s)${tagName}(\\[data-[a-z0-9_-]+-id=)`, "i"),
+                  `$1${tagName}${actionClsSelector}$2`
+                );
+              }
+              return p;
+            });
+          if (cleanedExisting.length > 0) {
+            workingSel = cleanedExisting.join(", ");
+          }
         }
 
         const dataAttrMatches = Array.from(
-          openTagAttrs.matchAll(
-            /\b(data-(?:menu-id|menu-name|res-id|dept-id|emp-id|cmp-id|cal-id|brd-id|trgt-id|work-id|app-type-ordr|app-type-se|app-type-id|addr-grpid|addr-grpname|column-id|value|tab))=["']([^"']+)["']/gi
-          )
-        );
+          openTagAttrs.matchAll(/\b(data-[a-zA-Z0-9_-]+)=["']([^"']+)["']/gi)
+        ).filter((dm) => !ignoredDataAttrRegex.test(dm[1]));
+
+        const tier1Candidates: string[] = [];
+        const tier2Candidates: string[] = [];
+        const entityScopedCandidates: string[] = [];
+        const resolvedEntityNames = new Set<string>();
+
         if (dataAttrMatches.length > 0) {
-          const attrCandidates: string[] = [];
           for (const dm of dataAttrMatches) {
             const attrName = dm[1];
+            const attrNameLower = attrName.toLowerCase();
             const attrVal = dm[2].replace(/'/g, "").trim();
-            if (attrVal && attrVal.toLowerCase() !== "empty") {
-              attrCandidates.push(`${idContainerPrefix}${tagName}[${attrName}='${attrVal}']:visible`);
+            if (!attrVal || attrVal.toLowerCase() === "empty") continue;
+
+            // Skip Tier-3 generic flags/types/ROOT parent IDs and parent folder attrs when item attrs exist
+            if (tier3SharedAttrRegex.test(attrNameLower) || attrVal === "ROOT") {
+              continue;
             }
-          }
-          if (attrCandidates.length > 0) {
-            const currentParts = splitSelectorCandidates(workingSel);
-            workingSel = Array.from(new Set([...attrCandidates, ...currentParts])).join(", ");
+            if (hasOwnEntityAttr && (attrNameLower === "data-folder-id" || attrNameLower === "data-folder-name")) {
+              continue;
+            }
+
+            const isTier1NameOrRole =
+              /^data-(?:.*name|subject|title|menu-id|tab|search-type|app-type-se|app-type-ordr)$/i.test(attrNameLower);
+            const needsMenuTextQual =
+              /^data-(?:menu-id|menu-name)$/i.test(attrNameLower) &&
+              innerTextClean &&
+              innerTextClean.length >= 2 &&
+              innerTextClean.length <= 25 &&
+              attrVal !== innerTextClean;
+            const textQualSuffix = needsMenuTextQual ? `:has-text('${innerTextClean}')` : "";
+            const clsQual =
+              actionClsSelector && !/^data-(?:menu-id|menu-name|tab|search-type|app-type-se|app-type-ordr)$/i.test(attrNameLower)
+                ? actionClsSelector
+                : "";
+
+            const targetBucket = isTier1NameOrRole ? tier1Candidates : tier2Candidates;
+            if (clsQual) {
+              targetBucket.push(`${idContainerPrefix}${tagName}${clsQual}[${attrName}='${attrVal}']${textQualSuffix}:visible`);
+              if (idContainerPrefix !== modalPrefix) {
+                targetBucket.push(`${modalPrefix}${tagName}${clsQual}[${attrName}='${attrVal}']${textQualSuffix}:visible`);
+              }
+            }
+            targetBucket.push(`${idContainerPrefix}${tagName}[${attrName}='${attrVal}']${textQualSuffix}:visible`);
+            if (idContainerPrefix !== modalPrefix) {
+              targetBucket.push(`${modalPrefix}${tagName}[${attrName}='${attrVal}']${textQualSuffix}:visible`);
+            }
+
+            if (/^data-(?!folder-name|menu-name)(?:.*name|subject|title)$/i.test(attrNameLower)) {
+              resolvedEntityNames.add(attrVal);
+            }
+            if (attrNameLower.endsWith("-id") && entityIdToNameMap.has(attrVal)) {
+              resolvedEntityNames.add(entityIdToNameMap.get(attrVal)!);
+            }
           }
         }
 
-        const classAttrMatch = openTagAttrs.match(/\bclass=["']([^"']+)["']/i);
-        if (classAttrMatch) {
-          const classTokens = classAttrMatch[1].split(/\s+/).filter(Boolean);
+        // Cross-Action Entity Name Scoping: When clicking an action button (e.g. '목록', '삭제', '옵션') on an entity whose
+        // demonstration ID may change after deletion/re-creation, inject item-scoped (li/tr :has-text(entityName)) candidates
+        // right after Tier 1 candidates and BEFORE unscoped generic button fallbacks!
+        // Note: Never inject li/tr:has-text(entityName) for <a> items inside dropdown/context menus (e.g. ul#wikiBookContent_context a._delete),
+        // because dropdown menu <li> elements only contain the command text ('삭제', '수정'), not the entity title!
+        const isDropdownContextMenu =
+          tagName === "a" || /(?:context|drop_menu|dropdown|menu_lyr|optn_lyr)/i.test(`${idContainerPrefix} ${workingSel}`);
+        if (isDropdownContextMenu && resolvedEntityNames.size > 0) {
+          workingSel = splitSelectorCandidates(workingSel)
+            .filter((p) => !/\b(?:li|tr):has-text\(['"][^'"]+['"]\)\s+a\b/i.test(p))
+            .join(", ");
+        }
+        if (resolvedEntityNames.size > 0 && tagName === "button" && !isDropdownContextMenu) {
+          for (const entName of resolvedEntityNames) {
+            if (!entName || entName === innerTextClean || entName === outerTitleVal) continue;
+            if (actionClsSelector) {
+              if (idContainerPrefix !== modalPrefix) {
+                entityScopedCandidates.push(`${idContainerPrefix}li:has-text('${entName}') ${tagName}${actionClsSelector}:visible`);
+              }
+              entityScopedCandidates.push(`${modalPrefix}li:has-text('${entName}') ${tagName}${actionClsSelector}:visible`);
+              if (idContainerPrefix !== modalPrefix) {
+                entityScopedCandidates.push(`${idContainerPrefix}tr:has-text('${entName}') ${tagName}${actionClsSelector}:visible`);
+              }
+              entityScopedCandidates.push(`${modalPrefix}tr:has-text('${entName}') ${tagName}${actionClsSelector}:visible`);
+            }
+            if (outerTitleVal) {
+              if (idContainerPrefix !== modalPrefix) {
+                entityScopedCandidates.push(
+                  `${idContainerPrefix}li:has-text('${entName}') ${tagName}${primaryHookOrBtnCls ? `.${primaryHookOrBtnCls}` : ""}[title='${outerTitleVal}']:visible`
+                );
+              }
+              entityScopedCandidates.push(
+                `${modalPrefix}li:has-text('${entName}') ${tagName}${primaryHookOrBtnCls ? `.${primaryHookOrBtnCls}` : ""}[title='${outerTitleVal}']:visible`
+              );
+            }
+          }
+        }
+
+        // Also ensure container-scoped action class / title / text fallbacks are present if workingSel was previously overwritten
+        const fallbackClassCandidates: string[] = [];
+        if (!outerIdVal && (tagName === "button" || tagName === "a") && actionClsSelector) {
+          if (outerTitleVal) {
+            fallbackClassCandidates.push(`${idContainerPrefix}${tagName}${actionClsSelector}[title='${outerTitleVal}']:visible`);
+          }
+          if (innerTextClean && innerTextClean.length >= 1 && innerTextClean.length <= 20) {
+            fallbackClassCandidates.push(`${idContainerPrefix}${tagName}${actionClsSelector}:has-text('${innerTextClean}'):visible`);
+          }
+          if (
+            primaryHookOrBtnCls &&
+            tagName === "button" &&
+            !/^_(?:menu|page|openBook|pageLink|space_wiki|search|write|appendBtn|writeBtn|lineSelect|addBtn|delBtn|selectBtn|setProcess)$/i.test(
+              primaryHookOrBtnCls
+            )
+          ) {
+            fallbackClassCandidates.push(`${idContainerPrefix}${tagName}.${primaryHookOrBtnCls}:visible`);
+          }
+        }
+
+        if (
+          tier1Candidates.length > 0 ||
+          tier2Candidates.length > 0 ||
+          entityScopedCandidates.length > 0 ||
+          fallbackClassCandidates.length > 0
+        ) {
+          const currentParts = splitSelectorCandidates(workingSel);
+          // Separate specific existing parts from generic unscoped button fallbacks so entityScopedCandidates always precede unscoped fallbacks
+          const specificExisting: string[] = [];
+          const genericUnscopedExisting: string[] = [];
+          for (const cp of currentParts) {
+            const isUnscopedGenericBtn =
+              resolvedEntityNames.size > 0 &&
+              !cp.includes("data-") &&
+              !cp.includes(":has-text(") &&
+              !cp.includes(":text-is(");
+            if (isUnscopedGenericBtn) {
+              genericUnscopedExisting.push(cp);
+            } else {
+              specificExisting.push(cp);
+            }
+          }
+          workingSel = Array.from(
+            new Set([
+              ...tier1Candidates,
+              ...entityScopedCandidates,
+              ...tier2Candidates,
+              ...specificExisting,
+              ...genericUnscopedExisting,
+              ...fallbackClassCandidates,
+            ])
+          ).join(", ");
+        }
+
+        if (classTokens.length > 0) {
           // Numeric-leading slot class (e.g. <dd class="1400"> in resource reservation timetable)
           const numSlotCls = classTokens.find((c) => /^[0-9][a-zA-Z0-9_-]*$/.test(c));
           if (numSlotCls && tagName) {
@@ -849,29 +1251,35 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
             const hookClasses = classTokens.filter(
               (c) =>
                 /^_[a-zA-Z0-9_-]*(?:btn|button|search|srch|confirm|save|draft|send|write|ok|cancel|close|text|word)[a-zA-Z0-9_-]*$/i.test(c) &&
-                !/^_(?:search_option|blind|hide|hidden|punchHandle|appendBtn|writeBtn|lineSelect|addBtn|delBtn|selectBtn|setProcess|write)$/i.test(c)
+                !/^_(?:search_option|search|blind|hide|hidden|punchHandle|appendBtn|writeBtn|lineSelect|addBtn|delBtn|selectBtn|setProcess|write)$/i.test(c)
             );
             if (hookClasses.length > 0) {
               const hookCls = hookClasses[0];
               const currentParts = splitSelectorCandidates(workingSel);
+              const alreadyHasSpecificTextOrAttr = currentParts.some(
+                (p) => /:(?:has-text|text-is)\(|\[(?:title|name|value|data-)/i.test(p)
+              );
               const hookCandidates: string[] = [];
               if (rawIdContainerMatch) {
                 hookCandidates.push(`${idContainerPrefix}${tagName}.${hookCls}:visible`);
               }
               hookCandidates.push(`${modalPrefix}${tagName}.${hookCls}:visible`);
-              workingSel = Array.from(new Set([...hookCandidates, ...currentParts])).join(", ");
+              // Never prepend an offline-guessed bare ._hook class ahead of live-DOM-verified :has-text / [title] / [data-*] candidates!
+              workingSel = alreadyHasSpecificTextOrAttr
+                ? Array.from(new Set([...currentParts, ...hookCandidates])).join(", ")
+                : Array.from(new Set([...hookCandidates, ...currentParts])).join(", ");
             }
           }
         }
 
-        // Strip previously polluted bare multi-instance hook classes (e.g. button._appendBtn:visible, button._writeBtn:visible)
+        // Strip previously polluted bare multi-instance hook classes (e.g. button._appendBtn:visible, button._writeBtn:visible, button._search:visible)
         // and shared child icon classes (e.g. button:has(.ico_write):visible, button:has(.ico_org):visible)
-        // so they NEVER shadow data-app-type-se='A'/'H'/'X', data-tab='appLine', title='협조', or li.aw_li:has-text(...)!
+        // so they NEVER shadow data-app-type-se='A'/'H'/'X', data-search-type='tool'/'gw', data-tab='appLine', title='협조', or li.aw_li:has-text(...)!
         {
           const rawPartsForClean = splitSelectorCandidates(workingSel);
           const cleanedHookIconParts = rawPartsForClean.filter((p) => {
             if (
-              /^(?:\.ui-dialog:visible\s+)?(?:[a-zA-Z0-9]*#[a-zA-Z0-9_-]+\s+)?(?:button|a)\._(?:appendBtn|writeBtn|lineSelect|addBtn|delBtn|selectBtn|setProcess|write):visible$/i.test(
+              /^(?:\.ui-dialog:visible\s+)?(?:[a-zA-Z0-9]*#[a-zA-Z0-9_-]+\s+)?(?:button|a)\.(?:_(?:appendBtn|writeBtn|lineSelect|addBtn|delBtn|selectBtn|setProcess|write|search|menu|page|openBook|pageLink)|item|sub_cover):visible$/i.test(
                 p
               )
             ) {
@@ -887,12 +1295,28 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
           }
         }
 
+        // Strip dynamic random #mentiony-content-xxxxxx / #mentiony-container-xxxxxx IDs generated per session by the mentiony plugin
+        if (/^mentiony-/i.test(outerIdVal) || workingSel.includes("mentiony-")) {
+          const phMatch = openTagAttrs.match(/\b(?:data-placeholder|placeholder)=["']([^"']+)["']/i);
+          const phVal = phMatch ? phMatch[1].replace(/'/g, "").trim() : "";
+          const cleanedMentionyParts = splitSelectorCandidates(workingSel).filter(
+            (p) => !/#mentiony-(?:content|container|popover|item)-[a-zA-Z0-9_-]+/i.test(p)
+          );
+          const mentionyCands: string[] = [];
+          if (phVal) {
+            mentionyCands.push(`${modalPrefix}div.mentiony-content[contenteditable='true'][data-placeholder*='${phVal.slice(0, 15)}']:visible`);
+          }
+          mentionyCands.push(`${modalPrefix}div.mentiony-content[contenteditable='true']:visible`);
+          workingSel = Array.from(new Set([...mentionyCands, ...cleanedMentionyParts])).join(", ");
+        }
+
         // Universal Child Fingerprinting for <label>, <a>, <button>, <td>, or <span> without its own id:
-        // prepend tag:has(#childId), tag:has(input[value='...']), or tag:has(.scvr*/.plt_*) so it uniquely targets that exact option!
+        // prepend tag:has(#childId), tag:has(input[value='...']), or tag:has(.scvr*/.plt_*/._ai*) so it uniquely targets that exact option!
         if ((tagName === "label" || tagName === "a" || tagName === "button" || tagName === "td" || tagName === "span") && !outerIdVal) {
           const isChkbox = /\bchkbox\b/i.test(openTagAttrs);
           const isRdobtn = /\brdobtn\b/i.test(openTagAttrs);
           const isFileBtn = /\bfileinput-button\b/i.test(openTagAttrs);
+          const isBotLink = tagName === "a" && /\bbot\b/i.test(openTagAttrs);
           const baseCls =
             tagName === "label"
               ? isChkbox
@@ -902,11 +1326,13 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
                   : "label"
               : tagName === "span" && isFileBtn
                 ? "span.fileinput-button"
-                : tagName;
+                : isBotLink
+                  ? "a.bot"
+                  : tagName;
           const hasChildCandidates: string[] = [];
           if (childInputId) {
             const isUnstableChildId =
-              /^(ui-id-|jqg|ext-gen|select2-|mceu_|cke_|tinymce|th\d+$|[0-9]+$)/i.test(childInputId) ||
+              /^(ui-id-|jqg|ext-gen|select2-|mceu_|cke_|tinymce|mentiony-|th\d+$|[0-9]+$)/i.test(childInputId) ||
               /[0-9a-f]{8,}/i.test(childInputId);
             if (!isUnstableChildId) {
               hasChildCandidates.push(`${modalPrefix}${baseCls}:has(#${childInputId}):visible`);
@@ -928,17 +1354,34 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
               hasChildCandidates.push(`${modalPrefix}${baseCls}:has(input[value='${childVal}']):visible`);
             }
           }
-          const childDataMatch = innerHtmlAfterOpen.match(/\b(data-(?:task-subject|emp-id|trgt-id|res-id|dept-id))=["']([^"']+)["']/i);
-          if (childDataMatch && childDataMatch[1] && childDataMatch[2]) {
-            const cAttr = childDataMatch[1];
-            const cVal = childDataMatch[2].replace(/'/g, "").trim();
-            if (cVal && cVal.toLowerCase() !== "empty" && cVal.length <= 35) {
+          const childDataMatches = Array.from(
+            innerHtmlAfterOpen.matchAll(/\b(data-[a-zA-Z0-9_-]+)=["']([^"']+)["']/gi)
+          ).filter((dm) => !ignoredDataAttrRegex.test(dm[1]) && !tier3SharedAttrRegex.test(dm[1].toLowerCase()));
+          for (const cdm of childDataMatches) {
+            const cAttr = cdm[1];
+            const cVal = cdm[2].replace(/'/g, "").trim();
+            if (cVal && cVal.toLowerCase() !== "empty" && cVal !== "ROOT" && cVal.length <= 35) {
               hasChildCandidates.unshift(`${idContainerPrefix}${baseCls}:has([${cAttr}='${cVal}']):visible`);
             }
           }
-          const childDistMatch = innerHtmlAfterOpen.match(/\bclass=["'][^"']*\b(scvr\d+|plt_\d+)\b/i);
+          const childDistMatch = innerHtmlAfterOpen.match(/\bclass=["'][^"']*\b(scvr\d+|plt_\d+|_ai[a-zA-Z0-9_]+)\b/i);
           if (childDistMatch && childDistMatch[1]) {
             hasChildCandidates.push(`${idContainerPrefix}${baseCls}:has(.${childDistMatch[1]}):visible`);
+            if (idContainerPrefix !== modalPrefix) {
+              hasChildCandidates.push(`${modalPrefix}${baseCls}:has(.${childDistMatch[1]}):visible`);
+            }
+          }
+          const childPrimaryNameMatch = innerHtmlAfterOpen.match(
+            /<(?:div|span|strong|em|p)\b[^<>]*\bclass=["'][^"']*\b(?:name|tit|subj|title)\b[^"']*["'][^<>]*>([^<>]{2,25})<\//i
+          );
+          if (childPrimaryNameMatch && childPrimaryNameMatch[1]) {
+            const cNameTxt = decodeEntities(childPrimaryNameMatch[1]).replace(/'/g, "").replace(/\s+/g, " ").trim();
+            if (cNameTxt.length >= 2) {
+              hasChildCandidates.push(`${idContainerPrefix}${baseCls}:has-text('${cNameTxt}'):visible`);
+              if (idContainerPrefix !== modalPrefix) {
+                hasChildCandidates.push(`${modalPrefix}${baseCls}:has-text('${cNameTxt}'):visible`);
+              }
+            }
           }
           const currentParts = splitSelectorCandidates(workingSel);
           if (hasChildCandidates.length > 0 || currentParts.length > 0) {
@@ -946,26 +1389,18 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
           }
         }
 
-        // Re-assert distinguishing outer data-* attributes right before outerIdVal so data-app-type-se / data-tab / data-menu-id stay ahead of any child/hook candidates!
-        if (dataAttrMatches.length > 0) {
-          const attrCandidates: string[] = [];
-          for (const dm of dataAttrMatches) {
-            const attrName = dm[1];
-            const attrVal = dm[2].replace(/'/g, "").trim();
-            if (attrVal && attrVal.toLowerCase() !== "empty") {
-              attrCandidates.push(`${idContainerPrefix}${tagName}[${attrName}='${attrVal}']:visible`);
-            }
-          }
-          if (attrCandidates.length > 0) {
-            const currentParts = splitSelectorCandidates(workingSel);
-            workingSel = Array.from(new Set([...attrCandidates, ...currentParts])).join(", ");
-          }
+        // Re-assert Tier 1, Entity-Scoped, and Tier 2 candidates right before outerIdVal so they stay ahead of any child/hook candidates!
+        if (tier1Candidates.length > 0 || tier2Candidates.length > 0 || entityScopedCandidates.length > 0) {
+          const currentParts = splitSelectorCandidates(workingSel);
+          workingSel = Array.from(
+            new Set([...tier1Candidates, ...entityScopedCandidates, ...tier2Candidates, ...currentParts])
+          ).join(", ");
         }
 
         // Keep stable outerIdVal at the VERY FRONT so unique IDs (e.g. button#notNoteReg_toAddressButton) always precede shared hook classes or [name='...']
         if (outerIdVal) {
           const isUnstableId =
-            /^(ui-id-|jqg|ext-gen|select2-|mceu_|cke_|tinymce|th\d+$|dp\d+$|ADRGR\d+$|[0-9]+$)/i.test(outerIdVal) ||
+            /^(ui-id-|jqg|ext-gen|select2-|mceu_|cke_|tinymce|mentiony-|th\d+$|dp\d+$|ADRGR\d+$|[0-9]+$)/i.test(outerIdVal) ||
             /[0-9a-f]{8,}/i.test(outerIdVal);
           if (!isUnstableId) {
             let currentParts = splitSelectorCandidates(workingSel);
@@ -1007,7 +1442,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         if (hasTextCandidate) {
           const nonEphemeral = currentCandidates.filter(
             (c) =>
-              !/\[data-(?:atcl|folder|mail|book)-id=|\[data-addr-grpid=|#ADRGR\d+|\[value=['"]TSK[0-9a-zA-Z]{10,}['"]\]/i.test(c)
+              !/\[data-(?:atcl|folder|mail)-id=|\[data-addr-grpid=|#ADRGR\d+|\[value=['"]TSK[0-9a-zA-Z]{10,}['"]\]/i.test(c)
           );
           if (nonEphemeral.length > 0) {
             currentCandidates = nonEphemeral;
@@ -1017,9 +1452,9 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
 
       // Strip erroneous #snb prefix and enforce #wikiMain_snb scope when targeting Wiki main sidebar (#wikiMain_snb / #wikiSideMenu_menuList / data-menu-id='wiki...')
       // so child popup sidebars (wikiBookMain) are never mistaken for the main Wiki sidebar!
-      const isWikiSidebarContext = currentCandidates.some(
-        (c) => c.includes("wikiSideMenu") || c.includes("wikiMain_snb") || c.includes("data-menu-id='wiki")
-      );
+      const isWikiSidebarContext =
+        normalizedHtmlHint.includes("_menu") &&
+        currentCandidates.some((c) => c.includes("wikiSideMenu") || c.includes("wikiMain_snb"));
       if (isWikiSidebarContext) {
         currentCandidates = Array.from(
           new Set(
@@ -1197,7 +1632,12 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
 
         for (const cand of currentCandidates) {
           const hasSlotClassAttr = cand.includes("[class~=");
-          const hasDataAttr = /\[data-[a-z-]+=/i.test(cand) || cand.includes("input[value=") || cand.includes(":has(.scvr");
+          const hasDataAttr =
+            /\[data-[a-z-]+=/i.test(cand) ||
+            cand.includes("input[value=") ||
+            cand.includes(":has(.scvr") ||
+            cand.includes(":has(.plt_") ||
+            cand.includes(":has(._");
           const isGenericContentEditable = /^(?:\.ui-dialog:visible\s+)?[a-z]+\[contenteditable=['"]true['"]\]:visible$/i.test(cand);
           const isUnscopedGenericCheckbox =
             /\[title\*?=['"]선택['"]\]/.test(cand) &&
@@ -1243,6 +1683,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
           const isBareClassCatchAll =
             !cand.includes("#") &&
             !cand.includes("[") &&
+            !cand.includes(":has(") &&
             !cand.includes(":has-text(") &&
             !cand.includes(":text-is(") &&
             !cand.includes(":nth-") &&
@@ -1273,28 +1714,58 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
               positionalLater.push(cand);
               continue;
             }
-            // If :has-text('...') includes a trailing date/category suffix (e.g. '테스트 주제 2026-10-18 개인'), insert the core title match FIRST
+            // If :has-text('...') includes a trailing date/category suffix (e.g. '테스트 주제 2026-10-18 개인') or trailing ' 옵션', insert the core title match FIRST
             const textMatch = cand.match(/^(.*):has-text\(['"]([^'"]+)['"]\)(.*)$/);
             if (textMatch) {
               const fullTxt = textMatch[2].trim();
-              const strippedDateTitle = fullTxt.replace(/\s+\d{4}[-.]\d{2}[-.]\d{2}(?:\s+.*)?$/, "").trim();
+              const strippedDateTitle = fullTxt
+                .replace(/\s+\d{4}[-.]\d{2}[-.]\d{2}(?:\s+.*)?$/, "")
+                .replace(/\s+옵션$/, "")
+                .trim();
               if (strippedDateTitle && strippedDateTitle.length >= 2 && strippedDateTitle !== fullTxt) {
                 specificFirst.push(`${textMatch[1]}:has-text('${strippedDateTitle}')${textMatch[3]}`);
               }
             }
             specificFirst.push(cand);
-            // If it's a multi-token user/item text like :has-text('이지민 조교 건축과') or :has-text('test002 테스트 부서'), also add core first-token match
-            if (textMatch) {
+            // ONLY for organization chart user rows (e.g. '이지민 조교 건축과 (유니슨)', 'test002 테스트 부서 (유니슨)'), also add core first-token match
+            const isOrgUserContext =
+              cand.includes("orgUserList") ||
+              cand.includes("user_info") ||
+              (textMatch && /\([^)]+\)$/.test(textMatch[2].trim()));
+            if (textMatch && isOrgUserContext) {
               const firstToken = textMatch[2].trim().split(/\s+/)[0];
-              if (firstToken && firstToken.length >= 2 && firstToken !== textMatch[2].trim()) {
+              if (
+                firstToken &&
+                firstToken.length >= 2 &&
+                !/^\d+\.?$/.test(firstToken) &&
+                firstToken !== textMatch[2].trim()
+              ) {
                 specificFirst.push(`${textMatch[1]}:has-text('${firstToken}')${textMatch[3]}`);
               }
             }
           }
         }
 
-        if (specificFirst.length > 0) {
-          workingSel = Array.from(new Set([...specificFirst, ...positionalLater])).join(", ");
+        // Remove any previously generated first-token truncated :has-text('...') duplicates (e.g. :has-text('1.'), :has-text('테스트'), :has-text('최신'))
+        // when the full multi-word :has-text('...') with the identical selector prefix/suffix exists in specificFirst!
+        const dedupedSpecificFirst = specificFirst.filter((cand) => {
+          if (cand.includes("orgUserList") || cand.includes("user_info")) return true;
+          const m = cand.match(/^(.*):has-text\(['"]([^'"]+)['"]\)(.*)$/);
+          if (!m) return true;
+          const [, pre, txt, post] = m;
+          const trimmedTxt = txt.trim();
+          if (trimmedTxt.includes(" ")) return true;
+          const hasLongerFullTextSibling = specificFirst.some((other) => {
+            if (other === cand) return false;
+            const om = other.match(/^(.*):has-text\(['"]([^'"]+)['"]\)(.*)$/);
+            if (!om) return false;
+            return om[1] === pre && om[3] === post && om[2].trim().startsWith(trimmedTxt + " ");
+          });
+          return !hasLongerFullTextSibling;
+        });
+
+        if (dedupedSpecificFirst.length > 0) {
+          workingSel = Array.from(new Set([...dedupedSpecificFirst, ...positionalLater])).join(", ");
         } else {
           workingSel = currentCandidates.join(", ");
         }
@@ -1319,9 +1790,9 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         action.type === "type" &&
         action.targetHtml &&
         desc.includes("'에디터 본문' 입력 영역") &&
-        (/placeholder=["']([^"']+)["']/i.test(action.targetHtml) || /id=["'][^"']*(?:subject|title)[^"']*["']/i.test(action.targetHtml))
+        (/\b(?:data-placeholder|placeholder)=["']([^"']+)["']/i.test(action.targetHtml) || /id=["'][^"']*(?:subject|title)[^"']*["']/i.test(action.targetHtml))
       ) {
-        const phMatch = action.targetHtml.match(/placeholder=["']([^"']+)["']/i);
+        const phMatch = action.targetHtml.match(/\b(?:data-placeholder|placeholder)=["']([^"']+)["']/i);
         const fieldLabel = phMatch && phMatch[1].trim() ? phMatch[1].trim() : "제목";
         action.description = action.description.replace("'에디터 본문' 입력 영역", `'${fieldLabel}' 입력창`);
         desc = action.description;
@@ -1343,8 +1814,11 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
 
     // If this action was captured directly from the live browser DOM via the Eyedropper,
     // preserve its exact HTML/DOM selector and iframe 100% without any keyword-guessing overrides!
+    const planHasExplicitEyedropperFlags = actualPlan.actions.some((a) => a.recordedByEyedropper === true);
     if (actualPlan.recordedByEyedropper || action.recordedByEyedropper) {
-      action.recordedByEyedropper = true;
+      if (action.recordedByEyedropper || Boolean(action.targetHtml) || !planHasExplicitEyedropperFlags) {
+        action.recordedByEyedropper = true;
+      }
       if (action.iframe === "iframe#subBody, iframe#contentFrame, iframe") {
         action.iframe = "iframe[name='setup_iframe'], iframe#subBody, iframe#contentFrame, iframe";
       }
@@ -2011,9 +2485,41 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       delete action.force;
     }
 
-    // 1-E. Module Content Search vs Sidebar Folder Search vs GNB Header Search Collision Prevention
+    // 1-E. Module Content Search vs Sidebar Folder Search vs GNB Header Search vs AI Chat Collision Prevention
+    const isAiChatContext =
+      Boolean(action.iframe && /chat_iframe|aiChat/i.test(action.iframe)) ||
+      /\bcmmAiChat|\bmentiony-content|\b_aiReset|\b_newChat|\b_chatLink|\bdata-search-type\b/i.test(sel) ||
+      desc.includes("에이전트") ||
+      desc.includes("질문") ||
+      desc.includes("ai ") ||
+      desc.includes("ai챗") ||
+      desc.includes("챗봇");
+
+    // Restore AI Chat actions in non-Eyedropper plans that were previously overwritten with eapWorkSelect_searchWord / eapWorkSelect_searchBox
+    if (isAiChatContext) {
+      if (action.type === "type" && sel.includes("eapWorkSelect_searchWord")) {
+        action.selector =
+          "div.mentiony-content[contenteditable='true']:visible, div[contenteditable='true'][data-placeholder*='질문']:visible, textarea:visible, input[type='text']:visible";
+        sel = action.selector;
+        changes.push(`[AI Chat 복원] AI 챗봇 질문 입력창 셀렉터 복원: "${desc}"`);
+        fixedActionsCount++;
+      } else if (action.type === "click" && sel.includes("eapWorkSelect_searchBox")) {
+        if (desc.includes("에이전트")) {
+          action.selector =
+            "div#cmmAiChat_controlMenu button[data-search-type='tool']:visible, button[data-search-type='tool']:visible, button._search:has-text('에이전트 모드'):visible, button:has-text('에이전트'):visible";
+        } else {
+          action.selector =
+            "div#cmmAiChat_controlMenu button[data-search-type='gw']:visible, button[data-search-type='gw']:visible, button._search:has-text('그룹웨어 검색'):visible, button._send:visible, button[title*='전송']:visible";
+        }
+        sel = action.selector;
+        changes.push(`[AI Chat 복원] AI 챗봇 검색/모드 버튼 셀렉터 복원: "${desc}"`);
+        fixedActionsCount++;
+      }
+    }
+
     const isFolderTreeSearch = desc.includes("문서함 검색") || desc.includes("폴더 검색") || desc.includes("트리 검색") || desc.includes("사이드바 검색");
     const isSearchExecuteAction =
+      !isAiChatContext &&
       action.type === "click" &&
       (desc.includes("검색") || sel.includes("search") || sel.includes("srch")) &&
       (desc.includes("버튼") || desc.includes("실행") || desc.includes("아이콘") || sel.includes("Btn") || sel.includes("btn") || sel.includes("submit")) &&
@@ -2035,6 +2541,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
 
     // 1-F. Content List Search Input (헤더 바로 아래 본문 제목/키워드 검색창 vs 사이드바 문서함 검색창)
     const isSearchInputAction =
+      !isAiChatContext &&
       action.type === "type" &&
       (desc.includes("검색") || sel.includes("search") || sel.includes("srch") || Boolean(action.useScraped)) &&
       !desc.includes("제목") &&
@@ -2406,6 +2913,44 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
           actSel.includes("#svc_box"))
       ) {
         changes.push(`[정제] 포탈 전체메뉴 모듈 이동 직후 중복 삽입된 전체메뉴 액션 제거: "${actDesc}"`);
+        removedActionsCount++;
+        if (idx + 1 < sanitizedActions.length && sanitizedActions[idx + 1].type === "wait") {
+          idx++;
+          removedActionsCount++;
+        }
+        continue;
+      }
+
+      // Clean up duplicate AI-injected [_fileAdd / _search] steps (lacking targetHtml & recordedByEyedropper) right after a recorded AI Chat control Menu action
+      if (
+        actualPlan.recordedByEyedropper &&
+        !act.recordedByEyedropper &&
+        !act.targetHtml &&
+        Boolean(prevNonWait?.targetHtml) &&
+        (actSel.includes("_fileAdd") ||
+          actSel.includes("_search") ||
+          actSel.includes("cmmAiChat_controlMenu") ||
+          actDesc.includes("파일 추가 및 기타") ||
+          actDesc.includes("에이전트 모드"))
+      ) {
+        changes.push(`[정제] AI Chat 옵션 선택 직후 중복 삽입된 비녹화 보조 액션 제거: "${actDesc}"`);
+        removedActionsCount++;
+        if (idx + 1 < sanitizedActions.length && sanitizedActions[idx + 1].type === "wait" && !sanitizedActions[idx + 1].recordedByEyedropper) {
+          idx++;
+          removedActionsCount++;
+        }
+        continue;
+      }
+
+      // Deduplicate consecutive identical clicks on a slide-over drawer item (#cmmAiChatSideMenu_navi a)
+      // because the 1st click already selects the item and closes the drawer!
+      if (
+        prevNonWait?.type === "click" &&
+        actSel.includes("cmmAiChatSideMenu_navi") &&
+        prevNonWaitSel.includes("cmmAiChatSideMenu_navi") &&
+        (actSel === prevNonWaitSel || (act.targetHtml && act.targetHtml === prevNonWait.targetHtml))
+      ) {
+        changes.push(`[중복 클릭 제거] 슬라이드 메뉴(#cmmAiChatSideMenu_navi) 닫힘 직후 동일 항목 중복 클릭 제거: "${actDesc}"`);
         removedActionsCount++;
         if (idx + 1 < sanitizedActions.length && sanitizedActions[idx + 1].type === "wait") {
           idx++;

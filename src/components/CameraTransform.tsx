@@ -3,7 +3,6 @@ import { useCurrentFrame, interpolate, Easing } from "remotion";
 import type { EditPlan, EditSegment, CursorPosition, Moment } from "../types";
 import { WINDOW_WIDTH, WINDOW_HEIGHT } from "./FloatingWindow";
 import { frameToVideoTime } from "./FrameMapper";
-import { getCursorState } from "./SyntheticCursor";
 
 interface CameraTransformProps {
   editPlan: EditPlan;
@@ -264,8 +263,9 @@ export const CameraTransform: React.FC<CameraTransformProps> = ({
   children,
 }) => {
   const frame = useCurrentFrame();
+  const videoFrame = frameToVideoTime(frame, editPlan) * editPlan.fps;
   const { scale, translateX, translateY } = getCameraState(
-    frame,
+    videoFrame,
     editPlan,
     canvasWidth,
     canvasHeight,
@@ -287,4 +287,3 @@ export const CameraTransform: React.FC<CameraTransformProps> = ({
     </div>
   );
 };
-

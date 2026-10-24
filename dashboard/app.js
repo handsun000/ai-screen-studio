@@ -515,6 +515,7 @@ async function selectScenario(slug, preferMode = null) {
     const targetMode = preferMode || (renderInfo.exists && currentVideoMode === "rendered" ? "rendered" : "raw");
     setVideoMode(targetMode, details, renderInfo);
 
+    handleClearCutRange();
     renderTimelineVisual(details);
     renderMomentsStepList(details);
     renderNarrationStudio(details);
@@ -562,8 +563,790 @@ function setVideoMode(mode, details = null, renderInfo = null) {
       videoPlayer.src = "";
     }
   }
+  stopRealtimeHoldAndAudio();
   if (videoSpeedSelect && videoPlayer) {
     videoPlayer.playbackRate = parseFloat(videoSpeedSelect.value) || 1.0;
+  }
+}
+
+// 6.8 Real-Time Segment Stretch/Shrink & 100% Sync Engine (Browser Memory + Live Preview)
+const realtimeHoldState = {
+  active: false,
+  isProgrammaticPause: false,
+  isProgrammaticResume: false,
+  isProgrammaticSeek: false,
+  regionIdx: -1,
+  completedRegions: new Set(),
+  playedCueIds: new Set(),
+  compStartMs: 0,
+  holdDurationMs: 0,
+  videoEndFrame: 0,
+  startWallMs: 0,
+  rafId: null,
+  lastPlayedCueId: null,
+};
+let quickSaveTimer = null;
+let autoTtsSynthTimer = null;
+let autoTtsInFlight = false;
+let autoTtsQueued = false;
+
+function stopRealtimeHoldAndAudio(preserveCompletedProgress = false) {
+  realtimeHoldState.active = false;
+  realtimeHoldState.isProgrammaticPause = false;
+  realtimeHoldState.isProgrammaticResume = false;
+  realtimeHoldState.regionIdx = -1;
+  if (!preserveCompletedProgress) {
+    realtimeHoldState.completedRegions.clear();
+    realtimeHoldState.playedCueIds.clear();
+  } else if (realtimeHoldState.lastPlayedCueId !== null) {
+    realtimeHoldState.playedCueIds.delete(realtimeHoldState.lastPlayedCueId);
+  }
+  realtimeHoldState.lastPlayedCueId = null;
+  if (activePreviewAudio) {
+    try {
+      activePreviewAudio.pause();
+    } catch {}
+    activePreviewAudio = null;
+  }
+  const badgeEl = document.getElementById("live-timewarp-badge");
+  if (badgeEl) badgeEl.classList.add("hidden");
+  const subEl = document.getElementById("live-subtitle-overlay");
+  if (subEl) subEl.classList.add("hidden");
+}
+
+function syncCompletedHoldRegionsForSeek(rawTimeSec, compTimeMs = null) {
+  realtimeHoldState.completedRegions.clear();
+  realtimeHoldState.playedCueIds.clear();
+  realtimeHoldState.lastPlayedCueId = null;
+
+  const details = scenarioDetailsCache[selectedScenario];
+  const editPlan = details?.editPlan;
+  const narration = details?.narration || editPlan?.narration;
+  const regions = editPlan?.timeRegions;
+  const fps = Number(editPlan?.fps || 60);
+  const rawSec = Number(rawTimeSec || 0);
+  if (rawSec <= 0.15 && (compTimeMs === null || compTimeMs <= 220)) {
+    return;
+  }
+
+  const effectiveCompMs =
+    compTimeMs !== null ? Number(compTimeMs) : videoTimeMsToCompTimeMs(rawSec * 1000, editPlan);
+  const rawFrame = rawSec * fps;
+  const compFrame = (effectiveCompMs / 1000) * fps;
+
+  if (Array.isArray(regions)) {
+    regions.forEach((r, idx) => {
+      const vSpan = Math.max(0, (r.videoEndFrame || 0) - (r.videoStartFrame || 0));
+      const cSpan = Math.max(0, (r.compEndFrame || 0) - (r.compStartFrame || 0));
+      if (r.speed < 0.25 && cSpan - vSpan >= 4) {
+        if (compTimeMs !== null) {
+          if (compFrame > 15 && r.compStartFrame <= compFrame + 2) {
+            realtimeHoldState.completedRegions.add(idx);
+          }
+        } else {
+          if (rawFrame > 15 && r.videoStartFrame <= rawFrame + 2) {
+            realtimeHoldState.completedRegions.add(idx);
+          }
+        }
+      }
+    });
+  }
+
+  const cues = narration?.cues || [];
+  cues.forEach((c) => {
+    if ((c.endMs || 0) <= effectiveCompMs + 180) {
+      realtimeHoldState.playedCueIds.add(c.id);
+    }
+  });
+}
+
+function computeTimeRegionsAndSyncCuesJS(cues, rawTotalMs, fps, momentsList = []) {
+  const safeRawTotalMs = Math.max(1000, Math.round(rawTotalMs || 15000));
+  const rawTotalFrames = Math.max(1, Math.round((safeRawTotalMs / 1000) * fps));
+  if (!Array.isArray(cues) || cues.length === 0) {
+    return {
+      cues: [],
+      timeRegions: [
+        {
+          videoStartFrame: 0,
+          videoEndFrame: rawTotalFrames,
+          compStartFrame: 0,
+          compEndFrame: rawTotalFrames,
+          speed: 1.0,
+        },
+      ],
+      totalDurationFrames: rawTotalFrames,
+      rawDurationFrames: rawTotalFrames,
+    };
+  }
+
+  const interactiveMoments = (momentsList || []).filter(
+    (m) => m.type !== "wait" && m.type !== "navigate" && typeof m.timestamp === "number"
+  );
+  const allMissingAnchor = cues.every((c) => typeof c.videoStartMs !== "number");
+  if (allMissingAnchor) {
+    cues.forEach((c, idx) => {
+      if (idx === 0 && (c.isIntro || (c.startMs || 0) <= 600)) {
+        c.videoStartMs = Math.min(400, Math.max(100, Number(c.startMs || 200)));
+      } else {
+        const mIdx = cues[0]?.isIntro || (cues[0]?.startMs || 0) <= 600 ? idx - 1 : idx;
+        if (mIdx >= 0 && mIdx < interactiveMoments.length && cues.length - 1 <= interactiveMoments.length) {
+          const mTs = Number(interactiveMoments[mIdx].timestamp || 0);
+          if ((c.startMs || 0) > mTs + 250) {
+            c.videoStartMs = Math.max(0, mTs - 200);
+          } else {
+            c.videoStartMs = Math.max(0, Number(c.startMs || 0));
+          }
+        } else {
+          c.videoStartMs = Math.max(0, Number(c.startMs || 0));
+        }
+      }
+    });
+  } else {
+    cues.forEach((c) => {
+      if (typeof c.videoStartMs !== "number" || isNaN(c.videoStartMs)) {
+        c.videoStartMs = Math.max(0, Number(c.startMs || 0));
+      } else {
+        c.videoStartMs = Math.max(0, Math.round(c.videoStartMs));
+      }
+    });
+  }
+
+  for (let i = 1; i < cues.length; i++) {
+    if (cues[i].videoStartMs < cues[i - 1].videoStartMs + 100) {
+      cues[i].videoStartMs = cues[i - 1].videoStartMs + 100;
+    }
+    if (cues[i].videoStartMs > safeRawTotalMs - 200) {
+      cues[i].videoStartMs = Math.max(cues[i - 1].videoStartMs + 50, safeRawTotalMs - 200);
+    }
+  }
+
+  const n = cues.length;
+  for (let i = 0; i < n; i++) {
+    if (i < n - 1) {
+      cues[i].videoEndMs = Math.max(cues[i].videoStartMs + 100, cues[i + 1].videoStartMs);
+    } else {
+      cues[i].videoEndMs = Math.max(cues[i].videoStartMs + 300, safeRawTotalMs);
+    }
+  }
+
+  const timeRegions = [];
+  let compCursorFrames = 0;
+
+  function appendRegion(vStartF, vEndF, cStartF, cEndF, cueId) {
+    vStartF = Math.max(0, Math.round(vStartF));
+    vEndF = Math.max(vStartF, Math.round(vEndF));
+    cStartF = Math.max(0, Math.round(cStartF));
+    cEndF = Math.max(cStartF, Math.round(cEndF));
+    const cSpan = cEndF - cStartF;
+    const vSpan = vEndF - vStartF;
+    if (cSpan <= 0) return;
+    const speed = Number((vSpan / cSpan).toFixed(6));
+    const reg = {
+      videoStartFrame: vStartF,
+      videoEndFrame: vEndF,
+      compStartFrame: cStartF,
+      compEndFrame: cEndF,
+      speed,
+    };
+    if (cueId !== undefined && cueId !== null) reg.cueId = cueId;
+    timeRegions.push(reg);
+  }
+
+  const firstVStartMs = cues[0].videoStartMs || 0;
+  const firstVStartF = Math.max(0, Math.round((firstVStartMs / 1000) * fps));
+  if (firstVStartF > 0) {
+    appendRegion(0, firstVStartF, 0, firstVStartF, null);
+    compCursorFrames = firstVStartF;
+  }
+
+  const speechPadBaseMs = 180;
+  for (let i = 0; i < n; i++) {
+    const c = cues[i];
+    const cueId = Number(c.id || i + 1);
+    const vStartMs = Number(c.videoStartMs || 0);
+    const vEndMs = Number(c.videoEndMs || vStartMs + 1000);
+    const vStartF = i === 0 ? firstVStartF : Math.max(0, Math.min(rawTotalFrames, Math.round((vStartMs / 1000) * fps)));
+    let vEndF = i === n - 1 ? rawTotalFrames : Math.max(0, Math.min(rawTotalFrames, Math.round((vEndMs / 1000) * fps)));
+    if (vEndF <= vStartF) {
+      vEndF = Math.min(rawTotalFrames, vStartF + 1);
+    }
+
+    const rawGapMs = Math.max(100, vEndMs - vStartMs);
+    const textLen = String(c.text || "").trim().length;
+    const audioDurMs = Number(c.audioDurationMs || Math.max(1800, textLen * 145));
+    const speechPadMs = i === n - 1 ? 260 : speechPadBaseMs;
+    const minSpeechWindowMs = audioDurMs > 0 ? audioDurMs + speechPadMs : 400;
+
+    const autoHoldMs = Math.max(0, minSpeechWindowMs - rawGapMs);
+    const extraHoldMs = Math.round(Number(c.extraHoldMs || 0));
+
+    const baseWindowMs = Math.max(rawGapMs, minSpeechWindowMs);
+    const minAllowedWindowMs = Math.max(minSpeechWindowMs, Math.max(300, Math.round(rawGapMs * 0.25)));
+    const compGapMs = Math.max(minAllowedWindowMs, baseWindowMs + extraHoldMs);
+    const effectiveDeltaMs = compGapMs - rawGapMs;
+
+    const rawFrames = Math.max(1, vEndF - vStartF);
+    const compFrames = Math.max(1, Math.round((compGapMs / 1000) * fps));
+    const deltaFrames = compFrames - rawFrames;
+
+    const cStartF = compCursorFrames;
+    const cEndF = cStartF + compFrames;
+
+    c.autoHoldMs = Math.round(autoHoldMs);
+    c.extraHoldMs = extraHoldMs;
+    c.effectiveDeltaMs = Math.round(effectiveDeltaMs);
+    c.playbackRate = 1.0;
+    c.startMs = Math.round((cStartF / fps) * 1000);
+    const cueDurForSub = audioDurMs > 0 ? audioDurMs : Math.min(compGapMs, 2500);
+    c.endMs = c.startMs + cueDurForSub;
+
+    const isIntro = Boolean(c.isIntro || (i === 0 && vStartMs <= 600));
+    if (Math.abs(deltaFrames) <= 1 || rawFrames < 4) {
+      appendRegion(vStartF, vEndF, cStartF, cEndF, cueId);
+    } else if (deltaFrames > 1) {
+      const holdRawF = Math.min(Math.max(2, Math.round(0.08 * fps)), Math.max(1, Math.floor(rawFrames / 4)));
+      let holdVStart = vStartF;
+      let holdVEnd = vStartF + holdRawF;
+      if (!isIntro) {
+        const tailGlideF = Math.min(Math.round(0.45 * fps), Math.max(0, rawFrames - holdRawF - 2));
+        holdVEnd = vEndF - tailGlideF;
+        holdVStart = Math.max(vStartF, holdVEnd - holdRawF);
+      }
+
+      const preRawF = holdVStart - vStartF;
+      const actHoldRawF = Math.max(1, holdVEnd - holdVStart);
+      const postRawF = vEndF - holdVEnd;
+      const holdCompF = actHoldRawF + deltaFrames;
+      let cCur = cStartF;
+
+      if (preRawF > 0) {
+        appendRegion(vStartF, holdVStart, cCur, cCur + preRawF, cueId);
+        cCur += preRawF;
+      }
+      appendRegion(holdVStart, holdVEnd, cCur, cCur + holdCompF, cueId);
+      cCur += holdCompF;
+      if (postRawF > 0) {
+        appendRegion(holdVEnd, vEndF, cCur, cCur + postRawF, cueId);
+        cCur += postRawF;
+      }
+    } else {
+      appendRegion(vStartF, vEndF, cStartF, cEndF, cueId);
+    }
+
+    compCursorFrames = cEndF;
+  }
+
+  return {
+    cues,
+    timeRegions,
+    totalDurationFrames: Math.max(1, compCursorFrames),
+    rawDurationFrames: rawTotalFrames,
+  };
+}
+
+function syncScenarioTimelineInMemory(details) {
+  if (!details) return;
+  const editPlan = details.editPlan;
+  const narration = details.narration || editPlan?.narration;
+  if (!narration || !Array.isArray(narration.cues) || narration.cues.length === 0) return;
+
+  const fps = Number(editPlan?.fps || 60);
+  const rawFrames = Number(editPlan?.rawDurationFrames || editPlan?.totalDurationFrames || 0);
+  const momentsDurMs = Number(details.moments?.totalDurationMs || 0);
+  const rawTotalMs =
+    rawFrames > 0
+      ? Math.round((rawFrames / fps) * 1000)
+      : momentsDurMs > 0
+      ? momentsDurMs
+      : videoPlayer && videoPlayer.duration
+      ? Math.round(videoPlayer.duration * 1000)
+      : 15000;
+
+  const synced = computeTimeRegionsAndSyncCuesJS(
+    narration.cues,
+    rawTotalMs,
+    fps,
+    details.moments?.moments || []
+  );
+
+  narration.cues = synced.cues;
+  details.narration = narration;
+  if (editPlan) {
+    editPlan.rawDurationFrames = synced.rawDurationFrames;
+    editPlan.totalDurationFrames = synced.totalDurationFrames;
+    editPlan.timeRegions = synced.timeRegions;
+    editPlan.narration = narration;
+  }
+}
+
+function videoTimeMsToCompTimeMs(rawTimeMs, editPlan, completedRegions = null) {
+  const regions = editPlan?.timeRegions;
+  const fps = Number(editPlan?.fps || 60);
+  if (!Array.isArray(regions) || regions.length === 0) return rawTimeMs;
+
+  const rawFrame = (rawTimeMs / 1000) * fps;
+  let compF = null;
+  for (let idx = 0; idx < regions.length; idx++) {
+    const r = regions[idx];
+    if (rawFrame >= r.videoStartFrame && rawFrame <= r.videoEndFrame) {
+      const vSpan = r.videoEndFrame - r.videoStartFrame;
+      const cSpan = r.compEndFrame - r.compStartFrame;
+      if (completedRegions && completedRegions.has(idx) && cSpan > vSpan) {
+        const progressedRawF = Math.max(0, Math.min(vSpan, rawFrame - r.videoStartFrame));
+        compF = r.compStartFrame + (cSpan - vSpan) + progressedRawF;
+        break;
+      }
+      if (vSpan <= 0.0001 || r.speed <= 0.0001) {
+        compF = r.compStartFrame;
+        break;
+      }
+      const ratio = (rawFrame - r.videoStartFrame) / vSpan;
+      compF = r.compStartFrame + ratio * cSpan;
+      break;
+    }
+  }
+  if (compF === null) {
+    const last = regions[regions.length - 1];
+    if (rawFrame > last.videoEndFrame) {
+      const extraF = rawFrame - last.videoEndFrame;
+      compF = last.compEndFrame + extraF;
+    } else {
+      return rawTimeMs;
+    }
+  }
+  if (completedRegions && completedRegions.size > 0) {
+    for (const cIdx of completedRegions) {
+      const rc = regions[cIdx];
+      if (rc && rawFrame >= rc.videoStartFrame - 1) {
+        const rvSpan = Math.max(0, rc.videoEndFrame - rc.videoStartFrame);
+        const rcSpan = Math.max(0, rc.compEndFrame - rc.compStartFrame);
+        const minCompF = rc.compStartFrame + Math.max(0, rcSpan - rvSpan);
+        if (compF < minCompF) compF = minCompF;
+      }
+    }
+  }
+  return (compF / fps) * 1000;
+}
+
+function compTimeMsToVideoTimeMs(compTimeMs, editPlan) {
+  const regions = editPlan?.timeRegions;
+  const fps = Number(editPlan?.fps || 60);
+  if (!Array.isArray(regions) || regions.length === 0) return compTimeMs;
+
+  const compFrame = (compTimeMs / 1000) * fps;
+  for (const r of regions) {
+    if (compFrame >= r.compStartFrame && compFrame <= r.compEndFrame) {
+      const vFrame = r.videoStartFrame + (compFrame - r.compStartFrame) * r.speed;
+      return (vFrame / fps) * 1000;
+    }
+  }
+  const last = regions[regions.length - 1];
+  if (compFrame > last.compEndFrame) {
+    return (last.videoEndFrame / fps) * 1000;
+  }
+  return compTimeMs;
+}
+
+function saveNarrationTimingQuick() {
+  if (!selectedScenario) return;
+  if (quickSaveTimer) clearTimeout(quickSaveTimer);
+  quickSaveTimer = setTimeout(async () => {
+    const details = scenarioDetailsCache[selectedScenario];
+    const narration = details?.narration;
+    if (!narration) return;
+    try {
+      const res = await fetch(`/api/narration/${selectedScenario}/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ narration, synthesize: false }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.narration && details) {
+          details.narration = data.narration;
+          if (data.editPlan) details.editPlan = data.editPlan;
+          else syncScenarioTimelineInMemory(details);
+        }
+      }
+    } catch (e) {
+      console.warn("Quick timing save failed:", e);
+    }
+  }, 220);
+}
+
+async function runAutoSynthesizeAndFitNow(targetRowIdx = null) {
+  if (!selectedScenario) return;
+  if (autoTtsInFlight) {
+    autoTtsQueued = true;
+    return;
+  }
+  autoTtsInFlight = true;
+  if (autoTtsSynthTimer) {
+    clearTimeout(autoTtsSynthTimer);
+    autoTtsSynthTimer = null;
+  }
+
+  const slug = selectedScenario;
+  const statusBadge = document.getElementById("narration-status-badge");
+  const container = document.getElementById("narration-cues-container");
+  const allRows = container ? container.querySelectorAll(".narration-cue-row") : [];
+  if (targetRowIdx !== null && allRows[targetRowIdx]) {
+    const bWrap = allRows[targetRowIdx].querySelector(".cue-sync-badge-wrap");
+    if (bWrap) {
+      bWrap.innerHTML = `<span class="cue-sync-badge badge-auto-hold">🔄 음성·영상길이 자동 맞춤 중...</span>`;
+    }
+  }
+  if (statusBadge) {
+    statusBadge.textContent = "🔄 수정 대본 TTS 측정 & 영상 길이 자동 맞춤 중...";
+  }
+
+  try {
+    const narration = collectNarrationFromUI({ sortByStartTime: false });
+    const res = await fetch(`/api/narration/${slug}/save`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ narration, synthesize: true }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const details = scenarioDetailsCache[slug];
+      if (details && data.narration) {
+        details.narration = data.narration;
+        if (data.editPlan) {
+          details.editPlan = data.editPlan;
+        } else if (details.editPlan) {
+          details.editPlan.narration = data.narration;
+        }
+        syncScenarioTimelineInMemory(details);
+
+        // If user is currently typing in an input inside narration studio, update badges/times in-place without losing focus
+        const activeEl = document.activeElement;
+        const isTypingInCue =
+          activeEl && container && container.contains(activeEl) && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA");
+
+        if (isTypingInCue) {
+          const rowsNow = container.querySelectorAll(".narration-cue-row");
+          details.narration.cues.forEach((sc, sIdx) => {
+            const rEl = rowsNow[sIdx];
+            if (!rEl) return;
+            const currentInputVal = (rEl.querySelector(".cue-text-input")?.value || "").trim();
+            rEl.dataset.compStartMs = String(sc.startMs || 0);
+            rEl.dataset.compEndMs = String(sc.endMs || 0);
+            if (currentInputVal === sc.text) {
+              rEl.dataset.lastSyncedText = sc.text;
+            }
+            const jEl = rEl.querySelector(".cue-jump-time");
+            if (jEl) {
+              const cs = ((sc.startMs || 0) / 1000).toFixed(1);
+              const ce = ((sc.endMs || 0) / 1000).toFixed(1);
+              jEl.textContent = `➔ ${cs}~${ce}s`;
+            }
+            const bWrap = rEl.querySelector(".cue-sync-badge-wrap");
+            if (bWrap) bWrap.innerHTML = buildCueSyncBadgeHtml(sc);
+          });
+          const styleLabels = {
+            manual: "📘 정석 매뉴얼",
+            friendly: "😊 친절 가이드",
+            presentation: "🎙️ 시연 발표",
+            compact: "⚡ 핵심 브리핑",
+          };
+          const styleBadgeText = styleLabels[details.narration.style || "manual"] || "📘 정석 매뉴얼";
+          const totalHoldMs = details.narration.cues.reduce(
+            (acc, c) => acc + Math.max(0, Number(c.effectiveDeltaMs || 0)),
+            0
+          );
+          if (statusBadge) {
+            const holdText = totalHoldMs >= 200 ? ` · ⏱️싱크연장 +${(totalHoldMs / 1000).toFixed(1)}s` : "";
+            statusBadge.textContent = `✅ 자동맞춤 완료 · ${details.narration.cues.length}구간 · ${styleBadgeText}${holdText}`;
+          }
+        } else {
+          renderNarrationStudio(details);
+        }
+        renderTimelineVisual(details);
+        renderMomentsStepList(details);
+        updateJsonViewer("narration");
+      }
+    }
+  } catch (err) {
+    console.warn("Auto TTS synthesize failed:", err);
+  } finally {
+    autoTtsInFlight = false;
+    if (autoTtsQueued) {
+      autoTtsQueued = false;
+      runAutoSynthesizeAndFitNow();
+    }
+  }
+}
+
+function scheduleAutoSynthesizeAndFit(targetRowIdx = null, delayMs = 850) {
+  if (autoTtsSynthTimer) clearTimeout(autoTtsSynthTimer);
+  autoTtsSynthTimer = setTimeout(() => {
+    runAutoSynthesizeAndFitNow(targetRowIdx);
+  }, delayMs);
+}
+
+// 6.9 Direct Video Cut (Trim) Editor & Undo/Restore
+let cutPreviewStopRawSec = null;
+let timelineDragCutState = null;
+
+function updateCutSelectionUI() {
+  const cutInInput = document.getElementById("cut-in-input");
+  const cutOutInput = document.getElementById("cut-out-input");
+  const cutDurationBadge = document.getElementById("cut-duration-badge");
+  const cutSelEl = document.getElementById("timeline-cut-selection");
+  const btnUndo = document.getElementById("btn-undo-video-cut");
+  const btnRestoreOrig = document.getElementById("btn-restore-orig-video");
+
+  const details = scenarioDetailsCache[selectedScenario];
+  const editStatus = details?.videoEditStatus;
+
+  if (btnUndo) {
+    btnUndo.classList.toggle("hidden", !editStatus?.hasUndoBackup);
+  }
+  if (btnRestoreOrig) {
+    btnRestoreOrig.classList.toggle("hidden", !editStatus?.hasOriginalBackup);
+    if (editStatus?.hasOriginalBackup && editStatus?.originalDurationSec) {
+      btnRestoreOrig.title = `최초 녹화 원본 영상(${editStatus.originalDurationSec.toFixed(1)}s)으로 복원합니다`;
+    }
+  }
+
+  if (!cutInInput || !cutOutInput || !cutSelEl) return;
+
+  const inSec = parseFloat(cutInInput.value);
+  const outSec = parseFloat(cutOutInput.value);
+
+  if (!Number.isFinite(inSec) || !Number.isFinite(outSec) || outSec <= inSec + 0.05) {
+    cutSelEl.classList.add("hidden");
+    if (cutDurationBadge) cutDurationBadge.classList.add("hidden");
+    return;
+  }
+
+  const cutDur = outSec - inSec;
+  if (cutDurationBadge) {
+    cutDurationBadge.classList.remove("hidden");
+    cutDurationBadge.textContent = `✂️ -${cutDur.toFixed(1)}s 삭제 영역`;
+  }
+
+  const editPlan = details?.editPlan;
+  const fps = Number(editPlan?.fps || 60);
+  const totalCompMs =
+    editPlan?.totalDurationFrames > 0
+      ? (editPlan.totalDurationFrames / fps) * 1000
+      : (videoPlayer?.duration || Math.max(outSec, 10)) * 1000;
+
+  if (totalCompMs <= 0) {
+    cutSelEl.classList.add("hidden");
+    return;
+  }
+
+  const startCompMs = editPlan?.timeRegions?.length
+    ? videoTimeMsToCompTimeMs(inSec * 1000, editPlan)
+    : inSec * 1000;
+  const endCompMs = editPlan?.timeRegions?.length
+    ? videoTimeMsToCompTimeMs(outSec * 1000, editPlan)
+    : outSec * 1000;
+
+  const leftPct = Math.min(99.5, Math.max(0, (startCompMs / totalCompMs) * 100));
+  const rightPct = Math.min(100, Math.max(leftPct + 0.5, (endCompMs / totalCompMs) * 100));
+  cutSelEl.style.left = `${leftPct}%`;
+  cutSelEl.style.width = `${Math.max(0.5, rightPct - leftPct)}%`;
+  cutSelEl.classList.remove("hidden");
+}
+
+function getCurrentRawVideoTimeSec() {
+  if (!videoPlayer) return 0;
+  const curSec = videoPlayer.currentTime || 0;
+  if (currentVideoMode === "rendered") {
+    const details = scenarioDetailsCache[selectedScenario];
+    const rawMs = compTimeMsToVideoTimeMs(curSec * 1000, details?.editPlan);
+    return Number((rawMs / 1000).toFixed(1));
+  }
+  return Number(curSec.toFixed(1));
+}
+
+function handleSetCutInFromPlayhead() {
+  const cutInInput = document.getElementById("cut-in-input");
+  const cutOutInput = document.getElementById("cut-out-input");
+  if (!cutInInput) return;
+  const curRawSec = getCurrentRawVideoTimeSec();
+  cutInInput.value = curRawSec.toFixed(1);
+  const outVal = parseFloat(cutOutInput?.value || "");
+  if (!Number.isFinite(outVal) || outVal <= curRawSec) {
+    const maxDur = videoPlayer?.duration || curRawSec + 3.0;
+    if (cutOutInput) {
+      cutOutInput.value = Math.min(maxDur, curRawSec + 2.0).toFixed(1);
+    }
+  }
+  updateCutSelectionUI();
+}
+
+function handleSetCutOutFromPlayhead() {
+  const cutInInput = document.getElementById("cut-in-input");
+  const cutOutInput = document.getElementById("cut-out-input");
+  if (!cutOutInput) return;
+  const curRawSec = getCurrentRawVideoTimeSec();
+  cutOutInput.value = curRawSec.toFixed(1);
+  const inVal = parseFloat(cutInInput?.value || "");
+  if (!Number.isFinite(inVal) || inVal >= curRawSec) {
+    if (cutInInput) {
+      cutInInput.value = Math.max(0, curRawSec - 2.0).toFixed(1);
+    }
+  }
+  updateCutSelectionUI();
+}
+
+function handleClearCutRange() {
+  const cutInInput = document.getElementById("cut-in-input");
+  const cutOutInput = document.getElementById("cut-out-input");
+  if (cutInInput) cutInInput.value = "";
+  if (cutOutInput) cutOutInput.value = "";
+  cutPreviewStopRawSec = null;
+  updateCutSelectionUI();
+}
+
+function handlePreviewCutRange() {
+  if (!videoPlayer || !videoPlayer.duration) return;
+  const cutInInput = document.getElementById("cut-in-input");
+  const cutOutInput = document.getElementById("cut-out-input");
+  const inSec = parseFloat(cutInInput?.value || "");
+  const outSec = parseFloat(cutOutInput?.value || "");
+  if (!Number.isFinite(inSec) || !Number.isFinite(outSec) || outSec <= inSec + 0.1) {
+    alert("먼저 잘라낼 시작(초)과 끝(초) 지점을 지정해주세요.");
+    return;
+  }
+  if (currentVideoMode !== "raw") {
+    setVideoMode("raw");
+  }
+  stopRealtimeHoldAndAudio();
+  syncCompletedHoldRegionsForSeek(inSec, null);
+  cutPreviewStopRawSec = outSec;
+  realtimeHoldState.isProgrammaticSeek = true;
+  videoPlayer.currentTime = Math.max(0, inSec);
+  realtimeHoldState.isProgrammaticResume = true;
+  videoPlayer.play().catch(() => {
+    realtimeHoldState.isProgrammaticResume = false;
+  });
+}
+
+async function handleApplyVideoCut() {
+  if (!selectedScenario) return;
+  const cutInInput = document.getElementById("cut-in-input");
+  const cutOutInput = document.getElementById("cut-out-input");
+  const btnApply = document.getElementById("btn-apply-video-cut");
+  const inSec = parseFloat(cutInInput?.value || "");
+  const outSec = parseFloat(cutOutInput?.value || "");
+
+  if (!Number.isFinite(inSec) || !Number.isFinite(outSec) || outSec <= inSec + 0.19) {
+    alert("잘라낼 시작(초)과 끝(초) 구간을 최소 0.2초 이상으로 지정해주세요.\n(영상을 재생하며 [시작점 현위치] / [끝점 현위치] 버튼을 누르거나 값을 입력하세요)");
+    return;
+  }
+
+  const slug = selectedScenario;
+  if (btnApply) {
+    btnApply.disabled = true;
+    btnApply.textContent = "⏳ 구간 잘라내는 중...";
+  }
+  stopRealtimeHoldAndAudio();
+  if (videoPlayer && !videoPlayer.paused) {
+    videoPlayer.pause();
+  }
+
+  try {
+    const res = await fetch(`/api/video-edit/${slug}/cut`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ startSec: inSec, endSec: outSec }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "컷 편집 실패");
+
+    const details = scenarioDetailsCache[slug];
+    if (details) {
+      if (data.moments) details.moments = data.moments;
+      if (data.editPlan) details.editPlan = data.editPlan;
+      if (data.narration) details.narration = data.narration;
+      if (data.editStatus) details.videoEditStatus = data.editStatus;
+      syncScenarioTimelineInMemory(details);
+    }
+
+    handleClearCutRange();
+    setVideoMode("raw", details);
+    if (videoPlayer) {
+      const resumeSec = Math.max(0, inSec - 0.3);
+      videoPlayer.addEventListener(
+        "loadedmetadata",
+        () => {
+          realtimeHoldState.isProgrammaticSeek = true;
+          videoPlayer.currentTime = Math.min(videoPlayer.duration || resumeSec, resumeSec);
+          updateVideoPlaybackSync();
+        },
+        { once: true }
+      );
+    }
+    handleClearCutRange();
+    renderTimelineVisual(details);
+    renderMomentsStepList(details);
+    renderNarrationStudio(details);
+    updateJsonViewer("edit");
+    fetchScenarios();
+  } catch (err) {
+    alert(`구간 잘라내기 실패: ${err.message}`);
+  } finally {
+    if (btnApply) {
+      btnApply.disabled = false;
+      btnApply.textContent = "✂️ 선택 구간 잘라내기";
+    }
+  }
+}
+
+async function handleRestoreVideoCut(mode = "undo") {
+  if (!selectedScenario) return;
+  const slug = selectedScenario;
+  const btn = document.getElementById(mode === "orig" ? "btn-restore-orig-video" : "btn-undo-video-cut");
+  const origLabel = btn ? btn.textContent : "";
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "⏳ 복원 중...";
+  }
+  stopRealtimeHoldAndAudio();
+  if (videoPlayer && !videoPlayer.paused) {
+    videoPlayer.pause();
+  }
+
+  try {
+    const res = await fetch(`/api/video-edit/${slug}/restore`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "복원 실패");
+
+    const details = scenarioDetailsCache[slug];
+    if (details) {
+      if (data.moments) details.moments = data.moments;
+      if (data.editPlan) details.editPlan = data.editPlan;
+      if (data.narration) details.narration = data.narration;
+      if (data.editStatus) details.videoEditStatus = data.editStatus;
+      syncScenarioTimelineInMemory(details);
+    }
+
+    handleClearCutRange();
+    setVideoMode("raw", details);
+    handleClearCutRange();
+    renderTimelineVisual(details);
+    renderMomentsStepList(details);
+    renderNarrationStudio(details);
+    updateJsonViewer("edit");
+    fetchScenarios();
+  } catch (err) {
+    alert(`영상 복원 실패: ${err.message}`);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = origLabel;
+    }
   }
 }
 
@@ -572,6 +1355,8 @@ function renderTimelineVisual(details) {
   if (!timelineVisualBar) return;
   timelineVisualBar.innerHTML = "";
   if (timelinePlayhead) timelinePlayhead.style.left = "0%";
+
+  syncScenarioTimelineInMemory(details);
 
   const editPlan = details.editPlan;
   const moments = details.moments;
@@ -583,33 +1368,65 @@ function renderTimelineVisual(details) {
   }
 
   const totalFrames = editPlan.totalDurationFrames;
+  const rawFrames = editPlan.rawDurationFrames || totalFrames;
   const fps = editPlan.fps || 60;
   const totalMs = (totalFrames / fps) * 1000;
+  const deltaSec = (totalFrames - rawFrames) / fps;
 
   const segments = editPlan.segments || [];
+  const timeRegions = editPlan.timeRegions || [];
   const allMoments = moments?.moments || [];
   const interactiveMoments = allMoments.filter((m) => m.type !== "wait" && m.type !== "navigate");
   const cues = narration?.cues || [];
 
   if (timelineStats) {
-    timelineStats.textContent = `줌 ${segments.length}구간 · 동작 ${interactiveMoments.length}회 · 나레이션 ${cues.length}구간 (${(
-      totalFrames / fps
-    ).toFixed(1)}s)`;
+    const stretchNote =
+      Math.abs(deltaSec) >= 0.1
+        ? ` · 원본 ${(rawFrames / fps).toFixed(1)}s ➔ 싱크 ${(totalFrames / fps).toFixed(1)}s (${
+            deltaSec > 0 ? `+${deltaSec.toFixed(1)}s 연장` : `${deltaSec.toFixed(1)}s 단축`
+          })`
+        : ` (${(totalFrames / fps).toFixed(1)}s)`;
+    timelineStats.textContent = `줌 ${segments.length}구간 · 동작 ${interactiveMoments.length}회 · 나레이션 ${cues.length}구간${stretchNote}`;
   }
 
-  // 1) Draw Zoom Segments
+  // 1) Draw Zoom Segments (mapped onto unified composition timeline)
   segments.forEach((seg) => {
-    const leftPercent = (seg.startFrame / totalFrames) * 100;
-    const widthPercent = ((seg.endFrame - seg.startFrame) / totalFrames) * 100;
+    const compStartMs = videoTimeMsToCompTimeMs((seg.startFrame / fps) * 1000, editPlan);
+    const compEndMs = videoTimeMsToCompTimeMs((seg.endFrame / fps) * 1000, editPlan);
+    const leftPercent = Math.min(99.5, Math.max(0, (compStartMs / totalMs) * 100));
+    const widthPercent = Math.max(0.8, ((compEndMs - compStartMs) / totalMs) * 100);
 
     const block = document.createElement("div");
     block.className = "segment-block";
     block.style.left = `${leftPercent}%`;
-    block.style.width = `${Math.max(1, widthPercent)}%`;
-    block.title = `[줌 ${seg.zoom}x] ${seg.description || "확대 구간"} (${(seg.startFrame / fps).toFixed(1)}s ~ ${(
-      seg.endFrame / fps
+    block.style.width = `${Math.min(100 - leftPercent, widthPercent)}%`;
+    block.title = `[줌 ${seg.zoom}x] ${seg.description || "확대 구간"} (${(compStartMs / 1000).toFixed(1)}s ~ ${(
+      compEndMs / 1000
     ).toFixed(1)}s)`;
     timelineVisualBar.appendChild(block);
+  });
+
+  // 1.5) Draw Hold / Time-Stretch Regions on timeline
+  timeRegions.forEach((reg) => {
+    const cSpanF = (reg.compEndFrame || 0) - (reg.compStartFrame || 0);
+    if (cSpanF < 6) return;
+    if (reg.speed < 0.25 || reg.speed > 1.15) {
+      const startMs = (reg.compStartFrame / fps) * 1000;
+      const endMs = (reg.compEndFrame / fps) * 1000;
+      const leftPercent = Math.min(99.5, Math.max(0, (startMs / totalMs) * 100));
+      const widthPercent = Math.max(0.8, ((endMs - startMs) / totalMs) * 100);
+
+      const hBlock = document.createElement("div");
+      hBlock.className = "hold-segment-block";
+      hBlock.style.left = `${leftPercent}%`;
+      hBlock.style.width = `${Math.min(100 - leftPercent, widthPercent)}%`;
+      const durSec = ((endMs - startMs) / 1000).toFixed(1);
+      hBlock.title =
+        reg.speed < 0.25
+          ? `⏸️ [구간 늘리기(홀드) +${durSec}s] 대본 #${reg.cueId || ""} 싱크 맞춤 구간 (${(startMs / 1000).toFixed(1)}s ~ ${(endMs / 1000).toFixed(1)}s)`
+          : `⚡ [구간 단축 ${reg.speed.toFixed(2)}x] 대본 #${reg.cueId || ""} (${(startMs / 1000).toFixed(1)}s ~ ${(endMs / 1000).toFixed(1)}s)`;
+      timelineVisualBar.appendChild(hBlock);
+    }
   });
 
   // 2) Draw Narration TTS Segments at bottom of timeline
@@ -623,28 +1440,51 @@ function renderTimelineVisual(details) {
     nBlock.className = "narration-segment-block";
     nBlock.style.left = `${leftPercent}%`;
     nBlock.style.width = `${Math.min(100 - leftPercent, widthPercent)}%`;
-    nBlock.title = `[나레이션 #${idx + 1}] "${cue.text}" (${(startMs / 1000).toFixed(1)}s ~ ${(endMs / 1000).toFixed(1)}s)`;
+    const deltaLabel =
+      (cue.effectiveDeltaMs || 0) >= 100
+        ? ` [구간 +${((cue.effectiveDeltaMs || 0) / 1000).toFixed(1)}s 연장]`
+        : (cue.effectiveDeltaMs || 0) <= -100
+        ? ` [구간 ${((cue.effectiveDeltaMs || 0) / 1000).toFixed(1)}s 단축]`
+        : "";
+    nBlock.title = `[나레이션 #${idx + 1}] "${cue.text}" (${(startMs / 1000).toFixed(1)}s ~ ${(endMs / 1000).toFixed(1)}s)${deltaLabel}`;
     timelineVisualBar.appendChild(nBlock);
   });
 
-  // 3) Draw Interactive Action / Click Moment Markers
+  // 3) Draw Interactive Action / Click Moment Markers (mapped onto unified composition timeline)
   interactiveMoments.forEach((m, i) => {
-    const leftPercent = Math.min(99.5, Math.max(0, (m.timestamp / totalMs) * 100));
+    const compMomentMs = videoTimeMsToCompTimeMs(m.timestamp || 0, editPlan);
+    const leftPercent = Math.min(99.5, Math.max(0, (compMomentMs / totalMs) * 100));
     const marker = document.createElement("div");
     marker.className = "moment-marker";
     marker.style.left = `${leftPercent}%`;
-    marker.title = `[#${i + 1} ${(m.type || "click").toUpperCase()}] ${m.description || ""} (${(m.timestamp / 1000).toFixed(1)}s)`;
+    marker.title = `[#${i + 1} ${(m.type || "click").toUpperCase()}] ${m.description || ""} (싱크 ${(
+      compMomentMs / 1000
+    ).toFixed(1)}s / 원본 ${((m.timestamp || 0) / 1000).toFixed(1)}s)`;
 
     marker.addEventListener("click", (e) => {
       e.stopPropagation();
       if (videoPlayer && videoPlayer.duration) {
-        videoPlayer.currentTime = m.timestamp / 1000;
-        videoPlayer.play().catch(() => {});
+        stopRealtimeHoldAndAudio();
+        const rawSec = (m.timestamp || 0) / 1000;
+        if (currentVideoMode === "raw") {
+          syncCompletedHoldRegionsForSeek(rawSec, compMomentMs);
+        }
+        realtimeHoldState.isProgrammaticSeek = true;
+        videoPlayer.currentTime = currentVideoMode === "rendered" ? compMomentMs / 1000 : rawSec;
+        realtimeHoldState.isProgrammaticResume = true;
+        videoPlayer.play().catch(() => {
+          realtimeHoldState.isProgrammaticResume = false;
+        });
       }
     });
 
     timelineVisualBar.appendChild(marker);
   });
+
+  if (videoPlayer && (videoPlayer.currentTime > 0 || realtimeHoldState.active)) {
+    updateVideoPlaybackSync();
+  }
+  updateCutSelectionUI();
 }
 
 function renderMomentsStepList(details) {
@@ -660,7 +1500,10 @@ function renderMomentsStepList(details) {
     momentsStepList.innerHTML = "";
 
     interactiveMoments.forEach((m, idx) => {
-      const timeSec = ((m.timestamp || 0) / 1000).toFixed(1);
+      const rawSec = ((m.timestamp || 0) / 1000).toFixed(1);
+      const compMs = videoTimeMsToCompTimeMs(m.timestamp || 0, details?.editPlan);
+      const compSec = (compMs / 1000).toFixed(1);
+      const timeSecLabel = Math.abs(compMs - (m.timestamp || 0)) >= 150 ? `${compSec}s` : `${rawSec}s`;
       const frame = Math.round(((m.timestamp || 0) / 1000) * fps);
       const activeZoomSeg = editSegments.find((s) => frame >= s.startFrame && frame <= s.endFrame && s.zoom > 1.05);
       const zoomLabel = activeZoomSeg ? `🔍 ${activeZoomSeg.zoom}x 줌` : "";
@@ -670,8 +1513,9 @@ function renderMomentsStepList(details) {
       const card = document.createElement("div");
       card.className = "moment-step-card";
       card.dataset.timestampMs = m.timestamp || 0;
+      card.dataset.compTimestampMs = Math.round(compMs);
       card.innerHTML = `
-        <span class="moment-step-time">${timeSec}s</span>
+        <span class="moment-step-time" title="싱크 시점 ${compSec}s (원본 ${rawSec}s)">${timeSecLabel}</span>
         <div class="moment-step-info">
           <div class="moment-step-title" title="${escapeHtmlAttr(m.description || typeUpper)}">
             <span style="color:#38BDF8; font-family:var(--font-mono); font-size:0.74rem; margin-right:4px;">#${idx + 1} ${typeUpper}</span>
@@ -685,8 +1529,17 @@ function renderMomentsStepList(details) {
 
       card.addEventListener("click", () => {
         if (videoPlayer && videoPlayer.duration) {
-          videoPlayer.currentTime = (m.timestamp || 0) / 1000;
-          videoPlayer.play().catch(() => {});
+          stopRealtimeHoldAndAudio();
+          const targetRawSec = (m.timestamp || 0) / 1000;
+          if (currentVideoMode === "raw") {
+            syncCompletedHoldRegionsForSeek(targetRawSec, compMs);
+          }
+          realtimeHoldState.isProgrammaticSeek = true;
+          videoPlayer.currentTime = currentVideoMode === "rendered" ? compMs / 1000 : targetRawSec;
+          realtimeHoldState.isProgrammaticResume = true;
+          videoPlayer.play().catch(() => {
+            realtimeHoldState.isProgrammaticResume = false;
+          });
         }
       });
 
@@ -728,21 +1581,190 @@ function formatTimecode(sec) {
   return `${String(mins).padStart(2, "0")}:${rem.padStart(4, "0")}`;
 }
 
+function startRealtimePreviewLoop() {
+  if (realtimeHoldState.rafId) return;
+  const tick = () => {
+    updateVideoPlaybackSync();
+    if (videoPlayer && (!videoPlayer.paused || realtimeHoldState.active || realtimeHoldState.isProgrammaticResume)) {
+      realtimeHoldState.rafId = requestAnimationFrame(tick);
+    } else {
+      realtimeHoldState.rafId = null;
+    }
+  };
+  realtimeHoldState.rafId = requestAnimationFrame(tick);
+}
+
 function updateVideoPlaybackSync() {
   if (!videoPlayer) return;
-  const cur = videoPlayer.currentTime || 0;
-  const dur = videoPlayer.duration || 0;
+  const details = scenarioDetailsCache[selectedScenario];
+  const editPlan = details?.editPlan;
+  const narration = details?.narration || editPlan?.narration;
+  const fps = Number(editPlan?.fps || 60);
+  const userSpeed = parseFloat(videoSpeedSelect?.value || "1") || 1.0;
+
+  const rawCurSec = videoPlayer.currentTime || 0;
+  const rawDurSec = videoPlayer.duration || 0;
+
+  if (cutPreviewStopRawSec !== null && !videoPlayer.paused && rawCurSec >= cutPreviewStopRawSec) {
+    cutPreviewStopRawSec = null;
+    videoPlayer.pause();
+  }
+
+  let compCurMs = rawCurSec * 1000;
+  let compTotalMs = rawDurSec * 1000;
+
+  const badgeEl = document.getElementById("live-timewarp-badge");
+  const subEl = document.getElementById("live-subtitle-overlay");
+
+  if (currentVideoMode === "raw" && editPlan && Array.isArray(editPlan.timeRegions) && editPlan.timeRegions.length > 0) {
+    compTotalMs = ((editPlan.totalDurationFrames || fps * rawDurSec) / fps) * 1000;
+    const regions = editPlan.timeRegions;
+
+    if (realtimeHoldState.active) {
+      const elapsedSimMs = (performance.now() - realtimeHoldState.startWallMs) * userSpeed;
+      if (elapsedSimMs >= realtimeHoldState.holdDurationMs) {
+        // Hold finished! Mark region completed and resume raw video playback without seeking currentTime
+        // (Seeking currentTime would fire the async 'seeking' event, interrupting activePreviewAudio & resetting hold state!)
+        if (realtimeHoldState.regionIdx >= 0) {
+          realtimeHoldState.completedRegions.add(realtimeHoldState.regionIdx);
+        }
+        const finishedEndMs = realtimeHoldState.compStartMs + realtimeHoldState.holdDurationMs;
+        realtimeHoldState.active = false;
+        realtimeHoldState.isProgrammaticPause = false;
+        realtimeHoldState.regionIdx = -1;
+        if (badgeEl) badgeEl.classList.add("hidden");
+        videoPlayer.playbackRate = userSpeed;
+        realtimeHoldState.isProgrammaticResume = true;
+        videoPlayer.play().catch(() => {
+          realtimeHoldState.isProgrammaticResume = false;
+        });
+        compCurMs = finishedEndMs;
+      } else {
+        compCurMs = realtimeHoldState.compStartMs + elapsedSimMs;
+        const remainSec = Math.max(0, (realtimeHoldState.holdDurationMs - elapsedSimMs) / 1000).toFixed(1);
+        const totalHoldSec = (realtimeHoldState.holdDurationMs / 1000).toFixed(1);
+        if (badgeEl) {
+          badgeEl.classList.remove("hidden");
+          badgeEl.textContent = `⏸️ 실시간 구간 늘리기(홀드) 중 (+${totalHoldSec}s · 남은 ${remainSec}s)`;
+        }
+      }
+    } else if (!videoPlayer.paused) {
+      const rawCurFrame = rawCurSec * fps;
+      // Check if we entered an uncompleted hold region
+      let triggeredHold = false;
+      for (let rIdx = 0; rIdx < regions.length; rIdx++) {
+        const r = regions[rIdx];
+        const vSpan = Math.max(0, (r.videoEndFrame || 0) - (r.videoStartFrame || 0));
+        const cSpan = Math.max(0, (r.compEndFrame || 0) - (r.compStartFrame || 0));
+        const extraHoldFrames = cSpan - vSpan;
+        if (r.speed < 0.25 && extraHoldFrames >= 4 && !realtimeHoldState.completedRegions.has(rIdx)) {
+          if (rawCurFrame >= r.videoStartFrame && rawCurFrame <= r.videoEndFrame + 6) {
+            const alreadyPlayedRawF = Math.max(0, Math.min(vSpan, rawCurFrame - r.videoStartFrame));
+            realtimeHoldState.completedRegions.add(rIdx);
+            realtimeHoldState.active = true;
+            realtimeHoldState.isProgrammaticPause = true;
+            realtimeHoldState.regionIdx = rIdx;
+            realtimeHoldState.compStartMs = ((r.compStartFrame + alreadyPlayedRawF) / fps) * 1000;
+            realtimeHoldState.holdDurationMs = (extraHoldFrames / fps) * 1000;
+            realtimeHoldState.videoEndFrame = r.videoEndFrame;
+            realtimeHoldState.startWallMs = performance.now();
+            videoPlayer.pause();
+            compCurMs = realtimeHoldState.compStartMs;
+            triggeredHold = true;
+            startRealtimePreviewLoop();
+            break;
+          }
+        }
+      }
+
+      if (!triggeredHold) {
+        // Check if we are in a shortened (fast-forward) region
+        const activeReg = regions.find(
+          (r) => rawCurFrame >= r.videoStartFrame && rawCurFrame <= r.videoEndFrame && r.speed >= 0.25
+        );
+        if (activeReg && activeReg.speed > 1.08) {
+          const targetRate = Math.min(4.0, Number((userSpeed * activeReg.speed).toFixed(2)));
+          if (Math.abs(videoPlayer.playbackRate - targetRate) > 0.05) {
+            videoPlayer.playbackRate = targetRate;
+          }
+          if (badgeEl) {
+            badgeEl.classList.remove("hidden");
+            badgeEl.textContent = `⚡ 실시간 구간 단축 재생 (${activeReg.speed.toFixed(2)}x)`;
+          }
+        } else {
+          if (Math.abs(videoPlayer.playbackRate - userSpeed) > 0.05) {
+            videoPlayer.playbackRate = userSpeed;
+          }
+          if (badgeEl) badgeEl.classList.add("hidden");
+        }
+        compCurMs = videoTimeMsToCompTimeMs(rawCurSec * 1000, editPlan, realtimeHoldState.completedRegions);
+      }
+    } else {
+      compCurMs = videoTimeMsToCompTimeMs(rawCurSec * 1000, editPlan, realtimeHoldState.completedRegions);
+      if (badgeEl) badgeEl.classList.add("hidden");
+    }
+
+    // Live Subtitle & TTS Audio Preview in Raw Mode
+    const cues = narration?.cues || [];
+    const speakingCue = cues.find((c, idx) => {
+      const nextCueStart = idx < cues.length - 1 ? cues[idx + 1].startMs || Infinity : Infinity;
+      const effectiveEnd = Math.min(nextCueStart - 10, (c.endMs || 0) + 100);
+      return compCurMs >= (c.startMs || 0) && compCurMs <= effectiveEnd;
+    });
+    const isPlayingOrHolding = !videoPlayer.paused || realtimeHoldState.active;
+
+    if (subEl) {
+      if (narration?.showSubtitles !== false && speakingCue && speakingCue.text) {
+        subEl.classList.remove("hidden");
+        subEl.textContent = speakingCue.text;
+      } else {
+        subEl.classList.add("hidden");
+      }
+    }
+
+    if (isPlayingOrHolding && narration?.enabled !== false && speakingCue && speakingCue.audioFile) {
+      if (
+        !realtimeHoldState.playedCueIds.has(speakingCue.id) &&
+        compCurMs < (speakingCue.endMs || 0) - 180
+      ) {
+        realtimeHoldState.playedCueIds.add(speakingCue.id);
+        realtimeHoldState.lastPlayedCueId = speakingCue.id;
+        if (activePreviewAudio) {
+          try {
+            activePreviewAudio.pause();
+          } catch {}
+        }
+        const audioFileName = speakingCue.audioFile.split("/").pop();
+        const url = `/api/narration/audio/${selectedScenario}/${audioFileName}`;
+        activePreviewAudio = new Audio(url);
+        activePreviewAudio.playbackRate = userSpeed;
+        const offsetSec = Math.max(0, (compCurMs - (speakingCue.startMs || 0)) / 1000);
+        if (offsetSec > 0.25) {
+          activePreviewAudio.currentTime = offsetSec;
+        }
+        activePreviewAudio.play().catch(() => {});
+      }
+    }
+  } else {
+    if (badgeEl) badgeEl.classList.add("hidden");
+    if (subEl) subEl.classList.add("hidden");
+  }
+
+  const displayCurSec = compCurMs / 1000;
+  const displayDurSec = compTotalMs / 1000;
 
   if (videoTimecode) {
-    videoTimecode.textContent = `${formatTimecode(cur)} / ${formatTimecode(dur)}`;
+    if (currentVideoMode === "raw" && Math.abs(displayDurSec - rawDurSec) >= 0.2 && rawDurSec > 0) {
+      videoTimecode.textContent = `${formatTimecode(displayCurSec)} / ${formatTimecode(displayDurSec)} (원본 ${formatTimecode(rawCurSec)})`;
+    } else {
+      videoTimecode.textContent = `${formatTimecode(displayCurSec)} / ${formatTimecode(displayDurSec)}`;
+    }
   }
 
-  if (timelinePlayhead && dur > 0) {
-    const pct = Math.min(100, Math.max(0, (cur / dur) * 100));
+  if (timelinePlayhead && compTotalMs > 0) {
+    const pct = Math.min(100, Math.max(0, (compCurMs / compTotalMs) * 100));
     timelinePlayhead.style.left = `${pct}%`;
   }
-
-  const curMs = cur * 1000;
 
   // Highlight active moment card
   if (momentsStepList) {
@@ -750,22 +1772,21 @@ function updateVideoPlaybackSync() {
     let activeCard = null;
     cards.forEach((c) => {
       const tMs = parseFloat(c.dataset.timestampMs || "0");
-      const isNear = Math.abs(curMs - tMs) <= 900;
+      const isNear = Math.abs(rawCurSec * 1000 - tMs) <= 900;
       c.classList.toggle("active-moment", isNear);
       if (isNear) activeCard = c;
     });
-    if (activeCard && !videoPlayer.paused) {
+    if (activeCard && (!videoPlayer.paused || realtimeHoldState.active)) {
       activeCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }
 
-  // Highlight active narration cue row
+  // Highlight active narration cue row using synced composition time
   const cueRows = document.querySelectorAll("#narration-cues-container .narration-cue-row");
   cueRows.forEach((row) => {
-    const startSec = parseFloat(row.querySelector(".cue-start-input")?.value || "0");
-    const endText = row.querySelector(".cue-jump-time")?.textContent || "0";
-    const endSec = parseFloat(endText.replace("s", "")) || startSec + 2.5;
-    const isSpeaking = cur >= startSec && cur <= endSec;
+    const startMs = parseFloat(row.dataset.compStartMs || "0");
+    const endMs = parseFloat(row.dataset.compEndMs || String(startMs + 2500));
+    const isSpeaking = compCurMs >= startMs && compCurMs <= endMs + 150;
     row.classList.toggle("active-cue", isSpeaking);
   });
 }
@@ -812,6 +1833,31 @@ function getOpeningTemplateByStyle(style) {
   }
 }
 
+function buildCueSyncBadgeHtml(cue) {
+  const autoHold = Number(cue.autoHoldMs || 0);
+  const extraHold = Number(cue.extraHoldMs || 0);
+  const effDelta = Number(cue.effectiveDeltaMs || 0);
+
+  if (extraHold > 0) {
+    return `<span class="cue-sync-badge badge-manual-hold" title="대본 자동 홀드 ${(autoHold / 1000).toFixed(1)}s + 수동 늘리기 +${(
+      extraHold / 1000
+    ).toFixed(1)}s — 뒤따르는 대본·카메라 줌·커서 싱크가 자동으로 함께 이동합니다">⏱️ 구간 +${(effDelta / 1000).toFixed(
+      1
+    )}s (수동 +${(extraHold / 1000).toFixed(1)}s)</span>`;
+  }
+  if (effDelta <= -100) {
+    return `<span class="cue-sync-badge badge-shrink" title="수동 구간 줄이기 적용됨 (대본 음성 길이 이하로는 줄어들지 않아 음성이 절대 잘리지 않습니다)">⚡ 구간 ${(
+      effDelta / 1000
+    ).toFixed(1)}s 단축</span>`;
+  }
+  if (autoHold >= 100) {
+    return `<span class="cue-sync-badge badge-auto-hold" title="대본이 원본 동작 간격보다 길어 음성 속도를 빠르게 왜곡하지 않고 화면을 자동으로 +${(
+      effDelta / 1000
+    ).toFixed(1)}s 홀드(연장)하여 싱크를 맞춥니다">⏳ 대본맞춤 +${(effDelta / 1000).toFixed(1)}s 자동연장</span>`;
+  }
+  return `<span class="cue-sync-badge badge-normal" title="원본 영상 길이 안에서 정상 속도로 대본이 재생됩니다">1.0x 정속</span>`;
+}
+
 function renderNarrationStudio(details, focusIndex = null) {
   const container = document.getElementById("narration-cues-container");
   const statusBadge = document.getElementById("narration-status-badge");
@@ -823,6 +1869,8 @@ function renderNarrationStudio(details, focusIndex = null) {
   const subtitleToggle = document.getElementById("narration-subtitle-toggle");
 
   if (!container) return;
+
+  syncScenarioTimelineInMemory(details);
 
   const narration = details?.narration || details?.editPlan?.narration || null;
   if (!narration || !Array.isArray(narration.cues) || narration.cues.length === 0) {
@@ -853,9 +1901,11 @@ function renderNarrationStudio(details, focusIndex = null) {
     compact: "⚡ 핵심 브리핑",
   };
   const styleBadgeText = styleLabels[narration.style || "manual"] || "📘 정석 매뉴얼";
+  const totalHoldMs = narration.cues.reduce((acc, c) => acc + Math.max(0, Number(c.effectiveDeltaMs || 0)), 0);
 
   if (statusBadge) {
-    statusBadge.textContent = `${narration.cues.length}구간 · ${styleBadgeText}`;
+    const holdText = totalHoldMs >= 200 ? ` · ⏱️싱크연장 +${(totalHoldMs / 1000).toFixed(1)}s` : "";
+    statusBadge.textContent = `${narration.cues.length}구간 · ${styleBadgeText}${holdText}`;
     statusBadge.style.background = "rgba(16, 185, 129, 0.2)";
     statusBadge.style.color = "#6ee7b7";
   }
@@ -866,34 +1916,50 @@ function renderNarrationStudio(details, focusIndex = null) {
     row.className = "narration-cue-row";
     row.dataset.origIdx = String(idx);
     row.dataset.isIntro = cue.isIntro ? "true" : "false";
+    row.dataset.extraHoldMs = String(cue.extraHoldMs || 0);
+    row.dataset.compStartMs = String(cue.startMs || 0);
+    row.dataset.compEndMs = String(cue.endMs || 0);
+    row.dataset.lastSyncedText = String(cue.text || "").trim();
 
-    const startSec = ((cue.startMs || 0) / 1000).toFixed(1);
-    const endSec = ((cue.endMs || 0) / 1000).toFixed(1);
+    const anchorSec = ((cue.videoStartMs ?? cue.startMs ?? 0) / 1000).toFixed(1);
+    const compStartSec = ((cue.startMs || 0) / 1000).toFixed(1);
+    const compEndSec = ((cue.endMs || 0) / 1000).toFixed(1);
     const audioFileName = cue.audioFile ? cue.audioFile.split("/").pop() : null;
-    const isOpeningCue = Boolean(cue.isIntro || (idx === 0 && (cue.startMs || 0) <= 600));
+    const isOpeningCue = Boolean(cue.isIntro || (idx === 0 && (cue.videoStartMs ?? cue.startMs ?? 0) <= 600));
+    const extraHoldMs = Number(cue.extraHoldMs || 0);
 
     row.innerHTML = `
-      <span style="font-size: 0.78em; font-weight: 700; color: #818cf8; min-width: 26px; font-family: var(--font-mono);">#${idx + 1}</span>
+      <span style="font-size: 0.78em; font-weight: 700; color: #818cf8; min-width: 24px; font-family: var(--font-mono);">#${idx + 1}</span>
       ${
         isOpeningCue
           ? `<span class="status-tag status-tag-eye" title="영상 시작 시 어떤 매뉴얼인지 안내하는 오프닝 소개 구간" style="font-size: 0.7em; padding: 2px 6px;">🎬 오프닝</span>`
           : ""
       }
-      <input type="number" step="0.1" min="0" class="cue-start-input" value="${startSec}" title="시작 시간(초) — 변경 시 시간순으로 자동 정렬됩니다"
-        style="width: 66px; padding: 6px 6px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-input); color: #e2e8f0; font-size: 0.82em; text-align: center; font-family: var(--font-mono);" />
-      <span style="color: var(--text-muted); font-size: 0.8em;">~</span>
-      <span style="font-size: 0.8em; color: #38bdf8; min-width: 42px; cursor: pointer; font-family: var(--font-mono);" class="cue-jump-time" title="클릭하여 비디오 해당 위치로 이동">${endSec}s</span>
-      <input type="text" class="cue-text-input" value="${(cue.text || "").replace(/"/g, "&quot;")}" placeholder="나레이션 대본 문장을 입력하세요"
-        style="flex: 1; min-width: 180px; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-input); color: #f8fafc; font-size: 0.88em;" />
-      <div style="display: inline-flex; align-items: center; gap: 4px;">
-        <button type="button" class="btn btn-sm btn-outline btn-insert-cue-before" title="이 구간 바로 위(이전 시점)에 새 대본 구간 끼워넣기" style="padding: 4px 7px; font-size: 0.74em; color: #93c5fd;">+위</button>
-        <button type="button" class="btn btn-sm btn-outline btn-insert-cue-after" title="이 구간 바로 아래(다음 시점)에 새 대본 구간 끼워넣기" style="padding: 4px 7px; font-size: 0.74em; color: #93c5fd;">+아래</button>
+      <input type="number" step="0.1" min="0" class="cue-start-input" value="${anchorSec}" title="원본 녹화 영상 기준 동작 시점(초) — 변경 시 시간순으로 자동 정렬 및 전체 싱크가 재계산됩니다"
+        style="width: 60px; padding: 5px 5px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-input); color: #e2e8f0; font-size: 0.8em; text-align: center; font-family: var(--font-mono);" />
+      <span style="font-size: 0.76em; color: #38bdf8; min-width: 78px; cursor: pointer; font-family: var(--font-mono); white-space: nowrap;" class="cue-jump-time" title="클릭하여 비디오 해당 구간으로 이동 (실제 동기화 재생 구간: ${compStartSec}s ~ ${compEndSec}s)">➔ ${compStartSec}~${compEndSec}s</span>
+      <input type="text" class="cue-text-input" value="${(cue.text || "").replace(/"/g, "&quot;")}" placeholder="나레이션 대본 문장을 입력하세요 (길어져도 음성 속도가 빨라지지 않고 화면 구간이 자동 연장됩니다)"
+        style="flex: 1; min-width: 170px; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-input); color: #f8fafc; font-size: 0.88em;" />
+      <span class="cue-sync-badge-wrap">${buildCueSyncBadgeHtml(cue)}</span>
+      <div class="cue-stretch-controls" title="이 구간의 영상 길이를 실시간으로 늘리거나 줄입니다 (뒤따르는 모든 대본·카메라 줌·커서 싱크 자동 재정렬)">
+        <button type="button" class="btn-cue-stretch stretch-minus" data-stretch="-500" title="구간 0.5초 줄이기 (대본 음성 길이 이하로는 줄어들지 않음)">-0.5s</button>
+        <button type="button" class="btn-cue-stretch stretch-plus" data-stretch="500" title="구간 0.5초 늘리기 (화면 홀드 연장)">+0.5s</button>
+        <button type="button" class="btn-cue-stretch stretch-plus" data-stretch="1000" title="구간 1.0초 늘리기 (화면 홀드 연장)">+1.0s</button>
         ${
-          audioFileName
-            ? `<button type="button" class="btn btn-sm btn-outline btn-play-cue" title="합성된 음성 미리듣기" style="padding: 4px 9px; font-size: 0.76em;">▶️ 듣기</button>`
+          extraHoldMs !== 0
+            ? `<button type="button" class="btn-cue-stretch stretch-reset" data-stretch="reset" title="수동 늘리기/줄이기 초기화 (0.0s)">초기화</button>`
             : ""
         }
-        <button type="button" class="btn btn-sm btn-outline btn-delete-cue" title="구간 삭제" style="padding: 4px 8px; font-size: 0.78em; color: #f87171;">✕</button>
+      </div>
+      <div style="display: inline-flex; align-items: center; gap: 4px;">
+        <button type="button" class="btn btn-sm btn-outline btn-insert-cue-before" title="이 구간 바로 위(이전 시점)에 새 대본 구간 끼워넣기" style="padding: 4px 6px; font-size: 0.72em; color: #93c5fd;">+위</button>
+        <button type="button" class="btn btn-sm btn-outline btn-insert-cue-after" title="이 구간 바로 아래(다음 시점)에 새 대본 구간 끼워넣기" style="padding: 4px 6px; font-size: 0.72em; color: #93c5fd;">+아래</button>
+        ${
+          audioFileName
+            ? `<button type="button" class="btn btn-sm btn-outline btn-play-cue" title="합성된 음성 미리듣기" style="padding: 4px 8px; font-size: 0.74em;">▶️ 듣기</button>`
+            : ""
+        }
+        <button type="button" class="btn btn-sm btn-outline btn-delete-cue" title="구간 삭제" style="padding: 4px 7px; font-size: 0.76em; color: #f87171;">✕</button>
       </div>
     `;
 
@@ -903,17 +1969,101 @@ function renderNarrationStudio(details, focusIndex = null) {
         const updated = collectNarrationFromUI({ sortByStartTime: true });
         if (scenarioDetailsCache[selectedScenario]) {
           scenarioDetailsCache[selectedScenario].narration = updated;
+          syncScenarioTimelineInMemory(scenarioDetailsCache[selectedScenario]);
         }
         renderNarrationStudio(scenarioDetailsCache[selectedScenario]);
+        renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
+        saveNarrationTimingQuick();
       });
     }
+
+    const textInput = row.querySelector(".cue-text-input");
+    if (textInput) {
+      textInput.addEventListener("input", () => {
+        // 1) Instant 0ms preview of auto-hold & subsequent cue sync while typing
+        const updated = collectNarrationFromUI({ sortByStartTime: false });
+        if (scenarioDetailsCache[selectedScenario]) {
+          scenarioDetailsCache[selectedScenario].narration = updated;
+          syncScenarioTimelineInMemory(scenarioDetailsCache[selectedScenario]);
+          const allRows = container.querySelectorAll(".narration-cue-row");
+          scenarioDetailsCache[selectedScenario].narration.cues.forEach((sc, sIdx) => {
+            const rEl = allRows[sIdx];
+            if (!rEl) return;
+            rEl.dataset.compStartMs = String(sc.startMs || 0);
+            rEl.dataset.compEndMs = String(sc.endMs || 0);
+            const jEl = rEl.querySelector(".cue-jump-time");
+            if (jEl) {
+              const cs = ((sc.startMs || 0) / 1000).toFixed(1);
+              const ce = ((sc.endMs || 0) / 1000).toFixed(1);
+              jEl.textContent = `➔ ${cs}~${ce}s`;
+            }
+            const bWrap = rEl.querySelector(".cue-sync-badge-wrap");
+            if (bWrap) bWrap.innerHTML = buildCueSyncBadgeHtml(sc);
+          });
+          renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
+        }
+        // 2) Automatically synthesize modified cue via Edge-TTS & lock in exact audio duration + video length after 850ms idle
+        const newVal = textInput.value.trim();
+        if (newVal && newVal !== row.dataset.lastSyncedText) {
+          scheduleAutoSynthesizeAndFit(idx, 850);
+        }
+      });
+
+      textInput.addEventListener("change", () => {
+        const newVal = textInput.value.trim();
+        if (newVal && newVal !== row.dataset.lastSyncedText) {
+          runAutoSynthesizeAndFitNow(idx);
+        }
+      });
+
+      textInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const newVal = textInput.value.trim();
+          if (newVal && newVal !== row.dataset.lastSyncedText) {
+            runAutoSynthesizeAndFitNow(idx);
+          }
+          textInput.blur();
+        }
+      });
+    }
+
+    row.querySelectorAll(".btn-cue-stretch").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const action = btn.getAttribute("data-stretch");
+        const curExtra = Number(row.dataset.extraHoldMs || 0);
+        const nextExtra = action === "reset" ? 0 : Math.max(-5000, Math.min(30000, curExtra + Number(action || 0)));
+        row.dataset.extraHoldMs = String(nextExtra);
+
+        const updated = collectNarrationFromUI({ sortByStartTime: false });
+        if (scenarioDetailsCache[selectedScenario]) {
+          scenarioDetailsCache[selectedScenario].narration = updated;
+          syncScenarioTimelineInMemory(scenarioDetailsCache[selectedScenario]);
+        }
+        renderNarrationStudio(scenarioDetailsCache[selectedScenario]);
+        renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
+        updateJsonViewer("narration");
+        saveNarrationTimingQuick();
+      });
+    });
 
     const jumpEl = row.querySelector(".cue-jump-time");
     if (jumpEl) {
       jumpEl.addEventListener("click", () => {
         if (videoPlayer && videoPlayer.duration) {
-          videoPlayer.currentTime = Number(row.querySelector(".cue-start-input").value) || 0;
-          videoPlayer.play().catch(() => {});
+          stopRealtimeHoldAndAudio();
+          const compStartMs = Number(row.dataset.compStartMs) || 0;
+          const rawStartSec = Number(row.querySelector(".cue-start-input").value) || 0;
+          const targetSec = currentVideoMode === "rendered" ? compStartMs / 1000 : rawStartSec;
+          if (currentVideoMode === "raw") {
+            syncCompletedHoldRegionsForSeek(rawStartSec, Math.max(0, compStartMs - 150));
+          }
+          realtimeHoldState.isProgrammaticSeek = true;
+          videoPlayer.currentTime = targetSec;
+          realtimeHoldState.isProgrammaticResume = true;
+          videoPlayer.play().catch(() => {
+            realtimeHoldState.isProgrammaticResume = false;
+          });
         }
       });
     }
@@ -952,8 +2102,11 @@ function renderNarrationStudio(details, focusIndex = null) {
         const updated = collectNarrationFromUI();
         if (scenarioDetailsCache[selectedScenario]) {
           scenarioDetailsCache[selectedScenario].narration = updated;
+          syncScenarioTimelineInMemory(scenarioDetailsCache[selectedScenario]);
         }
         renderNarrationStudio(scenarioDetailsCache[selectedScenario]);
+        renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
+        saveNarrationTimingQuick();
       });
     }
 
@@ -992,21 +2145,25 @@ function collectNarrationFromUI(options = {}) {
     if (!text) return;
     const origIdx = Number(row.dataset.origIdx ?? idx);
     const prevCue = existing.cues?.[origIdx] || {};
-    const startMs = Math.max(0, Math.round(startSec * 1000));
-    const durMs = prevCue.audioDurationMs || 2500;
+    const videoStartMs = Math.max(0, Math.round(startSec * 1000));
     const textUnchanged = prevCue.text === text;
+    const estDurMs = textUnchanged && prevCue.audioDurationMs ? prevCue.audioDurationMs : Math.max(1800, text.length * 145);
+    const extraHoldMs = Number(row.dataset.extraHoldMs ?? prevCue.extraHoldMs ?? 0);
     rawCues.push({
-      startMs,
-      endMs: startMs + durMs,
+      videoStartMs,
+      startMs: videoStartMs,
+      endMs: videoStartMs + estDurMs,
       text,
       isIntro: row.dataset.isIntro === "true" || prevCue.isIntro || false,
+      extraHoldMs,
       audioFile: textUnchanged ? prevCue.audioFile : undefined,
       audioDurationMs: textUnchanged ? prevCue.audioDurationMs : undefined,
+      _ttsSig: textUnchanged ? prevCue._ttsSig : undefined,
     });
   });
 
   if (options.sortByStartTime) {
-    rawCues.sort((a, b) => a.startMs - b.startMs);
+    rawCues.sort((a, b) => a.videoStartMs - b.videoStartMs);
   }
 
   const cues = rawCues.map((c, i) => ({
@@ -1055,12 +2212,16 @@ async function handleGenerateNarration() {
 
     if (scenarioDetailsCache[selectedScenario]) {
       scenarioDetailsCache[selectedScenario].narration = data.narration;
-      if (scenarioDetailsCache[selectedScenario].editPlan) {
+      if (data.editPlan) {
+        scenarioDetailsCache[selectedScenario].editPlan = data.editPlan;
+      } else if (scenarioDetailsCache[selectedScenario].editPlan) {
         scenarioDetailsCache[selectedScenario].editPlan.narration = data.narration;
       }
+      syncScenarioTimelineInMemory(scenarioDetailsCache[selectedScenario]);
     }
     renderNarrationStudio(scenarioDetailsCache[selectedScenario]);
     renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
+    renderMomentsStepList(scenarioDetailsCache[selectedScenario]);
     updateJsonViewer("narration");
     fetchScenarios();
   } catch (err) {
@@ -1068,7 +2229,7 @@ async function handleGenerateNarration() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.textContent = "✨ AI 대본(오프닝 포함) 생성 & 음성 합성";
+      btn.textContent = "✨ AI 대본 생성 & 음성 합성";
     }
   }
 }
@@ -1080,44 +2241,50 @@ function insertNarrationCueRelative(targetIdx, position) {
   const refCue = cues[targetIdx];
   if (!refCue) return;
 
+  const refAnchor = refCue.videoStartMs ?? refCue.startMs ?? 200;
   let newStartMs = 200;
   let insertIndex = targetIdx;
 
   if (position === "before") {
     const prevCue = targetIdx > 0 ? cues[targetIdx - 1] : null;
+    const prevAnchor = prevCue ? prevCue.videoStartMs ?? prevCue.startMs ?? 0 : 0;
     if (!prevCue) {
-      newStartMs = Math.max(100, Math.round((refCue.startMs || 1000) / 2));
-      if (refCue.startMs < 1200) {
-        refCue.startMs = Math.max(refCue.startMs, newStartMs + 1500);
-        refCue.endMs = Math.max(refCue.endMs, refCue.startMs + 2000);
+      newStartMs = Math.max(100, Math.round(refAnchor / 2));
+      if (refAnchor < 1200) {
+        refCue.videoStartMs = Math.max(refAnchor, newStartMs + 800);
       }
     } else {
-      newStartMs = Math.round(((prevCue.startMs || 0) + (refCue.startMs || 0)) / 2);
+      newStartMs = Math.round((prevAnchor + refAnchor) / 2);
     }
     insertIndex = targetIdx;
   } else {
     const nextCue = targetIdx < cues.length - 1 ? cues[targetIdx + 1] : null;
+    const nextAnchor = nextCue ? nextCue.videoStartMs ?? nextCue.startMs ?? refAnchor + 2500 : null;
     if (!nextCue) {
-      newStartMs = (refCue.endMs || refCue.startMs + 2500) + 400;
+      newStartMs = refAnchor + 2000;
     } else {
-      newStartMs = Math.round(((refCue.startMs || 0) + (nextCue.startMs || 0)) / 2);
+      newStartMs = Math.round((refAnchor + nextAnchor) / 2);
     }
     insertIndex = targetIdx + 1;
   }
 
   cues.splice(insertIndex, 0, {
     id: insertIndex + 1,
+    videoStartMs: newStartMs,
     startMs: newStartMs,
     endMs: newStartMs + 2400,
     text: "새 나레이션 대본을 입력하세요.",
     isIntro: insertIndex === 0 && newStartMs <= 600,
+    extraHoldMs: 0,
   });
 
   current.cues = cues.map((c, idx) => ({ ...c, id: idx + 1 }));
   if (scenarioDetailsCache[selectedScenario]) {
     scenarioDetailsCache[selectedScenario].narration = current;
+    syncScenarioTimelineInMemory(scenarioDetailsCache[selectedScenario]);
   }
   renderNarrationStudio(scenarioDetailsCache[selectedScenario], insertIndex);
+  renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
 }
 
 function handleAddNarrationIntro() {
@@ -1127,26 +2294,27 @@ function handleAddNarrationIntro() {
   const introStartMs = 200;
   const introEndMs = 2800;
 
-  // 만약 첫 번째 구간이 너무 앞쪽(2.8초 미만)에 있으면 자연스럽게 뒤로 밀어줌
-  if (current.cues.length > 0 && current.cues[0].startMs < introEndMs) {
-    const shift = introEndMs - current.cues[0].startMs + 200;
-    current.cues[0].startMs += shift;
-    current.cues[0].endMs = Math.max(current.cues[0].endMs, current.cues[0].startMs + 2000);
+  if (current.cues.length > 0 && (current.cues[0].videoStartMs ?? current.cues[0].startMs) < 500) {
+    current.cues[0].videoStartMs = Math.max(800, current.cues[0].videoStartMs || 800);
   }
 
   current.cues.unshift({
     id: 1,
+    videoStartMs: introStartMs,
     startMs: introStartMs,
     endMs: introEndMs,
     text: getOpeningTemplateByStyle(style),
     isIntro: true,
+    extraHoldMs: 0,
   });
   current.cues = current.cues.map((c, idx) => ({ ...c, id: idx + 1 }));
 
   if (scenarioDetailsCache[selectedScenario]) {
     scenarioDetailsCache[selectedScenario].narration = current;
+    syncScenarioTimelineInMemory(scenarioDetailsCache[selectedScenario]);
   }
   renderNarrationStudio(scenarioDetailsCache[selectedScenario], 0);
+  renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
 }
 
 function handleAddNarrationCue() {
@@ -1154,7 +2322,11 @@ function handleAddNarrationCue() {
   const current = collectNarrationFromUI();
   const playheadMs =
     videoPlayer && Number.isFinite(videoPlayer.currentTime) && videoPlayer.currentTime > 0.1
-      ? Math.round(videoPlayer.currentTime * 1000)
+      ? Math.round(
+          currentVideoMode === "rendered"
+            ? compTimeMsToVideoTimeMs(videoPlayer.currentTime * 1000, scenarioDetailsCache[selectedScenario]?.editPlan)
+            : videoPlayer.currentTime * 1000
+        )
       : null;
 
   let nextStartMs;
@@ -1162,27 +2334,31 @@ function handleAddNarrationCue() {
 
   if (playheadMs !== null) {
     nextStartMs = playheadMs;
-    const foundIdx = current.cues.findIndex((c) => c.startMs > nextStartMs);
+    const foundIdx = current.cues.findIndex((c) => (c.videoStartMs ?? c.startMs) > nextStartMs);
     insertIndex = foundIdx === -1 ? current.cues.length : foundIdx;
   } else {
     const lastCue = current.cues[current.cues.length - 1];
-    nextStartMs = lastCue ? lastCue.endMs + 400 : 200;
+    nextStartMs = lastCue ? (lastCue.videoStartMs ?? lastCue.startMs) + 2000 : 200;
     insertIndex = current.cues.length;
   }
 
   current.cues.splice(insertIndex, 0, {
     id: insertIndex + 1,
+    videoStartMs: nextStartMs,
     startMs: nextStartMs,
     endMs: nextStartMs + 2500,
     text: "새 나레이션 대본을 입력하세요.",
     isIntro: insertIndex === 0 && nextStartMs <= 600,
+    extraHoldMs: 0,
   });
   current.cues = current.cues.map((c, idx) => ({ ...c, id: idx + 1 }));
 
   if (scenarioDetailsCache[selectedScenario]) {
     scenarioDetailsCache[selectedScenario].narration = current;
+    syncScenarioTimelineInMemory(scenarioDetailsCache[selectedScenario]);
   }
   renderNarrationStudio(scenarioDetailsCache[selectedScenario], insertIndex);
+  renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
 }
 
 async function handleSaveNarration() {
@@ -1192,7 +2368,7 @@ async function handleSaveNarration() {
 
   if (btn) {
     btn.disabled = true;
-    btn.textContent = "⏳ 음성 재합성 및 저장 중...";
+    btn.textContent = "⏳ 정속 음성 재합성 & 싱크 계산 중...";
   }
   try {
     const res = await fetch(`/api/narration/${selectedScenario}/save`, {
@@ -1205,12 +2381,16 @@ async function handleSaveNarration() {
 
     if (scenarioDetailsCache[selectedScenario]) {
       scenarioDetailsCache[selectedScenario].narration = data.narration;
-      if (scenarioDetailsCache[selectedScenario].editPlan) {
+      if (data.editPlan) {
+        scenarioDetailsCache[selectedScenario].editPlan = data.editPlan;
+      } else if (scenarioDetailsCache[selectedScenario].editPlan) {
         scenarioDetailsCache[selectedScenario].editPlan.narration = data.narration;
       }
+      syncScenarioTimelineInMemory(scenarioDetailsCache[selectedScenario]);
     }
     renderNarrationStudio(scenarioDetailsCache[selectedScenario]);
     renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
+    renderMomentsStepList(scenarioDetailsCache[selectedScenario]);
     updateJsonViewer("narration");
     fetchScenarios();
   } catch (err) {
@@ -1218,7 +2398,7 @@ async function handleSaveNarration() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.textContent = "💾 수정 대본 저장 & 음성 재합성";
+      btn.textContent = "💾 대본 저장 & 재합성";
     }
   }
 }
@@ -2831,27 +4011,176 @@ function bindEvents() {
         });
       });
 
-      // Video Player Timecode, Playhead & Step Sync
+      // Video Player Timecode, Playhead & Step Sync (including Real-Time Hold/Stretch Preview)
       if (videoPlayer) {
         videoPlayer.addEventListener("timeupdate", updateVideoPlaybackSync);
-        videoPlayer.addEventListener("loadedmetadata", updateVideoPlaybackSync);
+        videoPlayer.addEventListener("loadedmetadata", () => {
+          stopRealtimeHoldAndAudio();
+          updateVideoPlaybackSync();
+        });
+        videoPlayer.addEventListener("play", () => {
+          if (realtimeHoldState.isProgrammaticResume) {
+            realtimeHoldState.isProgrammaticResume = false;
+            startRealtimePreviewLoop();
+            return;
+          }
+          // If user manually clicked play while a hold was active, complete the current hold and continue forward
+          if (realtimeHoldState.active) {
+            if (realtimeHoldState.regionIdx >= 0) {
+              realtimeHoldState.completedRegions.add(realtimeHoldState.regionIdx);
+            }
+            realtimeHoldState.active = false;
+            realtimeHoldState.isProgrammaticPause = false;
+            realtimeHoldState.regionIdx = -1;
+            const badgeEl = document.getElementById("live-timewarp-badge");
+            if (badgeEl) badgeEl.classList.add("hidden");
+          }
+          // If playing from the very start of the video, reset completed hold & cue sets
+          if ((videoPlayer.currentTime || 0) <= 0.15) {
+            realtimeHoldState.completedRegions.clear();
+            realtimeHoldState.playedCueIds.clear();
+            realtimeHoldState.lastPlayedCueId = null;
+          }
+          startRealtimePreviewLoop();
+        });
+        videoPlayer.addEventListener("pause", () => {
+          if (realtimeHoldState.isProgrammaticPause || realtimeHoldState.active) {
+            realtimeHoldState.isProgrammaticPause = false;
+            return;
+          }
+          // User manually paused playback: preserve completed hold regions so unpausing doesn't re-trigger past holds
+          stopRealtimeHoldAndAudio(true);
+          updateVideoPlaybackSync();
+        });
+        videoPlayer.addEventListener("seeking", () => {
+          if (realtimeHoldState.isProgrammaticSeek) {
+            realtimeHoldState.isProgrammaticSeek = false;
+            return;
+          }
+          // Genuine user scrub on native video player controls
+          realtimeHoldState.active = false;
+          realtimeHoldState.isProgrammaticPause = false;
+          realtimeHoldState.isProgrammaticResume = false;
+          realtimeHoldState.regionIdx = -1;
+          if (activePreviewAudio) {
+            try {
+              activePreviewAudio.pause();
+            } catch {}
+            activePreviewAudio = null;
+          }
+          const badgeEl = document.getElementById("live-timewarp-badge");
+          if (badgeEl) badgeEl.classList.add("hidden");
+          syncCompletedHoldRegionsForSeek(videoPlayer.currentTime || 0, null);
+        });
+        videoPlayer.addEventListener("ended", () => {
+          stopRealtimeHoldAndAudio();
+          updateVideoPlaybackSync();
+        });
       }
 
       if (videoSpeedSelect && videoPlayer) {
         videoSpeedSelect.addEventListener("change", () => {
-          videoPlayer.playbackRate = parseFloat(videoSpeedSelect.value) || 1.0;
+          const spd = parseFloat(videoSpeedSelect.value) || 1.0;
+          videoPlayer.playbackRate = spd;
+          if (activePreviewAudio) activePreviewAudio.playbackRate = spd;
         });
       }
 
       if (timelineBarWrapper && videoPlayer) {
+        const clientXToRawSec = (clientX) => {
+          const rect = timelineBarWrapper.getBoundingClientRect();
+          const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+          const details = scenarioDetailsCache[selectedScenario];
+          const editPlan = details?.editPlan;
+          if (currentVideoMode === "raw" && editPlan?.totalDurationFrames) {
+            const fps = Number(editPlan.fps || 60);
+            const compTotalMs = (editPlan.totalDurationFrames / fps) * 1000;
+            const targetCompMs = ratio * compTotalMs;
+            const targetRawMs = compTimeMsToVideoTimeMs(targetCompMs, editPlan);
+            return Math.min(videoPlayer.duration || 0, Math.max(0, targetRawMs / 1000));
+          }
+          return ratio * (videoPlayer.duration || 0);
+        };
+
+        timelineBarWrapper.addEventListener("mousedown", (e) => {
+          if (!e.shiftKey || !videoPlayer.duration) return;
+          e.preventDefault();
+          const startRawSec = clientXToRawSec(e.clientX);
+          timelineDragCutState = { startRawSec, moved: false };
+        });
+
+        window.addEventListener("mousemove", (e) => {
+          if (!timelineDragCutState || !videoPlayer.duration) return;
+          timelineDragCutState.moved = true;
+          const curRawSec = clientXToRawSec(e.clientX);
+          const inSec = Math.min(timelineDragCutState.startRawSec, curRawSec);
+          const outSec = Math.max(timelineDragCutState.startRawSec, curRawSec);
+          const cutInInput = document.getElementById("cut-in-input");
+          const cutOutInput = document.getElementById("cut-out-input");
+          if (cutInInput) cutInInput.value = inSec.toFixed(1);
+          if (cutOutInput) cutOutInput.value = outSec.toFixed(1);
+          updateCutSelectionUI();
+        });
+
+        window.addEventListener("mouseup", () => {
+          if (timelineDragCutState) {
+            setTimeout(() => {
+              timelineDragCutState = null;
+            }, 30);
+          }
+        });
+
         timelineBarWrapper.addEventListener("click", (e) => {
           if (!videoPlayer.duration) return;
+          if (timelineDragCutState && timelineDragCutState.moved) return;
+          const wasPlaying = !videoPlayer.paused || realtimeHoldState.active;
+          stopRealtimeHoldAndAudio();
           const rect = timelineBarWrapper.getBoundingClientRect();
           const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-          videoPlayer.currentTime = ratio * videoPlayer.duration;
+          const details = scenarioDetailsCache[selectedScenario];
+          const editPlan = details?.editPlan;
+          if (currentVideoMode === "raw" && editPlan?.totalDurationFrames) {
+            const fps = Number(editPlan.fps || 60);
+            const compTotalMs = (editPlan.totalDurationFrames / fps) * 1000;
+            const targetCompMs = ratio * compTotalMs;
+            const targetRawMs = compTimeMsToVideoTimeMs(targetCompMs, editPlan);
+            const targetRawSec = Math.min(videoPlayer.duration, Math.max(0, targetRawMs / 1000));
+            syncCompletedHoldRegionsForSeek(targetRawSec, targetCompMs);
+            realtimeHoldState.isProgrammaticSeek = true;
+            videoPlayer.currentTime = targetRawSec;
+          } else {
+            realtimeHoldState.isProgrammaticSeek = true;
+            videoPlayer.currentTime = ratio * videoPlayer.duration;
+          }
+          if (wasPlaying) {
+            realtimeHoldState.isProgrammaticResume = true;
+            videoPlayer.play().catch(() => {
+              realtimeHoldState.isProgrammaticResume = false;
+            });
+          }
           updateVideoPlaybackSync();
         });
       }
+
+      const btnSetCutIn = document.getElementById("btn-set-cut-in");
+      const btnSetCutOut = document.getElementById("btn-set-cut-out");
+      const cutInInput = document.getElementById("cut-in-input");
+      const cutOutInput = document.getElementById("cut-out-input");
+      const btnPreviewCutRange = document.getElementById("btn-preview-cut-range");
+      const btnClearCutRange = document.getElementById("btn-clear-cut-range");
+      const btnApplyVideoCut = document.getElementById("btn-apply-video-cut");
+      const btnUndoVideoCut = document.getElementById("btn-undo-video-cut");
+      const btnRestoreOrigVideo = document.getElementById("btn-restore-orig-video");
+
+      if (btnSetCutIn) btnSetCutIn.addEventListener("click", handleSetCutInFromPlayhead);
+      if (btnSetCutOut) btnSetCutOut.addEventListener("click", handleSetCutOutFromPlayhead);
+      if (cutInInput) cutInInput.addEventListener("input", updateCutSelectionUI);
+      if (cutOutInput) cutOutInput.addEventListener("input", updateCutSelectionUI);
+      if (btnPreviewCutRange) btnPreviewCutRange.addEventListener("click", handlePreviewCutRange);
+      if (btnClearCutRange) btnClearCutRange.addEventListener("click", handleClearCutRange);
+      if (btnApplyVideoCut) btnApplyVideoCut.addEventListener("click", handleApplyVideoCut);
+      if (btnUndoVideoCut) btnUndoVideoCut.addEventListener("click", () => handleRestoreVideoCut("undo"));
+      if (btnRestoreOrigVideo) btnRestoreOrigVideo.addEventListener("click", () => handleRestoreVideoCut("orig"));
 
       if (btnCopyJson && jsonViewerContent) {
         btnCopyJson.addEventListener("click", () => {
@@ -2874,14 +4203,26 @@ function bindEvents() {
 
       const narrationStyleSelect = document.getElementById("narration-style-select");
       const narrationPitchSelect = document.getElementById("narration-pitch-select");
+      const narrationVoiceSelect = document.getElementById("narration-voice-select");
+      const narrationRateSelect = document.getElementById("narration-rate-select");
       if (narrationStyleSelect && narrationPitchSelect) {
         narrationStyleSelect.addEventListener("change", () => {
           const recPitch = STYLE_RECOMMENDED_PITCH[narrationStyleSelect.value];
           if (recPitch) {
             narrationPitchSelect.value = recPitch;
           }
+          const hasCues = document.querySelectorAll("#narration-cues-container .narration-cue-row").length > 0;
+          if (hasCues) runAutoSynthesizeAndFitNow();
         });
       }
+      [narrationVoiceSelect, narrationRateSelect, narrationPitchSelect].forEach((sel) => {
+        if (sel) {
+          sel.addEventListener("change", () => {
+            const hasCues = document.querySelectorAll("#narration-cues-container .narration-cue-row").length > 0;
+            if (hasCues) runAutoSynthesizeAndFitNow();
+          });
+        }
+      });
 
       const btnGenerateNarration = document.getElementById("btn-generate-narration");
       if (btnGenerateNarration) {

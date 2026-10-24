@@ -636,6 +636,39 @@ export const GROUPWARE_CATALOG: Record<string, GroupwareModuleSpec> = {
       "② 특정 사원명이 명시되지 않은 범용 시연인 경우 중앙 사원 후보 카드(.ui-dialog:visible label.user_info.chkbox) 선택 -> 셔틀 추가 버튼(button.drop_tgl, button:has-text('추가'), button:has-text('권한')) 클릭 -> 확인(button._confirmBtn) 클릭",
     ],
   },
+
+  aichat: {
+    moduleKey: "aichat",
+    name: "NAON AI Chat & AI Editor (CMM AI)",
+    koreanName: "NAON AI 챗봇 & AI Editor",
+    gnbMenuText: "AI Chat",
+    keywords: ["ai", "ai chat", "aichat", "챗봇", "에이전트 모드", "ai editor", "naon ai", "그룹웨어 검색"],
+    urlPatterns: ["/cmm/ai/chat/cmmAiChatMain", "/cmmAiChat"],
+    entryPoints: {
+      gnbDrawerButton: "div#lnb button.btn_ai[title='AI Chat']:visible, button[name='topMenu_aiChat']:visible",
+      gnbMenuItem: "button#cmmAiChat_openChatList:visible",
+      lnbWriteButton: "div#cmmAiChat_topMenu button.btn_write._aiReset:visible",
+    },
+    exactSelectors: {
+      titleInput: "div.mentiony-content[contenteditable='true']:visible, div[contenteditable='true'][data-placeholder*='질문']:visible",
+      bodyEditor: "div.mentiony-content[contenteditable='true']:visible",
+      categorySelectButton: "div#cmmAiChat_drop button.drop_tgl._fileAdd:visible",
+      saveButton: "button._send:visible, button.btn_send:visible",
+      confirmButton: "div#cmmAiChat_controlDetail button.setup[title='설정']:visible",
+      closeButton: "div#cmmAiChat_topMenu button.btn_close:visible",
+      treeExpander: "button#cmmAiChat_openChatList:visible",
+      treeLeafTitle: "div#cmmAiChatSideMenu_navi a.bot:has(._aiNormal):visible, div#cmmAiChatSideMenu_navi a._aiBox:visible, a.name._chatLink:visible",
+      searchInput: "div.mentiony-content[contenteditable='true']:visible",
+      searchButton: "div#cmmAiChat_controlMenu button[data-search-type='gw']:visible, div#cmmAiChat_controlMenu button[data-search-type='tool']:visible",
+      listFirstItem: "a.name._chatLink:visible",
+    },
+    specialInstructions: [
+      "포탈 우측 퀵메뉴에서 AI Chat 열기: div#lnb button.btn_ai[title='AI Chat']:visible (또는 button[name='topMenu_aiChat']:visible) 클릭 -> 이후 액션은 iframe#chat_iframe 내부에서 실행 (단, button.btn_export._newChat '새창으로 보기' 클릭 이후에는 팝업 메인 프레임에서 실행)",
+      "질문 입력창: div.mentiony-content[contenteditable='true']:visible (주의: #mentiony-content-xxxxxx ID는 매번 랜덤 생성되므로 절대 ID 셀렉터 사용 금지, Enter 키로 전송 시 pressEnter: true 지정)",
+      "하단 모드/옵션 선택: ① div#cmmAiChat_drop button.drop_tgl._fileAdd:visible ('파일 추가 및 기타') 클릭 -> ② 에이전트 모드는 div#cmmAiChat_controlMenu button[data-search-type='tool']:visible, 그룹웨어 검색은 div#cmmAiChat_controlMenu button[data-search-type='gw']:visible 클릭 (절대 단순 button._search:visible 단독 사용 금지)",
+      "에이전트 모드 세부 도구 설정: 에이전트 모드(data-search-type='tool') 활성화 후 div#cmmAiChat_controlDetail button.setup[title='설정']:visible 클릭",
+    ],
+  },
 };
 
 /**

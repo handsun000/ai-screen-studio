@@ -98,6 +98,7 @@ export interface TimeRegion {
   compStartFrame: number;
   compEndFrame: number;
   speed: number;
+  cueId?: number;
 }
 
 export interface EditSegment {
@@ -124,6 +125,11 @@ export interface NarrationCue {
   audioFile?: string;
   audioDurationMs?: number;
   playbackRate?: number;
+  videoStartMs?: number;
+  videoEndMs?: number;
+  autoHoldMs?: number;
+  extraHoldMs?: number;
+  effectiveDeltaMs?: number;
 }
 
 export interface NarrationFile {
@@ -140,6 +146,7 @@ export interface NarrationFile {
 
 export interface EditPlan {
   totalDurationFrames: number;
+  rawDurationFrames?: number;
   fps: number;
   defaultZoom: number;
   timeRegions?: TimeRegion[];

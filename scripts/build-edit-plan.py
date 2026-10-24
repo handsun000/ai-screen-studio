@@ -304,6 +304,7 @@ if merged:
 # Step 3: Output
 edit_plan = {
     "totalDurationFrames": total_frames,
+    "rawDurationFrames": total_frames,
     "fps": fps,
     "defaultZoom": 1.0,
     "segments": merged,
@@ -316,7 +317,24 @@ narration_path = data_dir / "narration.json"
 if narration_path.exists():
     try:
         with open(narration_path, encoding="utf-8") as nf:
-            edit_plan["narration"] = json.load(nf)
+            narration_data = json.load(nf)
+        cues = narration_data.get("cues") or []
+        if cues:
+            import importlib.util
+            tts_script = Path(__file__).parent / "synthesize-tts.py"
+            spec = importlib.util.spec_from_file_location("synthesize_tts", tts_script)
+            if spec and spec.loader:
+                tts_mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(tts_mod)
+                time_regions, total_comp_frames, raw_total_frames = tts_mod.compute_time_regions_and_sync_cues(
+                    cues, total_ms, fps
+                )
+                edit_plan["rawDurationFrames"] = raw_total_frames
+                edit_plan["totalDurationFrames"] = total_comp_frames
+                edit_plan["timeRegions"] = time_regions
+                with open(narration_path, "w", encoding="utf-8") as nfw:
+                    json.dump(narration_data, nfw, indent=2, ensure_ascii=False)
+        edit_plan["narration"] = narration_data
     except Exception:
         pass
 

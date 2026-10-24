@@ -205,7 +205,37 @@ npx tsc --noEmit
     - **시나리오별 하드코딩(`draftHint`) 전면 제거 및 순수 AI 맥락 해설**: 특정 시나리오용 고정 문구나 화면에 없는 허구 조건(예: `'비공개'`에 `'지정된 담당자만'` 등을 지어내는 하드코딩)을 모두 제거하고, 각 구간의 실제 구조적 사실(`rawActions`, `structuredFacts`, `sampleValuesToGeneralize`)을 기반으로 Gemini AI가 직접 자연스러운 매뉴얼 해설을 생성하도록 개편했습니다.
     - **워크플로우 구조(`StructuralRole`) 기반 스마트 그룹핑**: `[전체메뉴 + 모듈 진입]`, `[팝업 열기 + 대상 선택 + 팝업 '확인']`, `[날짜 입력란 클릭 + 달력 일자 선택]`, `[저장/상신/삭제 + 안내창/확인창 승인]`, `[등록 후 목록 이동 + 상세 조회]`를 각각 하나의 응집된 단계로 묶어 파편화된 `"확인 버튼을 누릅니다"` 구간과 단계 간 엉뚱한 병합을 모두 제거했습니다.
     - **초반 메뉴 오판 차단 (`typedBefore` 스코핑)**: 시연 후반부에 입력한 제목 텍스트 때문에 초반 모듈 메뉴 클릭(`'스마트워크'`)이 생성 항목 조회로 오판되던 버그를 시점별 이전 입력값(`typedBefore`) 참조 및 `STANDARD_UI_MENU_REGEX` 보호로 완전히 해결했습니다.
+12. **실시간 구간 늘리기/줄이기(`autoHoldMs` + `extraHoldMs`), 정속 TTS 합성 및 대본·줌·커서·효과음 4대 트랙 100% 타임워프 싱크 완성 (`scripts/synthesize-tts.py`, `scripts/build-edit-plan.py`, `src/services/narrationService.ts`, `src/ScreenDemo.tsx`, `src/components/FrameMapper.ts`, `src/components/CameraTransform.tsx`, `src/components/NarrationTrack.tsx`, `src/components/SoundEffects.tsx`, `dashboard/`)**:
+    - **TTS 강제 배속(`+35%`) 재합성 완전 제거 및 증분(Incremental) TTS 캐싱 (`scripts/synthesize-tts.py`)**:
+      - 대본이 원본 동작 간격보다 길어질 때 음성 속도를 `+35%`까지 강제로 빠르게 만들던 Pass 2 로직을 전면 제거하여, 항상 사용자가 선택한 기본 속도(예: `+5%`) 그대로 자연스럽게 합성합니다.
+      - 각 대본 구간의 `성우|속도|톤|텍스트` 서명(`_ttsSig`)을 비교하여 수정된 대본 줄만 약 0.6~1.2초 만에 초고속 재합성하도록 최적화했습니다.
+    - **원본 앵커(`videoStartMs`) 기반 자동/수동 구간 연장 및 `TimeRegion` 양방향 매핑**:
+      - 각 대본 구간의 원본 비디오 시점(`[videoStartMs, videoEndMs]`)을 고정하고, 음성 길이(`audioDurationMs + 패딩`)가 원본 간격보다 길면 부족한 시간(`autoHoldMs`)만큼 해당 동작 완료 직후의 안정된 화면 프레임을 자동으로 홀드(연장)합니다.
+      - 사용자가 수동으로 구간을 늘리거나 줄인 값(`extraHoldMs`)까지 합산하여 `editPlan.timeRegions`(`videoStartFrame`, `videoEndFrame`, `compStartFrame`, `compEndFrame`, `speed`, `cueId`)와 `totalDurationFrames`, `rawDurationFrames`를 Python·TypeScript·브라우저 JS 3중 엔진에서 오차 0프레임으로 동일하게 산출합니다.
+    - **Remotion 4대 트랙(`OffthreadVideo`, `CameraTransform`, `SyntheticCursor`, `SoundEffects`, `NarrationTrack`) 100% 동기화**:
+      - `ScreenDemo.tsx`에서 `mergeContiguousTimeRegions`를 통해 `<Sequence>` + `<OffthreadVideo startFrom={region.videoStartFrame} playbackRate={Math.max(0.0005, region.speed)}>`로 홀드/가감속 구간을 렌더링합니다.
+      - `CameraTransform.tsx`와 `SyntheticCursor.tsx`는 `frameToVideoTime(frame, editPlan)`을 통해 홀드 구간에서 줌과 커서를 안정적으로 유지하며, `SoundEffects.tsx`는 `videoFrameToCompFrame(rawFrame, editPlan)`을 통해 클릭·줌 효과음을 연장된 타임라인에 정확히 맞춥니다.
+      - `build-edit-plan.py` 실행 시(렌더링 직전 `calibrate-moments.py` 호출 포함)에도 `narration.json`의 `timeRegions`와 연장된 `totalDurationFrames`가 보존되도록 연동했습니다.
+    - **웹 대시보드 실시간 구간 조절 UI 및 자동 맞춤 + 원본 비디오 실시간 홀드 프리뷰 (`dashboard/app.js`, `index.html`, `style.css`)**:
+      - `[🎙️ AI 나레이션 대본 & 음성 합성 (TTS)]` 탭의 각 대본 행에서 문장을 수정하면 타이핑 즉시(`0ms`) 글자 수 기반으로 예상 연장 시간을 프리뷰하고, 포커스 이동(`blur`/`change`)·`Enter`·850ms 입력 정지 시 저장 버튼을 누르지 않아도 백그라운드에서 자동 TTS 합성 및 실제 음성 길이 기준 영상 길이 맞춤이 수행됩니다.
+      - 각 대본 행 우측의 `[-0.5s]` `[+0.5s]` `[+1.0s]` `[초기화]` 버튼으로 수동 구간 조절이 즉시 반영되며, `📹 원본 브라우저 녹화본` 재생 시에도 홀드 구간에서 비디오 프레임을 실시간 일시정지(`⏸️ 실시간 구간 늘리기(홀드) 중`)하고 정속 TTS 음성과 실시간 자막 오버레이를 재생한 뒤 자동 재개합니다. (홀드 종료 시 `videoPlayer.currentTime` 강제 시크로 인해 비동기 `seeking` 이벤트가 발생하며 완료 상태와 오디오가 초기화되어 동일 홀드 구간에서 무한 반복되던 문제를 무(無)시크 재개 및 `completedRegions`/`playedCueIds` `Set` 상태 관리로 근본 해결 완료)
+13. **녹화 영상 직접 컷 편집(`✂️ 구간 잘라내기`) 및 타임라인 자동 당김(Ripple Sync) + 실행 취소/원본 복원 구현 (`src/services/videoEditorService.ts`, `scripts/dashboard-server.ts`, `dashboard/`)**:
+    - 타임라인 하단 `✂️ 구간 잘라내기` 편집 바(`[ 시작점 현위치`, `끝점 현위치 ]`, `▶️ 구간 확인`, `✂️ 선택 구간 잘라내기`, `↩️ 실행 취소`, `🔄 원본 복원`) 및 타임라인 바 위 `Shift + 드래그` 구간 선택 하이라이트(`#timeline-cut-selection`)를 구현했습니다.
+    - 구간 잘라내기 실행 시 FFmpeg로 `recording.mp4`에서 선택 구간을 실제로 삭제하고, `moments.json`·`edit-plan.json`·`narration.json`의 이후 타임스탬프를 잘라낸 길이만큼 자동으로 앞으로 당겨(Ripple Edit) 커서·줌·대본 싱크가 100% 유지되도록 구성했습니다.
+    - 최초 편집 전 원본(`.orig`) 및 직전 단계(`.undo`) 백업을 자동 보존하여 언제든 즉시 되돌리거나 원본으로 복원할 수 있습니다.
+14. **실제 팝업 창(`pageStack`) 보존, 초반 로그인 시연 보존, 동적 생성 항목 셀렉터 해석, 스포이드 HUD 버튼 가림 해결 및 'Why(목적/이유)' 중심 AI 대본 고도화 (`scripts/record.ts`, `src/services/actionRecorderService.ts`, `src/services/planSanitizer.ts`, `src/services/narrationService.ts`)**:
+    - **팝업 동일 창 URL 덮어쓰기 제거 및 부모 창 SPA 상태 100% 보존 (`scripts/record.ts`)**: `window.open` 및 `target="_blank"`를 현재 창 `window.location.href = url`로 강제 이동시키거나 팝업 종료 시 `targetPage.goto(openerUrl)`로 리로드하여 그룹웨어 메인(`homGwMain`)으로 초기화되던 문제를 제거하고, 실제 자식 팝업(`pageStack`)에서 실행 후 닫히면 부모 창 DOM 상태가 그대로 유지되도록 해결했습니다.
+    - **초반 로그인 시연 액션 보존 및 미인증 시작 지원 (`actionRecorderService.ts`, `scripts/record.ts`)**: 사용자가 직접 시연한 초반 로그인 액션(`isInitialLoginEvent`)을 임의로 잘라내던 필터를 제거하고, `submit`/`beforeunload` 시 타이핑 버퍼 즉시 플러시 및 로그인 시연으로 시작하는 시나리오(`startsWithExplicitLogin`) 재생 시 `auth.json` 미주입 상태로 로그인 화면부터 재현하도록 수정했습니다.
+    - **재녹화 시 동적 생성 항목(ID 변경) 이름/텍스트 기반 우선 매칭 및 `targetHtml` 텍스트 폴백 (`actionRecorderService.ts`, `planSanitizer.ts`, `scripts/record.ts`)**: 생성 후 삭제되어 재녹화 시마다 `data-book-id` 등 DB ID가 바뀌는 항목에 대해 `Tier 1(이름/제목 속성 및 행 텍스트 스코핑) -> Tier 2(고유 엔티티 ID) -> Tier 3(공통 플래그 제외)` 우선순위를 적용하고, `resolveLocator` 실패 시 `targetHtml` 내부 텍스트/타이틀 폴백을 추가했습니다.
+    - **스포이드 HUD(`#__sd_recorder_hud`) 하단 버튼 가림 4중 해결 (`actionRecorderService.ts`)**: ① HUD 버튼 영역 아래에 웹페이지 버튼/입력창이 있으면 `document.elementsFromPoint`로 감지해 빈 모서리로 자동 회피(Auto-Dodge, 마우스 근접 시 고정), ② 상태 텍스트 영역 클릭 투과(`pointer-events: none`), ③ `[⇅ 위치]` 버튼(클릭 시 모서리 전환 및 드래그 이동), ④ `[➖]` 접기/펼치기 토글을 적용했습니다.
+    - **전 모듈 범용 업무 단계(Workflow Stage) 그룹핑 및 'Why(업무 목적·이유·효과)' 중심 AI 대본 생성 (`src/services/narrationService.ts`)**:
+      - `extractCleanDomSummary`에서 `href`, `data-*`, `childInputId`, 2~3순위 의미론적 셀렉터(`li._TOOLBOX` 등)까지 보존하여 AI가 기능적 목적을 정확히 파악하도록 개선했습니다.
+      - `buildNarrationWindows`에서 모달 외부 일반 화면의 연속 폼 입력·옵션 선택, 입력 직후 실행 버튼(`로그인`, `검색`, `등록`, `양식 [작성]`), 사이드바/트리 메뉴 클릭 직후 목록 조회 등을 하나의 의미 구간으로 통합하여 자잘한 1클릭 쪼개기와 불필요한 영상 멈춤(`autoHoldMs`)을 제거했습니다.
+      - 커서가 이미 보여주는 단순 조작법(How) 나열을 금지하고 **왜 해당 단계를 수행하는지(Why·업무적 목적·효과)**를 해설하도록 프롬프트 및 AI 인접 구간 병합(`windowIndices`)을 구현했습니다.
 
 ### 5.2 다음 세션에서 이어서 진행할 포인트
-* 동작 감지(클릭·호버·드래그·리치 에디터 타이핑·파일 첨부 `upload`), 셀렉터 정제, 1:1 브라우저 녹화, 매뉴얼 해설형 AI 대본 및 Edge-TTS 합성까지 전 파이프라인이 완비되어 있습니다.
-* 새로운 대화창에서 사용자가 추가 시나리오 녹화·렌더링 또는 신규 기능을 요청하면 이 `AGENTS.md` 규격을 기준으로 즉시 이어서 작업하면 됩니다.
+* 동작 감지(클릭·호버·드래그·리치 에디터 타이핑·파일 첨부 `upload`), 셀렉터 정제, 1:1 브라우저 녹화, 매뉴얼 해설형 AI 대본, 정속 Edge-TTS 합성, 그리고 **실시간 구간 늘리기/줄이기 및 4대 트랙 100% 타임워프 싱크**까지 전 파이프라인이 완비되어 있습니다.
+* 향후 사용자가 원할 경우:
+  1. 대본 탭(`subtab-narration`)뿐만 아니라 첫 번째 탭(`🎯 동작 모멘트 & 단계별 이동`)이나 비디오 플레이어 컨트롤 바에서도 바로 구간 늘리기/줄이기(`-0.5s` / `+0.5s` / `+1.0s`)를 조작할 수 있는 단축 UI 확장.
+  2. 15분 이상의 장편 다중 모듈 시나리오 제작 시 챕터(모듈)별 분할 녹화 후 FFmpeg `-c copy` 무손실 병합 아키텍처 또는 `scripts/record.ts` 내 잔여 레거시 하드코딩 클린업.
+  등을 이 `AGENTS.md` 규격을 기준으로 즉시 이어서 진행하면 됩니다.

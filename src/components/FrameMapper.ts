@@ -1,4 +1,4 @@
-import type { EditPlan, EditSegment } from "../types";
+import type { EditPlan, EditSegment, TimeRegion } from "../types";
 
 export function getSegmentAtFrame(
   frame: number,
@@ -23,7 +23,23 @@ export function frameToVideoTime(
   frame: number,
   editPlan: EditPlan
 ): number {
-  const { fps, segments } = editPlan;
+  const { fps, segments, timeRegions } = editPlan;
+
+  if (timeRegions && timeRegions.length > 0) {
+    if (frame <= timeRegions[0].compStartFrame) {
+      return Math.max(0, timeRegions[0].videoStartFrame / fps);
+    }
+    for (const r of timeRegions) {
+      if (frame >= r.compStartFrame && frame <= r.compEndFrame) {
+        const videoFrame = r.videoStartFrame + (frame - r.compStartFrame) * r.speed;
+        return Math.max(0, videoFrame / fps);
+      }
+    }
+    const last = timeRegions[timeRegions.length - 1];
+    const extraFrames = Math.max(0, frame - last.compEndFrame);
+    return Math.max(0, (last.videoEndFrame + extraFrames) / fps);
+  }
+
   const maxSpan = editPlan.totalDurationFrames;
   const actionSegments = segments
     .filter((s) => s.endFrame - s.startFrame < maxSpan)
@@ -64,4 +80,55 @@ export function frameToVideoTime(
   videoTimeMs += (remaining / fps) * 1000;
 
   return videoTimeMs / 1000;
+}
+
+export function videoFrameToCompFrame(
+  videoFrame: number,
+  editPlan: EditPlan
+): number {
+  const { timeRegions } = editPlan;
+  if (!timeRegions || timeRegions.length === 0) {
+    return Math.round(videoFrame);
+  }
+
+  if (videoFrame <= timeRegions[0].videoStartFrame) {
+    return Math.round(timeRegions[0].compStartFrame);
+  }
+
+  for (const r of timeRegions) {
+    if (videoFrame >= r.videoStartFrame && videoFrame <= r.videoEndFrame) {
+      const rawSpan = Math.max(1, r.videoEndFrame - r.videoStartFrame);
+      const progress = Math.max(0, Math.min(1, (videoFrame - r.videoStartFrame) / rawSpan));
+      const compFrame = r.compStartFrame + progress * (r.compEndFrame - r.compStartFrame);
+      return Math.round(compFrame);
+    }
+  }
+
+  const last = timeRegions[timeRegions.length - 1];
+  const extra = Math.max(0, videoFrame - last.videoEndFrame);
+  return Math.round(last.compEndFrame + extra);
+}
+
+export function mergeContiguousTimeRegions(regions?: TimeRegion[]): TimeRegion[] {
+  if (!regions || regions.length === 0) return [];
+  const merged: TimeRegion[] = [];
+  for (const r of regions) {
+    if (r.compEndFrame <= r.compStartFrame || r.videoEndFrame <= r.videoStartFrame) {
+      continue;
+    }
+    const prev = merged[merged.length - 1];
+    if (
+      prev &&
+      Math.abs(prev.speed - 1.0) < 0.001 &&
+      Math.abs(r.speed - 1.0) < 0.001 &&
+      prev.compEndFrame === r.compStartFrame &&
+      prev.videoEndFrame === r.videoStartFrame
+    ) {
+      prev.compEndFrame = r.compEndFrame;
+      prev.videoEndFrame = r.videoEndFrame;
+    } else {
+      merged.push({ ...r });
+    }
+  }
+  return merged;
 }

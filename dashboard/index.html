@@ -272,6 +272,8 @@
                 <video id="demo-video-player" controls preload="metadata">
                   <p>브라우저가 HTML5 비디오를 지원하지 않습니다.</p>
                 </video>
+                <div class="live-timewarp-badge hidden" id="live-timewarp-badge"></div>
+                <div class="live-subtitle-overlay hidden" id="live-subtitle-overlay"></div>
                 <div class="video-empty-state" id="video-empty">
                   <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 8 6 4-6 4Z"/></svg>
                   <p>녹화된 비디오 파일이 없습니다.</p>
@@ -290,12 +292,34 @@
                 </div>
                 <div class="timeline-bar-wrapper" id="timeline-bar-wrapper" title="클릭하여 해당 시점으로 비디오 이동">
                   <div class="timeline-bar" id="timeline-visual-bar"></div>
+                  <div class="timeline-cut-selection hidden" id="timeline-cut-selection"></div>
                   <div class="timeline-playhead" id="timeline-playhead" style="left: 0%;"></div>
                 </div>
                 <div class="timeline-legend">
                   <span class="legend-item"><span class="legend-dot zoom-dot"></span> 카메라 줌 구간 (Zoom In/Out)</span>
                   <span class="legend-item"><span class="legend-dot click-dot"></span> 동작/클릭 마커 (클릭 시 이동)</span>
                   <span class="legend-item"><span class="legend-dot narration-dot"></span> AI 나레이션 음성 구간</span>
+                  <span class="legend-item"><span class="legend-dot hold-dot"></span> 구간 늘리기(홀드)/단축</span>
+                </div>
+                <div class="video-cut-editor-bar" id="video-cut-editor-bar">
+                  <div class="cut-editor-left">
+                    <span class="cut-editor-label" title="타임라인에서 Shift+드래그하거나 아래 버튼으로 시작~끝 지점을 지정해 불필요한 구간을 삭제합니다">✂️ 구간 잘라내기</span>
+                    <button type="button" class="btn-cut-mark" id="btn-set-cut-in" title="현재 비디오 재생 위치를 잘라낼 시작점(In)으로 지정합니다">[ 시작점 현위치</button>
+                    <input type="number" step="0.1" min="0" id="cut-in-input" class="cut-time-input" placeholder="시작(초)" title="잘라낼 시작 시점(원본 초)" />
+                    <span class="cut-range-sep">~</span>
+                    <input type="number" step="0.1" min="0" id="cut-out-input" class="cut-time-input" placeholder="끝(초)" title="잘라낼 끝 시점(원본 초)" />
+                    <button type="button" class="btn-cut-mark" id="btn-set-cut-out" title="현재 비디오 재생 위치를 잘라낼 끝점(Out)으로 지정합니다">끝점 현위치 ]</button>
+                    <span class="cut-duration-badge hidden" id="cut-duration-badge">0.0s 선택됨</span>
+                  </div>
+                  <div class="cut-editor-actions">
+                    <button type="button" class="btn btn-sm btn-outline" id="btn-preview-cut-range" title="선택한 시작~끝 구간만 재생하여 잘라낼 부분을 미리 확인합니다">▶️ 구간 확인</button>
+                    <button type="button" class="btn btn-sm btn-outline" id="btn-clear-cut-range" title="선택한 시작~끝 구간 표시를 해제합니다">해제</button>
+                    <button type="button" class="btn btn-sm btn-danger" id="btn-apply-video-cut" title="선택한 시작~끝 구간을 녹화 영상(recording.mp4)에서 실제로 삭제하고 모멘트·줌·대본 싱크를 자동으로 당겨 맞춥니다">✂️ 선택 구간 잘라내기</button>
+                    <button type="button" class="btn btn-sm btn-outline hidden" id="btn-undo-video-cut" title="직전 컷 편집을 취소하고 바로 이전 영상 상태로 되돌립니다">↩️ 실행 취소</button>
+                    <button type="button" class="btn btn-sm btn-outline hidden" id="btn-restore-orig-video" title="모든 컷 편집을 취소하고 최초 녹화 원본 영상으로 복원합니다">🔄 원본 복원</button>
+                  </div>
+                </div>
+                <div style="display:none;">
                 </div>
               </div>
             </div>

@@ -502,33 +502,8 @@ class ActionRecorderService {
     this.finishedByBrowserHud = false;
     const targetBaseUrl = this.targetUrl || getConfig().targetBaseUrl || "http://gwdev.apple21.co.kr/";
 
-    // If the user started the Eyedropper while their session was expired (no prior logout)
-    // and logged in at the very beginning before demonstrating post-login groupware actions,
-    // strip the leading session-recovery login events because stopRecordingSession(true) already saved the fresh logged-in auth.json!
-    const hadLogout = capturedEvents.some((e) =>
-      /로그아웃|btn_logout|goLogout|topMenu_logon/i.test(
-        `${e.label || ""} ${e.selector || ""} ${e.targetHtml || ""}`
-      )
-    );
-    let effectiveEvents = capturedEvents;
-    if (!hadLogout && capturedEvents.length > 0) {
-      const isInitialLoginEvent = (e: RecordedRawEvent) =>
-        /#userId|name=['"]userId['"]|#password|type=['"]password['"]|#btnLogin|btn_login/i.test(
-          `${e.selector || ""} ${e.targetHtml || ""} ${e.label || ""}`
-        ) || Boolean(e.pageUrl && /login|signin|userlogin/i.test(e.pageUrl));
-      if (isInitialLoginEvent(capturedEvents[0])) {
-        let firstPostLoginIdx = 0;
-        while (firstPostLoginIdx < capturedEvents.length && isInitialLoginEvent(capturedEvents[firstPostLoginIdx])) {
-          firstPostLoginIdx++;
-        }
-        if (firstPostLoginIdx > 0 && firstPostLoginIdx < capturedEvents.length) {
-          console.log(
-            `[Live Action Recorder] 초기 세션 만료로 인한 로그인 단계(${firstPostLoginIdx}개)를 최신 세션(auth.json)으로 병합하고 본 시나리오 동작부터 플랜을 구성합니다.`
-          );
-          effectiveEvents = capturedEvents.slice(firstPostLoginIdx);
-        }
-      }
-    }
+    // Preserve 100% of user-demonstrated events (including initial login steps if the user demonstrated logging in)
+    const effectiveEvents = capturedEvents;
 
     const refined = await refineRecordedEventsIntoPlan(
       effectiveEvents,
@@ -681,10 +656,10 @@ export function getInjectedEyedropperScript(): string {
     }
   }
 
-  // Check if an ID looks auto-generated / unstable (e.g. ui-id-14, jqg123, ext-gen102) or is duplicated across multiple visible elements
+  // Check if an ID looks auto-generated / unstable (e.g. ui-id-14, jqg123, ext-gen102, mentiony-content-xxxxxx) or is duplicated across multiple visible elements
   function isStableId(id) {
     if (!id || typeof id !== "string") return false;
-    if (/^(ui-id-|jqg|ext-gen|select2-|mceu_|cke_|tinymce|th\\d+$|dp\\d+$|ADRGR\\d+$)/i.test(id)) return false;
+    if (/^(ui-id-|jqg|ext-gen|select2-|mceu_|cke_|tinymce|mentiony-|th\\d+$|dp\\d+$|ADRGR\\d+$)/i.test(id)) return false;
     if (/^[0-9]+$/.test(id)) return false;
     // Long random hex/uuid suffix
     if (/[0-9a-f]{8,}/i.test(id)) return false;
@@ -710,7 +685,7 @@ export function getInjectedEyedropperScript(): string {
       const icoTitle = (el.getAttribute("title") || "").trim();
       if (icoTitle) return icoTitle.replace(/\\s+/g, " ").slice(0, 40);
     }
-    const raw = (el.innerText || el.textContent || el.value || el.getAttribute("title") || el.getAttribute("placeholder") || el.getAttribute("alt") || "").trim();
+    const raw = (el.innerText || el.textContent || el.value || el.getAttribute("title") || el.getAttribute("placeholder") || el.getAttribute("data-placeholder") || el.getAttribute("alt") || "").trim();
     return raw.replace(/\\s+/g, " ").slice(0, 40);
   }
 
@@ -861,7 +836,7 @@ export function getInjectedEyedropperScript(): string {
       if (innerInputMatch && innerInputMatch[0].length <= 160) {
         childMeta += innerInputMatch[0];
       }
-      const innerCoverMatch = innerSlice.match(/<(?:div|span|i)\\b[^>]*class=["'][^"']*\\b(?:scvr\\d+|plt_\\d+|ico_[a-zA-Z0-9_]+)\\b[^"']*["'][^>]*>/i);
+      const innerCoverMatch = innerSlice.match(/<(?:div|span|i)\\b[^>]*class=["'][^"']*\\b(?:scvr\\d+|plt_\\d+|ico_[a-zA-Z0-9_]+|_ai[a-zA-Z0-9_]+)\\b[^"']*["'][^>]*>/i);
       if (innerCoverMatch && innerCoverMatch[0].length <= 120) {
         childMeta += innerCoverMatch[0];
       }
@@ -932,14 +907,24 @@ export function getInjectedEyedropperScript(): string {
         }
       }
 
-      // Check data-* attributes on cur if it has a distinguishing attribute
-      const dataAttrs = ["data-app-type-se", "data-app-type-id", "data-app-type-ordr", "data-tab", "data-book-name", "data-menu-id", "data-menu-name", "data-work-id", "data-res-id", "data-dept-id", "data-emp-id", "data-cmp-id", "data-cal-id", "data-brd-id", "data-addr-grpname", "data-addr-grpid", "data-id", "data-key", "data-value", "data-trgt-id"];
-      for (let i = 0; i < dataAttrs.length; i++) {
-        const attrName = dataAttrs[i];
-        const attrVal = cur.getAttribute(attrName);
-        if (attrVal && attrVal.length <= 35 && !/['"\\\\]/.test(attrVal)) {
-          step += "[" + attrName + "='" + attrVal + "']";
-          break;
+      // Check any distinguishing data-* attribute on cur automatically (without requiring a pre-defined attribute whitelist!)
+      const ignoredDataAttrPattern = /^data-(?:toggle|dismiss|backdrop|keyboard|spy|ride|slide|placement|original-title|qtip|tooltip|placeholder|i18n|bind|reactid|v-)/i;
+      if (cur.attributes && cur.attributes.length > 0) {
+        for (let i = 0; i < cur.attributes.length; i++) {
+          const attr = cur.attributes[i];
+          const attrName = attr && attr.name ? attr.name.toLowerCase() : "";
+          const attrVal = attr && attr.value ? attr.value.trim() : "";
+          if (
+            attrName.indexOf("data-") === 0 &&
+            !ignoredDataAttrPattern.test(attrName) &&
+            attrVal &&
+            attrVal.toLowerCase() !== "empty" &&
+            attrVal.length <= 35 &&
+            !/['"\\\\=]|\\s{2,}/.test(attrVal)
+          ) {
+            step += "[" + attrName + "='" + attrVal + "']";
+            break;
+          }
         }
       }
 
@@ -983,68 +968,100 @@ export function getInjectedEyedropperScript(): string {
     const tag = el.tagName.toLowerCase();
     const results = [];
 
-    // 1. Check distinguishing data-* attributes on the element itself (prioritize human-readable data-book-name / data-menu-id)
-    const priorityDataAttrs = [
-      "data-book-name",
-      "data-menu-id",
-      "data-menu-name",
-      "data-app-type-se",
-      "data-app-type-id",
-      "data-app-type-ordr",
-      "data-tab",
-      "data-work-id",
-      "data-res-id",
-      "data-dept-id",
-      "data-emp-id",
-      "data-cmp-id",
-      "data-cal-id",
-      "data-brd-id",
-      "data-trgt-id",
-      "data-addr-grpname",
-      "data-addr-grpid",
-      "data-doc-id",
-      "data-fld-id",
-      "data-cl-id",
-      "data-id",
-      "data-key",
-      "data-value",
-      "data-role",
-      "data-action",
-      "data-type",
-      "data-code"
-    ];
-    for (let i = 0; i < priorityDataAttrs.length; i++) {
-      const attrName = priorityDataAttrs[i];
-      const attrVal = el.getAttribute && el.getAttribute(attrName);
-      if (attrVal && attrVal.toLowerCase() !== "empty" && attrVal.length <= 40 && !/['"\\\\=]|\\s{2,}/.test(attrVal)) {
-        results.push(scopePrefix + tag + "[" + attrName + "='" + attrVal + "']:visible");
+    // 1. Automatically extract distinguishing data-* attributes on the element itself ordered by specificity tier
+    // (Tier 1: human-readable name/subject/role -> Tier 2: unique entity ID -> skip Tier 3 status/type/ROOT flags)
+    const ignoredDataAttrPattern = /^data-(?:toggle|dismiss|backdrop|keyboard|spy|ride|slide|placement|original-title|qtip|tooltip|placeholder|i18n|bind|reactid|v-)/i;
+    const tier3SharedAttrPattern = /^data-(?!app-type-se$|app-type-ordr$|search-type$)(?:.*status|.*type|.*mode|.*yn|up-.*|parent-.*|reg-emp-id)$/i;
+    const elDistClasses = (tag === "button" || tag === "a") ? getMeaningfulClasses(el, 2) : [];
+    const elClsQual = elDistClasses.length > 0 ? "." + elDistClasses.join(".") : "";
+    const elCleanTxt = getCleanText(el).replace(/['"\\\\]/g, "").trim();
+    const tier1Attrs = [];
+    const tier2Attrs = [];
+    if (el.attributes && el.attributes.length > 0) {
+      for (let i = 0; i < el.attributes.length; i++) {
+        const attr = el.attributes[i];
+        const attrName = attr && attr.name ? attr.name.toLowerCase() : "";
+        const attrVal = attr && attr.value ? attr.value.trim() : "";
+        if (
+          attrName.indexOf("data-") === 0 &&
+          !ignoredDataAttrPattern.test(attrName) &&
+          !tier3SharedAttrPattern.test(attrName) &&
+          attrVal &&
+          attrVal.toLowerCase() !== "empty" &&
+          attrVal !== "ROOT" &&
+          attrVal.length <= 40 &&
+          !/['"\\\\=]|\\s{2,}/.test(attrVal)
+        ) {
+          const isTier1 = /^data-(?:.*name|subject|title|menu-id|tab|search-type|app-type-se|app-type-ordr)$/i.test(attrName);
+          const needsMenuTxt =
+            /^data-(?:menu-id|menu-name)$/i.test(attrName) &&
+            elCleanTxt.length >= 2 &&
+            elCleanTxt.length <= 25 &&
+            attrVal !== elCleanTxt;
+          const txtSuffix = needsMenuTxt ? ":has-text('" + elCleanTxt + "')" : "";
+          const useCls = elClsQual && !/^data-(?:menu-id|menu-name|tab|search-type|app-type-se|app-type-ordr)$/i.test(attrName);
+          const bucket = isTier1 ? tier1Attrs : tier2Attrs;
+          if (useCls) {
+            bucket.push(scopePrefix + tag + elClsQual + "[" + attrName + "='" + attrVal + "']" + txtSuffix + ":visible");
+          }
+          bucket.push(scopePrefix + tag + "[" + attrName + "='" + attrVal + "']" + txtSuffix + ":visible");
+        }
+      }
+      for (let t1 = 0; t1 < tier1Attrs.length; t1++) results.push(tier1Attrs[t1]);
+    }
+
+    // 1.2 If clicking an action <button> inside a list item (<li> or <tr>) that has an item title/name, add item-scoped candidate BEFORE Tier-2 IDs
+    if (tag === "button" && elClsQual && el.closest) {
+      const parentItem = el.closest("li, tr");
+      if (
+        parentItem &&
+        !parentItem.classList.contains("dynatree-node") &&
+        !(parentItem.parentElement && /drop_menu|dropdown|context/i.test(parentItem.parentElement.className || ""))
+      ) {
+        const itemTitNode = parentItem.querySelector(
+          ".sub strong, .tit strong, strong.tit, .sub a, .tit a, td.sub a, td.al a, .subject a, a._atcl, a._doc, a._work, a._mail, a.page_item, .el a, [data-book-name], [data-subject], [data-title]"
+        );
+        let itemTit = itemTitNode
+          ? (itemTitNode.getAttribute("data-book-name") ||
+              itemTitNode.getAttribute("data-subject") ||
+              itemTitNode.getAttribute("data-title") ||
+              getCleanText(itemTitNode))
+          : "";
+        itemTit = (itemTit || "").replace(/['"\\\\]/g, "").trim();
+        if (itemTit && itemTit.length >= 2 && itemTit.length <= 35 && itemTit !== elCleanTxt) {
+          const itemTag = parentItem.tagName.toLowerCase();
+          results.push(scopePrefix + itemTag + ":has-text('" + itemTit + "') " + tag + elClsQual + ":visible");
+        }
       }
     }
 
+    for (let t2 = 0; t2 < tier2Attrs.length; t2++) results.push(tier2Attrs[t2]);
+
     // 1.5 Check underscore-prefixed JS action/hook classes ONLY on <button> or <input> (e.g. _eapSearchUIsearchBtn, _confirmBtn, _draftBtn)
-    // Never emit bare underscore classes on <a>, <li>, <tr>, <div> (like _punchHandle on tree nodes or _doc on document rows) or multi-instance action buttons (_appendBtn, _writeBtn, _lineSelect)!
-    if ((tag === "button" || tag === "input") && el.classList && el.classList.length > 0) {
-      let ancestorIdEl = null;
-      let ancestorIdPrefix = "";
-      let p = el.parentElement;
-      let d = 0;
-      while (p && p !== document.body && d < 5) {
-        const pid = p.getAttribute && p.getAttribute("id");
-        if (pid && isStableId(pid) && !/^(body|wrap|layout|content|container|main)$/i.test(pid)) {
-          ancestorIdEl = p;
-          ancestorIdPrefix = p.tagName.toLowerCase() + "#" + pid + " ";
-          break;
-        }
-        p = p.parentElement;
-        d++;
+    // Never emit bare underscore classes on <a>, <li>, <tr>, <div> (like _punchHandle on tree nodes or _doc on document rows) or multi-instance action buttons (_appendBtn, _writeBtn, _lineSelect, _search)!
+    let ancestorIdEl = null;
+    let ancestorIdPrefix = "";
+    let p = el.parentElement;
+    let d = 0;
+    while (p && p !== document.body && d < 5) {
+      const pid = p.getAttribute && p.getAttribute("id");
+      if (pid && isStableId(pid) && !/^(body|wrap|layout|content|container|main)$/i.test(pid)) {
+        ancestorIdEl = p;
+        ancestorIdPrefix = p.tagName.toLowerCase() + "#" + pid + " ";
+        break;
       }
-      const modalRoot = el.closest && el.closest(".ui-dialog, .modal, .layer_pop, [role='dialog']");
+      p = p.parentElement;
+      d++;
+    }
+    const modalRoot = el.closest && el.closest(".ui-dialog, .modal, .layer_pop, [role='dialog']");
+
+    if ((tag === "button" || tag === "input") && el.classList && el.classList.length > 0) {
       for (let i = 0; i < el.classList.length; i++) {
         const cls = el.classList[i];
         if (
           cls &&
           /^_[a-zA-Z0-9_-]*(?:btn|button|search|srch|confirm|save|draft|send|write|ok|cancel|close|text|word)[a-zA-Z0-9_-]*$/i.test(cls) &&
-          !/^_(?:search_option|blind|hide|hidden|punchHandle|appendBtn|writeBtn|lineSelect|addBtn|delBtn|selectBtn|setProcess|write)$/i.test(cls)
+          !/^_(?:search_option|search|blind|hide|hidden|punchHandle|appendBtn|writeBtn|lineSelect|addBtn|delBtn|selectBtn|setProcess|write)$/i.test(cls)
         ) {
           if (ancestorIdEl && ancestorIdPrefix) {
             try {
@@ -1063,6 +1080,73 @@ export function getInjectedEyedropperScript(): string {
           } catch (e) {}
         }
       }
+    }
+
+    // 1.6 If <label>, <a>, <button>, or <li> has no stable id of its own, inspect child elements for distinguishing data-*, unique _hook/scvr/plt_ classes, or primary .name/.tit text
+    if ((!el.id || !isStableId(el.id)) && (tag === "a" || tag === "button" || tag === "label" || tag === "li") && el.querySelectorAll) {
+      try {
+        const children = el.querySelectorAll("*");
+        const checkScope = modalRoot || document;
+        const maxChildren = Math.min(children.length, 12);
+        for (let ci = 0; ci < maxChildren; ci++) {
+          const ch = children[ci];
+          if (ch.attributes && ch.attributes.length > 0) {
+            for (let ai = 0; ai < ch.attributes.length; ai++) {
+              const cAttr = ch.attributes[ai];
+              const cName = cAttr && cAttr.name ? cAttr.name.toLowerCase() : "";
+              const cVal = cAttr && cAttr.value ? cAttr.value.trim() : "";
+              if (
+                cName.indexOf("data-") === 0 &&
+                !ignoredDataAttrPattern.test(cName) &&
+                !tier3SharedAttrPattern.test(cName) &&
+                cVal &&
+                cVal.toLowerCase() !== "empty" &&
+                cVal !== "ROOT" &&
+                cVal.length <= 40 &&
+                !/['"\\\\=]|\\s{2,}/.test(cVal)
+              ) {
+                results.push(scopePrefix + tag + ":has([" + cName + "='" + cVal + "']):visible");
+              }
+            }
+          }
+          if (ch.classList && ch.classList.length > 0) {
+            for (let cli = 0; cli < ch.classList.length; cli++) {
+              const cCls = ch.classList[cli];
+              if (
+                cCls &&
+                /^(?:scvr\\d+|plt_\\d+|_[a-zA-Z0-9_-]{3,})$/.test(cCls) &&
+                !/^_(?:search_option|search|blind|hide|hidden|punchHandle|appendBtn|writeBtn|lineSelect|addBtn|delBtn|selectBtn|setProcess|write|toolTip)$/i.test(cCls)
+              ) {
+                if (ancestorIdEl && ancestorIdPrefix) {
+                  try {
+                    const mAnc = ancestorIdEl.querySelectorAll(tag + ":has(." + cCls + ")");
+                    if (mAnc.length === 1 && mAnc[0] === el) {
+                      results.push((modalRoot ? ".ui-dialog:visible " : "") + ancestorIdPrefix + tag + ":has(." + cCls + "):visible");
+                    }
+                  } catch (e) {}
+                }
+                try {
+                  const mScope = checkScope.querySelectorAll(tag + ":has(." + cCls + ")");
+                  if (mScope.length === 1 && mScope[0] === el) {
+                    results.push(scopePrefix + tag + ":has(." + cCls + "):visible");
+                  }
+                } catch (e) {}
+              }
+            }
+          }
+        }
+        const primaryNameNode = el.querySelector(".name, .tit, .subj, strong.tit");
+        if (primaryNameNode) {
+          const pTxt = getCleanText(primaryNameNode).replace(/['"\\\\]/g, "").trim();
+          const fullTxt = getCleanText(el).replace(/['"\\\\]/g, "").trim();
+          if (pTxt && pTxt.length >= 2 && pTxt.length <= 25 && pTxt !== fullTxt) {
+            if (ancestorIdEl && ancestorIdPrefix) {
+              results.push((modalRoot ? ".ui-dialog:visible " : "") + ancestorIdPrefix + tag + ":has-text('" + pTxt + "'):visible");
+            }
+            results.push(scopePrefix + tag + ":has-text('" + pTxt + "'):visible");
+          }
+        }
+      } catch (e) {}
     }
 
     // 2. Check name / title / onclick / value attributes
@@ -1222,7 +1306,8 @@ export function getInjectedEyedropperScript(): string {
     const tag = el.tagName.toLowerCase();
     const id = el.getAttribute("id") || "";
     const name = el.getAttribute("name") || "";
-    const placeholder = el.getAttribute("placeholder") || "";
+    const placeholder = el.getAttribute("placeholder") || el.getAttribute("data-placeholder") || "";
+    const hasDataPlaceholder = Boolean(!el.getAttribute("placeholder") && el.getAttribute("data-placeholder"));
     const title = el.getAttribute("title") || "";
     const typeAttr = el.getAttribute("type") || "";
     const text = (el.classList && el.classList.contains("dynatree-title"))
@@ -1324,9 +1409,9 @@ export function getInjectedEyedropperScript(): string {
         }
         candidates.push((modalEl ? ".ui-dialog:visible " : "") + baseCls + ":has(input[value='" + childVal + "']):visible");
       }
-      const childDataEl = el.querySelector("[data-task-subject], [data-emp-id], [data-trgt-id], [data-res-id], [data-dept-id]");
+      const childDataEl = el.querySelector("[data-search-type], [data-chat-room-id], [data-task-subject], [data-emp-id], [data-trgt-id], [data-res-id], [data-dept-id]");
       if (childDataEl && childDataEl.getAttribute) {
-        const cAttrs = ["data-task-subject", "data-emp-id", "data-trgt-id", "data-res-id", "data-dept-id"];
+        const cAttrs = ["data-search-type", "data-chat-room-id", "data-task-subject", "data-emp-id", "data-trgt-id", "data-res-id", "data-dept-id"];
         for (let ci = 0; ci < cAttrs.length; ci++) {
           const cVal = (childDataEl.getAttribute(cAttrs[ci]) || "").replace(/'/g, "").trim();
           if (cVal && cVal.toLowerCase() !== "empty" && cVal.length <= 35) {
@@ -1335,10 +1420,10 @@ export function getInjectedEyedropperScript(): string {
           }
         }
       }
-      const childDistinguishingEl = el.querySelector("[class*='scvr'], [class*='plt_'], i[class*='ico_'], span[class*='ico_']");
+      const childDistinguishingEl = el.querySelector("[class*='scvr'], [class*='plt_'], [class*='_ai'], i[class*='ico_'], span[class*='ico_']");
       if (childDistinguishingEl && childDistinguishingEl.classList) {
         const distCls = Array.from(childDistinguishingEl.classList).find(function(c) {
-          if (/^(?:scvr\\d+|plt_\\d+)$/i.test(c)) return true;
+          if (/^(?:scvr\\d+|plt_\\d+|_ai[a-zA-Z0-9_]+)$/i.test(c)) return true;
           if (tag !== "label" && /^ico_[a-zA-Z0-9_]+$/i.test(c) && !/^ico_(?:chk|rdo|hide|info|user|dept|f\\d+|lst)/i.test(c)) {
             return true;
           }
@@ -1491,9 +1576,18 @@ export function getInjectedEyedropperScript(): string {
 
     // ContentEditable element specific selectors (placed AFTER id/data-* and WITHOUT :has-text of typed content!)
     if (el.isContentEditable && tag !== "input" && tag !== "textarea") {
+      if (el.classList && el.classList.contains("mentiony-content")) {
+        if (placeholder) {
+          candidates.unshift(
+            scopePrefix + "div.mentiony-content[contenteditable='true'][data-placeholder*='" + placeholder.slice(0, 15).replace(/'/g, "") + "']:visible"
+          );
+        }
+        candidates.unshift(scopePrefix + "div.mentiony-content[contenteditable='true']:visible");
+      }
       if (placeholder) {
+        const phAttr = hasDataPlaceholder ? "data-placeholder" : "placeholder";
         candidates.push(
-          scopePrefix + tag + "[contenteditable='true'][placeholder*='" + placeholder.slice(0, 15).replace(/'/g, "") + "']:visible"
+          scopePrefix + tag + "[contenteditable='true'][" + phAttr + "*='" + placeholder.slice(0, 15).replace(/'/g, "") + "']:visible"
         );
       }
       if (goodClasses.length > 0) {
@@ -1695,7 +1789,7 @@ export function getInjectedEyedropperScript(): string {
       : "";
 
     const text = getCleanText(el);
-    const placeholder = el.getAttribute("placeholder") || "";
+    const placeholder = el.getAttribute("placeholder") || el.getAttribute("data-placeholder") || "";
     const title = el.getAttribute("title") || "";
     const id = el.getAttribute("id") || "";
 
@@ -1989,6 +2083,19 @@ export function getInjectedEyedropperScript(): string {
     return rawStr.replace(/\\u200B/g, "").replace(/\\r\\n/g, "\\n").replace(/^[ \\t\\r\\n]+|[ \\t\\r\\n]+$/g, "");
   }
 
+  // Detect single-line/prompt contenteditable inputs (e.g. AI Chat mentiony-content, Wiki title subject)
+  // which are NOT multi-paragraph document body editors and often clear their DOM immediately upon Enter/Send submission!
+  function isPromptOrSingleLineEditable(el) {
+    if (!el || !el.tagName) return false;
+    const cls = el.classList;
+    if (cls && (cls.contains("mentiony-content") || cls.contains("chat_input") || cls.contains("title"))) return true;
+    const id = (el.getAttribute && el.getAttribute("id")) || "";
+    if (/^(?:mentiony-content|.*(?:subject|title|search|prompt|chat).*)$/i.test(id)) return true;
+    if (el.getAttribute && (el.getAttribute("data-placeholder") || el.getAttribute("placeholder"))) return true;
+    if (el.closest && el.closest(".mentiony-container, #cmmAiChat_content, #cmmAiChatMain_content, .ai_chat, .chat_write, .msg_input")) return true;
+    return false;
+  }
+
   function flushPendingType(exceptEl) {
     if (!lastTypedElement) return;
     if (exceptEl && lastTypedElement === exceptEl) return;
@@ -2006,7 +2113,10 @@ export function getInjectedEyedropperScript(): string {
     lastTypedPressEnter = false;
 
     const isSeEditor = Boolean(el.classList && el.classList.contains("se-contents"));
-    const isRichEditor = Boolean(isSeEditor || el.isContentEditable || (tag === "body" && !isTopWindow));
+    const isPromptEditable = isPromptOrSingleLineEditable(el);
+    const isRichEditor = Boolean(
+      !isPromptEditable && (isSeEditor || el.isContentEditable || (tag === "body" && !isTopWindow))
+    );
     let editorParaIndex = undefined;
     let editorInsertNewline = undefined;
     let cursorOffset = undefined;
@@ -2019,12 +2129,15 @@ export function getInjectedEyedropperScript(): string {
           : null;
       const diff = computeEditorTypedDelta(baseParas, finalParas, lastEditorClickedParaIndex);
       if (diff) {
-        if (diff.noChange && !hadDeletion && !hadPressEnter) {
+        if (diff.noChange && !hadDeletion && !hadPressEnter && !val) {
           lastEditorBaselineParas = finalParas;
           lastEditorBaselineElement = el;
           return;
         }
-        val = diff.text;
+        // Only overwrite val with diff.text if diff.text is non-empty OR user explicitly pressed Backspace/Delete!
+        if (diff.text || (hadDeletion && !val)) {
+          val = diff.text;
+        }
         editorParaIndex = diff.editorParaIndex;
         editorInsertNewline = diff.editorInsertNewline || undefined;
       }
@@ -2159,21 +2272,23 @@ export function getInjectedEyedropperScript(): string {
       hud.id = "__sd_recorder_hud";
       hud.style.cssText = [
         "position: fixed",
-        "bottom: 20px",
-        "right: 20px",
+        "bottom: 16px",
+        "right: 16px",
         "z-index: 2147483647",
-        "background: rgba(15, 23, 42, 0.95)",
-        "backdrop-filter: blur(10px)",
+        "background: rgba(15, 23, 42, 0.88)",
+        "backdrop-filter: blur(8px)",
         "border: 1.5px solid #06b6d4",
         "border-radius: 12px",
-        "padding: 12px 16px",
+        "padding: 8px 12px",
         "color: #f8fafc",
         "font-family: Pretendard, -apple-system, BlinkMacSystemFont, sans-serif",
-        "box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55)",
+        "box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45)",
         "display: flex",
         "align-items: center",
-        "gap: 12px",
-        "user-select: none"
+        "gap: 10px",
+        "user-select: none",
+        "pointer-events: none",
+        "transition: top 0.18s ease, bottom 0.18s ease, left 0.18s ease, right 0.18s ease, opacity 0.15s ease"
       ].join(";");
 
       const btnBg = isPopupWindow
@@ -2186,22 +2301,122 @@ export function getInjectedEyedropperScript(): string {
         ? "🪟 팝업 닫기 (부모 창에서 시범 계속)"
         : "✅ 시범 완료 (AI 시나리오 변환)";
 
+      // Status text area has pointer-events:none so any button behind the text can be clicked directly through it!
+      // Interactive controls container has pointer-events:auto + position cycle [⇅] + minimize [➖] + drag support.
       hud.innerHTML = \`
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span style="width:10px; height:10px; border-radius:50%; background:#ef4444; display:inline-block; box-shadow:0 0 10px #ef4444;"></span>
+        <div id="__sd_hud_status_wrap" style="display:flex; align-items:center; gap:8px; pointer-events:none;">
+          <span style="width:9px; height:9px; border-radius:50%; background:#ef4444; display:inline-block; box-shadow:0 0 10px #ef4444;"></span>
           <div>
-            <div style="font-size:12px; font-weight:700; color:#38bdf8;">\${isPopupWindow ? "🪟 팝업 동작 감지 중 (부모 창 유지)" : "💧 스포이드 동작 감지 모드 작동 중"}</div>
-            <div id="__sd_hud_last_step" style="font-size:11px; color:#cbd5e1; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            <div style="font-size:11px; font-weight:700; color:#38bdf8;">\${isPopupWindow ? "🪟 팝업 동작 감지 중 (하단 투과됨)" : "💧 스포이드 감지 중 (텍스트 영역 클릭 투과)"}</div>
+            <div id="__sd_hud_last_step" style="font-size:11px; color:#cbd5e1; max-width:230px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
               원하는 버튼 클릭·타이핑·드래그를 진행하세요
             </div>
           </div>
         </div>
-        <button id="__sd_btn_finish" type="button" style="background:\${btnBg}; color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:\${btnShadow};">
-          \${btnLabel}
-        </button>
+        <div id="__sd_hud_ctrl_wrap" style="display:flex; align-items:center; gap:6px; pointer-events:auto;">
+          <button id="__sd_btn_move" type="button" title="HUD 위치 이동 (클릭 시 모서리 전환 / 드래그하여 자유 이동)" style="background:rgba(51,65,85,0.9); color:#e2e8f0; border:1px solid #475569; border-radius:6px; padding:6px 8px; font-size:11px; font-weight:700; cursor:grab; line-height:1;">
+            ⇅ 위치
+          </button>
+          <button id="__sd_btn_min" type="button" title="상태창 접기/펼치기" style="background:rgba(51,65,85,0.9); color:#e2e8f0; border:1px solid #475569; border-radius:6px; padding:6px 7px; font-size:11px; font-weight:700; cursor:pointer; line-height:1;">
+            ➖
+          </button>
+          <button id="__sd_btn_finish" type="button" style="background:\${btnBg}; color:#fff; border:none; border-radius:8px; padding:7px 12px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:\${btnShadow}; white-space:nowrap;">
+            \${btnLabel}
+          </button>
+        </div>
       \`;
 
       document.body.appendChild(hud);
+
+      const dockPresets = [
+        { top: "auto", bottom: "16px", left: "auto", right: "16px", transform: "none" },
+        { top: "12px", bottom: "auto", left: "50%", right: "auto", transform: "translateX(-50%)" },
+        { top: "auto", bottom: "16px", left: "16px", right: "auto", transform: "none" },
+        { top: "56px", bottom: "auto", left: "auto", right: "16px", transform: "none" }
+      ];
+      window.__sdHudDockIdx = typeof window.__sdHudDockIdx === "number" ? window.__sdHudDockIdx : 0;
+      window.__sdHudManualDragged = Boolean(window.__sdHudManualDragged);
+
+      function applyHudDock(idx) {
+        const p = dockPresets[idx % dockPresets.length];
+        hud.style.top = p.top;
+        hud.style.bottom = p.bottom;
+        hud.style.left = p.left;
+        hud.style.right = p.right;
+        hud.style.transform = p.transform;
+      }
+      applyHudDock(window.__sdHudDockIdx);
+
+      const moveBtn = document.getElementById("__sd_btn_move");
+      if (moveBtn) {
+        let isDraggingHud = false;
+        let dragMoved = false;
+        let startX = 0;
+        let startY = 0;
+        let origLeft = 0;
+        let origTop = 0;
+
+        moveBtn.addEventListener("mousedown", function(e) {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          e.stopPropagation();
+          isDraggingHud = true;
+          dragMoved = false;
+          startX = e.clientX;
+          startY = e.clientY;
+          const r = hud.getBoundingClientRect();
+          origLeft = r.left;
+          origTop = r.top;
+          moveBtn.style.cursor = "grabbing";
+        }, true);
+
+        window.addEventListener("mousemove", function(e) {
+          if (!isDraggingHud) return;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          if (Math.hypot(dx, dy) > 5) {
+            dragMoved = true;
+            window.__sdHudManualDragged = true;
+            hud.style.transition = "none";
+            hud.style.bottom = "auto";
+            hud.style.right = "auto";
+            hud.style.transform = "none";
+            hud.style.left = Math.max(8, Math.min(window.innerWidth - hud.offsetWidth - 8, origLeft + dx)) + "px";
+            hud.style.top = Math.max(8, Math.min(window.innerHeight - hud.offsetHeight - 8, origTop + dy)) + "px";
+          }
+        }, true);
+
+        window.addEventListener("mouseup", function() {
+          if (!isDraggingHud) return;
+          isDraggingHud = false;
+          moveBtn.style.cursor = "grab";
+          hud.style.transition = "top 0.18s ease, bottom 0.18s ease, left 0.18s ease, right 0.18s ease, opacity 0.15s ease";
+        }, true);
+
+        moveBtn.addEventListener("click", function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (dragMoved) {
+            dragMoved = false;
+            return;
+          }
+          window.__sdHudManualDragged = false;
+          window.__sdHudDockIdx = (window.__sdHudDockIdx + 1) % dockPresets.length;
+          applyHudDock(window.__sdHudDockIdx);
+        }, true);
+      }
+
+      const minBtn = document.getElementById("__sd_btn_min");
+      const statusWrap = document.getElementById("__sd_hud_status_wrap");
+      if (minBtn && statusWrap) {
+        minBtn.addEventListener("click", function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          const isHidden = statusWrap.style.display === "none";
+          statusWrap.style.display = isHidden ? "flex" : "none";
+          minBtn.textContent = isHidden ? "➖" : "➕";
+        }, true);
+      }
 
       const finishBtn = document.getElementById("__sd_btn_finish");
       if (finishBtn) {
@@ -2217,6 +2432,60 @@ export function getInjectedEyedropperScript(): string {
         }, true);
       }
     }
+
+    // 3. Auto-dodge when a webpage interactive button/input is directly underneath the HUD buttons
+    // (Only runs when the user's mouse is NOT hovering the HUD controls, so the HUD never runs away while clicking [시범 완료])
+    if (isTopWindow && !window.__sdHudManualDragged) {
+      const hud = document.getElementById("__sd_recorder_hud");
+      const ctrlWrap = document.getElementById("__sd_hud_ctrl_wrap");
+      if (hud && ctrlWrap && typeof document.elementsFromPoint === "function") {
+        const r = ctrlWrap.getBoundingClientRect();
+        const mx = window.__sdLastMouseX || -100;
+        const my = window.__sdLastMouseY || -100;
+        const isMouseNearHud =
+          mx >= r.left - 35 && mx <= r.right + 35 && my >= r.top - 35 && my <= r.bottom + 35;
+
+        if (!isMouseNearHud && r.width > 0 && r.height > 0) {
+          const samplePoints = [
+            [r.left + r.width * 0.25, r.top + r.height * 0.5],
+            [r.left + r.width * 0.5, r.top + r.height * 0.5],
+            [r.left + r.width * 0.8, r.top + r.height * 0.5]
+          ];
+          let hasUnderlyingButton = false;
+          for (let sp = 0; sp < samplePoints.length; sp++) {
+            const stack = document.elementsFromPoint(samplePoints[sp][0], samplePoints[sp][1]) || [];
+            for (let si = 0; si < stack.length; si++) {
+              const node = stack[si];
+              if (!node || node === document.body || node === document.documentElement) continue;
+              if (node.closest && node.closest("#__sd_recorder_hud, #__sd_eyedropper_box, #__sd_eyedropper_badge")) continue;
+              const hitInteractive =
+                node.closest &&
+                node.closest("button, a.btn, input[type='button'], input[type='submit'], input[type='text'], textarea, select, [role='button'], .btn_pri, .btn_med, .btn_sml, .btn_lar, .ui-dialog-buttonpane");
+              if (hitInteractive) {
+                hasUnderlyingButton = true;
+                break;
+              }
+            }
+            if (hasUnderlyingButton) break;
+          }
+          if (hasUnderlyingButton) {
+            const dockPresets = [
+              { top: "auto", bottom: "16px", left: "auto", right: "16px", transform: "none" },
+              { top: "12px", bottom: "auto", left: "50%", right: "auto", transform: "translateX(-50%)" },
+              { top: "auto", bottom: "16px", left: "16px", right: "auto", transform: "none" },
+              { top: "56px", bottom: "auto", left: "auto", right: "16px", transform: "none" }
+            ];
+            window.__sdHudDockIdx = ((window.__sdHudDockIdx || 0) + 1) % dockPresets.length;
+            const p = dockPresets[window.__sdHudDockIdx];
+            hud.style.top = p.top;
+            hud.style.bottom = p.bottom;
+            hud.style.left = p.left;
+            hud.style.right = p.right;
+            hud.style.transform = p.transform;
+          }
+        }
+      }
+    }
   }
 
   if (document.readyState === "loading") {
@@ -2224,7 +2493,7 @@ export function getInjectedEyedropperScript(): string {
   } else {
     setupVisualOverlays();
   }
-  setInterval(setupVisualOverlays, 1500);
+  setInterval(setupVisualOverlays, 750);
 
   let suppressClickUntil = 0;
   let lastCommitDragTime = 0;
@@ -2491,6 +2760,10 @@ export function getInjectedEyedropperScript(): string {
 
   // Update Eyedropper box on mousemove + track live mouse drag (registered on window capture phase)
   window.addEventListener("mousemove", function(e) {
+    if (isTopWindow) {
+      window.__sdLastMouseX = e.clientX;
+      window.__sdLastMouseY = e.clientY;
+    }
     // Check if user is holding left mouse button and dragging
     if (dragSourceInfo && (e.buttons & 1) === 1) {
       dragSourceInfo.lastX = e.clientX;
@@ -2644,9 +2917,9 @@ export function getInjectedEyedropperScript(): string {
 
     if (e && e.type === "keyup") {
       const k = e.key || "";
-      // For single-line <input>, Enter was already flushed in keydown; for multi-line editors, allow keyup(Enter) so newlines are captured!
+      // For single-line <input> or prompt/chat contenteditable, Enter was already flushed in keydown; for multi-line editors, allow keyup(Enter) so newlines are captured!
       if (
-        (k === "Enter" && tag === "input") ||
+        (k === "Enter" && (tag === "input" || isPromptOrSingleLineEditable(t) || t === lastFlushedElement)) ||
         k === "Tab" ||
         k === "Escape" ||
         k === "Shift" ||
@@ -2684,6 +2957,11 @@ export function getInjectedEyedropperScript(): string {
         lastTypedHadDeletion = true;
       }
       const newVal = readEditableValue(t, rawTarget, isDeletion);
+      // Never arm or overwrite lastTypedValue with an empty string unless the user explicitly pressed Backspace/Delete!
+      // (Prevents programmatic input clearing after Enter/Send or non-character keyup from wiping out typed text or recording a bogus Backspace step)
+      if (!isDeletion && !newVal) {
+        return;
+      }
       // If this exact element & value was already flushed (e.g. via Enter key), do NOT re-arm lastTypedElement unless user explicitly pressed Backspace/Delete!
       if (t === lastFlushedElement && newVal === lastFlushedValue && !isDeletion) {
         return;
@@ -2840,12 +3118,30 @@ export function getInjectedEyedropperScript(): string {
     }
   }, true);
 
+  window.addEventListener("submit", function() {
+    flushAllFrames();
+  }, true);
+
+  window.addEventListener("beforeunload", function() {
+    flushAllFrames();
+  }, true);
+
   // 1) Mouse & Pointer Drag & Drop (jQuery UI draggable / sortable / Dynatree / custom mouse drag)
   window.addEventListener("mousedown", function(e) {
     if (e.button !== 0) return;
     ensureJqueryDropHook();
     const rawTarget = e.target;
     if (!rawTarget || isDragHelperOrOverlay(rawTarget)) return;
+
+    // If user was typing into an element and clicks outside it (e.g. clicking a Send/Search button whose mousedown/click handler immediately clears the input),
+    // flush the pending typed text right on mousedown BEFORE the page handler clears the DOM!
+    if (
+      lastTypedElement &&
+      !(rawTarget.closest && rawTarget.closest("#__sd_recorder_hud")) &&
+      !(lastTypedElement === rawTarget || (lastTypedElement.contains && lastTypedElement.contains(rawTarget)))
+    ) {
+      flushAllFrames(resolveInteractiveElement(rawTarget));
+    }
 
     // Capture jQuery UI Datepicker / Timepicker selection on mousedown (since their popups close on mousedown before click fires)
     const pickerCell =
@@ -2884,7 +3180,7 @@ export function getInjectedEyedropperScript(): string {
     const editorSurface =
       rawTarget.closest &&
       rawTarget.closest("div.se-contents, [role='textbox'].se-contents, [contenteditable='true']");
-    if (editorSurface) {
+    if (editorSurface && !isPromptOrSingleLineEditable(editorSurface)) {
       const clickedParaIdx = getClickedParagraphIndex(editorSurface, rawTarget, e.clientY);
       if (
         lastTypedElement === editorSurface &&
@@ -3001,6 +3297,8 @@ export function getInjectedEyedropperScript(): string {
 
   let lastClickedLabelEl = null;
   let lastClickedLabelTime = 0;
+  let lastClickedDrawerLinkEl = null;
+  let lastClickedDrawerLinkTime = 0;
 
   // Capture clicks (on click in capture phase, ignoring clicks suppressed by a completed drag-and-drop)
   window.addEventListener("click", function(e) {
@@ -3019,6 +3317,23 @@ export function getInjectedEyedropperScript(): string {
 
     if (!el || !el.tagName) return;
     const tag = el.tagName.toLowerCase();
+
+    // Suppress accidental double-click on drawer/navigation links (#cmmAiChatSideMenu_navi a, #all_svc_inner a, #svc_box a)
+    // where the 1st click already selects the item and closes the slide-over drawer
+    if (
+      tag === "a" &&
+      el.closest &&
+      el.closest("#cmmAiChatSideMenu_navi, #all_svc_inner, #svc_box")
+    ) {
+      if (
+        (e.detail && e.detail >= 2) ||
+        (lastClickedDrawerLinkEl === el && Date.now() - lastClickedDrawerLinkTime < 1500)
+      ) {
+        return;
+      }
+      lastClickedDrawerLinkEl = el;
+      lastClickedDrawerLinkTime = Date.now();
+    }
 
     // Suppress the browser's automatic <label> -> <input type="checkbox"|"radio"> synthetic second click event (both nested <label><input></label> and sibling <input id="x"><label for="x">)
     if (
@@ -3139,7 +3454,8 @@ export function getInjectedEyedropperScript(): string {
   }, true);
 
   // Capture Backspace/Delete clearing and Enter key submission inside input / editor fields
-  document.addEventListener("keydown", function(e) {
+  // Attached on window in capture phase so it runs BEFORE page/element keydown handlers (e.g. AI Chat mentiony-content which clears innerText on Enter!)
+  window.addEventListener("keydown", function(e) {
     if (!e) return;
     const rawTarget = e.target;
     if (!rawTarget || (rawTarget.closest && rawTarget.closest("#__sd_recorder_hud"))) return;
@@ -3154,9 +3470,10 @@ export function getInjectedEyedropperScript(): string {
     const tag = (t && t.tagName ? t.tagName : "").toLowerCase();
     const isSeEditor = Boolean(t && t.classList && t.classList.contains("se-contents"));
     const isEditable = Boolean(t && (t.isContentEditable || isSeEditor || (tag === "body" && !isTopWindow)));
+    const isPromptEditable = isPromptOrSingleLineEditable(t);
     const isInputField = tag === "input" || tag === "textarea" || isEditable;
 
-    if (isEditable && lastTypedElement !== t && lastEditorBaselineElement !== t) {
+    if (isEditable && !isPromptEditable && lastTypedElement !== t && lastEditorBaselineElement !== t) {
       lastEditorBaselineElement = t;
       lastEditorBaselineParas = getEditorParagraphs(t);
     }
@@ -3188,9 +3505,11 @@ export function getInjectedEyedropperScript(): string {
       return;
     }
 
-    if (e.key === "Enter") {
-      // Only flush on Enter for single-line <input>; for <textarea>/contenteditable/.se-contents, Enter inserts a newline
-      if (tag === "input") {
+    if (e.key === "Enter" && !e.shiftKey) {
+      // Flush on Enter for single-line <input> and prompt/chat contenteditable fields (e.g. AI Chat mentiony-content)
+      // even if Korean IME composition is active (e.isComposing), because chat/search handlers often submit & clear DOM on Enter keydown!
+      // For multi-line <textarea>/rich editors (.se-contents, .ProseMirror), Enter inserts a newline.
+      if (tag === "input" || isPromptEditable) {
         const typeAttr = ((t.getAttribute && t.getAttribute("type")) || "").toLowerCase();
         if (
           typeAttr === "checkbox" ||
@@ -3209,11 +3528,13 @@ export function getInjectedEyedropperScript(): string {
         }
         lastTypedElement = t;
         const curVal = readEditableValue(t, rawTarget, false);
-        if (curVal || !lastTypedValue) {
+        if (curVal) {
           lastTypedValue = curVal;
         }
-        lastTypedPressEnter = true;
-        flushPendingType();
+        if (lastTypedValue) {
+          lastTypedPressEnter = true;
+          flushPendingType();
+        }
       }
     }
   }, true);
