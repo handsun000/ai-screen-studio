@@ -1,7 +1,7 @@
 // -- Browse Plan (input to record script) --
 
 export interface BrowsePlanAction {
-  type: "navigate" | "click" | "dblclick" | "hover" | "scroll" | "wait" | "script" | "type" | "upload" | "scrape" | "dragAndDrop";
+  type: "navigate" | "click" | "rightclick" | "dblclick" | "hover" | "scroll" | "wait" | "script" | "type" | "upload" | "scrape" | "dragAndDrop";
   filePath?: string;
   force?: boolean;
   url?: string;
@@ -71,7 +71,7 @@ export interface BoundingBox {
 
 export interface Moment {
   id: number;
-  type: "navigate" | "click" | "dblclick" | "hover" | "scroll" | "wait" | "script" | "drag" | "type" | "key" | "upload" | "scrape" | "dragAndDrop";
+  type: "navigate" | "click" | "rightclick" | "dblclick" | "hover" | "scroll" | "wait" | "script" | "drag" | "type" | "key" | "upload" | "scrape" | "dragAndDrop";
   timestamp: number;
   url?: string;
   cursor?: CursorPosition;

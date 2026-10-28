@@ -5,6 +5,7 @@ import * as path from "path";
 import * as dotenv from "dotenv";
 import type { BrowsePlanAction, BrowsePlan } from "../types";
 import { getGroupwarePromptContext } from "./groupwareCatalog";
+import { recordAiUsage } from "./aiUsageTracker";
 
 dotenv.config({ override: true });
 
@@ -111,7 +112,7 @@ function prioritizeSelfHealCandidates(
       } else if (c.tag === "button") {
         score -= 30;
       }
-    } else if (currentAction.type === "click" || currentAction.type === "dblclick") {
+    } else if (currentAction.type === "click" || currentAction.type === "rightclick" || currentAction.type === "dblclick") {
       if (["button", "a", "label", "input", "span"].includes(c.tag)) {
         score += 35;
       }
@@ -685,6 +686,14 @@ Determine whether to:
             thinkingConfig: { thinkingBudget: 0 },
             responseMimeType: "application/json",
           },
+        });
+
+        recordAiUsage({
+          feature: "실시간 자가 치유",
+          model,
+          usageMetadata: response.usageMetadata,
+          fallbackPromptChars: systemInstruction.length + userPrompt.length + (screenshotBase64 ? 1000 : 0),
+          fallbackOutputChars: (response.text || "").length,
         });
 
         console.log(

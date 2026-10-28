@@ -109,7 +109,7 @@ if exclude_zones:
 def find_next_action_ms(start_idx):
     for k in range(start_idx, len(moments)):
         mk = moments[k]
-        if mk["type"] in ("click", "dblclick", "upload", "type", "drag", "dragAndDrop", "scroll") and mk.get("cursor"):
+        if mk["type"] in ("click", "rightclick", "dblclick", "upload", "type", "drag", "dragAndDrop", "scroll") and mk.get("cursor"):
             return mk["timestamp"]
     return None
 
@@ -175,8 +175,8 @@ while i < len(moments):
         i += 1
         continue
 
-    # Click / DblClick / Upload
-    if m["type"] in ("click", "dblclick", "upload", "hover"):
+    # Click / RightClick / DblClick / Upload
+    if m["type"] in ("click", "rightclick", "dblclick", "upload", "hover"):
         if m["type"] == "hover":
             # Hover is tracked by cursor; only create a zoom segment if isolated from clicks
             i += 1

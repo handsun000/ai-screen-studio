@@ -82,31 +82,48 @@ export function frameToVideoTime(
   return videoTimeMs / 1000;
 }
 
-export function videoFrameToCompFrame(
+export function videoFrameToCompFrameExact(
   videoFrame: number,
   editPlan: EditPlan
 ): number {
   const { timeRegions } = editPlan;
   if (!timeRegions || timeRegions.length === 0) {
-    return Math.round(videoFrame);
+    return videoFrame;
   }
 
   if (videoFrame <= timeRegions[0].videoStartFrame) {
-    return Math.round(timeRegions[0].compStartFrame);
+    return timeRegions[0].compStartFrame;
   }
 
   for (const r of timeRegions) {
+    if (r.videoEndFrame <= r.videoStartFrame) continue;
     if (videoFrame >= r.videoStartFrame && videoFrame <= r.videoEndFrame) {
-      const rawSpan = Math.max(1, r.videoEndFrame - r.videoStartFrame);
+      const rawSpan = Math.max(1e-6, r.videoEndFrame - r.videoStartFrame);
       const progress = Math.max(0, Math.min(1, (videoFrame - r.videoStartFrame) / rawSpan));
-      const compFrame = r.compStartFrame + progress * (r.compEndFrame - r.compStartFrame);
-      return Math.round(compFrame);
+      return r.compStartFrame + progress * (r.compEndFrame - r.compStartFrame);
     }
   }
 
   const last = timeRegions[timeRegions.length - 1];
   const extra = Math.max(0, videoFrame - last.videoEndFrame);
-  return Math.round(last.compEndFrame + extra);
+  return last.compEndFrame + extra;
+}
+
+export function videoFrameToCompFrame(
+  videoFrame: number,
+  editPlan: EditPlan
+): number {
+  return Math.round(videoFrameToCompFrameExact(videoFrame, editPlan));
+}
+
+export function videoTimeMsToCompTimeMs(
+  videoTimeMs: number,
+  editPlan: EditPlan
+): number {
+  const fps = editPlan.fps || 60;
+  const rawFrame = (videoTimeMs / 1000) * fps;
+  const compFrame = videoFrameToCompFrameExact(rawFrame, editPlan);
+  return (compFrame / fps) * 1000;
 }
 
 export function mergeContiguousTimeRegions(regions?: TimeRegion[]): TimeRegion[] {

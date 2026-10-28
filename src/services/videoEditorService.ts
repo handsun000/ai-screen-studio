@@ -125,6 +125,39 @@ function syncPublicRecordingCopy(slug: string, mp4Path: string) {
   }
 }
 
+/**
+ * Safely replaces targetPath with tmpPath on Windows without failing with EPERM/EBUSY
+ * when the browser <video> element or an HTTP Range stream holds a read handle on targetPath.
+ */
+function replaceFileSafeWindows(tmpPath: string, targetPath: string) {
+  let lastErr: any = null;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      fs.copyFileSync(tmpPath, targetPath);
+      try {
+        fs.unlinkSync(tmpPath);
+      } catch {}
+      return;
+    } catch (err: any) {
+      lastErr = err;
+      try {
+        fs.renameSync(tmpPath, targetPath);
+        return;
+      } catch (renErr: any) {
+        lastErr = renErr;
+      }
+      // Brief synchronous wait (~60ms) before retry so any closing stream handle is released
+      const waitUntil = Date.now() + 60;
+      while (Date.now() < waitUntil) {
+        // spin wait
+      }
+    }
+  }
+  if (lastErr) {
+    throw lastErr;
+  }
+}
+
 export function cutVideoSegment(slug: string, rawStartSec: number, rawEndSec: number): VideoCutResult {
   const sDir = path.join(DATA_DIR, slug);
   const mp4Path = path.join(sDir, "recording.mp4");
@@ -246,7 +279,7 @@ export function cutVideoSegment(slug: string, rawStartSec: number, rawEndSec: nu
     throw new Error(`FFmpeg 컷 편집 실패: ${ffRes.stderr || "알 수 없는 오류"}`);
   }
 
-  fs.renameSync(tmpOut, mp4Path);
+  replaceFileSafeWindows(tmpOut, mp4Path);
   syncPublicRecordingCopy(slug, mp4Path);
 
   const newDurSec = probeVideoDurationSec(mp4Path) || Math.max(1, Number((totalDurSec - cutDurSec).toFixed(3)));
@@ -690,12 +723,7 @@ export function mergeRenderedVideos(options: {
     }
   }
 
-  if (fs.existsSync(outMp4Path)) {
-    try {
-      fs.unlinkSync(outMp4Path);
-    } catch {}
-  }
-  fs.renameSync(tmpOutPath, outMp4Path);
+  replaceFileSafeWindows(tmpOutPath, outMp4Path);
 
   // Create combined scenario folder in data/<targetSlug>/ so it appears in the Scenario Library with full timeline & download support
   const mergedDataDir = path.join(DATA_DIR, targetSlug);

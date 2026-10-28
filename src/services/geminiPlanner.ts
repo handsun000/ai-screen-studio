@@ -13,6 +13,7 @@ import {
 } from "./codeExplorerAgent";
 import { getCachedPlan, setCachedPlan } from "./aiCacheManager";
 import { sanitizeBrowsePlan } from "./planSanitizer";
+import { recordAiUsage } from "./aiUsageTracker";
 import { probeTargetScreens, VisualProbeScreen } from "./visualProbeAgent";
 import type { LiveDOMCandidate } from "./elementSelfHealer";
 import { ensureSessionForSlug } from "./authManager";
@@ -878,6 +879,14 @@ User Request: "${rawPrompt}"`,
       },
     });
 
+    recordAiUsage({
+      feature: "프롬프트 다듬기",
+      model,
+      usageMetadata: response.usageMetadata,
+      fallbackPromptChars: rawPrompt.length + 500,
+      fallbackOutputChars: (response.text || "").length,
+    });
+
     const parsed = JSON.parse(response.text || "{}");
     if (parsed.normalizedPrompt) {
       const reNorm = normalizeUserPrompt(parsed.normalizedPrompt);
@@ -1128,6 +1137,17 @@ Respond ONLY with valid JSON matching this schema:
             },
           });
 
+          const usageRec = recordAiUsage({
+            feature: "시나리오 생성",
+            model,
+            usageMetadata: response.usageMetadata,
+            fallbackPromptChars: systemInstruction.length + prompt.length,
+            fallbackOutputChars: (response.text || "").length,
+          });
+          options.onProgress?.(
+            `💰 [AI 토큰/요금] 입력 ${usageRec.promptTokens.toLocaleString()} + 출력 ${usageRec.outputTokens.toLocaleString()} = ${usageRec.totalTokens.toLocaleString()} 토큰 ($${usageRec.costUsd.toFixed(5)} / 약 ${usageRec.costKrw.toFixed(2)}원)`
+          );
+
           const functionCalls = response.functionCalls;
           if (functionCalls && functionCalls.length > 0) {
             contents.push(response.candidates?.[0]?.content);
@@ -1202,6 +1222,17 @@ Respond ONLY with valid JSON matching this schema:
                 maxOutputTokens: 8192,
               },
             });
+
+            const finalUsageRec = recordAiUsage({
+              feature: "시나리오 플랜 합성",
+              model,
+              usageMetadata: finalResponse.usageMetadata,
+              fallbackPromptChars: systemInstruction.length + prompt.length,
+              fallbackOutputChars: (finalResponse.text || "").length,
+            });
+            options.onProgress?.(
+              `💰 [AI 토큰/요금] 입력 ${finalUsageRec.promptTokens.toLocaleString()} + 출력 ${finalUsageRec.outputTokens.toLocaleString()} = ${finalUsageRec.totalTokens.toLocaleString()} 토큰 ($${finalUsageRec.costUsd.toFixed(5)} / 약 ${finalUsageRec.costKrw.toFixed(2)}원)`
+            );
 
             const finalText = finalResponse.text || "";
             if (finalText.trim().length > 0) {

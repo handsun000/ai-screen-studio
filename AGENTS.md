@@ -236,10 +236,28 @@ npx tsc --noEmit
     - 긴 시나리오 제작 시 중간 단계 실수로 전체를 다시 찍지 않도록, 챕터(모듈)별로 짧게 나누어 각각 최종 MP4(`output/<slug>.mp4`)를 렌더링한 뒤 원하는 순서대로 하나로 합치는 **`🔗 영상 합치기`(`mergeRenderedVideos`, `POST /api/video-edit/merge`)** 기능을 구현했습니다.
     - 동일 규격(1920x1080@60fps H.264 + AAC) 렌더링 영상들은 FFmpeg `-f concat -c copy`로 0.5초 이내에 화질 저하 없이 무손실 병합하며, 오디오 유무나 해상도가 다른 영상이 섞여 있으면 자동으로 정규화(`-filter_complex` + 무음 트랙 보충)하여 병합합니다.
     - 병합 완료 시 `output/<targetSlug>.mp4` 생성과 동시에 `data/<targetSlug>/`에 챕터별 누적 시간(`cumulativeMs`/`cumulativeFrames`)이 반영된 통합 `browse-plan.json`, `moments.json`, `edit-plan.json`, `narration.json`을 생성하여 시나리오 라이브러리에서 `🔗 병합본` 배지·통합 타임라인 이동·자막/모멘트 확인·최종 MP4 다운로드가 즉시 동작하도록 연동했습니다.
+16. **우클릭(`rightclick`) 전 파이프라인 정밀 재현, 구간 늘리기(`timeRegions`) 시 커서/줌 슬로우모션·순간이동 버그 해결, Windows 파일 잠금(`EPERM`) 안전 교체 및 AI 사용량/요금 트래커 구축**:
+    - **우클릭(`contextmenu` / `rightclick`) 감지·정제·스크롤 재생 완성 (`actionRecorderService.ts`, `planSanitizer.ts`, `scripts/record.ts`, `dashboard/app.js`)**:
+      - `actionRecorderService.ts`: `contextmenu` 핸들러 내 `flushAllFramesTyping()` 오타(`ReferenceError`)로 인해 우클릭 캡처가 중단되던 치명적 버그를 `flushAllFrames()`로 수정하고, 메신저 조직도 동적 사원 ID(`wmOrgList_orgTreeList_...`)를 `isStableId`에서 제외하며 `li.nt_li._orgUser` 행 텍스트 스코핑을 적용해 스크롤 목록에서도 클릭한 바로 그 사원을 정확히 우클릭하도록 개선했습니다.
+      - `scripts/record.ts` & `dashboard/app.js`: 우클릭 실행 전 타겟 요소가 뷰포트 밖이면 자동으로 스크롤(`scrollTargetIntoViewIfNeeded`)한 뒤 우클릭하며, 대시보드 액션 리스트에 `🖱️ 우클릭` 전용 배지를 표시합니다.
+    - **구간 늘리기(`timeRegions`) 적용 시 가상 마우스 커서 및 카메라 줌 슬로우모션·순간이동 현상 근본 해결 (`FrameMapper.ts`, `SyntheticCursor.tsx`, `CameraTransform.tsx`, `SoundEffects.tsx`)**:
+      - 기존에는 `SyntheticCursor`와 `CameraTransform`이 역변환된 원본 비디오 시간(`videoTimeMs`) 기준으로 커서 이동(`420ms`/`600ms`)과 줌 인(`easeInFrames`)을 계산하여, 오프닝/중간 홀드(`speed < 1`) 구간 동안 커서가 1~5초간 반투명 슬로우모션으로 기어가다가 홀드 종료 시점에 순간이동하던 문제를 해결했습니다.
+      - `videoFrameToCompFrameExact` 및 `videoTimeMsToCompTimeMs`를 통해 모든 액션 시점과 줌 세그먼트를 **최종 렌더링 타임라인(`compTimeMs` / `compFrame`)**으로 매핑하여, 홀드 구간에서는 커서가 대기하고 실제 클릭 직전(`0.68초` 전)에 정속으로 자연스럽게 이동·클릭하도록 수정했습니다.
+    - **Windows 비디오 컷/복원 시 `EPERM` 파일 잠금 에러 해결 및 플레이어 세로 영역 확장 (`videoEditorService.ts`, `dashboard/app.js`, `dashboard/style.css`)**:
+      - 브라우저 `<video>` 태그가 `recording.mp4`를 스트리밍으로 잡고 있을 때 `fs.renameSync`가 `EPERM`으로 실패하던 문제를, 컷/복원 API 호출 전 플레이어 스트림 해제(`releaseVideoFileLock`) + 백엔드 `replaceFileSafeWindows`(`copyFileSync` + 재시도 폴백) 2중 안전장치로 해결했습니다.
+      - 대시보드 비디오 플레이어 컨테이너 높이를 `min-height: 460px; max-height: 62vh; aspect-ratio: 16 / 9`로 확장해 세로로 답답하게 눌리던 문제를 해소했습니다.
+    - **AI API 호출 사용량(토큰) 및 예상 요금(USD/KRW) 실시간 트래커 (`src/services/aiUsageTracker.ts`, `dashboard/`)**:
+      - 시나리오 생성, 실시간 자가 치유, AI 대본 생성 시 Gemini 토큰 사용량(`usageMetadata`)과 예상 비용을 집계하여 상단 헤더 배지 및 상세 내역 모달로 실시간 확인할 수 있도록 구현했습니다.
+    - **Electron 데스크톱 앱 실행 환경 및 커스텀 아이콘 적용 (`scripts/desktop-main.cjs`, `assets/icon.*`)**:
+      - 바탕화면 바로가기 및 독립 데스크톱 창으로 스튜디오를 실행할 수 있도록 구성했습니다.
 
-### 5.2 다음 세션에서 이어서 진행할 포인트
-* 동작 감지(클릭·호버·드래그·리치 에디터 타이핑·파일 첨부 `upload`), 셀렉터 정제, 1:1 브라우저 녹화, 매뉴얼 해설형 AI 대본, 정속 Edge-TTS 합성, 실시간 구간 늘리기/줄이기(4대 트랙 타임워프 싱크), 구간 잘라내기 및 **렌더링된 챕터 영상 무손실 합치기**까지 전 파이프라인이 완비되어 있습니다.
-* 향후 사용자가 원할 경우:
-  1. 대본 탭(`subtab-narration`)뿐만 아니라 첫 번째 탭(`🎯 동작 모멘트 & 단계별 이동`)이나 비디오 플레이어 컨트롤 바에서도 바로 구간 늘리기/줄이기(`-0.5s` / `+0.5s` / `+1.0s`)를 조작할 수 있는 단축 UI 확장.
-  2. `scripts/record.ts` 내 잔여 레거시 하드코딩 클린업 또는 추가 모듈 고도화.
-  등을 이 `AGENTS.md` 규격을 기준으로 즉시 이어서 진행하면 됩니다.
+### 5.2 다음 세션에서 최우선으로 진행할 핵심 과제 (Next Session Priority)
+* **핵심 문제 의식**:
+  - 최종 MP4 렌더링(`renderRunner.ts`)이 끝날 때까지 시간이 꽤 걸리는데, 현재 구조에서는 렌더링 도중 다른 시나리오 시연(녹화)이나 작업을 병행하기가 어렵고 마냥 기다려야 해서 작업 효율이 떨어집니다.
+* **다음 세션에서 설계·구현할 해결 방안**:
+  1. **렌더링 작업과 시나리오 시연(녹화)의 완전 격리 (병렬 작업 지원)**:
+     - 현재 `renderRunner.ts`와 `scripts/record.ts`가 단일 공용 파일인 `public/recording.mp4`와 `src/Root.tsx`를 덮어쓰는 구조여서, 렌더링 중에 다른 시나리오를 녹화하면 파일 충돌이 발생합니다.
+     - 렌더링 시작 시 해당 시나리오 전용 영상 경로(예: `public/renders/<slug>/recording.mp4` 또는 시나리오별 고정 에셋)와 Remotion `--props` 주입 방식을 사용하여, **`src/Root.tsx`나 공용 `public/recording.mp4`를 건드리지 않고도 백그라운드에서 독립적으로 렌더링**되도록 분리합니다.
+     - 대시보드에서도 렌더링 진행 상태(프로그레스 바)를 일반 녹화/스포이드 콘솔과 분리하여, **렌더링이 백그라운드에서 돌아가는 동안 사용자가 다른 시나리오를 스포이드로 따거나 시연 녹화·대본 편집을 동시에 진행**할 수 있도록 개선합니다.
+  2. **Remotion 렌더링 속도 자체 단축 방안**:
+     - 매 렌더링마다 반복되는 Webpack 번들링 캐시 재사용, 멀티코어 동시 렌더링(`--concurrency`) 최적화, 하드웨어 인코딩/고속 렌더링 옵션을 적용하여 렌더링 소요 시간을 대폭 단축합니다.

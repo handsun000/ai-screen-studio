@@ -15,7 +15,7 @@ import { sanitizeBrowsePlan } from "./planSanitizer";
 export interface RecordedRawEvent {
   seq: number;
   timestamp: number;
-  kind: "click" | "hover" | "type" | "dragAndDrop" | "select" | "scroll" | "upload";
+  kind: "click" | "rightclick" | "hover" | "type" | "dragAndDrop" | "select" | "scroll" | "upload";
   selector: string;
   sourceSelector?: string;
   targetSelector?: string;
@@ -259,6 +259,8 @@ class ActionRecorderService {
     const icon =
       evt.kind === "click"
         ? "💧 클릭"
+        : evt.kind === "rightclick"
+        ? "🖱️ 우클릭"
         : evt.kind === "hover"
         ? "🖱️ 호버"
         : evt.kind === "type"
@@ -661,8 +663,8 @@ export function getInjectedEyedropperScript(): string {
     if (!id || typeof id !== "string") return false;
     if (/^(ui-id-|jqg|ext-gen|select2-|mceu_|cke_|tinymce|mentiony-|th\\d+$|dp\\d+$|ADRGR\\d+$)/i.test(id)) return false;
     if (/^[0-9]+$/.test(id)) return false;
-    // Long random hex/uuid suffix
-    if (/[0-9a-f]{8,}/i.test(id)) return false;
+    // Long random hex/uuid suffix (must contain UUID dashes or mixed hex [a-f] + digits, never rejecting Naonsoft M123456789 IDs)
+    if (/[0-9a-f]{8}-[0-9a-f]{4}/i.test(id) || (/[0-9a-f]{12,}/i.test(id) && /[a-f]/i.test(id) && /[0-9]/.test(id))) return false;
     try {
       const allSameId = Array.from(document.querySelectorAll("[id='" + id.replace(/'/g, "\\\\'") + "']"));
       if (allSameId.length > 1) {
@@ -773,7 +775,7 @@ export function getInjectedEyedropperScript(): string {
 
     // 1. True atomic interactive controls (prioritized BEFORE table cells th/td so custom widgets inside cells are never swallowed!)
     const primaryInteractive = target.closest(
-      "button, a, input, textarea, select, label, .dynatree-title, .dynatree-checkbox, .dynatree-expander, .fancytree-title, .fancytree-checkbox, .fancytree-expander, [role='button'], [role='tab'], [role='menuitem'], [role='option'], [onclick], .Selected, .select_Value, .sp-replacer, .app_work_box, li.aw_li, li.card_item"
+      "button, a, input, textarea, select, label, .dynatree-title, .dynatree-checkbox, .dynatree-expander, .fancytree-title, .fancytree-checkbox, .fancytree-expander, [role='button'], [role='tab'], [role='menuitem'], [role='option'], [onclick], .Selected, .select_Value, .sp-replacer, .app_work_box, li.aw_li, li.card_item, li.nt_li"
     );
     if (primaryInteractive) return primaryInteractive;
 
@@ -908,7 +910,7 @@ export function getInjectedEyedropperScript(): string {
       }
 
       // Check any distinguishing data-* attribute on cur automatically (without requiring a pre-defined attribute whitelist!)
-      const ignoredDataAttrPattern = /^data-(?:toggle|dismiss|backdrop|keyboard|spy|ride|slide|placement|original-title|qtip|tooltip|placeholder|i18n|bind|reactid|v-)/i;
+      const ignoredDataAttrPattern = /^data-(?:toggle|dismiss|backdrop|keyboard|spy|ride|slide|placement|original-title|qtip|tooltip|placeholder|i18n|bind|reactid|v-|unique-id$|start$|full$|end$|time$|date$)/i;
       if (cur.attributes && cur.attributes.length > 0) {
         for (let i = 0; i < cur.attributes.length; i++) {
           const attr = cur.attributes[i];
@@ -920,6 +922,7 @@ export function getInjectedEyedropperScript(): string {
             attrVal &&
             attrVal.toLowerCase() !== "empty" &&
             attrVal.length <= 35 &&
+            !/[0-9a-f]{8}-[0-9a-f]{4}-/i.test(attrVal) &&
             !/['"\\\\=]|\\s{2,}/.test(attrVal)
           ) {
             step += "[" + attrName + "='" + attrVal + "']";
@@ -970,9 +973,9 @@ export function getInjectedEyedropperScript(): string {
 
     // 1. Automatically extract distinguishing data-* attributes on the element itself ordered by specificity tier
     // (Tier 1: human-readable name/subject/role -> Tier 2: unique entity ID -> skip Tier 3 status/type/ROOT flags)
-    const ignoredDataAttrPattern = /^data-(?:toggle|dismiss|backdrop|keyboard|spy|ride|slide|placement|original-title|qtip|tooltip|placeholder|i18n|bind|reactid|v-)/i;
+    const ignoredDataAttrPattern = /^data-(?:toggle|dismiss|backdrop|keyboard|spy|ride|slide|placement|original-title|qtip|tooltip|placeholder|i18n|bind|reactid|v-|unique-id$|start$|full$|end$|time$|date$)/i;
     const tier3SharedAttrPattern = /^data-(?!app-type-se$|app-type-ordr$|search-type$)(?:.*status|.*type|.*mode|.*yn|up-.*|parent-.*|reg-emp-id)$/i;
-    const elDistClasses = (tag === "button" || tag === "a") ? getMeaningfulClasses(el, 2) : [];
+    const elDistClasses = (tag === "button" || tag === "a" || (tag === "li" && el.classList && el.classList.contains("nt_li"))) ? getMeaningfulClasses(el, 2) : [];
     const elClsQual = elDistClasses.length > 0 ? "." + elDistClasses.join(".") : "";
     const elCleanTxt = getCleanText(el).replace(/['"\\\\]/g, "").trim();
     const tier1Attrs = [];
@@ -990,6 +993,7 @@ export function getInjectedEyedropperScript(): string {
           attrVal.toLowerCase() !== "empty" &&
           attrVal !== "ROOT" &&
           attrVal.length <= 40 &&
+          !/[0-9a-f]{8}-[0-9a-f]{4}-/i.test(attrVal) &&
           !/['"\\\\=]|\\s{2,}/.test(attrVal)
         ) {
           const isTier1 = /^data-(?:.*name|subject|title|menu-id|tab|search-type|app-type-se|app-type-ordr)$/i.test(attrName);
@@ -1139,11 +1143,12 @@ export function getInjectedEyedropperScript(): string {
         if (primaryNameNode) {
           const pTxt = getCleanText(primaryNameNode).replace(/['"\\\\]/g, "").trim();
           const fullTxt = getCleanText(el).replace(/['"\\\\]/g, "").trim();
-          if (pTxt && pTxt.length >= 2 && pTxt.length <= 25 && pTxt !== fullTxt) {
+          if (pTxt && pTxt.length >= 2 && pTxt.length <= 25) {
+            const rowCls = elClsQual || "";
             if (ancestorIdEl && ancestorIdPrefix) {
-              results.push((modalRoot ? ".ui-dialog:visible " : "") + ancestorIdPrefix + tag + ":has-text('" + pTxt + "'):visible");
+              results.push((modalRoot ? ".ui-dialog:visible " : "") + ancestorIdPrefix + tag + rowCls + ":has-text('" + pTxt + "'):visible");
             }
-            results.push(scopePrefix + tag + ":has-text('" + pTxt + "'):visible");
+            results.push(scopePrefix + tag + rowCls + ":has-text('" + pTxt + "'):visible");
           }
         }
       } catch (e) {}
@@ -1263,6 +1268,9 @@ export function getInjectedEyedropperScript(): string {
       let textFilterMode = "";
       let textFilterVal = "";
       const textPseudoMatch = queryStr.match(/^(.*):((?:has-text|text-is))\\(['"]([^'"]+)['"]\\)$/);
+      const ancTextPseudoMatch = !textPseudoMatch
+        ? queryStr.match(/^([^:]+):((?:has-text|text-is))\\(['"]([^'"]+)['"]\\)\\s+(.+)$/)
+        : null;
       if (textPseudoMatch) {
         baseCss = textPseudoMatch[1].trim() || "*";
         textFilterMode = textPseudoMatch[2];
@@ -1270,17 +1278,41 @@ export function getInjectedEyedropperScript(): string {
       }
 
       try {
-        const rawNodes = Array.from(searchRoot.querySelectorAll(baseCss));
-        const visibleNodes = rawNodes.filter(function(n) {
-          if (!isNodeVisible(n)) return false;
-          if (!textFilterMode) return true;
-          const nClean = getCleanText(n);
-          const nRaw = ((n.innerText || n.textContent || "") + "").replace(/\\s+/g, " ").trim();
-          if (textFilterMode === "text-is") {
-            return nClean === textFilterVal || nRaw === textFilterVal;
+        let visibleNodes = [];
+        if (ancTextPseudoMatch) {
+          const ancCss = ancTextPseudoMatch[1].trim() || "*";
+          const ancMode = ancTextPseudoMatch[2];
+          const ancVal = ancTextPseudoMatch[3];
+          const descCss = ancTextPseudoMatch[4].trim();
+          const ancNodes = Array.from(searchRoot.querySelectorAll(ancCss)).filter(function(aNode) {
+            if (!isNodeVisible(aNode)) return false;
+            const aClean = getCleanText(aNode);
+            const aRaw = ((aNode.innerText || aNode.textContent || "") + "").replace(/\\s+/g, " ").trim();
+            return ancMode === "text-is"
+              ? aClean === ancVal || aRaw === ancVal
+              : aClean.indexOf(ancVal) !== -1 || aRaw.indexOf(ancVal) !== -1;
+          });
+          for (let ai = 0; ai < ancNodes.length; ai++) {
+            const descNodes = Array.from(ancNodes[ai].querySelectorAll(descCss));
+            for (let di = 0; di < descNodes.length; di++) {
+              if (isNodeVisible(descNodes[di]) && visibleNodes.indexOf(descNodes[di]) === -1) {
+                visibleNodes.push(descNodes[di]);
+              }
+            }
           }
-          return nClean.indexOf(textFilterVal) !== -1 || nRaw.indexOf(textFilterVal) !== -1;
-        });
+        } else {
+          const rawNodes = Array.from(searchRoot.querySelectorAll(baseCss));
+          visibleNodes = rawNodes.filter(function(n) {
+            if (!isNodeVisible(n)) return false;
+            if (!textFilterMode) return true;
+            const nClean = getCleanText(n);
+            const nRaw = ((n.innerText || n.textContent || "") + "").replace(/\\s+/g, " ").trim();
+            if (textFilterMode === "text-is") {
+              return nClean === textFilterVal || nRaw === textFilterVal;
+            }
+            return nClean.indexOf(textFilterVal) !== -1 || nRaw.indexOf(textFilterVal) !== -1;
+          });
+        }
 
         const matchIdx = visibleNodes.indexOf(el);
         if (matchIdx === 0 && visibleNodes.length === 1) {
@@ -1395,6 +1427,24 @@ export function getInjectedEyedropperScript(): string {
       const childInput = el.querySelector("input");
       const childName = childInput ? (childInput.getAttribute("name") || "").replace(/'/g, "").trim() : "";
       const childVal = childInput ? (childInput.getAttribute("value") || "").replace(/'/g, "").trim() : "";
+      const isEphemeralChildVal = /^[0-9]{8,}$|^(?:ATCL|DOC|WKS|BRD|EML|NOT|SCD|TSK|WBB|WBP)[0-9a-zA-Z]{8,}$/i.test(childVal);
+      if (
+        tag === "label" &&
+        !text &&
+        (!childId || !isStableId(childId)) &&
+        (!childVal || /^(on|true|false)$/i.test(childVal) || isEphemeralChildVal) &&
+        (el.classList.contains("chkbox") || el.classList.contains("rdobtn"))
+      ) {
+        const rowAnc = el.closest("tr, li");
+        if (rowAnc && rowAnc.querySelectorAll && rowAnc.querySelectorAll(baseCls).length === 1) {
+          const rTag = rowAnc.tagName.toLowerCase();
+          const subjNode = rowAnc.querySelector("td.sub, td.al a, a._atcl, .sub a, .tit, .subject, a");
+          const rawRowSubj = getCleanText(subjNode || rowAnc).slice(0, 24).replace(/'/g, "").trim();
+          if (rawRowSubj && rawRowSubj.length >= 2) {
+            candidates.push(scopePrefix + rTag + ":has-text('" + rawRowSubj + "') " + baseCls + ":visible");
+          }
+        }
+      }
       if (childVal && childVal.length <= 35 && !/^(on|true|false|y|n|1|0)$/i.test(childVal)) {
         if (childName) {
           candidates.push(
@@ -1418,6 +1468,13 @@ export function getInjectedEyedropperScript(): string {
             candidates.unshift((modalEl ? ".ui-dialog:visible " : "") + baseCls + ":has([" + cAttrs[ci] + "='" + cVal + "']):visible");
             break;
           }
+        }
+      }
+      const childFcTitle = el.classList && el.classList.contains("fc-event") ? el.querySelector(".fc-title") : null;
+      if (childFcTitle) {
+        const fcTxt = (childFcTitle.textContent || "").replace(/'/g, "").replace(/\s+/g, " ").trim();
+        if (fcTxt && fcTxt.length >= 2 && fcTxt.length <= 35) {
+          candidates.push(scopePrefix + "a.fc-event:has-text('" + fcTxt + "'):visible");
         }
       }
       const childDistinguishingEl = el.querySelector("[class*='scvr'], [class*='plt_'], [class*='_ai'], i[class*='ico_'], span[class*='ico_']");
@@ -1808,6 +1865,15 @@ export function getInjectedEyedropperScript(): string {
         return prefix + "'" + (placeholder || title || "제목") + "' 입력창";
       }
       return prefix + "'에디터 본문' 입력 영역";
+    }
+
+    if (tag === "label" && !text && el.classList && (el.classList.contains("chkbox") || el.classList.contains("rdobtn"))) {
+      const rowAnc = el.closest("tr, li");
+      const subjNode = rowAnc ? rowAnc.querySelector("td.sub, td.al a, a._atcl, .sub a, .tit, .subject, a") : null;
+      const rowTxt = getCleanText(subjNode || rowAnc).slice(0, 22).trim();
+      if (rowTxt) {
+        return prefix + "'" + rowTxt + "' 체크박스";
+      }
     }
 
     if (tag === "input" || tag === "textarea") {
@@ -3453,6 +3519,59 @@ export function getInjectedEyedropperScript(): string {
     }
   }, true);
 
+  // Capture right-click (contextmenu) on elements (e.g. tree nodes, table rows, folders, files, editor cells)
+  window.addEventListener("contextmenu", function(e) {
+    if (!e) return;
+    const rawTarget = e.target;
+    if (!rawTarget || (rawTarget.closest && rawTarget.closest("#__sd_recorder_hud"))) return;
+
+    flushAllFrames();
+
+    let el = resolveInteractiveElement(rawTarget);
+    if (rawTarget.closest) {
+      const ctxRow = rawTarget.closest(
+        "li.nt_li, .context-menu-one, .ctxt-one, .dynatree-title, .fancytree-title, .user_item, .chat_item, .item_box, tr.lst_tr, li"
+      );
+      if (ctxRow && ctxRow.getBoundingClientRect) {
+        const r = ctxRow.getBoundingClientRect();
+        const elTag = el && el.tagName ? el.tagName.toLowerCase() : "";
+        if (r.height > 0 && r.height <= 120 && (!el || elTag === "div" || elTag === "span" || elTag === "i" || elTag === "em" || elTag === "img")) {
+          el = ctxRow;
+        }
+      }
+    }
+    if (!el) return;
+    const tag = (el.tagName || "").toLowerCase();
+    if (tag === "html" || (tag === "body" && !el.isContentEditable)) return;
+
+    const selector = buildRobustSelector(el);
+    const label = buildHumanLabel(el);
+    const targetHtml = extractTargetHtml(el);
+    const iframe = getCurrentIframeSelector();
+    const inModal = Boolean(el.closest && el.closest(".ui-dialog, .modal, .layer_pop"));
+
+    try {
+      const topDoc = window.top.document;
+      const hudStep = topDoc.getElementById("__sd_hud_last_step");
+      if (hudStep) {
+        hudStep.textContent = "최근 감지: 🖱️ " + label + " 우클릭";
+      }
+    } catch (err) {}
+
+    if (typeof window.__screenDemoRecordAction === "function") {
+      window.__screenDemoRecordAction({
+        kind: "rightclick",
+        selector,
+        targetHtml,
+        iframe,
+        tagName: tag,
+        label: label + " 우클릭",
+        pageUrl: location.href,
+        inModal
+      });
+    }
+  }, true);
+
   // Capture Backspace/Delete clearing and Enter key submission inside input / editor fields
   // Attached on window in capture phase so it runs BEFORE page/element keydown handlers (e.g. AI Chat mentiony-content which clears innerText on Enter!)
   window.addEventListener("keydown", function(e) {
@@ -3653,6 +3772,22 @@ async function refineRecordedEventsIntoPlan(
         type: "wait",
         ms: scaleMs(1400),
         description: "첨부 파일 업로드 및 목록 반영 대기",
+      });
+    } else if (ev.kind === "rightclick") {
+      const desc = ev.label.endsWith("우클릭") ? ev.label : `${ev.label} 우클릭`;
+      promptSteps.push(desc);
+      actions.push({
+        type: "rightclick",
+        selector: ev.selector,
+        iframe: ev.iframe,
+        description: desc,
+        recordedByEyedropper: true,
+        targetHtml: ev.targetHtml,
+      });
+      actions.push({
+        type: "wait",
+        ms: scaleMs(900),
+        description: "우클릭 컨텍스트 메뉴 표시 대기",
       });
     } else {
       // If a native <select> was clicked to open the dropdown and immediately followed by selecting an option (change event),

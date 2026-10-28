@@ -312,6 +312,10 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       action.type = "upload";
       changes.push(`[타입 복원] '${desc}' 액션의 filePath를 감지하여 type을 'upload'로 자동 복원했습니다.`);
       fixedActionsCount++;
+    } else if (action.type === "click" && /우클릭/.test(desc)) {
+      action.type = "rightclick";
+      changes.push(`[타입 복원] '${desc}' 액션의 우클릭 설명을 감지하여 type을 'rightclick'으로 자동 복원했습니다.`);
+      fixedActionsCount++;
     } else if (action.type === "type" && action.text && /^C:\\fakepath\\/i.test(action.text.trim())) {
       const fakeFileName = action.text.trim().replace(/^C:\\fakepath\\/i, "");
       if (i + 1 < actualPlan.actions.length && actualPlan.actions[i + 1].type === "upload") {
@@ -987,7 +991,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         }
 
         const ignoredDataAttrRegex =
-          /^data-(?:toggle|dismiss|backdrop|keyboard|spy|ride|slide|placement|original-title|qtip|tooltip|placeholder|i18n|bind|reactid|v-)/i;
+          /^data-(?:toggle|dismiss|backdrop|keyboard|spy|ride|slide|placement|original-title|qtip|tooltip|placeholder|i18n|bind|reactid|v-|unique-id$|start$|full$|end$|time$|date$)/i;
         const tier3SharedAttrRegex =
           /^data-(?!app-type-se$|app-type-ordr$|search-type$)(?:.*status|.*type|.*mode|.*yn|up-.*|parent-.*|reg-emp-id)$/i;
         const hasOwnEntityAttr = /\bdata-(?:book|page|wks|atcl|doc|work|scd|res)-/i.test(openTagAttrs);
@@ -1000,7 +1004,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
             )
         );
         const actionClsSelector =
-          (tagName === "button" || tagName === "a") && distinguishingClsTokens.length > 0
+          (tagName === "button" || tagName === "a" || (tagName === "li" && classTokens.includes("nt_li"))) && distinguishingClsTokens.length > 0
             ? "." + distinguishingClsTokens.slice(0, 2).join(".")
             : "";
         const primaryHookOrBtnCls = distinguishingClsTokens.find((c) => c.startsWith("_")) || distinguishingClsTokens[0] || "";
@@ -1009,11 +1013,14 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         {
           const cleanedExisting = splitSelectorCandidates(workingSel)
             .filter((p) => {
-              if (/:has\(\[data-(?:reg-emp-id|.*status|.*type|.*yn)=/i.test(p)) return false;
+              if (/:has\(\[data-(?:reg-emp-id|unique-id|start|full|end|time|date|.*status|.*type|.*yn)=/i.test(p)) return false;
               const dataM = p.match(/\[(data-[a-zA-Z0-9_-]+)=['"]([^'"]+)['"]\]/i);
               if (dataM) {
                 const dName = dataM[1].toLowerCase();
                 const dVal = dataM[2].trim();
+                if (ignoredDataAttrRegex.test(dName) || /[0-9a-f]{8}-[0-9a-f]{4}-/i.test(dVal)) {
+                  return false;
+                }
                 const hasTextQual = /:(?:has-text|text-is)\(/i.test(p);
                 if (!hasTextQual && (tier3SharedAttrRegex.test(dName) || dVal === "ROOT" || dVal.endsWith("/ROOT"))) {
                   return false;
@@ -1072,7 +1079,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
             const attrName = dm[1];
             const attrNameLower = attrName.toLowerCase();
             const attrVal = dm[2].replace(/'/g, "").trim();
-            if (!attrVal || attrVal.toLowerCase() === "empty") continue;
+            if (!attrVal || attrVal.toLowerCase() === "empty" || /[0-9a-f]{8}-[0-9a-f]{4}-/i.test(attrVal)) continue;
 
             // Skip Tier-3 generic flags/types/ROOT parent IDs and parent folder attrs when item attrs exist
             if (tier3SharedAttrRegex.test(attrNameLower) || attrVal === "ROOT") {
@@ -1333,7 +1340,8 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
           if (childInputId) {
             const isUnstableChildId =
               /^(ui-id-|jqg|ext-gen|select2-|mceu_|cke_|tinymce|mentiony-|th\d+$|[0-9]+$)/i.test(childInputId) ||
-              /[0-9a-f]{8,}/i.test(childInputId);
+              /[0-9a-f]{8}-[0-9a-f]{4}/i.test(childInputId) ||
+              (/[0-9a-f]{12,}/i.test(childInputId) && /[a-f]/i.test(childInputId) && /[0-9]/.test(childInputId));
             if (!isUnstableChildId) {
               hasChildCandidates.push(`${modalPrefix}${baseCls}:has(#${childInputId}):visible`);
               if (baseCls !== tagName) {
@@ -1345,6 +1353,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
           const childVal = childValMatch ? childValMatch[1].replace(/'/g, "").trim() : "";
           const childNameMatch = innerHtmlAfterOpen.match(/<input\b[^<>]*?\bname=["']([^"']+)["']/i);
           const childName = childNameMatch ? childNameMatch[1].replace(/'/g, "").trim() : "";
+          const isEphemeralChildVal = /^[0-9]{8,}$|^(?:ATCL|DOC|WKS|BRD|EML|NOT|SCD|TSK|WBB|WBP)[0-9a-zA-Z]{8,}$/i.test(childVal);
           if (childVal && childVal.length <= 35 && !/^(on|true|false|y|n|1|0)$/i.test(childVal)) {
             if (childName) {
               hasChildCandidates.push(`${idContainerPrefix}${baseCls}:has(input[name='${childName}'][value='${childVal}']):visible`);
@@ -1372,20 +1381,35 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
             }
           }
           const childPrimaryNameMatch = innerHtmlAfterOpen.match(
-            /<(?:div|span|strong|em|p)\b[^<>]*\bclass=["'][^"']*\b(?:name|tit|subj|title)\b[^"']*["'][^<>]*>([^<>]{2,25})<\//i
+            /<(?:div|span|strong|em|p)\b[^<>]*\bclass=["'][^"']*\b(?:fc-title|name|tit|subj|title)\b[^"']*["'][^<>]*>([^<>]{2,35})<\//i
           );
           if (childPrimaryNameMatch && childPrimaryNameMatch[1]) {
             const cNameTxt = decodeEntities(childPrimaryNameMatch[1]).replace(/'/g, "").replace(/\s+/g, " ").trim();
             if (cNameTxt.length >= 2) {
-              hasChildCandidates.push(`${idContainerPrefix}${baseCls}:has-text('${cNameTxt}'):visible`);
-              if (idContainerPrefix !== modalPrefix) {
-                hasChildCandidates.push(`${modalPrefix}${baseCls}:has-text('${cNameTxt}'):visible`);
+              if (/\bfc-event\b/i.test(openTagAttrs)) {
+                hasChildCandidates.unshift(`${idContainerPrefix}a.fc-event:has-text('${cNameTxt}'):visible`);
+                if (idContainerPrefix !== modalPrefix) {
+                  hasChildCandidates.push(`${modalPrefix}a.fc-event:has-text('${cNameTxt}'):visible`);
+                }
+              } else {
+                hasChildCandidates.push(`${idContainerPrefix}${baseCls}:has-text('${cNameTxt}'):visible`);
+                if (idContainerPrefix !== modalPrefix) {
+                  hasChildCandidates.push(`${modalPrefix}${baseCls}:has-text('${cNameTxt}'):visible`);
+                }
               }
             }
           }
           const currentParts = splitSelectorCandidates(workingSel);
           if (hasChildCandidates.length > 0 || currentParts.length > 0) {
-            workingSel = Array.from(new Set([...hasChildCandidates, ...currentParts])).join(", ");
+            const leadingRowScopedChk =
+              !childInputId && isEphemeralChildVal
+                ? currentParts.filter((p) =>
+                    /^(?:\.ui-dialog:visible\s+)?(?:[a-z0-9#._-]+\s+)?(?:tr|li):has-text\(['"][^'"]+['"]\)\s+label\.(?:chkbox|rdobtn):visible$/i.test(
+                      p.trim()
+                    )
+                  )
+                : [];
+            workingSel = Array.from(new Set([...leadingRowScopedChk, ...hasChildCandidates, ...currentParts])).join(", ");
           }
         }
 
@@ -1401,7 +1425,8 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         if (outerIdVal) {
           const isUnstableId =
             /^(ui-id-|jqg|ext-gen|select2-|mceu_|cke_|tinymce|mentiony-|th\d+$|dp\d+$|ADRGR\d+$|[0-9]+$)/i.test(outerIdVal) ||
-            /[0-9a-f]{8,}/i.test(outerIdVal);
+            /[0-9a-f]{8}-[0-9a-f]{4}/i.test(outerIdVal) ||
+            (/[0-9a-f]{12,}/i.test(outerIdVal) && /[a-f]/i.test(outerIdVal) && /[0-9]/.test(outerIdVal));
           if (!isUnstableId) {
             let currentParts = splitSelectorCandidates(workingSel);
             // If this is a system alert/confirm button (#naon-cmm-confirm-ok or #naon-cmm-alert-confirm),
@@ -1776,7 +1801,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       return workingSel;
     };
 
-    if (action.type === "click" || action.type === "hover" || action.type === "type" || action.type === "upload") {
+    if (action.type === "click" || action.type === "rightclick" || action.type === "hover" || action.type === "type" || action.type === "upload") {
       if (action.selector) {
         const refined = refineSelectorString(action.selector, action.targetHtml);
         if (refined !== action.selector) {

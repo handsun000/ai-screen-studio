@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { spawnSync } from "child_process";
 import * as dotenv from "dotenv";
+import { recordAiUsage } from "./aiUsageTracker";
 import type {
   BrowsePlan,
   BrowsePlanAction,
@@ -140,6 +141,7 @@ export function buildNarrationWindows(
   let meaningful = (momentsFile.moments || []).filter(
     (m) =>
       m.type === "click" ||
+      m.type === "rightclick" ||
       m.type === "dblclick" ||
       m.type === "type" ||
       m.type === "drag" ||
@@ -157,6 +159,7 @@ export function buildNarrationWindows(
   const planMeaningful = (browsePlan?.actions || []).filter(
     (a) =>
       a.type === "click" ||
+      a.type === "rightclick" ||
       a.type === "dblclick" ||
       a.type === "type" ||
       a.type === "dragAndDrop" ||
@@ -279,7 +282,7 @@ export function buildNarrationWindows(
       Boolean(currModal) &&
       !/\[알림\s*팝업\]/.test(currModal || "") &&
       currentGroup.length <= 2 &&
-      prevM.type === "click" &&
+      (prevM.type === "click" || prevM.type === "upload") &&
       sincePrev < 4800;
 
     const isInsideSameModalFlow =
@@ -628,6 +631,14 @@ ${JSON.stringify(
           });
 
           const rawText = (response.text || "").trim();
+          recordAiUsage({
+            feature: "AI 대본 생성",
+            model,
+            slug,
+            usageMetadata: response.usageMetadata,
+            fallbackPromptChars: prompt.length,
+            fallbackOutputChars: rawText.length,
+          });
           const parsed = JSON.parse(rawText);
           if (Array.isArray(parsed) && parsed.length > 0) {
             const hasMergedIndices = parsed.some(
@@ -841,7 +852,7 @@ export function computeTimeRegionsAndSyncCues(
     const cueDurForSub = audioDurMs > 0 ? audioDurMs : Math.min(compGapMs, 2500);
     cue.endMs = cue.startMs + cueDurForSub;
 
-    if (Math.abs(deltaFrames) <= 1 || rawFrames < 4) {
+    if (Math.abs(deltaFrames) <= 1) {
       timeRegions.push({
         videoStartFrame: vStartF,
         videoEndFrame: vEndF,
@@ -851,10 +862,12 @@ export function computeTimeRegionsAndSyncCues(
         cueId: cue.id,
       });
     } else if (deltaFrames > 1) {
-      const holdRawF = Math.min(Math.max(2, Math.round(0.08 * fps)), Math.max(1, Math.floor(rawFrames / 4)));
       const isIntro = Boolean(cue.isIntro || (i === 0 && vStartMs <= 600));
+      const holdRawF = isIntro
+        ? 1
+        : Math.min(Math.max(2, Math.round(0.08 * fps)), Math.max(1, Math.floor(rawFrames / 4)));
       let holdVStart = vStartF;
-      let holdVEnd = vStartF + holdRawF;
+      let holdVEnd = Math.min(vEndF, vStartF + holdRawF);
       if (!isIntro) {
         const tailGlideF = Math.min(Math.round(0.45 * fps), Math.max(0, rawFrames - holdRawF - 2));
         holdVEnd = vEndF - tailGlideF;

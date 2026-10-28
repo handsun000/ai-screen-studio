@@ -59,6 +59,8 @@ data/**/*.jpeg
 data/**/*.webm
 data/**/*.mp3
 data/**/*.wav
+data/**/*.orig
+data/**/*.undo
 data/**/audio/
 data/**/uploads/
 data/**/narration.json
@@ -66,15 +68,19 @@ data/**/inspections/
 data/**/verification_frames/
 data/**/frames/
 data/_uploads/
+data/ai-usage.json
 data/test-*/
 data/live-demo-*/
 data/visual-test-*/
+data/msg/
+data/scd-*/
 data/tutorial-address/
 data/tutorial-board/
 data/tutorial-filebox/
 data/tutorial-note/
 data/tutorial-resource/
 *.bak
+*.lnk
 
 # IDE & OS Files
 .DS_Store

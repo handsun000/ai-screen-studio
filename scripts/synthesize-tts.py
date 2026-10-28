@@ -146,7 +146,7 @@ def compute_time_regions_and_sync_cues(cues: list[dict], raw_total_ms: int, fps:
         cue_dur_for_sub = audio_dur_ms if audio_dur_ms > 0 else min(comp_gap_ms, 2500)
         cue["endMs"] = cue["startMs"] + cue_dur_for_sub
 
-        if abs(delta_frames) <= 1 or raw_frames < 4:
+        if abs(delta_frames) <= 1:
             speed = round(float(raw_frames) / float(comp_frames), 5)
             time_regions.append(
                 {
@@ -159,11 +159,15 @@ def compute_time_regions_and_sync_cues(cues: list[dict], raw_total_ms: int, fps:
                 }
             )
         elif delta_frames > 1:
-            hold_raw_f = min(max(2, int(round(0.08 * fps))), max(1, raw_frames // 4))
             is_intro = bool(cue.get("isIntro") or (i == 0 and v_start_ms <= 600))
+            hold_raw_f = (
+                1
+                if is_intro
+                else min(max(2, int(round(0.08 * fps))), max(1, raw_frames // 4))
+            )
             if is_intro:
                 hold_v_start = v_start_f
-                hold_v_end = v_start_f + hold_raw_f
+                hold_v_end = min(v_end_f, v_start_f + hold_raw_f)
             else:
                 tail_glide_f = min(int(round(0.45 * fps)), max(0, raw_frames - hold_raw_f - 2))
                 hold_v_end = v_end_f - tail_glide_f

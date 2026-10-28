@@ -8,7 +8,12 @@ import {
   CLICK_SCALE_MIN,
 } from "../styles/cursor";
 import type { EditPlan } from "../types";
-import { frameToVideoTime } from "./FrameMapper";
+import { videoTimeMsToCompTimeMs } from "./FrameMapper";
+
+type TimedMoment = Moment & {
+  rawTimestamp?: number;
+  dragEndTimestamp?: number;
+};
 
 interface SyntheticCursorProps {
   moments: Moment[];
@@ -42,16 +47,18 @@ function isSameInputSpot(a: { x: number; y: number } | undefined, b: { x: number
   return Math.hypot(a.x - b.x, a.y - b.y) <= 56;
 }
 
-function isMomentClickable(m: Moment, prev: Moment | undefined): boolean {
-  if (m.type === "click" || m.type === "dblclick" || m.type === "upload") return true;
+function isMomentClickable(m: TimedMoment, prev: TimedMoment | undefined): boolean {
+  if (m.type === "click" || m.type === "rightclick" || m.type === "dblclick" || m.type === "upload") return true;
   if (m.type === "type" && m.cursor) {
     // In record.ts, 'type' clicks the input box to focus it unless the immediately preceding moment
     // already clicked the exact same spot.
+    const mRaw = m.rawTimestamp ?? m.timestamp;
+    const prevRaw = prev ? (prev.rawTimestamp ?? prev.timestamp) : 0;
     if (
       prev &&
       (prev.type === "click" || prev.type === "dblclick" || prev.type === "type") &&
       isSameInputSpot(prev.cursor, m.cursor) &&
-      m.timestamp - prev.timestamp <= 3500
+      mRaw - prevRaw <= 3500
     ) {
       return false;
     }
@@ -62,7 +69,7 @@ function isMomentClickable(m: Moment, prev: Moment | undefined): boolean {
 
 export function getCursorState(
   videoTimeMs: number,
-  moments: Moment[]
+  moments: TimedMoment[]
 ): {
   x: number;
   y: number;
@@ -79,6 +86,7 @@ export function getCursorState(
         m.cursor.x > 0 &&
         m.cursor.y > 0 &&
         (m.type === "click" ||
+          m.type === "rightclick" ||
           m.type === "dblclick" ||
           m.type === "upload" ||
           m.type === "hover" ||
@@ -156,10 +164,12 @@ export function getCursorState(
   const isCurrentDrag =
     (current.type === "drag" || current.type === "dragAndDrop") &&
     Boolean(current.dragFrom && current.dragTo);
+  const currentDragEndMs = current.dragEndTimestamp ?? current.timestamp + DRAG_DURATION_MS;
+  const currentDragSpanMs = Math.max(1, currentDragEndMs - current.timestamp);
 
   // If currently executing a drag gesture, interpolate from dragFrom to dragTo
-  if (isCurrentDrag && videoTimeMs <= current.timestamp + DRAG_DURATION_MS) {
-    const dt = (videoTimeMs - current.timestamp) / DRAG_DURATION_MS;
+  if (isCurrentDrag && videoTimeMs <= currentDragEndMs) {
+    const dt = (videoTimeMs - current.timestamp) / currentDragSpanMs;
     const eased = Easing.inOut(Easing.cubic)(Math.min(1, Math.max(0, dt)));
     x = currentStartPos.x + (currentEndPos.x - currentStartPos.x) * eased;
     y = currentStartPos.y + (currentEndPos.y - currentStartPos.y) * eased;
@@ -173,7 +183,7 @@ export function getCursorState(
   }
 
   const currentRestTime = isCurrentDrag
-    ? current.timestamp + DRAG_DURATION_MS
+    ? currentDragEndMs
     : current.timestamp;
 
   // Determine whether the cursor should hide for typing:
@@ -183,13 +193,15 @@ export function getCursorState(
   const nextIsSameSpotType =
     Boolean(next && next.type === "type" && isSameInputSpot(currentEndPos, getStartPos(next)));
   const currentIsType = current.type === "type";
+  const currentRawTs = current.rawTimestamp ?? current.timestamp;
+  const prevRawTs = prev ? (prev.rawTimestamp ?? prev.timestamp) : 0;
   const currentAlreadyHiddenFromPrevClick =
     currentIsType &&
     Boolean(
       prev &&
         (prev.type === "click" || prev.type === "dblclick" || prev.type === "type") &&
         isSameInputSpot(getEndPos(prev), currentStartPos) &&
-        current.timestamp - prev.timestamp <= 3500
+        currentRawTs - prevRawTs <= 3500
     );
 
   if (!next) {
@@ -331,12 +343,29 @@ export const SyntheticCursor: React.FC<SyntheticCursorProps> = ({
   viewportHeight,
 }) => {
   const frame = useCurrentFrame();
-  const videoTimeSec = frameToVideoTime(frame, editPlan);
-  const videoTimeMs = videoTimeSec * 1000;
+  const fps = editPlan.fps || 60;
+  // Evaluate cursor travel, fade-in/out, and click animations in rendered composition time (ms)
+  // with each moment's raw timestamp mapped through editPlan.timeRegions into composition time.
+  // This prevents time-stretched freeze regions (speed < 1) from turning cursor travel into
+  // a multi-second slow-motion crawl followed by a sudden jump when normal speed resumes.
+  const compTimeMs = (frame / fps) * 1000;
+  const mappedMoments = React.useMemo<TimedMoment[]>(
+    () =>
+      moments.map((m) => ({
+        ...m,
+        rawTimestamp: m.timestamp,
+        timestamp: videoTimeMsToCompTimeMs(m.timestamp, editPlan),
+        dragEndTimestamp:
+          m.type === "drag" || m.type === "dragAndDrop"
+            ? videoTimeMsToCompTimeMs(m.timestamp + DRAG_DURATION_MS, editPlan)
+            : undefined,
+      })),
+    [moments, editPlan]
+  );
 
   const { x, y, opacity, isClick, clickProgress } = getCursorState(
-    videoTimeMs,
-    moments
+    compTimeMs,
+    mappedMoments
   );
 
   if (opacity <= 0.001) return null;

@@ -109,6 +109,7 @@ const btnTerminalSend = document.getElementById("btn-terminal-send");
 
 // Initialization
 document.addEventListener("DOMContentLoaded", () => {
+  initTheme();
   initTabs();
   fetchTemplates();
   initSSE();
@@ -117,6 +118,167 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchScenarios();
   bindEvents();
 });
+
+function initTheme() {
+  const savedTheme = localStorage.getItem("screen_demo_theme") || "light";
+  applyTheme(savedTheme);
+  const toggleBtn = document.getElementById("btn-theme-toggle");
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+      const current = document.documentElement.getAttribute("data-theme") || "light";
+      const next = current === "dark" ? "light" : "dark";
+      localStorage.setItem("screen_demo_theme", next);
+      applyTheme(next);
+    });
+  }
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  const labelEl = document.getElementById("theme-toggle-label");
+  if (labelEl) {
+    labelEl.textContent = theme === "dark" ? "🌙 다크" : "☀️ 라이트";
+  }
+  if (window.electronAPI && typeof window.electronAPI.setTheme === "function") {
+    window.electronAPI.setTheme(theme);
+  }
+}
+
+// ── Windows 11 Fluent In-App Dialog (Replaces native Electron alert/confirm) ──
+function showFluentDialog(message, options = {}) {
+  const mode = options.mode || "alert"; // "alert" | "confirm"
+  const rawText = String(message == null ? "" : message).trim();
+
+  let dialogType = "info";
+  let titleText = "Screen Demo Studio";
+  let badgeSymbol = "i";
+
+  if (mode === "confirm") {
+    dialogType = "warn";
+    titleText = "실행 확인";
+    badgeSymbol = "!";
+  } else if (/실패|오류|에러|Error|❌/i.test(rawText)) {
+    dialogType = "error";
+    titleText = "작업 오류 안내";
+    badgeSymbol = "✕";
+  } else if (/성공|저장되었습니다|지정되었습니다|완료되었습니다|🎉|✅/.test(rawText)) {
+    dialogType = "success";
+    titleText = "완료 안내";
+    badgeSymbol = "✓";
+  } else if (/⚠️|입력해주세요|선택해주세요|없습니다|비어/.test(rawText)) {
+    dialogType = "warn";
+    titleText = "확인이 필요합니다";
+    badgeSymbol = "!";
+  }
+
+  const cleanBody = rawText.replace(/^(?:⚠️|🎉|✅|❌)\s*/, "");
+
+  return new Promise((resolve) => {
+    const existing = document.querySelector(".fluent-dialog-overlay");
+    if (existing) existing.remove();
+
+    const overlay = document.createElement("div");
+    overlay.className = "fluent-dialog-overlay";
+
+    const card = document.createElement("div");
+    card.className = "fluent-dialog-card";
+    card.setAttribute("role", "dialog");
+    card.setAttribute("aria-modal", "true");
+
+    const header = document.createElement("div");
+    header.className = "fluent-dialog-header";
+
+    const iconEl = document.createElement("div");
+    iconEl.className = `fluent-dialog-icon type-${dialogType}`;
+    iconEl.textContent = badgeSymbol;
+
+    const titleEl = document.createElement("div");
+    titleEl.className = "fluent-dialog-title";
+    titleEl.textContent = options.title || titleText;
+
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "fluent-dialog-close";
+    closeBtn.title = "닫기 (Esc)";
+    closeBtn.textContent = "✕";
+
+    header.appendChild(iconEl);
+    header.appendChild(titleEl);
+    header.appendChild(closeBtn);
+
+    const body = document.createElement("div");
+    body.className = "fluent-dialog-body";
+    body.textContent = cleanBody;
+
+    const footer = document.createElement("div");
+    footer.className = "fluent-dialog-footer";
+
+    let cancelBtn = null;
+    if (mode === "confirm") {
+      cancelBtn = document.createElement("button");
+      cancelBtn.type = "button";
+      cancelBtn.className = "btn btn-secondary";
+      cancelBtn.textContent = options.cancelText || "취소";
+      footer.appendChild(cancelBtn);
+    }
+
+    const okBtn = document.createElement("button");
+    okBtn.type = "button";
+    okBtn.className = "btn btn-primary";
+    okBtn.textContent = options.okText || (mode === "confirm" ? "계속 진행" : "확인");
+    footer.appendChild(okBtn);
+
+    card.appendChild(header);
+    card.appendChild(body);
+    card.appendChild(footer);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+
+    const cleanup = (result) => {
+      document.removeEventListener("keydown", onKeyDown, true);
+      overlay.remove();
+      resolve(result);
+    };
+
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        cleanup(false);
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        e.stopPropagation();
+        cleanup(true);
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown, true);
+    okBtn.addEventListener("click", () => cleanup(true));
+    closeBtn.addEventListener("click", () => cleanup(false));
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", () => cleanup(false));
+    }
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay && mode === "alert") {
+        cleanup(false);
+      }
+    });
+
+    setTimeout(() => okBtn.focus(), 10);
+  });
+}
+
+function showAppAlert(message, options = {}) {
+  return showFluentDialog(message, { ...options, mode: "alert" });
+}
+
+function showAppConfirm(message, options = {}) {
+  return showFluentDialog(message, { ...options, mode: "confirm" });
+}
+
+window.alert = (msg) => {
+  void showAppAlert(msg);
+};
 
 // 1. Tab Navigation
 function initTabs() {
@@ -179,8 +341,8 @@ function updateProjectAnalysisUI(analysis, targetUrlOverride) {
     pillProjectName.textContent = `🌐 ${hostLabel}`;
   }
   if (dot) {
-    dot.style.background = "var(--success-color)";
-    dot.style.boxShadow = "0 0 8px var(--success-glow)";
+    dot.style.background = "var(--ok)";
+    dot.style.boxShadow = "none";
   }
   if (projectStatusText) {
     projectStatusText.textContent = `접속 대상: ${hostLabel}`;
@@ -233,9 +395,10 @@ async function fetchStatus() {
     const pillAi = document.getElementById("pill-ai");
     if (data.geminiApiKeySet) {
       pillAi.innerHTML = `<span class="status-dot"></span><span>${data.geminiModel}</span>`;
-      pillAi.title = `API Key: ${data.geminiApiKeyPreview}`;
+      pillAi.title = `클릭하여 AI API 토큰 사용량 및 요금 내역 보기 (API Key: ${data.geminiApiKeyPreview})`;
     } else {
-      pillAi.innerHTML = `<span class="status-dot" style="background:#EF4444"></span><span>Gemini Key 미설정</span>`;
+      pillAi.innerHTML = `<span class="status-dot" style="background:var(--fail)"></span><span>Gemini Key 미설정</span>`;
+      pillAi.title = "클릭하여 AI API 사용량 및 요금 내역 보기";
     }
 
     const pillAuth = document.getElementById("pill-auth");
@@ -243,17 +406,153 @@ async function fetchStatus() {
     const authLabel = document.getElementById("pill-auth-label");
     if (pillAuth && authLabel) {
       if (data.hasAuthSession) {
-        if (authDot) authDot.style.background = "#10B981";
+        if (authDot) authDot.style.background = "var(--ok)";
         authLabel.textContent = "로그인 활성";
         pillAuth.title = `인증 세션: ${data.authSessionPath || "auth.json"} (클릭하여 계정 변경/재로그인)`;
       } else {
-        if (authDot) authDot.style.background = "#F59E0B";
+        if (authDot) authDot.style.background = "var(--warn)";
         authLabel.textContent = "로그인 필요 (클릭)";
         pillAuth.title = "저장된 세션이 없습니다. 클릭하여 브라우저에서 1회 로그인합니다.";
       }
     }
   } catch (err) {
     console.error("fetchStatus failed:", err);
+  }
+}
+
+async function openAiUsageModal() {
+  try {
+    const res = await fetch("/api/ai-usage");
+    const ct = res.headers.get("content-type") || "";
+    const usage = ct.includes("application/json")
+      ? await res.json()
+      : { today: {}, total: {}, recentHistory: [] };
+    const today = usage.today || { calls: 0, promptTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0, costKrw: 0 };
+    const total = usage.total || { calls: 0, promptTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0, costKrw: 0 };
+    const history = Array.isArray(usage.recentHistory) ? usage.recentHistory : [];
+
+    const existing = document.querySelector(".fluent-dialog-overlay");
+    if (existing) existing.remove();
+
+    const overlay = document.createElement("div");
+    overlay.className = "fluent-dialog-overlay";
+
+    const historyRowsHtml =
+      history.length === 0
+        ? `<tr><td colspan="5" style="padding:28px 12px;text-align:center;color:var(--text-3);">아직 기록된 AI API 호출 내역이 없습니다.<br><span style="font-size:11.5px;">(스포이드 동작 감지는 AI API를 호출하지 않아 요금이 발생하지 않습니다.)</span></td></tr>`
+        : history
+            .map((item) => {
+              const dt = new Date(item.timestamp);
+              const timeStr = isNaN(dt.getTime())
+                ? item.timestamp
+                : `${String(dt.getMonth() + 1).padStart(2, "0")}/${String(dt.getDate()).padStart(2, "0")} ${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}:${String(dt.getSeconds()).padStart(2, "0")}`;
+              return `
+                <tr style="border-bottom:1px solid var(--stroke);">
+                  <td style="padding:7px 8px;color:var(--text-3);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap;">${timeStr}</td>
+                  <td style="padding:7px 8px;color:var(--text);font-weight:600;white-space:nowrap;">${item.feature}</td>
+                  <td style="padding:7px 8px;color:var(--text-2);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap;">${item.model}</td>
+                  <td style="padding:7px 8px;color:var(--text-2);font-family:var(--font-mono);font-size:11.5px;text-align:right;white-space:nowrap;" title="입력 ${Number(item.promptTokens || 0).toLocaleString()} / 출력 ${Number(item.outputTokens || 0).toLocaleString()}">
+                    ${Number(item.totalTokens || 0).toLocaleString()} <span style="color:var(--text-3);font-size:10.5px;">(${Number(item.promptTokens || 0).toLocaleString()}+${Number(item.outputTokens || 0).toLocaleString()})</span>
+                  </td>
+                  <td style="padding:7px 8px;color:var(--accent);font-family:var(--font-mono);font-size:11.5px;font-weight:600;text-align:right;white-space:nowrap;">
+                    ₩${Number(item.costKrw || 0).toFixed(2)} <span style="color:var(--text-3);font-weight:400;">($${Number(item.costUsd || 0).toFixed(5)})</span>
+                  </td>
+                </tr>`;
+            })
+            .join("");
+
+    overlay.innerHTML = `
+      <div class="fluent-dialog-card" style="max-width:680px;" role="dialog" aria-modal="true">
+        <div class="fluent-dialog-header">
+          <div class="fluent-dialog-icon type-info">💰</div>
+          <div class="fluent-dialog-title">AI API 사용량 및 예상 요금 내역</div>
+          <button type="button" class="fluent-dialog-close" id="btn-close-ai-usage" title="닫기 (Esc)">✕</button>
+        </div>
+        <div class="fluent-dialog-body" style="white-space:normal;padding-top:8px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+            <div style="background:var(--layer);border:1px solid var(--stroke);border-radius:var(--r-card);padding:12px 14px;">
+              <div style="font-size:12px;color:var(--text-2);margin-bottom:4px;display:flex;justify-content:space-between;">
+                <span>오늘 사용량 (${usage.todayKey || "오늘"})</span>
+                <span style="font-weight:600;color:var(--text);">${today.calls}회 호출</span>
+              </div>
+              <div style="font-size:18px;font-weight:700;color:var(--accent);font-family:var(--font-mono);">
+                약 ₩${Number(today.costKrw || 0).toFixed(1)}원 <span style="font-size:12.5px;color:var(--text-2);font-weight:500;">($${Number(today.costUsd || 0).toFixed(4)})</span>
+              </div>
+              <div style="font-size:11.5px;color:var(--text-3);margin-top:4px;font-family:var(--font-mono);">
+                총 ${Number(today.totalTokens || 0).toLocaleString()} 토큰 (입력 ${Number(today.promptTokens || 0).toLocaleString()} · 출력 ${Number(today.outputTokens || 0).toLocaleString()})
+              </div>
+            </div>
+            <div style="background:var(--layer);border:1px solid var(--stroke);border-radius:var(--r-card);padding:12px 14px;">
+              <div style="font-size:12px;color:var(--text-2);margin-bottom:4px;display:flex;justify-content:space-between;">
+                <span>전체 누적 사용량</span>
+                <span style="font-weight:600;color:var(--text);">${total.calls}회 호출</span>
+              </div>
+              <div style="font-size:18px;font-weight:700;color:var(--text);font-family:var(--font-mono);">
+                약 ₩${Number(total.costKrw || 0).toFixed(1)}원 <span style="font-size:12.5px;color:var(--text-2);font-weight:500;">($${Number(total.costUsd || 0).toFixed(4)})</span>
+              </div>
+              <div style="font-size:11.5px;color:var(--text-3);margin-top:4px;font-family:var(--font-mono);">
+                총 ${Number(total.totalTokens || 0).toLocaleString()} 토큰 (입력 ${Number(total.promptTokens || 0).toLocaleString()} · 출력 ${Number(total.outputTokens || 0).toLocaleString()})
+              </div>
+            </div>
+          </div>
+
+          <div style="font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px;">최근 호출 상세 내역 (최대 30건)</div>
+          <div style="max-height:240px;overflow-y:auto;border:1px solid var(--stroke);border-radius:var(--r-ctl);background:var(--layer);">
+            <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:left;">
+              <thead>
+                <tr style="border-bottom:1px solid var(--stroke);background:var(--card);color:var(--text-2);font-size:11.5px;position:sticky;top:0;">
+                  <th style="padding:7px 8px;font-weight:600;">시각</th>
+                  <th style="padding:7px 8px;font-weight:600;">기능</th>
+                  <th style="padding:7px 8px;font-weight:600;">모델</th>
+                  <th style="padding:7px 8px;font-weight:600;text-align:right;">토큰 (입력+출력)</th>
+                  <th style="padding:7px 8px;font-weight:600;text-align:right;">예상 요금</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${historyRowsHtml}
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:8px;font-size:11.5px;color:var(--text-3);display:flex;justify-content:space-between;">
+            <span>※ Google AI Studio 유료 티어 공식 단가 및 환율($1 = ₩${usage.exchangeRateKrw || 1400}) 기준 추정치</span>
+            <span>무료 등급(Free Tier) 키 사용 시 실제 청구액은 ₩0원입니다.</span>
+          </div>
+        </div>
+        <div class="fluent-dialog-footer" style="justify-content:space-between;">
+          <button type="button" class="btn btn-secondary" id="btn-reset-ai-usage">내역 초기화</button>
+          <button type="button" class="btn btn-primary" id="btn-ok-ai-usage">닫기</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const close = () => {
+      document.removeEventListener("keydown", onKey, true);
+      overlay.remove();
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape" || e.key === "Enter") {
+        e.preventDefault();
+        close();
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+
+    overlay.querySelector("#btn-close-ai-usage")?.addEventListener("click", close);
+    overlay.querySelector("#btn-ok-ai-usage")?.addEventListener("click", close);
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) close();
+    });
+
+    overlay.querySelector("#btn-reset-ai-usage")?.addEventListener("click", async () => {
+      const ok = await showAppConfirm("누적된 AI API 사용량 및 요금 기록을 모두 초기화하시겠습니까?");
+      if (!ok) return;
+      await fetch("/api/ai-usage/reset", { method: "POST" });
+      await openAiUsageModal();
+    });
+  } catch (err) {
+    showAppAlert("AI 사용량 정보를 불러오지 못했습니다: " + err.message);
   }
 }
 
@@ -985,12 +1284,14 @@ function computeTimeRegionsAndSyncCuesJS(cues, rawTotalMs, fps, momentsList = []
     c.endMs = c.startMs + cueDurForSub;
 
     const isIntro = Boolean(c.isIntro || (i === 0 && vStartMs <= 600));
-    if (Math.abs(deltaFrames) <= 1 || rawFrames < 4) {
+    if (Math.abs(deltaFrames) <= 1) {
       appendRegion(vStartF, vEndF, cStartF, cEndF, cueId);
     } else if (deltaFrames > 1) {
-      const holdRawF = Math.min(Math.max(2, Math.round(0.08 * fps)), Math.max(1, Math.floor(rawFrames / 4)));
+      const holdRawF = isIntro
+        ? 1
+        : Math.min(Math.max(2, Math.round(0.08 * fps)), Math.max(1, Math.floor(rawFrames / 4)));
       let holdVStart = vStartF;
-      let holdVEnd = vStartF + holdRawF;
+      let holdVEnd = Math.min(vEndF, vStartF + holdRawF);
       if (!isIntro) {
         const tailGlideF = Math.min(Math.round(0.45 * fps), Math.max(0, rawFrames - holdRawF - 2));
         holdVEnd = vEndF - tailGlideF;
@@ -1431,8 +1732,14 @@ async function handleApplyVideoCut() {
     btnApply.textContent = "⏳ 구간 잘라내는 중...";
   }
   stopRealtimeHoldAndAudio();
-  if (videoPlayer && !videoPlayer.paused) {
-    videoPlayer.pause();
+  let prevVideoSrc = "";
+  if (videoPlayer) {
+    if (!videoPlayer.paused) {
+      videoPlayer.pause();
+    }
+    prevVideoSrc = videoPlayer.getAttribute("src") || "";
+    videoPlayer.removeAttribute("src");
+    videoPlayer.load();
   }
 
   try {
@@ -1474,6 +1781,10 @@ async function handleApplyVideoCut() {
     updateJsonViewer("edit");
     fetchScenarios();
   } catch (err) {
+    if (videoPlayer && prevVideoSrc) {
+      videoPlayer.src = prevVideoSrc;
+      videoPlayer.load();
+    }
     alert(`구간 잘라내기 실패: ${err.message}`);
   } finally {
     if (btnApply) {
@@ -1493,8 +1804,14 @@ async function handleRestoreVideoCut(mode = "undo") {
     btn.textContent = "⏳ 복원 중...";
   }
   stopRealtimeHoldAndAudio();
-  if (videoPlayer && !videoPlayer.paused) {
-    videoPlayer.pause();
+  let prevRestoreVideoSrc = "";
+  if (videoPlayer) {
+    if (!videoPlayer.paused) {
+      videoPlayer.pause();
+    }
+    prevRestoreVideoSrc = videoPlayer.getAttribute("src") || "";
+    videoPlayer.removeAttribute("src");
+    videoPlayer.load();
   }
 
   try {
@@ -1524,6 +1841,10 @@ async function handleRestoreVideoCut(mode = "undo") {
     updateJsonViewer("edit");
     fetchScenarios();
   } catch (err) {
+    if (videoPlayer && prevRestoreVideoSrc) {
+      videoPlayer.src = prevRestoreVideoSrc;
+      videoPlayer.load();
+    }
     alert(`영상 복원 실패: ${err.message}`);
   } finally {
     if (btn) {
@@ -1701,7 +2022,7 @@ function renderMomentsStepList(details) {
         <span class="moment-step-time" title="싱크 시점 ${compSec}s (원본 ${rawSec}s)">${timeSecLabel}</span>
         <div class="moment-step-info">
           <div class="moment-step-title" title="${escapeHtmlAttr(m.description || typeUpper)}">
-            <span style="color:#38BDF8; font-family:var(--font-mono); font-size:0.74rem; margin-right:4px;">#${idx + 1} ${typeUpper}</span>
+            <span style="color:var(--accent); font-family:var(--font-mono); font-size:0.74rem; margin-right:4px;">#${idx + 1} ${typeUpper}</span>
             ${escapeHtmlAttr(m.description || "동작 수행")}
           </div>
           <div class="moment-step-sub">
@@ -1747,7 +2068,7 @@ function renderMomentsStepList(details) {
       <span class="moment-step-time">#${idx + 1}</span>
       <div class="moment-step-info">
         <div class="moment-step-title" title="${escapeHtmlAttr(act.description || act.type)}">
-          <span style="color:#A5B4FC; font-family:var(--font-mono); font-size:0.74rem; margin-right:4px;">${(act.type || "CLICK").toUpperCase()}</span>
+          <span style="color:var(--accent); font-family:var(--font-mono); font-size:0.74rem; margin-right:4px;">${(act.type || "CLICK").toUpperCase()}</span>
           ${escapeHtmlAttr(act.description || "계획된 동작")}
         </div>
         <div class="moment-step-sub">${escapeHtmlAttr(act.selector || act.sourceSelector || "셀렉터 자동 탐색")}</div>
@@ -2059,8 +2380,8 @@ function renderNarrationStudio(details, focusIndex = null) {
   if (!narration || !Array.isArray(narration.cues) || narration.cues.length === 0) {
     if (statusBadge) {
       statusBadge.textContent = "대본 없음";
-      statusBadge.style.background = "rgba(148, 163, 184, 0.16)";
-      statusBadge.style.color = "#cbd5e1";
+      statusBadge.style.background = "var(--neutral-soft)";
+      statusBadge.style.color = "var(--neutral)";
     }
     container.innerHTML = `
       <div class="studio-empty-box">
@@ -2089,8 +2410,8 @@ function renderNarrationStudio(details, focusIndex = null) {
   if (statusBadge) {
     const holdText = totalHoldMs >= 200 ? ` · ⏱️싱크연장 +${(totalHoldMs / 1000).toFixed(1)}s` : "";
     statusBadge.textContent = `${narration.cues.length}구간 · ${styleBadgeText}${holdText}`;
-    statusBadge.style.background = "rgba(16, 185, 129, 0.2)";
-    statusBadge.style.color = "#6ee7b7";
+    statusBadge.style.background = "var(--ok-soft)";
+    statusBadge.style.color = "var(--ok)";
   }
 
   container.innerHTML = "";
@@ -2112,17 +2433,17 @@ function renderNarrationStudio(details, focusIndex = null) {
     const extraHoldMs = Number(cue.extraHoldMs || 0);
 
     row.innerHTML = `
-      <span style="font-size: 0.78em; font-weight: 700; color: #818cf8; min-width: 24px; font-family: var(--font-mono);">#${idx + 1}</span>
+      <span style="font-size: 0.78em; font-weight: 700; color: var(--accent); min-width: 24px; font-family: var(--font-mono);">#${idx + 1}</span>
       ${
         isOpeningCue
           ? `<span class="status-tag status-tag-eye" title="영상 시작 시 어떤 매뉴얼인지 안내하는 오프닝 소개 구간" style="font-size: 0.7em; padding: 2px 6px;">🎬 오프닝</span>`
           : ""
       }
       <input type="number" step="0.1" min="0" class="cue-start-input" value="${anchorSec}" title="원본 녹화 영상 기준 동작 시점(초) — 변경 시 시간순으로 자동 정렬 및 전체 싱크가 재계산됩니다"
-        style="width: 60px; padding: 5px 5px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-input); color: #e2e8f0; font-size: 0.8em; text-align: center; font-family: var(--font-mono);" />
-      <span style="font-size: 0.76em; color: #38bdf8; min-width: 78px; cursor: pointer; font-family: var(--font-mono); white-space: nowrap;" class="cue-jump-time" title="클릭하여 비디오 해당 구간으로 이동 (실제 동기화 재생 구간: ${compStartSec}s ~ ${compEndSec}s)">➔ ${compStartSec}~${compEndSec}s</span>
+        style="width: 60px; padding: 5px 5px; border-radius: 4px; font-size: 0.8em; text-align: center; font-family: var(--font-mono);" />
+      <span style="font-size: 0.76em; color: var(--accent); min-width: 78px; cursor: pointer; font-family: var(--font-mono); font-weight: 600; white-space: nowrap;" class="cue-jump-time" title="클릭하여 비디오 해당 구간으로 이동 (실제 동기화 재생 구간: ${compStartSec}s ~ ${compEndSec}s)">➔ ${compStartSec}~${compEndSec}s</span>
       <input type="text" class="cue-text-input" value="${(cue.text || "").replace(/"/g, "&quot;")}" placeholder="나레이션 대본 문장을 입력하세요 (길어져도 음성 속도가 빨라지지 않고 화면 구간이 자동 연장됩니다)"
-        style="flex: 1; min-width: 170px; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-input); color: #f8fafc; font-size: 0.88em;" />
+        style="flex: 1; min-width: 170px; padding: 6px 10px; border-radius: 4px; font-size: 0.88em;" />
       <span class="cue-sync-badge-wrap">${buildCueSyncBadgeHtml(cue)}</span>
       <div class="cue-stretch-controls" title="이 구간의 영상 길이를 실시간으로 늘리거나 줄입니다 (뒤따르는 모든 대본·카메라 줌·커서 싱크 자동 재정렬)">
         <button type="button" class="btn-cue-stretch stretch-minus" data-stretch="-500" title="구간 0.5초 줄이기 (대본 음성 길이 이하로는 줄어들지 않음)">-0.5s</button>
@@ -2135,14 +2456,14 @@ function renderNarrationStudio(details, focusIndex = null) {
         }
       </div>
       <div style="display: inline-flex; align-items: center; gap: 4px;">
-        <button type="button" class="btn btn-sm btn-outline btn-insert-cue-before" title="이 구간 바로 위(이전 시점)에 새 대본 구간 끼워넣기" style="padding: 4px 6px; font-size: 0.72em; color: #93c5fd;">+위</button>
-        <button type="button" class="btn btn-sm btn-outline btn-insert-cue-after" title="이 구간 바로 아래(다음 시점)에 새 대본 구간 끼워넣기" style="padding: 4px 6px; font-size: 0.72em; color: #93c5fd;">+아래</button>
+        <button type="button" class="btn btn-sm btn-outline btn-insert-cue-before" title="이 구간 바로 위(이전 시점)에 새 대본 구간 끼워넣기" style="padding: 4px 6px; font-size: 0.72em;">+위</button>
+        <button type="button" class="btn btn-sm btn-outline btn-insert-cue-after" title="이 구간 바로 아래(다음 시점)에 새 대본 구간 끼워넣기" style="padding: 4px 6px; font-size: 0.72em;">+아래</button>
         ${
           audioFileName
             ? `<button type="button" class="btn btn-sm btn-outline btn-play-cue" title="합성된 음성 미리듣기" style="padding: 4px 8px; font-size: 0.74em;">▶️ 듣기</button>`
             : ""
         }
-        <button type="button" class="btn btn-sm btn-outline btn-delete-cue" title="구간 삭제" style="padding: 4px 7px; font-size: 0.76em; color: #f87171;">✕</button>
+        <button type="button" class="btn btn-sm btn-outline btn-delete-cue" title="구간 삭제" style="padding: 4px 7px; font-size: 0.76em; color: var(--fail);">✕</button>
       </div>
     `;
 
@@ -2806,12 +3127,12 @@ function renderRecorderLiveEvents(status) {
     .map((ev) => {
       const badgeColor =
         ev.kind === "click"
-          ? "#38bdf8"
+          ? "var(--run)"
           : ev.kind === "type"
-          ? "#a855f7"
+          ? "var(--accent)"
           : ev.kind === "dragAndDrop"
-          ? "#f59e0b"
-          : "#10b981";
+          ? "var(--warn)"
+          : "var(--ok)";
       const kindLabel =
         ev.kind === "click"
           ? "💧 클릭"
@@ -2820,13 +3141,13 @@ function renderRecorderLiveEvents(status) {
           : ev.kind === "dragAndDrop"
           ? "✊ 드래그"
           : "🖱️ 동작";
-      const textPart = ev.text ? ` <strong style="color:#fde047;">'${ev.text}'</strong>` : "";
-      const iframePart = ev.iframe ? ` <span style="color:#94a3b8;">[${ev.iframe}]</span>` : "";
+      const textPart = ev.text ? ` <strong style="color:var(--accent);">'${ev.text}'</strong>` : "";
+      const iframePart = ev.iframe ? ` <span style="color:var(--text-muted);">[${ev.iframe}]</span>` : "";
       return `
-        <div style="display:flex; align-items:center; gap:8px; padding:5px 8px; background:rgba(15,23,42,0.85); border-left:3px solid ${badgeColor}; border-radius:4px;">
+        <div style="display:flex; align-items:center; gap:8px; padding:6px 10px; background:var(--card); border:1px solid var(--stroke); border-left:3px solid ${badgeColor}; border-radius:4px;">
           <span style="color:${badgeColor}; font-weight:700; min-width:64px;">#${ev.seq} ${kindLabel}</span>
-          <span style="color:#f8fafc; font-weight:500;">${ev.label}${textPart}</span>
-          <span style="margin-left:auto; color:#64748b; font-size:0.85em; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${(ev.selector || "").replace(/"/g, "&quot;")}">${ev.selector}${iframePart}</span>
+          <span style="color:var(--text-main); font-weight:500;">${ev.label}${textPart}</span>
+          <span style="margin-left:auto; color:var(--text-muted); font-size:0.85em; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${(ev.selector || "").replace(/"/g, "&quot;")}">${ev.selector}${iframePart}</span>
         </div>
       `;
     })
@@ -3055,11 +3376,11 @@ function insertBlockPreset(presetKey) {
     const cards = actionsList.querySelectorAll(".action-item-card");
     if (cards[startIndex]) {
       cards[startIndex].scrollIntoView({ behavior: "smooth", block: "nearest" });
-      cards[startIndex].style.borderColor = "#FBBF24";
-      cards[startIndex].style.boxShadow = "0 0 20px rgba(251, 191, 36, 0.5)";
+      cards[startIndex].style.borderColor = "var(--accent)";
+      cards[startIndex].style.background = "var(--accent-soft)";
       setTimeout(() => {
         cards[startIndex].style.borderColor = "";
-        cards[startIndex].style.boxShadow = "";
+        cards[startIndex].style.background = "";
       }, 1500);
     }
   }, 50);
@@ -3095,11 +3416,11 @@ function insertActionAt(targetIndex, actionData = null) {
       cards[validIndex].scrollIntoView({ behavior: "smooth", block: "nearest" });
       const descInput = cards[validIndex].querySelector('[data-field="description"]');
       if (descInput) descInput.focus();
-      cards[validIndex].style.borderColor = "var(--accent-color)";
-      cards[validIndex].style.boxShadow = "0 0 16px rgba(99, 102, 241, 0.5)";
+      cards[validIndex].style.borderColor = "var(--accent)";
+      cards[validIndex].style.background = "var(--accent-soft)";
       setTimeout(() => {
         cards[validIndex].style.borderColor = "";
-        cards[validIndex].style.boxShadow = "";
+        cards[validIndex].style.background = "";
       }, 1000);
     }
   }, 50);
@@ -3116,11 +3437,11 @@ function moveAction(fromIndex, toIndex) {
     const cards = actionsList.querySelectorAll(".action-item-card");
     if (cards[toIndex]) {
       cards[toIndex].scrollIntoView({ behavior: "smooth", block: "nearest" });
-      cards[toIndex].style.borderColor = "#38BDF8";
-      cards[toIndex].style.boxShadow = "0 0 16px rgba(56, 189, 248, 0.5)";
+      cards[toIndex].style.borderColor = "var(--accent)";
+      cards[toIndex].style.background = "var(--accent-soft)";
       setTimeout(() => {
         cards[toIndex].style.borderColor = "";
-        cards[toIndex].style.boxShadow = "";
+        cards[toIndex].style.background = "";
       }, 1000);
     }
   }, 50);
@@ -3258,18 +3579,18 @@ function renderActionCards() {
   // Update Plan Breakdown Stats Pills
   if (planStatsPills) {
     const acts = currentPlan.actions;
-    const clickCount = acts.filter((a) => a.type === "click" || a.type === "dblclick" || a.type === "hover").length;
+    const clickCount = acts.filter((a) => a.type === "click" || a.type === "rightclick" || a.type === "dblclick" || a.type === "hover").length;
     const typeCount = acts.filter((a) => a.type === "type").length;
     const uploadCount = acts.filter((a) => a.type === "upload").length;
     const dragCount = acts.filter((a) => a.type === "dragAndDrop" || (a.sourceSelector && a.targetSelector)).length;
     const waitCount = acts.filter((a) => a.type === "wait").length;
     planStatsPills.innerHTML = [
       `<span class="plan-stat-pill">총 ${acts.length}단계</span>`,
-      clickCount > 0 ? `<span class="plan-stat-pill" style="color:#22D3EE;">🖱️ 클릭 ${clickCount}</span>` : "",
-      typeCount > 0 ? `<span class="plan-stat-pill" style="color:#34D399;">⌨️ 입력 ${typeCount}</span>` : "",
-      uploadCount > 0 ? `<span class="plan-stat-pill" style="color:#C084FC;">📎 첨부 ${uploadCount}</span>` : "",
-      dragCount > 0 ? `<span class="plan-stat-pill" style="color:#FB923C;">✊ 드래그 ${dragCount}</span>` : "",
-      waitCount > 0 ? `<span class="plan-stat-pill" style="color:#FBBF24;">⏳ 대기 ${waitCount}</span>` : "",
+      clickCount > 0 ? `<span class="plan-stat-pill" style="color:var(--run);">🖱️ 클릭 ${clickCount}</span>` : "",
+      typeCount > 0 ? `<span class="plan-stat-pill" style="color:var(--ok);">⌨️ 입력 ${typeCount}</span>` : "",
+      uploadCount > 0 ? `<span class="plan-stat-pill" style="color:var(--accent);">📎 첨부 ${uploadCount}</span>` : "",
+      dragCount > 0 ? `<span class="plan-stat-pill" style="color:var(--warn);">✊ 드래그 ${dragCount}</span>` : "",
+      waitCount > 0 ? `<span class="plan-stat-pill" style="color:var(--neutral);">⏳ 대기 ${waitCount}</span>` : "",
     ]
       .filter(Boolean)
       .join("");
@@ -3332,7 +3653,7 @@ function renderActionCards() {
           <input type="text" class="storyboard-inline-input" placeholder="파일 경로 또는 파일명 (예: 샘플문서.pdf)" value="${escapeHtmlAttr(fileDisplay)}" data-field="filePath">
         </div>
       `;
-    } else if (act.type === "click" || act.type === "hover" || act.type === "dblclick") {
+    } else if (act.type === "click" || act.type === "rightclick" || act.type === "hover" || act.type === "dblclick") {
       inlineValueHtml = `
         <div class="storyboard-inline-field storyboard-target-field" title="클릭할 버튼이나 메뉴의 글자를 수정하면 내부 셀렉터가 자동으로 변경됩니다">
           <span class="storyboard-field-tag">🎯 대상 글자</span>
@@ -3358,6 +3679,7 @@ function renderActionCards() {
           <option value="wait" ${act.type === "wait" ? "selected" : ""}>⏳ 대기</option>
           <option value="hover" ${act.type === "hover" ? "selected" : ""}>👆 마우스 올리기</option>
           <option value="dragAndDrop" ${act.type === "dragAndDrop" ? "selected" : ""}>✊ 드래그 이동</option>
+          <option value="rightclick" ${act.type === "rightclick" ? "selected" : ""}>🖱️ 우클릭</option>
           <option value="dblclick" ${act.type === "dblclick" ? "selected" : ""}>🖱️ 더블클릭</option>
           <option value="navigate" ${act.type === "navigate" ? "selected" : ""}>🌐 페이지 이동</option>
         </select>
@@ -3561,10 +3883,12 @@ async function handleSavePlan(silent = false) {
           if (btnSavePlan) {
             const originalText = btnSavePlan.textContent;
             btnSavePlan.textContent = "✅ 플랜 저장 완료!";
-            btnSavePlan.style.background = "#10b981";
+            btnSavePlan.style.background = "var(--ok)";
+            btnSavePlan.style.color = "#fff";
             setTimeout(() => {
               btnSavePlan.textContent = originalText || "💾 플랜 저장";
               btnSavePlan.style.background = "";
+              btnSavePlan.style.color = "";
             }, 2000);
           }
           if (!isSilent) {
@@ -3622,7 +3946,7 @@ async function handleRunPipeline() {
             .join("\n");
           const moreText = missingActions.length > 3 ? ` 외 ${missingActions.length - 3}개` : "";
 
-          const proceed = confirm(
+          const proceed = await showAppConfirm(
             `⚠️ 다음 ${missingActions.length}개 액션의 셀렉터가 비어 있습니다:\n\n${summaryList}${moreText}\n\n셀렉터가 비어있어도 화면 텍스트로 자동 추론을 시도하지만, 직접 지정하는 것이 가장 정확합니다.\n\n이대로 계속 녹화를 진행하시겠습니까?`
           );
 
@@ -3937,6 +4261,13 @@ function bindEvents() {
       if (btnCloseRecorderModal) {
         btnCloseRecorderModal.addEventListener("click", () => {
           cancelLiveDemoRecorder();
+        });
+      }
+
+      const pillAiEl = document.getElementById("pill-ai");
+      if (pillAiEl) {
+        pillAiEl.addEventListener("click", () => {
+          openAiUsageModal();
         });
       }
 
@@ -4441,6 +4772,31 @@ function bindEvents() {
       const btnExecuteVideoMerge = document.getElementById("btn-execute-video-merge");
       if (btnExecuteVideoMerge) {
         btnExecuteVideoMerge.addEventListener("click", handleExecuteVideoMerge);
+      }
+
+      // Scenario Library Sidebar Collapse / Expand Toggle
+      const scenariosGridEl = document.getElementById("scenarios-grid");
+      const btnCollapseLibrary = document.getElementById("btn-collapse-library");
+      const btnExpandLibrary = document.getElementById("btn-expand-library");
+
+      const applyLibraryCollapsed = (collapsed) => {
+        if (!scenariosGridEl) return;
+        scenariosGridEl.classList.toggle("library-collapsed", Boolean(collapsed));
+        if (btnExpandLibrary) {
+          btnExpandLibrary.classList.toggle("hidden", !collapsed);
+        }
+        localStorage.setItem("screen_demo_library_collapsed", collapsed ? "true" : "false");
+      };
+
+      if (localStorage.getItem("screen_demo_library_collapsed") === "true") {
+        applyLibraryCollapsed(true);
+      }
+
+      if (btnCollapseLibrary) {
+        btnCollapseLibrary.addEventListener("click", () => applyLibraryCollapsed(true));
+      }
+      if (btnExpandLibrary) {
+        btnExpandLibrary.addEventListener("click", () => applyLibraryCollapsed(false));
       }
 
       // Terminal Enter & Interactive Input Bindings

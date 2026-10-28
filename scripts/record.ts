@@ -4181,6 +4181,95 @@ async function main() {
           break;
         }
 
+        case "rightclick": {
+          await autoRecoverActiveModals(page, action, moments, recordingStart);
+          const isOptionalOrSub = isOptionalAction(action, momentId, plan.actions.length) || isNonCriticalSubOption(action);
+          let el = await getLocatorWithWait(page, action, isOptionalOrSub);
+          if (!(el && (await el.isVisible().catch(() => false)))) {
+            const restored = await restoreFromSimulatedPopupIfNeeded(
+              page,
+              `'${action.description || action.selector}' 우클릭 대상 탐색을 위해 팝업 종료`,
+              action
+            );
+            if (restored) {
+              el = await getLocatorWithWait(page, action, isOptionalOrSub);
+            }
+          }
+          if (!el) {
+            el = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
+          }
+          if (!el) {
+            if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+              markActionAndFollowupWaitForPruning(plan, actionIdx, action);
+              console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 통과합니다: ${action.description}`);
+              break;
+            }
+            throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
+          }
+          const waitTimeout = isOptionalOrSub ? 2500 : (momentId >= plan.actions.length - 2) ? 3000 : 15000;
+          try {
+            await el.waitFor({ state: "visible", timeout: waitTimeout });
+          } catch (waitErr) {
+            const healed = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
+            if (healed) {
+              el = healed;
+            } else {
+              if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
+                markActionAndFollowupWaitForPruning(plan, actionIdx, action);
+                console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 통과합니다: ${action.description}`);
+                break;
+              }
+              throw new Error(`요소를 찾을 수 없습니다: ${action.selector}`);
+            }
+          }
+
+          await el.evaluate((node) => {
+            const r = node.getBoundingClientRect();
+            if (r.top < 60 || r.bottom > window.innerHeight - 60) {
+              node.scrollIntoView({ block: "center", inline: "nearest" });
+            }
+          }).catch(() => {});
+          await el.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {});
+          const { locator: targetEl, box } = await resolveAtomicTarget(
+            el,
+            false,
+            action.description || "",
+            Boolean(action.recordedByEyedropper || plan.recordedByEyedropper)
+          );
+          el = targetEl;
+
+          if (box) {
+            const rawX = box.x + box.width / 2 + (action.cursorOffset?.x || 0);
+            const rawY = box.y + box.height / 2 + (action.cursorOffset?.y || 0);
+            const clamped = clampToViewport(
+              rawX,
+              rawY,
+              plan.viewport.width,
+              plan.viewport.height
+            );
+            moment.cursor = {
+              x: Math.round(clamped.x),
+              y: Math.round(clamped.y),
+            };
+            moment.target = {
+              x: Math.round(Math.max(0, box.x)),
+              y: Math.round(Math.max(0, box.y)),
+              width: Math.round(box.width),
+              height: Math.round(box.height),
+            };
+            await page.mouse.move(moment.cursor.x, moment.cursor.y, { steps: 10 }).catch(() => {});
+          }
+          moment.timestamp = Date.now() - recordingStart;
+
+          if (moment.cursor) {
+            triggerClickVisualizer(page, moment.cursor.x, moment.cursor.y).catch(() => {});
+          }
+
+          await el.click({ button: "right", timeout: 10000, force: action.force ?? false });
+          await page.waitForTimeout(1000);
+          break;
+        }
+
         case "click": {
           await autoRecoverActiveModals(page, action, moments, recordingStart);
           const descLower = (action.description || "").toLowerCase();
@@ -4196,6 +4285,109 @@ async function main() {
             if (restored) {
               el = await getLocatorWithWait(page, action, isOptionalOrSub);
             }
+          }
+
+          // Auto-open right-click context menu if the action targets a .context-menu-item / .context-menu-list that is not open yet
+          if (
+            !(el && (await el.isVisible().catch(() => false))) &&
+            /context-menu|contextmenu|ctx_menu/i.test(action.selector || "")
+          ) {
+            try {
+              let ctxScope: any = page;
+              if (action.iframe) {
+                for (const fSel of action.iframe.split(",").map((s) => s.trim()).filter(Boolean)) {
+                  const fLoc = page.locator(fSel).first();
+                  if ((await fLoc.count().catch(() => 0)) > 0 && (await fLoc.isVisible().catch(() => false))) {
+                    ctxScope = page.frameLocator(fSel);
+                    break;
+                  }
+                }
+              }
+
+              // Check if a recent type action searched a specific name/keyword
+              let recentSearchWord = "";
+              for (let p = actionIdx - 1; p >= Math.max(0, actionIdx - 5); p--) {
+                const prevAct = plan.actions[p];
+                if (prevAct && prevAct.type === "type" && prevAct.text && prevAct.text.trim().length >= 2) {
+                  recentSearchWord = prevAct.text.trim().replace(/['"\\]/g, "");
+                  break;
+                }
+              }
+
+              const rowCandidates: string[] = [];
+              if (recentSearchWord) {
+                rowCandidates.push(
+                  `#ntalk_body li.nt_li:has-text('${recentSearchWord}'):visible`,
+                  `#ntalk_body li:has-text('${recentSearchWord}'):visible`,
+                  `#ntalk_body .context-menu-one:has-text('${recentSearchWord}'):visible`,
+                  `li:has-text('${recentSearchWord}'):visible`,
+                  `tr:has-text('${recentSearchWord}'):visible`,
+                  `.dynatree-title:has-text('${recentSearchWord}'):visible`
+                );
+              }
+              rowCandidates.push(
+                "#ntalk_body li.nt_li._orgUser:visible",
+                "#ntalk_body li.nt_li:visible",
+                "#ntalk_body .nti_user:visible",
+                "#ntalk_body .context-menu-one:visible",
+                "#ntalk_body .ctxt-one:visible",
+                ".context-menu-one:visible",
+                ".dynatree-title:visible"
+              );
+
+              let openedMenuEl: Locator | null = null;
+              let clickedRowBox: { x: number; y: number; width: number; height: number } | null = null;
+              let clickedRowTs = 0;
+
+              outerRowLoop:
+              for (const rSel of rowCandidates) {
+                const candList = ctxScope.locator(rSel);
+                const candCount = await candList.count().catch(() => 0);
+                const maxTry = Math.min(candCount, 4);
+                for (let ci = 0; ci < maxTry; ci++) {
+                  const cand = candList.nth(ci);
+                  if (!(await cand.isVisible().catch(() => false))) continue;
+                  const rBox = await cand.boundingBox().catch(() => null);
+                  if (!rBox || rBox.width <= 20 || rBox.height < 16 || rBox.height > 140) continue;
+
+                  const rCx = Math.round(rBox.x + rBox.width / 2);
+                  const rCy = Math.round(rBox.y + rBox.height / 2);
+                  await page.mouse.move(rCx, rCy, { steps: 10 }).catch(() => {});
+                  const rTs = Date.now() - recordingStart;
+                  await cand.click({ button: "right", timeout: 2500, force: true }).catch(() => {});
+                  await page.waitForTimeout(450);
+
+                  const checkEl = await getLocator(page, action);
+                  if (checkEl && (await checkEl.isVisible().catch(() => false))) {
+                    openedMenuEl = checkEl;
+                    clickedRowBox = rBox;
+                    clickedRowTs = rTs;
+                    triggerClickVisualizer(page, rCx, rCy).catch(() => {});
+                    break outerRowLoop;
+                  }
+                }
+              }
+
+              if (openedMenuEl && clickedRowBox) {
+                const rCx = Math.round(clickedRowBox.x + clickedRowBox.width / 2);
+                const rCy = Math.round(clickedRowBox.y + clickedRowBox.height / 2);
+                moments.push({
+                  id: momentId,
+                  type: "rightclick",
+                  timestamp: clickedRowTs,
+                  cursor: { x: rCx, y: rCy },
+                  target: {
+                    x: Math.round(clickedRowBox.x),
+                    y: Math.round(clickedRowBox.y),
+                    width: Math.round(clickedRowBox.width),
+                    height: Math.round(clickedRowBox.height),
+                  },
+                  description: `[우클릭 메뉴 열기] 항목 우클릭`,
+                });
+                console.log(`  [🖱️ 우클릭 메뉴 자동 열기] 컨텍스트 메뉴 항목(${action.description}) 클릭을 위해 대상 항목을 우클릭했습니다.`);
+                el = openedMenuEl;
+              }
+            } catch {}
           }
           const hasSpecificSelector = Boolean(
             action.recordedByEyedropper ||
@@ -6996,6 +7188,284 @@ async function main() {
           }
 
           moment.timestamp = Date.now() - recordingStart;
+
+          // ── Virtual Windows 11 File Explorer ("열기") Dialog Simulation ──
+          // Since OS native file dialogs are outside the browser DOM and invisible to Playwright video recording,
+          // render an authentic in-DOM Windows "열기" dialog showing the pre-attached file(s),
+          // visually click the file item, and click [열기(O)] before injecting setInputFiles().
+          try {
+            await page.waitForTimeout(350);
+
+            const vfdFiles = resolvedFiles.map((fPath) => {
+              const name = path.basename(fPath);
+              const ext = path.extname(name).toLowerCase();
+              let sizeBytes = 2048;
+              let mtime = new Date();
+              try {
+                const st = fs.statSync(fPath);
+                sizeBytes = st.size || 1024;
+                mtime = st.mtime || new Date();
+              } catch {}
+              const sizeKb = `${Math.max(1, Math.round(sizeBytes / 1024))} KB`;
+              const yyyy = mtime.getFullYear();
+              const mm = String(mtime.getMonth() + 1).padStart(2, "0");
+              const dd = String(mtime.getDate()).padStart(2, "0");
+              const hr24 = mtime.getHours();
+              const ampm = hr24 < 12 ? "오전" : "오후";
+              const hr12 = hr24 % 12 || 12;
+              const min = String(mtime.getMinutes()).padStart(2, "0");
+              const dateStr = `${yyyy}-${mm}-${dd} ${ampm} ${hr12}:${min}`;
+
+              let typeLabel = "문서 파일";
+              let badgeColor = "#0067c0";
+              let badgeText = "DOC";
+              if (/\.(xlsx|xls|csv)$/i.test(ext)) {
+                typeLabel = "Microsoft Excel 워크시트";
+                badgeColor = "#107c41";
+                badgeText = "XLS";
+              } else if (/\.pdf$/i.test(ext)) {
+                typeLabel = "PDF 문서";
+                badgeColor = "#d93025";
+                badgeText = "PDF";
+              } else if (/\.(docx|doc)$/i.test(ext)) {
+                typeLabel = "Microsoft Word 문서";
+                badgeColor = "#185abd";
+                badgeText = "DOC";
+              } else if (/\.(hwp|hwpx)$/i.test(ext)) {
+                typeLabel = "한컴오피스 한글 문서";
+                badgeColor = "#0095d9";
+                badgeText = "HWP";
+              } else if (/\.(pptx|ppt)$/i.test(ext)) {
+                typeLabel = "Microsoft PowerPoint 문서";
+                badgeColor = "#c43e1c";
+                badgeText = "PPT";
+              } else if (/\.(png|jpg|jpeg|gif|webp)$/i.test(ext)) {
+                typeLabel = "이미지 파일";
+                badgeColor = "#7c3aed";
+                badgeText = "IMG";
+              } else if (/\.(zip|7z|rar)$/i.test(ext)) {
+                typeLabel = "압축(ZIP) 폴더";
+                badgeColor = "#d97706";
+                badgeText = "ZIP";
+              } else if (/\.txt$/i.test(ext)) {
+                typeLabel = "텍스트 문서";
+                badgeColor = "#475569";
+                badgeText = "TXT";
+              }
+
+              return { name, sizeKb, dateStr, typeLabel, badgeColor, badgeText };
+            });
+
+            await page.evaluate((files) => {
+              const existing = document.getElementById("__sd_virtual_file_dialog__");
+              if (existing) existing.remove();
+
+              const overlay = document.createElement("div");
+              overlay.id = "__sd_virtual_file_dialog__";
+              overlay.style.cssText = [
+                "position:fixed",
+                "inset:0",
+                "z-index:2147483640",
+                "background:rgba(0,0,0,0.18)",
+                "display:flex",
+                "align-items:center",
+                "justify-content:center",
+                "font-family:'Segoe UI','Malgun Gothic',sans-serif",
+                "user-select:none",
+              ].join(";");
+
+              const rowsHtml = files
+                .map(
+                  (f, idx) => `
+                  <tr id="__sd_vfd_file_${idx}" class="sd-vfd-row" style="cursor:pointer;border-bottom:1px solid #f2f2f2;transition:background 0.1s;">
+                    <td style="padding:7px 10px;display:flex;align-items:center;gap:8px;color:#1a1a1a;font-weight:500;">
+                      <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:18px;border-radius:3px;background:${f.badgeColor};color:#fff;font-size:9px;font-weight:700;letter-spacing:0.02em;flex-shrink:0;">${f.badgeText}</span>
+                      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:205px;">${f.name}</span>
+                    </td>
+                    <td style="padding:7px 8px;color:#555;font-size:11.5px;white-space:nowrap;">${f.dateStr}</td>
+                    <td style="padding:7px 8px;color:#555;font-size:11.5px;white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis;">${f.typeLabel}</td>
+                    <td style="padding:7px 10px;color:#555;font-size:11.5px;text-align:right;white-space:nowrap;">${f.sizeKb}</td>
+                  </tr>`
+                )
+                .join("");
+
+              overlay.innerHTML = `
+                <div style="width:680px;height:426px;background:#ffffff;border:1px solid #888;border-radius:8px;box-shadow:0 20px 50px rgba(0,0,0,0.35),0 0 1px rgba(0,0,0,0.4);display:flex;flex-direction:column;overflow:hidden;color:#1a1a1a;font-size:12px;">
+                  <!-- Title Bar -->
+                  <div style="height:32px;background:#f3f3f3;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid #e5e5e5;">
+                    <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#1a1a1a;">
+                      <span style="font-size:14px;">📁</span>
+                      <span>열기</span>
+                    </div>
+                    <div style="color:#666;font-size:13px;padding:2px 6px;">✕</div>
+                  </div>
+
+                  <!-- Address & Search Bar -->
+                  <div style="height:38px;background:#fafafa;display:flex;align-items:center;gap:8px;padding:0 10px;border-bottom:1px solid #e5e5e5;">
+                    <div style="display:flex;gap:6px;color:#777;font-size:13px;padding:0 4px;">
+                      <span>←</span><span>→</span><span>↑</span>
+                    </div>
+                    <div style="flex:1;height:26px;background:#fff;border:1px solid #d6d6d6;border-radius:4px;display:flex;align-items:center;padding:0 10px;gap:6px;color:#222;font-size:12px;">
+                      <span>💻</span>
+                      <span style="color:#888;">›</span>
+                      <span>내 PC</span>
+                      <span style="color:#888;">›</span>
+                      <span>문서 (Documents)</span>
+                      <span style="color:#888;">›</span>
+                      <span style="font-weight:600;color:#005fb8;">첨부파일</span>
+                    </div>
+                    <div style="width:165px;height:26px;background:#fff;border:1px solid #d6d6d6;border-radius:4px;display:flex;align-items:center;padding:0 8px;color:#888;font-size:11.5px;">
+                      🔍 첨부파일 검색
+                    </div>
+                  </div>
+
+                  <!-- Main Explorer Body -->
+                  <div style="flex:1;display:flex;min-height:0;background:#fff;">
+                    <!-- Left Navigation Sidebar -->
+                    <div style="width:154px;border-right:1px solid #e5e5e5;background:#fbfbfb;padding:8px 6px;display:flex;flex-direction:column;gap:2px;font-size:12px;color:#333;">
+                      <div style="padding:5px 8px;border-radius:4px;display:flex;align-items:center;gap:8px;color:#555;">⭐ 즐겨찾기</div>
+                      <div style="padding:5px 8px;border-radius:4px;display:flex;align-items:center;gap:8px;color:#555;">🖥️ 바탕 화면</div>
+                      <div style="padding:5px 8px;border-radius:4px;display:flex;align-items:center;gap:8px;background:#e5f3ff;color:#005fb8;font-weight:600;border-left:3px solid #005fb8;">📄 문서</div>
+                      <div style="padding:5px 8px 5px 22px;border-radius:4px;display:flex;align-items:center;gap:6px;background:#f0f7ff;color:#005fb8;font-weight:600;font-size:11.5px;">📂 첨부파일</div>
+                      <div style="padding:5px 8px;border-radius:4px;display:flex;align-items:center;gap:8px;color:#555;">⬇️ 다운로드</div>
+                      <div style="padding:5px 8px;border-radius:4px;display:flex;align-items:center;gap:8px;color:#555;">🖼️ 사진</div>
+                    </div>
+
+                    <!-- Right File List Table -->
+                    <div style="flex:1;display:flex;flex-direction:column;min-width:0;padding:4px 8px;">
+                      <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                        <thead>
+                          <tr style="border-bottom:1px solid #e0e0e0;color:#555;font-size:11.5px;text-align:left;">
+                            <th style="padding:6px 10px;font-weight:500;width:44%;border-right:1px solid #eee;">이름</th>
+                            <th style="padding:6px 8px;font-weight:500;width:25%;border-right:1px solid #eee;">수정한 날짜</th>
+                            <th style="padding:6px 8px;font-weight:500;width:19%;border-right:1px solid #eee;">유형</th>
+                            <th style="padding:6px 10px;font-weight:500;width:12%;text-align:right;">크기</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${rowsHtml}
+                        </tbody>
+                      </table>
+                      <div style="margin-top:auto;padding:6px 10px;font-size:11px;color:#777;border-top:1px solid #f3f3f3;">
+                        항목 ${files.length}개
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Bottom Dialog Bar -->
+                  <div style="background:#f3f3f3;border-top:1px solid #dcdcdc;padding:10px 14px;display:flex;flex-direction:column;gap:8px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="width:76px;text-align:right;color:#222;font-size:12px;">파일 이름(N):</span>
+                      <input id="__sd_vfd_filename_input" type="text" readonly value="" style="flex:1;height:25px;background:#fff;border:1px solid #ababab;border-radius:3px;padding:0 8px;font-size:12px;color:#111;outline:none;" />
+                      <div style="width:148px;height:25px;background:#fff;border:1px solid #ababab;border-radius:3px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;font-size:11.5px;color:#222;">
+                        <span>모든 파일 (*.*)</span>
+                        <span style="font-size:10px;color:#666;">▾</span>
+                      </div>
+                    </div>
+                    <div style="display:flex;justify-content:flex-end;gap:8px;">
+                      <button id="__sd_vfd_btn_open" type="button" style="min-width:86px;height:26px;background:#e1e1e1;border:2px solid #0078d4;border-radius:4px;font-size:12px;font-weight:600;color:#111;cursor:pointer;">열기(O)</button>
+                      <button id="__sd_vfd_btn_cancel" type="button" style="min-width:86px;height:26px;background:#e1e1e1;border:1px solid #adadad;border-radius:4px;font-size:12px;color:#222;cursor:pointer;">취소</button>
+                    </div>
+                  </div>
+                </div>
+              `;
+              document.body.appendChild(overlay);
+            }, vfdFiles);
+
+            await page.waitForTimeout(550);
+
+            // Step A: Move cursor to the file item in the virtual dialog & click it
+            const firstFileRow = page.locator("#__sd_vfd_file_0").first();
+            const fBox = await firstFileRow.boundingBox().catch(() => null);
+            const joinedFileNames =
+              vfdFiles.length === 1
+                ? vfdFiles[0].name
+                : vfdFiles.map((f) => `"${f.name}"`).join(" ");
+
+            if (fBox && fBox.width > 0 && fBox.height > 0) {
+              const fCx = Math.round(fBox.x + Math.min(140, fBox.width * 0.45));
+              const fCy = Math.round(fBox.y + fBox.height / 2);
+              await page.mouse.move(fCx, fCy, { steps: 14 }).catch(() => {});
+              await page.evaluate((fileNameVal) => {
+                const rows = document.querySelectorAll(".sd-vfd-row");
+                rows.forEach((r) => {
+                  (r as HTMLElement).style.background = "#cce8ff";
+                  (r as HTMLElement).style.outline = "1px solid #0078d4";
+                });
+                const inp = document.getElementById("__sd_vfd_filename_input") as HTMLInputElement | null;
+                if (inp) inp.value = fileNameVal;
+                const openBtn = document.getElementById("__sd_vfd_btn_open") as HTMLElement | null;
+                if (openBtn) {
+                  openBtn.style.background = "#0067c0";
+                  openBtn.style.borderColor = "#005fb8";
+                  openBtn.style.color = "#ffffff";
+                }
+              }, joinedFileNames);
+              const fileClickTs = Date.now() - recordingStart;
+              triggerClickVisualizer(page, fCx, fCy).catch(() => {});
+              extraSubMoments.push({
+                id: 0,
+                type: "click",
+                timestamp: fileClickTs,
+                cursor: { x: fCx, y: fCy },
+                target: {
+                  x: Math.round(fBox.x),
+                  y: Math.round(fBox.y),
+                  width: Math.round(fBox.width),
+                  height: Math.round(fBox.height),
+                },
+                description: `[파일 선택 팝업] '${vfdFiles.map((f) => f.name).join(", ")}' 파일 선택`,
+              });
+            }
+
+            await page.waitForTimeout(650);
+
+            // Step B: Move cursor to [열기(O)] button & click it
+            const openBtnLoc = page.locator("#__sd_vfd_btn_open").first();
+            const oBox = await openBtnLoc.boundingBox().catch(() => null);
+            if (oBox && oBox.width > 0 && oBox.height > 0) {
+              const oCx = Math.round(oBox.x + oBox.width / 2);
+              const oCy = Math.round(oBox.y + oBox.height / 2);
+              await page.mouse.move(oCx, oCy, { steps: 12 }).catch(() => {});
+              await page.evaluate(() => {
+                const openBtn = document.getElementById("__sd_vfd_btn_open") as HTMLElement | null;
+                if (openBtn) {
+                  openBtn.style.background = "#004e8c";
+                  openBtn.style.transform = "scale(0.98)";
+                }
+              });
+              const openClickTs = Date.now() - recordingStart;
+              triggerClickVisualizer(page, oCx, oCy).catch(() => {});
+              extraSubMoments.push({
+                id: 0,
+                type: "click",
+                timestamp: openClickTs,
+                cursor: { x: oCx, y: oCy },
+                target: {
+                  x: Math.round(oBox.x),
+                  y: Math.round(oBox.y),
+                  width: Math.round(oBox.width),
+                  height: Math.round(oBox.height),
+                },
+                description: `[파일 선택 팝업] '열기(O)' 버튼 클릭`,
+              });
+            }
+
+            await page.waitForTimeout(300);
+
+            // Close the virtual dialog right before injecting the actual file(s)
+            await page.evaluate(() => {
+              const existing = document.getElementById("__sd_virtual_file_dialog__");
+              if (existing) existing.remove();
+            });
+          } catch (vfdErr) {
+            await page
+              .evaluate(() => {
+                const existing = document.getElementById("__sd_virtual_file_dialog__");
+                if (existing) existing.remove();
+              })
+              .catch(() => {});
+          }
 
           // Strategy 1: If el is input[type='file'] or contains/wraps an input[type='file'] (e.g. .fileinput-button / .fileupload-buttonbar),
           // call setInputFiles directly so no native OS file dialog ever opens in headed mode!

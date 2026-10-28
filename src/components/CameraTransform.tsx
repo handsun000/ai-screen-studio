@@ -2,7 +2,7 @@ import React from "react";
 import { useCurrentFrame, interpolate, Easing } from "remotion";
 import type { EditPlan, EditSegment, CursorPosition, Moment } from "../types";
 import { WINDOW_WIDTH, WINDOW_HEIGHT } from "./FloatingWindow";
-import { frameToVideoTime } from "./FrameMapper";
+import { videoFrameToCompFrame } from "./FrameMapper";
 
 interface CameraTransformProps {
   editPlan: EditPlan;
@@ -145,9 +145,17 @@ function getCameraState(
   const defaultState: ZoomState = { scale: 1, translateX: 0, translateY: 0 };
   const fps = editPlan.fps;
   const fpsScale = fps / BASE_FPS;
-  const zoomSegments = editPlan.segments.filter(
-    (s) => s.zoomTarget && s.zoom > 1
-  );
+  const zoomSegments = editPlan.segments
+    .filter((s) => s.zoomTarget && s.zoom > 1)
+    .map((s) => {
+      const compStart = videoFrameToCompFrame(s.startFrame, editPlan);
+      const compEnd = Math.max(compStart + 1, videoFrameToCompFrame(s.endFrame, editPlan));
+      return {
+        ...s,
+        startFrame: compStart,
+        endFrame: compEnd,
+      };
+    });
 
   if (zoomSegments.length === 0) return defaultState;
 
@@ -263,9 +271,8 @@ export const CameraTransform: React.FC<CameraTransformProps> = ({
   children,
 }) => {
   const frame = useCurrentFrame();
-  const videoFrame = frameToVideoTime(frame, editPlan) * editPlan.fps;
   const { scale, translateX, translateY } = getCameraState(
-    videoFrame,
+    frame,
     editPlan,
     canvasWidth,
     canvasHeight,

@@ -61,7 +61,9 @@ export const SoundEffects: React.FC<SoundEffectsProps> = ({
   const events: SfxEvent[] = [];
 
   // Click sounds on click moments (mapped through timeRegions to composition frames)
-  const clickMoments = moments.moments.filter((m) => m.type === "click");
+  const clickMoments = moments.moments.filter(
+    (m) => m.type === "click" || m.type === "rightclick" || m.type === "dblclick"
+  );
   clickMoments.forEach((m, idx) => {
     const rawFrame = (m.timestamp / 1000) * editPlan.fps;
     const frame = videoFrameToCompFrame(rawFrame, editPlan);
@@ -73,9 +75,17 @@ export const SoundEffects: React.FC<SoundEffectsProps> = ({
   });
 
   // Camera whooshes from zoom segments (mapped through timeRegions to composition frames)
-  const zoomSegments = editPlan.segments.filter(
-    (s) => s.zoomTarget && s.zoom > 1
-  );
+  const zoomSegments = editPlan.segments
+    .filter((s) => s.zoomTarget && s.zoom > 1)
+    .map((s) => {
+      const compStart = videoFrameToCompFrame(s.startFrame, editPlan);
+      const compEnd = Math.max(compStart + 1, videoFrameToCompFrame(s.endFrame, editPlan));
+      return {
+        ...s,
+        startFrame: compStart,
+        endFrame: compEnd,
+      };
+    });
 
   for (let i = 0; i < zoomSegments.length; i++) {
     const seg = zoomSegments[i];
@@ -87,16 +97,16 @@ export const SoundEffects: React.FC<SoundEffectsProps> = ({
     const panFromPrev = prevSeg && willPanBetween(prevSeg, seg, editPlan.fps, fpsScale);
     if (panFromPrev) {
       const boundary = Math.round((prevSeg.endFrame + seg.startFrame) / 2);
-      const rawPanFrame = boundary - Math.round(8 * fpsScale);
+      const compPanFrame = boundary - Math.round(8 * fpsScale);
       events.push({
-        frame: videoFrameToCompFrame(rawPanFrame, editPlan),
+        frame: Math.max(0, compPanFrame),
         src: WHOOSH_PAN_SOUND,
         volume: whooshVolume * 0.8,
       });
     } else {
       // Zoom in whoosh
       events.push({
-        frame: videoFrameToCompFrame(seg.startFrame - easeIn, editPlan),
+        frame: Math.max(0, seg.startFrame - easeIn),
         src: WHOOSH_IN_SOUNDS[i % WHOOSH_IN_SOUNDS.length],
         volume: whooshVolume,
       });
@@ -106,7 +116,7 @@ export const SoundEffects: React.FC<SoundEffectsProps> = ({
     const panToNext = nextSeg && willPanBetween(seg, nextSeg, editPlan.fps, fpsScale);
     if (!panToNext) {
       events.push({
-        frame: videoFrameToCompFrame(seg.endFrame, editPlan),
+        frame: Math.max(0, seg.endFrame),
         src: WHOOSH_OUT_SOUNDS[i % WHOOSH_OUT_SOUNDS.length],
         volume: whooshVolume,
       });

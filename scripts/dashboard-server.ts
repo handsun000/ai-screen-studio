@@ -43,6 +43,7 @@ import {
   saveNarrationFile,
   synthesizeNarrationAudio,
 } from "../src/services/narrationService";
+import { getAiUsageSummary, resetAiUsageStore } from "../src/services/aiUsageTracker";
 
 dotenv.config({ override: true });
 
@@ -83,7 +84,17 @@ app.get("/api/status", (_req: Request, res: Response) => {
     authSessionPath: existingAuth,
     activeSlug: getActiveSlug(),
     analysis,
+    aiUsage: getAiUsageSummary(),
   });
+});
+
+// 1-B. AI Token Usage & Cost APIs
+app.get("/api/ai-usage", (_req: Request, res: Response) => {
+  res.json(getAiUsageSummary());
+});
+
+app.post("/api/ai-usage/reset", (_req: Request, res: Response) => {
+  res.json(resetAiUsageStore());
 });
 
 // Auth Session Management APIs
