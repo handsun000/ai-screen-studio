@@ -116,13 +116,8 @@ function backupFilesBeforeEdit(sDir: string) {
   }
 }
 
-function syncPublicRecordingCopy(slug: string, mp4Path: string) {
-  const pubMp4 = path.join(PUBLIC_DIR, `${slug}-recording.mp4`);
-  if (fs.existsSync(PUBLIC_DIR) && fs.existsSync(mp4Path)) {
-    try {
-      fs.copyFileSync(mp4Path, pubMp4);
-    } catch {}
-  }
+function syncPublicRecordingCopy(_slug: string, _mp4Path: string) {
+  // No-op: scenarios are now isolated in data/<slug>/recording.mp4 and staged on-demand per render
 }
 
 /**
@@ -489,6 +484,7 @@ interface ProbedStreamMeta {
   width: number;
   height: number;
   videoCodec: string;
+  rFrameRate: string;
   hasAudio: boolean;
 }
 
@@ -497,6 +493,7 @@ function probeClipMeta(mp4Path: string): ProbedStreamMeta {
   let width = 1920;
   let height = 1080;
   let videoCodec = "h264";
+  let rFrameRate = "30/1";
   let hasAudio = false;
 
   try {
@@ -506,7 +503,7 @@ function probeClipMeta(mp4Path: string): ProbedStreamMeta {
         "-v",
         "error",
         "-show_entries",
-        "stream=codec_name,codec_type,width,height",
+        "stream=codec_name,codec_type,width,height,r_frame_rate",
         "-of",
         "json",
         mp4Path,
@@ -521,6 +518,7 @@ function probeClipMeta(mp4Path: string): ProbedStreamMeta {
           width = Number(s.width || 1920);
           height = Number(s.height || 1080);
           videoCodec = String(s.codec_name || "h264");
+          if (s.r_frame_rate) rFrameRate = String(s.r_frame_rate);
         } else if (s.codec_type === "audio") {
           hasAudio = true;
         }
@@ -528,7 +526,7 @@ function probeClipMeta(mp4Path: string): ProbedStreamMeta {
     }
   } catch {}
 
-  return { durationSec, width, height, videoCodec, hasAudio };
+  return { durationSec, width, height, videoCodec, rFrameRate, hasAudio };
 }
 
 function mapRawFrameToCompFrame(rawFrame: number, editPlan: any): number {
@@ -614,6 +612,7 @@ export function mergeRenderedVideos(options: {
     (item) =>
       item.meta.hasAudio === firstMeta.hasAudio &&
       item.meta.videoCodec === firstMeta.videoCodec &&
+      item.meta.rFrameRate === firstMeta.rFrameRate &&
       item.meta.width === firstMeta.width &&
       item.meta.height === firstMeta.height
   );

@@ -79,11 +79,38 @@ const btnSetActive = document.getElementById("btn-set-active");
 const btnReRecord = document.getElementById("btn-re-record");
 const btnDirectRerecord = document.getElementById("btn-direct-rerecord");
 const btnPlayerRender = document.getElementById("btn-player-render");
+const renderFpsSelect = document.getElementById("render-fps-select");
 const btnDownloadVideo = document.getElementById("btn-download-video");
 const btnModeRaw = document.getElementById("btn-mode-raw");
 const btnModeRendered = document.getElementById("btn-mode-rendered");
 const videoModeBadge = document.getElementById("video-mode-badge");
 let currentVideoMode = "raw"; // "raw" | "rendered"
+
+// Isolated Background Render State & Dock Elements
+let activeRenderTask = null;
+let renderQueueList = [];
+let lastCompletedRenderTask = null;
+let renderDockDismissedTaskId = null;
+
+const backgroundRenderDock = document.getElementById("background-render-dock");
+const renderDockTitle = document.getElementById("render-dock-title");
+const renderDockSlug = document.getElementById("render-dock-slug");
+const renderDockFps = document.getElementById("render-dock-fps");
+const renderDockQueue = document.getElementById("render-dock-queue");
+const renderDockProgressFill = document.getElementById("render-dock-progress-fill");
+const renderDockDetail = document.getElementById("render-dock-detail");
+const btnCloseRenderDock = document.getElementById("btn-close-render-dock");
+const btnStopRenderDock = document.getElementById("btn-stop-render-dock");
+const btnOpenRenderedDock = document.getElementById("btn-open-rendered-dock");
+const btnDownloadRenderDock = document.getElementById("btn-download-render-dock");
+
+if (renderFpsSelect) {
+  const savedFps = localStorage.getItem("screen_demo_render_fps");
+  renderFpsSelect.value = savedFps === "60" ? "60" : "30";
+  renderFpsSelect.addEventListener("change", () => {
+    localStorage.setItem("screen_demo_render_fps", renderFpsSelect.value === "60" ? "60" : "30");
+  });
+}
 const timelineBarWrapper = document.getElementById("timeline-bar-wrapper");
 const timelineVisualBar = document.getElementById("timeline-visual-bar");
 const timelinePlayhead = document.getElementById("timeline-playhead");
@@ -632,7 +659,20 @@ function renderScenarioList() {
     item.dataset.slug = s.slug;
     if (selectedScenario === s.slug) item.classList.add("selected");
 
-    const statusBadgeHtml = s.hasRenderedVideo
+    const isActivelyRendering =
+      activeRenderTask &&
+      (activeRenderTask.status === "running" || activeRenderTask.status === "queued") &&
+      activeRenderTask.slug === s.slug;
+    const isQueuedForRender =
+      !isActivelyRendering &&
+      Array.isArray(renderQueueList) &&
+      renderQueueList.some((q) => q && q.slug === s.slug);
+
+    const statusBadgeHtml = isActivelyRendering
+      ? `<span class="status-tag status-tag-rendering" data-render-badge="${escapeHtmlAttr(s.slug)}" title="백그라운드 최종 MP4 렌더링 진행 중 (${activeRenderTask.fps || 30}fps)">⏳ 렌더링 ${activeRenderTask.progress || 0}%</span>`
+      : isQueuedForRender
+      ? `<span class="status-tag status-tag-queued" data-render-badge="${escapeHtmlAttr(s.slug)}" title="백그라운드 렌더링 대기열 등록됨">🕒 대기 중</span>`
+      : s.hasRenderedVideo
       ? '<span class="status-tag status-tag-rendered" title="줌/커서 합성 최종 MP4 완료">✨ 최종본</span>'
       : s.hasVideo
       ? '<span class="status-tag status-tag-raw" title="원본 브라우저 녹화 완료">📹 녹화됨</span>'
@@ -676,6 +716,7 @@ function renderScenarioList() {
         <div class="scenario-card-actions-right">
           ${mergeBtnHtml}
           <button type="button" class="btn-card-edit" title="브라우징 플랜 편집기(탭 1)에서 이 시나리오 열기">✏️ 편집</button>
+          <button type="button" class="btn-card-delete" title="이 시나리오와 관련 녹화/렌더링 파일을 모두 삭제합니다">🗑️</button>
         </div>
       </div>
     `;
@@ -696,11 +737,78 @@ function renderScenarioList() {
       });
     }
 
+    const deleteBtn = item.querySelector(".btn-card-delete");
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        handleDeleteScenario(s.slug);
+      });
+    }
+
     item.addEventListener("click", () => selectScenario(s.slug));
     scenarioCardsContainer.appendChild(item);
   });
 
   renderMergeQueueUI();
+}
+
+async function handleDeleteScenario(slug) {
+  if (!slug) return;
+  const confirmed = await showAppConfirm(
+    `⚠️ '${slug}' 시나리오를 정말 삭제하시겠습니까?\n\n브라우징 플랜, 원본 녹화 영상(recording.mp4), AI 나레이션, 최종 렌더링 MP4가 모두 함께 삭제되며 되돌릴 수 없습니다.`
+  );
+  if (!confirmed) return;
+
+  try {
+    // Release Windows file lock if this scenario's video is currently loaded in the player
+    if (selectedScenario === slug && typeof releaseVideoFileLock === "function") {
+      await releaseVideoFileLock();
+    }
+
+    const res = await fetch(`/api/scenarios/${encodeURIComponent(slug)}`, {
+      method: "DELETE",
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || "시나리오 삭제 실패");
+    }
+
+    delete scenarioDetailsCache[slug];
+    const qIdx = videoMergeQueue.indexOf(slug);
+    if (qIdx >= 0) {
+      videoMergeQueue.splice(qIdx, 1);
+    }
+
+    if (currentSlug === slug) {
+      currentSlug = "";
+      currentPlan = null;
+      if (slugInput && slugInput.value === slug) slugInput.value = "";
+      if (editorScenarioSelect && editorScenarioSelect.value === slug) editorScenarioSelect.value = "";
+      if (planSlugBadge) planSlugBadge.textContent = "시나리오 미선택";
+      renderActionCards();
+    }
+
+    const wasSelected = selectedScenario === slug;
+    if (wasSelected) {
+      selectedScenario = null;
+    }
+
+    await fetchScenarios();
+
+    if (wasSelected && !selectedScenario && allScenariosList.length === 0) {
+      if (playerTitle) playerTitle.textContent = "영상 미리보기";
+      if (playerFlowSubtitle) playerFlowSubtitle.textContent = "좌측 라이브러리에서 시나리오를 선택해주세요.";
+      if (playerMeta) playerMeta.textContent = "시나리오를 선택해주세요";
+      if (playerStatusBadges) playerStatusBadges.innerHTML = "";
+      if (videoPlayer) {
+        videoPlayer.style.display = "none";
+        videoPlayer.src = "";
+      }
+      if (videoEmpty) videoEmpty.style.display = "flex";
+    }
+  } catch (err) {
+    alert(`❌ 시나리오 삭제 실패: ${err.message}`);
+  }
 }
 
 function toggleMergeDrawer(forceOpen = null) {
@@ -960,8 +1068,23 @@ async function selectScenario(slug, preferMode = null) {
       if (hasTts) {
         badges.push('<span class="status-tag status-tag-tts">🎙️ AI 나레이션 포함</span>');
       }
+      if (
+        activeRenderTask &&
+        (activeRenderTask.status === "running" || activeRenderTask.status === "queued") &&
+        activeRenderTask.slug === slug
+      ) {
+        badges.push(
+          `<span class="status-tag status-tag-rendering" id="player-live-render-badge">⏳ 렌더링 ${
+            activeRenderTask.progress || 0
+          }% (${activeRenderTask.fps || 30}fps)</span>`
+        );
+      } else if (Array.isArray(renderQueueList) && renderQueueList.some((q) => q && q.slug === slug)) {
+        badges.push('<span class="status-tag status-tag-queued" id="player-live-render-badge">🕒 렌더링 대기 중</span>');
+      }
       playerStatusBadges.innerHTML = badges.join("");
     }
+
+    updateRenderUI();
 
     // Render Korean Flow Subtitle
     if (playerFlowSubtitle) {
@@ -3995,7 +4118,7 @@ async function handleRunPipeline() {
       }
     }
 
-// 12-2. Run Video Render (Remotion Composite)
+// 12-2. Run Video Render (Scenario-Isolated Background Remotion Render)
 async function handleRenderVideo(targetSlug = null) {
       const slug = targetSlug || slugInput.value.trim() || currentSlug || selectedScenario;
       if (!slug) {
@@ -4006,33 +4129,181 @@ async function handleRenderVideo(targetSlug = null) {
       // Pre-check scenario details
       const details = scenarioDetailsCache[slug];
       if (details && !details.hasVideo) {
-        alert(`'${slug}' 시나리오의 원본 녹화 비디오가 없습니다.\n먼저 [원클릭 녹화 & 제작]을 실행하여 녹화를 완료해주세요.`);
+        alert(`'${slug}' 시나리오의 원본 녹화 비디오가 없습니다.\n먼저 [브라우저 녹화 실행] 또는 [즉시 재녹화]로 녹화를 완료해주세요.`);
         return;
       }
 
-      switchTab("tab-terminal");
-      const prevLive = terminalOutput.querySelector(".render-live-progress");
-      if (prevLive) prevLive.classList.remove("render-live-progress");
-      appendTerminalLog(`🎞️ '${slug}' 최종 MP4 렌더링(비디오 추출) 프로세스 시작 요청 중...`, "system-line");
+      const fps = renderFpsSelect && renderFpsSelect.value === "60" ? 60 : 30;
+      renderDockDismissedTaskId = null;
 
       try {
         const res = await fetch("/api/render/start", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ slug }),
+          body: JSON.stringify({ slug, fps }),
         });
 
         const data = await res.json();
         if (!data.success) {
-          throw new Error(data.error);
+          throw new Error(data.error || "렌더링 요청 실패");
         }
-        terminalStatusText.textContent = `렌더링 중 (${slug})`;
+
+        if (data.task && (data.task.status === "running" || !activeRenderTask)) {
+          activeRenderTask = data.task;
+        }
+        if (Array.isArray(data.queue)) {
+          renderQueueList = data.queue;
+        }
+        updateRenderUI(true);
       } catch (err) {
-        appendTerminalLog(`❌ 비디오 렌더링 시작 실패: ${err.message}`, "log-error");
+        alert(`❌ 백그라운드 렌더링 시작 실패: ${err.message}`);
       }
     }
 
-// 13. SSE for Terminal Logs
+async function handleStopRender(slug = null) {
+      try {
+        const res = await fetch("/api/render/stop", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(slug ? { slug } : {}),
+        });
+        const data = await res.json();
+        activeRenderTask = data.task || null;
+        renderQueueList = Array.isArray(data.queue) ? data.queue : [];
+        updateRenderUI(true);
+      } catch (err) {
+        console.error("Failed to stop background render:", err);
+      }
+    }
+
+function updateRenderUI(forceRebuildCards = false) {
+      const isRunning =
+        activeRenderTask && (activeRenderTask.status === "running" || activeRenderTask.status === "queued");
+
+      if (btnPlayerRender) {
+        if (isRunning && selectedScenario && activeRenderTask.slug === selectedScenario) {
+          const pct = Number(activeRenderTask.progress || 0);
+          btnPlayerRender.textContent = `⏳ 렌더링 중 (${pct}%)`;
+          btnPlayerRender.disabled = true;
+        } else if (
+          selectedScenario &&
+          Array.isArray(renderQueueList) &&
+          renderQueueList.some((q) => q && q.slug === selectedScenario)
+        ) {
+          btnPlayerRender.textContent = "🕒 렌더링 대기열 등록됨";
+          btnPlayerRender.disabled = true;
+        } else if (isRunning) {
+          btnPlayerRender.textContent = "🎞️ 최종 MP4 렌더링 (대기열 추가)";
+          btnPlayerRender.disabled = false;
+        } else {
+          btnPlayerRender.textContent = "🎞️ 최종 MP4 렌더링";
+          btnPlayerRender.disabled = false;
+        }
+      }
+
+      if (forceRebuildCards) {
+        renderScenarioList();
+      } else if (isRunning && activeRenderTask.slug) {
+        const cardBadge = document.querySelector(
+          `.status-tag[data-render-badge="${CSS.escape(activeRenderTask.slug)}"]`
+        );
+        if (cardBadge) {
+          cardBadge.textContent = `⏳ 렌더링 ${activeRenderTask.progress || 0}%`;
+        }
+      }
+
+      const playerLiveBadge = document.getElementById("player-live-render-badge");
+      if (playerLiveBadge && isRunning && activeRenderTask.slug === selectedScenario) {
+        playerLiveBadge.textContent = `⏳ 렌더링 ${activeRenderTask.progress || 0}% (${
+          activeRenderTask.fps || 30
+        }fps)`;
+      }
+
+      if (!backgroundRenderDock) return;
+
+      if (isRunning) {
+        backgroundRenderDock.classList.remove("hidden", "dock-completed", "dock-failed");
+        const pct = Math.min(100, Math.max(0, Number(activeRenderTask.progress || 0)));
+        if (renderDockTitle) renderDockTitle.textContent = "백그라운드 렌더링 진행 중";
+        if (renderDockSlug) renderDockSlug.textContent = activeRenderTask.slug || "-";
+        if (renderDockFps) renderDockFps.textContent = `${activeRenderTask.fps || 30}fps`;
+        if (renderDockQueue) {
+          const qLen = Array.isArray(renderQueueList) ? renderQueueList.length : 0;
+          renderDockQueue.textContent = `대기 ${qLen}`;
+          renderDockQueue.classList.toggle("hidden", qLen === 0);
+        }
+        if (renderDockProgressFill) {
+          renderDockProgressFill.style.width = `${pct}%`;
+        }
+        if (renderDockDetail) {
+          const framesText =
+            activeRenderTask.totalFrames > 0
+              ? `${activeRenderTask.renderedFrames || 0}/${activeRenderTask.totalFrames}f`
+              : "번들 준비 중";
+          renderDockDetail.textContent = `${pct}% (${framesText}) · 다른 시나리오 녹화/편집 가능`;
+        }
+        if (btnStopRenderDock) btnStopRenderDock.classList.remove("hidden");
+        if (btnOpenRenderedDock) btnOpenRenderedDock.classList.add("hidden");
+        if (btnDownloadRenderDock) btnDownloadRenderDock.classList.add("hidden");
+        if (btnCloseRenderDock) btnCloseRenderDock.classList.add("hidden");
+        return;
+      }
+
+      if (lastCompletedRenderTask && renderDockDismissedTaskId !== lastCompletedRenderTask.id) {
+        const doneTask = lastCompletedRenderTask;
+        backgroundRenderDock.classList.remove("hidden");
+        if (renderDockSlug) renderDockSlug.textContent = doneTask.slug || "-";
+        if (renderDockFps) renderDockFps.textContent = `${doneTask.fps || 30}fps`;
+        if (renderDockQueue) renderDockQueue.classList.add("hidden");
+        if (btnStopRenderDock) btnStopRenderDock.classList.add("hidden");
+        if (btnCloseRenderDock) btnCloseRenderDock.classList.remove("hidden");
+
+        if (doneTask.status === "completed") {
+          backgroundRenderDock.classList.add("dock-completed");
+          backgroundRenderDock.classList.remove("dock-failed");
+          if (renderDockTitle) renderDockTitle.textContent = "✅ 최종 MP4 렌더링 완료";
+          if (renderDockProgressFill) renderDockProgressFill.style.width = "100%";
+          const elapsedSec =
+            doneTask.endTime && doneTask.startTime
+              ? ((doneTask.endTime - doneTask.startTime) / 1000).toFixed(1)
+              : null;
+          if (renderDockDetail) {
+            renderDockDetail.textContent = elapsedSec
+              ? `'${doneTask.slug}' 합성 완료 (${elapsedSec}초 소요)`
+              : `'${doneTask.slug}' 합성 완료`;
+          }
+          if (btnOpenRenderedDock) {
+            btnOpenRenderedDock.classList.remove("hidden");
+            btnOpenRenderedDock.dataset.slug = doneTask.slug;
+          }
+          if (btnDownloadRenderDock) {
+            btnDownloadRenderDock.classList.remove("hidden");
+            btnDownloadRenderDock.href = `/api/rendered-video/${doneTask.slug}?download=1`;
+            btnDownloadRenderDock.download = `${doneTask.slug}-final.mp4`;
+          }
+        } else {
+          backgroundRenderDock.classList.add("dock-failed");
+          backgroundRenderDock.classList.remove("dock-completed");
+          if (renderDockTitle) {
+            renderDockTitle.textContent =
+              doneTask.status === "stopped" ? "⏹️ 백그라운드 렌더링 취소됨" : "❌ 백그라운드 렌더링 실패";
+          }
+          if (renderDockDetail) {
+            renderDockDetail.textContent =
+              doneTask.status === "stopped"
+                ? `'${doneTask.slug}' 렌더링이 취소되었습니다.`
+                : `'${doneTask.slug}' 렌더링 중 오류가 발생했습니다.`;
+          }
+          if (btnOpenRenderedDock) btnOpenRenderedDock.classList.add("hidden");
+          if (btnDownloadRenderDock) btnDownloadRenderDock.classList.add("hidden");
+        }
+        return;
+      }
+
+      backgroundRenderDock.classList.add("hidden");
+    }
+
+// 13. SSE for Terminal Logs & Isolated Background Render Events
 function initSSE() {
       if (sseSource) sseSource.close();
       sseSource = new EventSource("/api/record/stream");
@@ -4040,43 +4311,79 @@ function initSSE() {
       sseSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          if (data.type === "log") {
-            const isProgress =
-              data.isProgress === true ||
-              data.line.includes("비디오 프레임 렌더링:") ||
-              data.line.includes("렌더링 진행:") ||
-              (data.line.includes("frames)") && data.line.includes("%"));
-
-            if (isProgress) {
-              let liveLine = terminalOutput.querySelector(".render-live-progress");
-              if (!liveLine) {
-                liveLine = document.createElement("div");
-                liveLine.className = "terminal-line log-sync render-live-progress";
-                terminalOutput.appendChild(liveLine);
+          if (data.type === "render-snapshot") {
+            activeRenderTask = data.task || null;
+            renderQueueList = Array.isArray(data.queue) ? data.queue : [];
+            updateRenderUI(true);
+            return;
+          }
+          if (data.type === "render-progress" || data.type === "render-log") {
+            if (data.task) {
+              activeRenderTask = data.task;
+            } else if (activeRenderTask && (!data.slug || activeRenderTask.slug === data.slug)) {
+              if (typeof data.percent === "number") activeRenderTask.progress = data.percent;
+              if (typeof data.renderedFrames === "number") activeRenderTask.renderedFrames = data.renderedFrames;
+              if (typeof data.totalFrames === "number") activeRenderTask.totalFrames = data.totalFrames;
+            }
+            if (Array.isArray(data.queue)) {
+              renderQueueList = data.queue;
+            }
+            updateRenderUI(false);
+            return;
+          }
+          if (data.type === "render-status") {
+            const rTask = data.task;
+            renderQueueList = Array.isArray(data.queue) ? data.queue : [];
+            if (rTask && (rTask.status === "running" || rTask.status === "queued")) {
+              activeRenderTask = rTask;
+              updateRenderUI(true);
+            } else if (rTask) {
+              lastCompletedRenderTask = rTask;
+              if (activeRenderTask && activeRenderTask.id === rTask.id) {
+                activeRenderTask = null;
               }
-              liveLine.textContent = data.line;
-              terminalOutput.scrollTop = terminalOutput.scrollHeight;
-            } else {
-              // If completion or failure, finalize live progress class
-              if (data.line.includes("완료") || data.line.includes("실패") || data.line.includes("중단")) {
-                const liveLine = terminalOutput.querySelector(".render-live-progress");
-                if (liveLine) {
-                  liveLine.classList.remove("render-live-progress");
+              if (rTask.status === "completed") {
+                delete scenarioDetailsCache[rTask.slug];
+                fetchScenarios();
+                fetchStatus();
+                // If the user is currently viewing this exact scenario in Studio and not playing raw video, refresh its rendered badge & download button without switching tabs
+                if (selectedScenario === rTask.slug) {
+                  const isUserPlaying = videoPlayer && !videoPlayer.paused;
+                  if (!isUserPlaying) {
+                    selectScenario(rTask.slug, "rendered");
+                  } else {
+                    fetch(`/api/render/info/${rTask.slug}`)
+                      .then((r) => (r.ok ? r.json() : null))
+                      .then((rInfo) => {
+                        if (rInfo && rInfo.exists && btnDownloadVideo) {
+                          btnDownloadVideo.classList.remove("hidden");
+                          btnDownloadVideo.href = rInfo.downloadUrl;
+                          btnDownloadVideo.download = `${rTask.slug}-final.mp4`;
+                          const sizeMb = ((rInfo.fileSizeBytes || 0) / (1024 * 1024)).toFixed(1);
+                          btnDownloadVideo.innerHTML = `💾 최종 MP4 다운로드 <small>(${sizeMb}MB)</small>`;
+                        }
+                      })
+                      .catch(() => {});
+                  }
                 }
               }
-
-              let lineClass = "";
-              if (data.line.includes("[ERR]") || data.line.includes("오류") || data.line.includes("FAIL")) {
-                lineClass = "log-error";
-              } else if (data.line.includes("완료") || data.line.includes("SUCCESS")) {
-                lineClass = "log-success";
-              } else if (data.line.includes("[Sync]") || data.line.includes("보정")) {
-                lineClass = "log-sync";
-              } else if (data.line.includes("] click:") || data.line.includes("] type:")) {
-                lineClass = "log-step";
-              }
-              appendTerminalLog(data.line, lineClass);
+              updateRenderUI(true);
             }
+            return;
+          }
+
+          if (data.type === "log") {
+            let lineClass = "";
+            if (data.line.includes("[ERR]") || data.line.includes("오류") || data.line.includes("FAIL")) {
+              lineClass = "log-error";
+            } else if (data.line.includes("완료") || data.line.includes("SUCCESS")) {
+              lineClass = "log-success";
+            } else if (data.line.includes("[Sync]") || data.line.includes("보정")) {
+              lineClass = "log-sync";
+            } else if (data.line.includes("] click:") || data.line.includes("] type:")) {
+              lineClass = "log-step";
+            }
+            appendTerminalLog(data.line, lineClass);
 
             if (data.line.includes("[Enter] 키를 눌러주세요") || data.line.includes("로그인을 완료해 주세요")) {
               if (terminalLoginBanner) terminalLoginBanner.style.display = "flex";
@@ -4092,23 +4399,21 @@ function initSSE() {
                 }
               });
               if (data.task.status === "running") {
-                const isRender = data.task.id && data.task.id.startsWith("render-");
-                terminalStatusText.textContent = `${isRender ? "렌더링 중" : "실행 중"} (${data.task.slug})`;
+                terminalStatusText.textContent = `실행 중 (${data.task.slug})`;
               }
             }
           } else if (data.type === "status") {
-            const isRender = data.task.id && data.task.id.startsWith("render-");
             if (data.task.status === "completed") {
-              terminalStatusText.textContent = isRender ? "렌더링 완료" : "녹화 완료";
+              terminalStatusText.textContent = "녹화 완료";
               if (terminalLoginBanner) terminalLoginBanner.style.display = "none";
               fetchScenarios();
               fetchStatus();
               setTimeout(() => {
-                selectScenario(data.task.slug, isRender ? "rendered" : null);
+                selectScenario(data.task.slug, null);
                 switchTab("tab-scenarios");
               }, 1500);
             } else if (data.task.status === "failed") {
-              terminalStatusText.textContent = isRender ? "렌더링 실패" : "녹화 실패";
+              terminalStatusText.textContent = "녹화 실패";
               if (terminalLoginBanner) terminalLoginBanner.style.display = "none";
             } else if (data.task.status === "stopped") {
               terminalStatusText.textContent = "작업 중단됨";
@@ -4161,6 +4466,26 @@ function bindEvents() {
       }
       if (btnPlayerRender) {
         btnPlayerRender.addEventListener("click", () => handleRenderVideo(selectedScenario));
+      }
+      if (btnStopRenderDock) {
+        btnStopRenderDock.addEventListener("click", () => handleStopRender());
+      }
+      if (btnCloseRenderDock) {
+        btnCloseRenderDock.addEventListener("click", () => {
+          if (lastCompletedRenderTask) {
+            renderDockDismissedTaskId = lastCompletedRenderTask.id;
+          }
+          if (backgroundRenderDock) backgroundRenderDock.classList.add("hidden");
+        });
+      }
+      if (btnOpenRenderedDock) {
+        btnOpenRenderedDock.addEventListener("click", () => {
+          const targetSlug = btnOpenRenderedDock.dataset.slug || lastCompletedRenderTask?.slug;
+          if (targetSlug) {
+            switchTab("tab-scenarios");
+            selectScenario(targetSlug, "rendered");
+          }
+        });
       }
       if (btnModeRaw) {
         btnModeRaw.addEventListener("click", () => setVideoMode("raw"));

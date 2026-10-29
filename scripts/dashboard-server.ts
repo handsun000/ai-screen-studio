@@ -12,6 +12,7 @@ import {
   listScenarios,
   getScenarioDetails,
   saveBrowsePlan,
+  deleteScenario,
   setActiveSlug,
   getActiveSlug,
 } from "../src/services/scenarioManager";
@@ -204,7 +205,7 @@ app.get("/api/scenarios", (_req: Request, res: Response) => {
   }
 });
 
-// 3. Scenario Details API
+// 3. Scenario Details & Delete API
 app.get("/api/scenarios/:slug", (req: Request, res: Response) => {
   try {
     const slug = req.params.slug as string;
@@ -212,6 +213,30 @@ app.get("/api/scenarios/:slug", (req: Request, res: Response) => {
     res.json({ ...details, videoEditStatus: getVideoEditStatus(slug) });
   } catch (err: any) {
     res.status(404).json({ error: err.message });
+  }
+});
+
+app.delete("/api/scenarios/:slug", (req: Request, res: Response) => {
+  try {
+    const slug = (req.params.slug as string || "").trim();
+    if (!slug) {
+      res.status(400).json({ error: "삭제할 시나리오 ID가 필요합니다." });
+      return;
+    }
+
+    const activeRecord = recordRunner.getCurrentTask();
+    if (activeRecord && activeRecord.status === "running" && activeRecord.slug === slug) {
+      res.status(400).json({ error: `현재 '${slug}' 시나리오가 녹화 실행 중입니다. 먼저 녹화를 중단한 뒤 삭제해주세요.` });
+      return;
+    }
+
+    // If this scenario is currently rendering or queued in background, cancel its render first
+    renderRunner.stopCurrentTask(slug);
+
+    const result = deleteScenario(slug);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || "시나리오 삭제 실패" });
   }
 });
 
@@ -418,37 +443,43 @@ app.post("/api/scenarios/record", (req: Request, res: Response) => {
   }
 });
 
-// Stop current task (record or render)
+// Stop current recording task (isolated from background rendering)
 app.post("/api/scenarios/stop", (_req: Request, res: Response) => {
   const recordStopped = recordRunner.stopCurrentTask();
-  const renderStopped = renderRunner.stopCurrentTask();
-  res.json({ success: recordStopped || renderStopped });
+  res.json({ success: recordStopped });
 });
 
-// Render Video with Remotion APIs
+// Render Video with Remotion APIs (Scenario-Isolated Background Queue)
 app.post("/api/render/start", (req: Request, res: Response) => {
   try {
-    const { slug } = req.body;
+    const { slug, fps } = req.body || {};
     if (!slug) {
       res.status(400).json({ error: "slug가 필요합니다." });
       return;
     }
 
-    const task = renderRunner.startRender(slug);
-    res.json({ success: true, task });
+    const targetFps: 30 | 60 = Number(fps) === 60 ? 60 : 30;
+    const task = renderRunner.startRender(slug, { fps: targetFps });
+    res.json({ success: true, task, queue: renderRunner.getQueue() });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
 });
 
-app.post("/api/render/stop", (_req: Request, res: Response) => {
-  const stopped = renderRunner.stopCurrentTask();
-  res.json({ success: stopped });
+app.post("/api/render/stop", (req: Request, res: Response) => {
+  const { slug } = req.body || {};
+  const stopped = renderRunner.stopCurrentTask(typeof slug === "string" ? slug : undefined);
+  res.json({
+    success: stopped,
+    task: renderRunner.getCurrentTask(),
+    queue: renderRunner.getQueue(),
+  });
 });
 
 app.get("/api/render/status", (_req: Request, res: Response) => {
   const task = renderRunner.getCurrentTask();
-  res.json({ task });
+  const queue = renderRunner.getQueue();
+  res.json({ task, queue });
 });
 
 app.get("/api/render/info/:slug", (req: Request, res: Response) => {
@@ -457,9 +488,9 @@ app.get("/api/render/info/:slug", (req: Request, res: Response) => {
   res.json(info);
 });
 
-// Get current task status
+// Get current recording task status
 app.get("/api/record/status", (_req: Request, res: Response) => {
-  const task = recordRunner.getCurrentTask() || renderRunner.getCurrentTask();
+  const task = recordRunner.getCurrentTask();
   res.json({ task });
 });
 
@@ -481,37 +512,90 @@ app.post("/api/record/input", (req: Request, res: Response) => {
   }
 });
 
-// SSE Stream for Live Recording & Rendering Logs
+// SSE Stream for Live Recording & Isolated Background Rendering Events
 app.get("/api/record/stream", (req: Request, res: Response) => {
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
   res.flushHeaders();
 
-  // Send current task snapshot first
-  const currentTask = recordRunner.getCurrentTask() || renderRunner.getCurrentTask();
-  if (currentTask) {
-    res.write(`data: ${JSON.stringify({ type: "snapshot", task: currentTask })}\n\n`);
+  // Send current recording task snapshot first
+  const currentRecordTask = recordRunner.getCurrentTask();
+  if (currentRecordTask) {
+    res.write(`data: ${JSON.stringify({ type: "snapshot", task: currentRecordTask })}\n\n`);
   }
 
-  const logHandler = (data: { taskId: string; line: string }) => {
+  // Send current background render snapshot separately
+  const currentRenderTask = renderRunner.getCurrentTask();
+  const currentRenderQueue = renderRunner.getQueue();
+  if (currentRenderTask || currentRenderQueue.length > 0) {
+    res.write(
+      `data: ${JSON.stringify({
+        type: "render-snapshot",
+        task: currentRenderTask,
+        queue: currentRenderQueue,
+      })}\n\n`
+    );
+  }
+
+  const recordLogHandler = (data: { taskId: string; line: string }) => {
     res.write(`data: ${JSON.stringify({ type: "log", ...data })}\n\n`);
   };
 
-  const statusHandler = (task: any) => {
+  const recordStatusHandler = (task: any) => {
     res.write(`data: ${JSON.stringify({ type: "status", task })}\n\n`);
   };
 
-  recordRunner.on("log", logHandler);
-  recordRunner.on("status", statusHandler);
-  renderRunner.on("log", logHandler);
-  renderRunner.on("status", statusHandler);
+  const renderLogHandler = (data: {
+    taskId: string;
+    slug?: string;
+    line: string;
+    isProgress?: boolean;
+    percent?: number;
+    renderedFrames?: number;
+    totalFrames?: number;
+  }) => {
+    if (data.isProgress) {
+      res.write(
+        `data: ${JSON.stringify({
+          type: "render-progress",
+          ...data,
+          task: renderRunner.getCurrentTask(),
+          queue: renderRunner.getQueue(),
+        })}\n\n`
+      );
+    } else {
+      res.write(
+        `data: ${JSON.stringify({
+          type: "render-log",
+          ...data,
+          task: renderRunner.getCurrentTask(),
+          queue: renderRunner.getQueue(),
+        })}\n\n`
+      );
+    }
+  };
+
+  const renderStatusHandler = (task: any) => {
+    res.write(
+      `data: ${JSON.stringify({
+        type: "render-status",
+        task,
+        queue: renderRunner.getQueue(),
+      })}\n\n`
+    );
+  };
+
+  recordRunner.on("log", recordLogHandler);
+  recordRunner.on("status", recordStatusHandler);
+  renderRunner.on("log", renderLogHandler);
+  renderRunner.on("status", renderStatusHandler);
 
   req.on("close", () => {
-    recordRunner.off("log", logHandler);
-    recordRunner.off("status", statusHandler);
-    renderRunner.off("log", logHandler);
-    renderRunner.off("status", statusHandler);
+    recordRunner.off("log", recordLogHandler);
+    recordRunner.off("status", recordStatusHandler);
+    renderRunner.off("log", renderLogHandler);
+    renderRunner.off("status", renderStatusHandler);
   });
 });
 

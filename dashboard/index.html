@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261027_rightclick1">
+  <link rel="stylesheet" href="style.css?v=20261028_del_scenario1">
 </head>
 <body>
   <div class="app-container">
@@ -273,9 +273,15 @@
                 <button class="btn btn-sm btn-secondary" id="btn-direct-rerecord" title="이 시나리오를 현재 설정으로 즉시 다시 녹화합니다">
                   🎥 즉시 재녹화
                 </button>
-                <button class="btn btn-sm btn-success btn-glow" id="btn-player-render" title="마우스 커서와 줌, 나레이션이 합성된 최종 MP4 비디오를 렌더링합니다">
-                  🎞️ 최종 MP4 렌더링
-                </button>
+                <div class="render-action-group" title="최종 MP4 렌더링 프레임 레이트(FPS) 선택 및 백그라운드 렌더링 실행">
+                  <select id="render-fps-select" class="render-fps-select" title="렌더링 프레임 레이트 선택 (기본 30fps 고속 · 60fps 고품질)">
+                    <option value="30" selected>⚡ 30fps (고속)</option>
+                    <option value="60">✨ 60fps (고품질)</option>
+                  </select>
+                  <button class="btn btn-sm btn-success btn-glow" id="btn-player-render" title="다른 시나리오 녹화·편집과 간섭 없이 백그라운드에서 최종 MP4 비디오를 렌더링합니다">
+                    🎞️ 최종 MP4 렌더링
+                  </button>
+                </div>
                 <a class="btn btn-sm btn-download hidden" id="btn-download-video" download title="완성된 최종 MP4 비디오 다운로드">
                   💾 최종 MP4 다운로드
                 </a>
@@ -578,6 +584,39 @@
     </div>
   </div>
 
-  <script src="app.js?v=20261027_rightclick1"></script>
+  <!-- Non-Intrusive Background Render Status Dock (Isolated from Recording/Editing) -->
+  <div class="background-render-dock hidden" id="background-render-dock" role="status" aria-live="polite">
+    <div class="render-dock-header">
+      <div class="render-dock-title-wrap">
+        <span class="render-dock-spinner" id="render-dock-spinner"></span>
+        <span class="render-dock-title" id="render-dock-title">백그라운드 렌더링 진행 중</span>
+      </div>
+      <div class="render-dock-badges">
+        <span class="render-dock-chip" id="render-dock-slug">-</span>
+        <span class="render-dock-fps-badge" id="render-dock-fps">30fps</span>
+        <span class="render-dock-queue-badge hidden" id="render-dock-queue">대기 0</span>
+        <button type="button" class="render-dock-close hidden" id="btn-close-render-dock" title="알림 닫기">✕</button>
+      </div>
+    </div>
+    <div class="render-dock-progress-track" id="render-dock-progress-track">
+      <div class="render-dock-progress-fill" id="render-dock-progress-fill" style="width: 0%;"></div>
+    </div>
+    <div class="render-dock-footer">
+      <span class="render-dock-detail" id="render-dock-detail">준비 중... (다른 시나리오 녹화·편집 가능)</span>
+      <div class="render-dock-actions">
+        <button type="button" class="btn btn-sm btn-outline render-dock-btn" id="btn-stop-render-dock" title="현재 백그라운드 렌더링 중단">
+          ⏹️ 취소
+        </button>
+        <button type="button" class="btn btn-sm btn-primary render-dock-btn hidden" id="btn-open-rendered-dock" title="완성된 최종 MP4 영상을 플레이어에서 바로 확인합니다">
+          🎬 영상 보기
+        </button>
+        <a class="btn btn-sm btn-download render-dock-btn hidden" id="btn-download-render-dock" download title="완성된 최종 MP4 파일 다운로드">
+          💾 다운로드
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=20261028_del_scenario1"></script>
 </body>
 </html>

@@ -7698,18 +7698,6 @@ async function main() {
         }
       }
     } catch {}
-
-    // Also copy to public/recording.mp4 for Remotion preview with retry
-    const publicDest = path.resolve(__dirname, "..", "public", "recording.mp4");
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
-        fs.copyFileSync(destPath, publicDest);
-        console.log(`Copied to public/recording.mp4`);
-        break;
-      } catch {
-        await new Promise((r) => setTimeout(r, 300));
-      }
-    }
   }
 
   // 🌟 Pruning & 2-Pass Clean Master Re-recording:
@@ -7771,44 +7759,7 @@ console.log(`Moments saved: ${momentsPath} (${moments.length} actions)`);
 try {
   console.log("\nCalibrating moments & building edit plan...");
   execSync(`python scripts/calibrate-moments.py ${slug} --force`, { stdio: "inherit" });
-
-  // Update Root.tsx to point to this recording
-  const rootPath = path.resolve(__dirname, "..", "src", "Root.tsx");
-  const rootContent = `import React from "react";
-import { Composition } from "remotion";
-import { ScreenDemo } from "./ScreenDemo";
-import type { EditPlan, MomentsFile } from "./types";
-
-import editPlanData from "../data/${slug}/edit-plan.json";
-import momentsData from "../data/${slug}/moments.json";
-
-const editPlan = editPlanData as EditPlan;
-const moments = momentsData as MomentsFile;
-
-export const RemotionRoot: React.FC = () => {
-  return (
-    <>
-      <Composition
-        id="ScreenDemo"
-        component={ScreenDemo as unknown as React.ComponentType<Record<string, unknown>>}
-        durationInFrames={editPlan.totalDurationFrames}
-        fps={editPlan.fps}
-        width={1920}
-        height={1080}
-        defaultProps={{
-          editPlan,
-          moments,
-          videoFileName: "recording.mp4",
-          showCursor: true,
-          showSfx: false,
-        }}
-      />
-    </>
-  );
-};
-`;
-  fs.writeFileSync(rootPath, rootContent);
-  console.log(`Updated Root.tsx -> data/${slug}/`);
+  console.log(`Scenario ready in data/${slug}/`);
   process.exit(0);
 } catch (e) {
   console.warn("Could not automatically run build-edit-plan.py:", e);

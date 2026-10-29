@@ -5,7 +5,7 @@ import { ensureSessionForSlug } from "./authManager";
 import { sanitizeBrowsePlan } from "./planSanitizer";
 
 const DATA_DIR = path.resolve(__dirname, "..", "..", "data");
-const ROOT_TSX_PATH = path.resolve(__dirname, "..", "Root.tsx");
+let currentActiveSlug = "";
 
 export interface ScenarioSummary {
   slug: string;
@@ -28,27 +28,12 @@ export interface ScenarioSummary {
 }
 
 export function getActiveSlug(): string {
-  if (!fs.existsSync(ROOT_TSX_PATH)) return "";
-  const content = fs.readFileSync(ROOT_TSX_PATH, "utf-8");
-  const match = content.match(/from\s+["']\.\.\/data\/([^/]+)\/edit-plan\.json["']/);
-  return match ? match[1] : "";
+  return currentActiveSlug;
 }
 
 export function setActiveSlug(slug: string): boolean {
-  if (!fs.existsSync(ROOT_TSX_PATH)) return false;
-  let content = fs.readFileSync(ROOT_TSX_PATH, "utf-8");
-
-  // Replace import paths
-  content = content.replace(
-    /from\s+["']\.\.\/data\/[^/]+\/edit-plan\.json["']/,
-    `from "../data/${slug}/edit-plan.json"`
-  );
-  content = content.replace(
-    /from\s+["']\.\.\/data\/[^/]+\/moments\.json["']/,
-    `from "../data/${slug}/moments.json"`
-  );
-
-  fs.writeFileSync(ROOT_TSX_PATH, content, "utf-8");
+  if (!slug) return false;
+  currentActiveSlug = slug;
   return true;
 }
 
@@ -266,4 +251,40 @@ export function saveBrowsePlan(slug: string, plan: BrowsePlan) {
   } catch {}
 
   return { success: true, path: browsePlanPath, plan: sanitized };
+}
+
+export function deleteScenario(slug: string): { success: boolean; slug: string } {
+  const cleanSlug = (slug || "").trim();
+  if (!cleanSlug || !/^[a-zA-Z0-9_-]+$/.test(cleanSlug)) {
+    throw new Error("유효하지 않은 시나리오 ID(slug)입니다.");
+  }
+
+  const rootDir = path.resolve(__dirname, "..", "..");
+  const dirPath = path.join(DATA_DIR, cleanSlug);
+  const renderedVideoPath = path.join(rootDir, "output", `${cleanSlug}.mp4`);
+  const publicNarrationDir = path.join(rootDir, "public", "narration", cleanSlug);
+
+  if (!fs.existsSync(dirPath) && !fs.existsSync(renderedVideoPath)) {
+    throw new Error(`삭제할 시나리오('${cleanSlug}')가 존재하지 않습니다.`);
+  }
+
+  if (fs.existsSync(dirPath)) {
+    fs.rmSync(dirPath, { recursive: true, force: true });
+  }
+  if (fs.existsSync(renderedVideoPath)) {
+    try {
+      fs.unlinkSync(renderedVideoPath);
+    } catch {}
+  }
+  if (fs.existsSync(publicNarrationDir)) {
+    try {
+      fs.rmSync(publicNarrationDir, { recursive: true, force: true });
+    } catch {}
+  }
+
+  if (currentActiveSlug === cleanSlug) {
+    currentActiveSlug = "";
+  }
+
+  return { success: true, slug: cleanSlug };
 }

@@ -1659,6 +1659,18 @@ input[type="checkbox"] {
   color: var(--neutral);
 }
 
+.status-tag-rendering {
+  background: var(--run-soft);
+  color: var(--run);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  animation: pulse 1.5s infinite;
+}
+
+.status-tag-queued {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
 .scenario-flow-summary {
   font-size: 12px;
   color: var(--text-2);
@@ -1707,7 +1719,8 @@ input[type="checkbox"] {
 }
 
 .btn-card-edit,
-.btn-card-merge {
+.btn-card-merge,
+.btn-card-delete {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1725,10 +1738,21 @@ input[type="checkbox"] {
   cursor: pointer;
 }
 
+.btn-card-delete {
+  padding: 0 6px;
+  color: var(--text-3);
+}
+
 .btn-card-edit:hover,
 .btn-card-merge:hover {
   background: var(--subtle-2);
   color: var(--text);
+}
+
+.btn-card-delete:hover {
+  background: var(--fail-soft);
+  border-color: var(--fail);
+  color: var(--fail);
 }
 
 .btn-card-merge.in-queue {
@@ -1806,6 +1830,37 @@ input[type="checkbox"] {
   flex-wrap: wrap;
   gap: var(--s2);
   align-items: center;
+}
+
+.render-action-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--subtle);
+  padding: 2px;
+  border-radius: var(--r-ctl);
+  border: 1px solid var(--stroke);
+}
+
+.render-fps-select {
+  height: 28px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--control);
+  border: 1px solid var(--control-stroke);
+  border-radius: calc(var(--r-ctl) - 1px);
+  cursor: pointer;
+  outline: none;
+}
+
+.render-fps-select:hover {
+  background: var(--subtle-2);
+}
+
+.render-fps-select:focus {
+  border-color: var(--accent);
 }
 
 /* ── Video Stage + Timeline Dock ─────────────────────── */
@@ -2982,4 +3037,179 @@ input[type="checkbox"] {
 @keyframes fluentDialogScaleIn {
   from { opacity: 0; transform: scale(0.95) translateY(4px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── Non-Intrusive Background Render Status Dock ── */
+.background-render-dock {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 9500;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--stroke-strong);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-dialog, 0 10px 30px rgba(0, 0, 0, 0.22));
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: fluentDialogScaleIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.background-render-dock.dock-completed {
+  border-color: var(--ok);
+}
+
+.background-render-dock.dock-failed {
+  border-color: var(--fail);
+}
+
+.render-dock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.render-dock-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.render-dock-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--accent-soft);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+.background-render-dock.dock-completed .render-dock-spinner,
+.background-render-dock.dock-failed .render-dock-spinner {
+  display: none;
+}
+
+.render-dock-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.render-dock-badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.render-dock-chip {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: 1px 7px;
+  border-radius: 999px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.render-dock-fps-badge {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  background: var(--subtle-2);
+  color: var(--text-2);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.render-dock-queue-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  background: var(--warn-soft);
+  color: var(--warn);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.render-dock-close {
+  background: transparent;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  font-size: 13px;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+}
+
+.render-dock-close:hover {
+  background: var(--subtle-2);
+  color: var(--text);
+}
+
+.render-dock-progress-track {
+  width: 100%;
+  height: 7px;
+  background: var(--subtle-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.render-dock-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--ok));
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+.background-render-dock.dock-failed .render-dock-progress-fill {
+  background: var(--fail);
+}
+
+.render-dock-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.render-dock-detail {
+  font-size: 11.5px;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.render-dock-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.render-dock-btn {
+  height: 24px !important;
+  padding: 0 8px !important;
+  font-size: 11px !important;
 }

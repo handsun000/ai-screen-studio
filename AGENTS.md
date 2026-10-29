@@ -250,14 +250,21 @@ npx tsc --noEmit
       - 시나리오 생성, 실시간 자가 치유, AI 대본 생성 시 Gemini 토큰 사용량(`usageMetadata`)과 예상 비용을 집계하여 상단 헤더 배지 및 상세 내역 모달로 실시간 확인할 수 있도록 구현했습니다.
     - **Electron 데스크톱 앱 실행 환경 및 커스텀 아이콘 적용 (`scripts/desktop-main.cjs`, `assets/icon.*`)**:
       - 바탕화면 바로가기 및 독립 데스크톱 창으로 스튜디오를 실행할 수 있도록 구성했습니다.
+17. **시나리오별 완전 격리 백그라운드 렌더링, 비간섭 대시보드 UI/SSE 분리 및 30fps(기본)/60fps 고속 렌더링 최적화 (`src/Root.tsx`, `src/services/renderRunner.ts`, `scripts/record.ts`, `scripts/dashboard-server.ts`, `dashboard/`)**:
+    - **공용 `public/recording.mp4` 및 `src/Root.tsx` 덮어쓰기 완전 제거**:
+      - `src/Root.tsx`: 정적 JSON import를 제거하고 Remotion v4 `calculateMetadata={({ props }) => ...}`를 도입하여 `--props`로 전달된 `editPlan`, `moments`, `videoFileName`만으로 `fps`와 `durationInFrames`를 동적 결정하도록 변경했습니다.
+      - `scripts/record.ts`, `scenarioManager.ts`, `videoEditorService.ts`: 녹화/컷편집 시 `src/Root.tsx`나 `public/<slug>-recording.mp4`를 덮어쓰던 로직을 모두 제거하고, `public/` 내 64MB의 레거시 중복 MP4 파일들을 정리했습니다.
+      - `src/services/renderRunner.ts`: 렌더링 작업마다 고유 스테이징 경로(`renders/<slug>-<taskId>/recording.mp4`)에 NTFS 하드링크(`fs.linkSync`)로 격리 연결하고 완료 즉시 자동 정리하며, 다중 렌더링 요청 시 백그라운드 대기열(`queue`)로 순차 처리합니다.
+    - **대시보드 렌더링/녹화 완전 분리 및 비간섭 플로팅 진행 도크 (`scripts/dashboard-server.ts`, `dashboard/index.html`, `style.css`, `app.js`)**:
+      - 녹화 중단(`POST /api/scenarios/stop`)과 렌더링 중단(`POST /api/render/stop`) API 및 SSE 이벤트(`render-snapshot`, `render-progress`, `render-status`)를 분리하여, 렌더링 시작/완료 시 강제로 탭을 전환(`switchTab`)하거나 현재 편집 중인 시나리오(`selectedScenario`)를 가로채지 않도록 개선했습니다.
+      - 우측 하단 플로팅 백그라운드 렌더링 도크(`#background-render-dock`)와 시나리오 카드 실시간 배지(`⏳ 렌더링 XX%`, `🕒 대기 중`)를 통해 다른 시나리오 스포이드 캡처·녹화·대본/타임라인 편집을 동시에 병행할 수 있습니다.
+    - **Remotion 렌더링 속도 대폭 단축 및 30fps(기본) / 60fps 선택 옵션**:
+      - `@remotion/bundler` 기반 영구 번들 캐시(`node_modules/.cache/screen-demo-remotion-bundle`, `src/` 수정 시각 자동 감지)를 도입해 두 번째 렌더링부터 Webpack 번들링 시간을 `0초`로 단축했습니다.
+      - 대시보드에서 **`⚡ 30fps (고속, 기본값)` / `✨ 60fps (고품질)`** 선택 옵션을 제공하며, `scaleEditPlanForFps()`를 통해 60fps 원본 `editPlan`의 세그먼트·타임리전·총 프레임을 목표 FPS에 맞게 정밀 스케일링하고 멀티코어(`--concurrency`) + `--image-format=jpeg` + `--x264-preset=veryfast` 가속을 적용했습니다.
+    - **시나리오 라이브러리 원클릭 삭제(`🗑️`) 기능 추가 (`src/services/scenarioManager.ts`, `scripts/dashboard-server.ts`, `dashboard/`)**:
+      - 시나리오 카드 우측 하단의 `[🗑️]` 버튼을 통해 확인 모달 후 `data/<slug>/`, `output/<slug>.mp4`, `public/narration/<slug>/`를 안전하게 일괄 삭제(`DELETE /api/scenarios/:slug`, Windows 비디오 파일 잠금 자동 해제 포함)할 수 있도록 구현했습니다.
 
-### 5.2 다음 세션에서 최우선으로 진행할 핵심 과제 (Next Session Priority)
-* **핵심 문제 의식**:
-  - 최종 MP4 렌더링(`renderRunner.ts`)이 끝날 때까지 시간이 꽤 걸리는데, 현재 구조에서는 렌더링 도중 다른 시나리오 시연(녹화)이나 작업을 병행하기가 어렵고 마냥 기다려야 해서 작업 효율이 떨어집니다.
-* **다음 세션에서 설계·구현할 해결 방안**:
-  1. **렌더링 작업과 시나리오 시연(녹화)의 완전 격리 (병렬 작업 지원)**:
-     - 현재 `renderRunner.ts`와 `scripts/record.ts`가 단일 공용 파일인 `public/recording.mp4`와 `src/Root.tsx`를 덮어쓰는 구조여서, 렌더링 중에 다른 시나리오를 녹화하면 파일 충돌이 발생합니다.
-     - 렌더링 시작 시 해당 시나리오 전용 영상 경로(예: `public/renders/<slug>/recording.mp4` 또는 시나리오별 고정 에셋)와 Remotion `--props` 주입 방식을 사용하여, **`src/Root.tsx`나 공용 `public/recording.mp4`를 건드리지 않고도 백그라운드에서 독립적으로 렌더링**되도록 분리합니다.
-     - 대시보드에서도 렌더링 진행 상태(프로그레스 바)를 일반 녹화/스포이드 콘솔과 분리하여, **렌더링이 백그라운드에서 돌아가는 동안 사용자가 다른 시나리오를 스포이드로 따거나 시연 녹화·대본 편집을 동시에 진행**할 수 있도록 개선합니다.
-  2. **Remotion 렌더링 속도 자체 단축 방안**:
-     - 매 렌더링마다 반복되는 Webpack 번들링 캐시 재사용, 멀티코어 동시 렌더링(`--concurrency`) 최적화, 하드웨어 인코딩/고속 렌더링 옵션을 적용하여 렌더링 소요 시간을 대폭 단축합니다.
+### 5.2 다음 세션 인수인계 메모 (Handoff Notes)
+* 백그라운드 격리 렌더링, 비간섭 대시보드 UI/SSE 분리, 30fps(기본)/60fps 선택 및 번들 캐시 가속, 시나리오 라이브러리 삭제(`🗑️`)까지 모두 구현·검증 완료되었습니다.
+* 만약 향후 네이티브 `<select>` 드롭다운 클릭 시 펼쳐지는 `<option>` 목록까지 녹화 영상(`recording.mp4`)에 시각적으로 찍히게 연출하고 싶다면, `scripts/record.ts`의 `selectOption` 실행 구간에서 DOM 가상 드롭다운 오버레이를 잠시 렌더링 후 선택·닫힘 처리하는 방식으로 확장할 수 있습니다.
+* 이후 세션에서는 실제 현업 매뉴얼 시나리오 제작 중 발견되는 추가 UX 개선 사항이나 신규 그룹웨어 모듈 대응 요청을 우선 처리하면 됩니다.
