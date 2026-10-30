@@ -45,6 +45,7 @@ import {
   synthesizeNarrationAudio,
 } from "../src/services/narrationService";
 import { getAiUsageSummary, resetAiUsageStore } from "../src/services/aiUsageTracker";
+import { detectAvailableClis, generateAiContent } from "../src/services/aiClient";
 
 dotenv.config({ override: true });
 
@@ -78,6 +79,10 @@ app.get("/api/status", (_req: Request, res: Response) => {
     geminiApiKeySet: !!apiKey,
     geminiApiKeyPreview: apiKey ? apiKey.substring(0, 8) + "..." : "미설정",
     geminiModel: config.geminiModel,
+    aiMode: config.aiMode,
+    aiCliProvider: config.aiCliProvider,
+    aiCliModel: config.aiCliModel,
+    availableClis: detectAvailableClis(),
     targetProjectPath: config.targetProjectPath,
     targetProjectExists: analysis.exists,
     targetBaseUrl: config.targetBaseUrl,
@@ -89,13 +94,77 @@ app.get("/api/status", (_req: Request, res: Response) => {
   });
 });
 
-// 1-B. AI Token Usage & Cost APIs
+// 1-B. AI Token Usage, Cost & Execution Mode APIs
 app.get("/api/ai-usage", (_req: Request, res: Response) => {
-  res.json(getAiUsageSummary());
+  const config = getConfig();
+  const apiKey = process.env.GEMINI_API_KEY || "";
+  res.json({
+    ...getAiUsageSummary(),
+    aiMode: config.aiMode,
+    aiCliProvider: config.aiCliProvider,
+    aiCliModel: config.aiCliModel,
+    geminiModel: config.geminiModel,
+    geminiApiKeySet: !!apiKey,
+    geminiApiKeyPreview: apiKey ? apiKey.substring(0, 8) + "..." : "미설정",
+    availableClis: detectAvailableClis(),
+  });
 });
 
 app.post("/api/ai-usage/reset", (_req: Request, res: Response) => {
   res.json(resetAiUsageStore());
+});
+
+app.post("/api/ai-mode", (req: Request, res: Response) => {
+  try {
+    const { aiMode, aiCliProvider, aiCliModel, geminiModel } = req.body || {};
+    const updated = updateConfig({
+      aiMode,
+      aiCliProvider,
+      aiCliModel,
+      geminiModel,
+    });
+    console.log(
+      `[Dashboard AI Mode] 실행 모드 변경: ${updated.aiMode.toUpperCase()} (${
+        updated.aiMode === "cli" ? `${updated.aiCliProvider}/${updated.aiCliModel}` : updated.geminiModel
+      })`
+    );
+    res.json({
+      success: true,
+      config: updated,
+      availableClis: detectAvailableClis(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/ai-mode/test", async (req: Request, res: Response) => {
+  try {
+    const { aiMode, aiCliProvider, aiCliModel } = req.body || {};
+    const startMs = Date.now();
+    const result = await generateAiContent({
+      feature: "AI 연결 테스트",
+      prompt: 'Respond with ONLY this JSON object: {"status":"ok","engine":"ready"}',
+      temperature: 0,
+      jsonMode: true,
+      forceMode: aiMode,
+      cliProviderOverride: aiCliProvider,
+      cliModelOverride: aiCliModel,
+      timeoutMs: 30_000,
+    });
+    res.json({
+      success: true,
+      elapsedMs: Date.now() - startMs,
+      mode: result.mode,
+      modelUsed: result.modelUsed,
+      responseText: result.text,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: err.message || "AI 연결 테스트 실패",
+    });
+  }
 });
 
 // Auth Session Management APIs

@@ -6,10 +6,16 @@ dotenv.config({ override: true });
 
 const ENV_FILE_PATH = path.resolve(__dirname, "..", "..", ".env");
 
+export type AiExecutionMode = "api" | "cli";
+export type AiCliProvider = "agy" | "claude" | "gemini";
+
 export interface StudioConfig {
   targetProjectPath: string;
   targetBaseUrl: string;
   geminiModel: string;
+  aiMode: AiExecutionMode;
+  aiCliProvider: AiCliProvider;
+  aiCliModel: string;
 }
 
 export const DEFAULT_GROUPWARE_PROJECTS = [
@@ -23,12 +29,26 @@ export function getDiscoveredGroupwareProjects(): string[] {
   return DEFAULT_GROUPWARE_PROJECTS.filter((p) => fs.existsSync(p));
 }
 
+function normalizeAiMode(raw?: string): AiExecutionMode {
+  return String(raw || "").trim().toLowerCase() === "cli" ? "cli" : "api";
+}
+
+function normalizeAiCliProvider(raw?: string): AiCliProvider {
+  const v = String(raw || "").trim().toLowerCase();
+  if (v === "claude") return "claude";
+  if (v === "gemini") return "gemini";
+  return "agy";
+}
+
 // In-memory runtime config, initialized from .env or defaults
 const discoveredGw = getDiscoveredGroupwareProjects();
 let currentConfig: StudioConfig = {
   targetProjectPath: process.env.TARGET_PROJECT_PATH || (discoveredGw.length > 0 ? discoveredGw[0] : ""),
   targetBaseUrl: process.env.TARGET_BASE_URL || "https://gwdev.unison.co.kr",
   geminiModel: process.env.GEMINI_MODEL || "gemini-3.8-flash",
+  aiMode: normalizeAiMode(process.env.AI_MODE),
+  aiCliProvider: normalizeAiCliProvider(process.env.AI_CLI_PROVIDER),
+  aiCliModel: (process.env.AI_CLI_MODEL || "gemini-3.8-flash-low").trim(),
 };
 
 export interface ProjectAnalysis {
@@ -58,6 +78,18 @@ export function updateConfig(newConfig: Partial<StudioConfig>): StudioConfig {
   if (newConfig.geminiModel !== undefined) {
     currentConfig.geminiModel = newConfig.geminiModel.trim();
   }
+  if (newConfig.aiMode !== undefined) {
+    currentConfig.aiMode = normalizeAiMode(newConfig.aiMode);
+    process.env.AI_MODE = currentConfig.aiMode;
+  }
+  if (newConfig.aiCliProvider !== undefined) {
+    currentConfig.aiCliProvider = normalizeAiCliProvider(newConfig.aiCliProvider);
+    process.env.AI_CLI_PROVIDER = currentConfig.aiCliProvider;
+  }
+  if (newConfig.aiCliModel !== undefined && newConfig.aiCliModel.trim()) {
+    currentConfig.aiCliModel = newConfig.aiCliModel.trim();
+    process.env.AI_CLI_MODEL = currentConfig.aiCliModel;
+  }
 
   // Update .env file to persist changes
   try {
@@ -70,6 +102,9 @@ export function updateConfig(newConfig: Partial<StudioConfig>): StudioConfig {
       TARGET_PROJECT_PATH: currentConfig.targetProjectPath,
       TARGET_BASE_URL: currentConfig.targetBaseUrl,
       GEMINI_MODEL: currentConfig.geminiModel,
+      AI_MODE: currentConfig.aiMode,
+      AI_CLI_PROVIDER: currentConfig.aiCliProvider,
+      AI_CLI_MODEL: currentConfig.aiCliModel,
     };
 
     for (const [key, val] of Object.entries(updates)) {

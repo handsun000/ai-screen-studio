@@ -6,6 +6,8 @@ import * as dotenv from "dotenv";
 import type { BrowsePlanAction, BrowsePlan } from "../types";
 import { getGroupwarePromptContext } from "./groupwareCatalog";
 import { recordAiUsage } from "./aiUsageTracker";
+import { getConfig } from "./configManager";
+import { generateAiContent, getGeminiApiKeys } from "./aiClient";
 
 dotenv.config({ override: true });
 
@@ -488,13 +490,11 @@ export async function selfHealElement(
   dataDir?: string,
   plan?: BrowsePlan
 ): Promise<SelfHealResult | null> {
-  const apiKeys = [
-    process.env.GEMINI_API_KEY,
-    process.env.GEMINI_API_KEY_ALT,
-  ].filter(Boolean) as string[];
+  const config = getConfig();
+  const apiKeys = getGeminiApiKeys();
 
-  if (apiKeys.length === 0) {
-    console.warn("  [⚠️ AI 자가 치유] GEMINI_API_KEY가 없어 자가 치유를 생략합니다.");
+  if (config.aiMode !== "cli" && apiKeys.length === 0) {
+    console.warn("  [⚠️ AI 자가 치유] GEMINI_API_KEY가 없고 CLI 모드가 아니어서 자가 치유를 생략합니다.");
     return null;
   }
 
@@ -644,63 +644,88 @@ Determine whether to:
 `;
 
   const configuredModel = process.env.GEMINI_MODEL || "gemini-3.8-flash";
-  const candidateModels = Array.from(
-    new Set([
-      configuredModel,
-      "gemini-3.8-flash",
-      "gemini-3.5-flash",
-      "gemini-flash-latest",
-    ])
-  );
+  const candidateModels =
+    config.aiMode === "cli"
+      ? [`${config.aiCliProvider}/${config.aiCliModel}`]
+      : Array.from(
+          new Set([
+            configuredModel,
+            "gemini-3.8-flash",
+            "gemini-3.5-flash",
+            "gemini-flash-latest",
+          ])
+        );
 
   console.log(
-    `  [🤖 AI 실시간 자가 치유 & 시나리오 조정] 화면 DOM 후보군 (${candidates.length}개) 및 전후 시나리오 맥락 추출 완료, AI 분석 요청 중...`
+    `  [🤖 AI 실시간 자가 치유 & 시나리오 조정] 화면 DOM 후보군 (${candidates.length}개) 및 전후 시나리오 맥락 추출 완료, AI 분석 요청 중 (${config.aiMode.toUpperCase()} 모드)...`
   );
 
   for (const model of candidateModels) {
-    for (const key of apiKeys) {
+    const keysToTry = config.aiMode === "cli" ? ["cli"] : apiKeys;
+    for (const key of keysToTry) {
       try {
-        const ai = new GoogleGenAI({ apiKey: key });
+        const aiStart = Date.now();
+        let rawText = "";
 
-        const parts: any[] = [];
-        if (screenshotBase64) {
-          parts.push({
-            inlineData: {
-              mimeType: "image/jpeg",
-              data: screenshotBase64,
+        if (config.aiMode === "cli") {
+          console.log(`  [💻 AI 실시간 자가 치유] CLI (${model}) 시나리오 진단 요청 중...`);
+          const cliRes = await generateAiContent({
+            feature: "실시간 자가 치유",
+            systemInstruction,
+            prompt: userPrompt,
+            temperature: 0.1,
+            jsonMode: true,
+            forceMode: "cli",
+            timeoutMs: 60_000,
+          });
+          rawText = cliRes.text || "";
+          console.log(
+            `  [💻 AI 실시간 자가 치유] CLI (${cliRes.modelUsed}) 응답 수신 완료 (${Date.now() - aiStart}ms)`
+          );
+        } else {
+          const ai = new GoogleGenAI({ apiKey: key });
+
+          const parts: any[] = [];
+          if (screenshotBase64) {
+            parts.push({
+              inlineData: {
+                mimeType: "image/jpeg",
+                data: screenshotBase64,
+              },
+            });
+          }
+          parts.push({ text: userPrompt });
+
+          console.log(`  [🤖 AI 실시간 자가 치유] Gemini (${model}) 멀티모달 시나리오 진단 요청 중...`);
+
+          const response = await ai.models.generateContent({
+            model,
+            contents: [{ role: "user", parts }],
+            config: {
+              systemInstruction,
+              temperature: 0.1,
+              maxOutputTokens: 8192,
+              thinkingConfig: { thinkingBudget: 0 },
+              responseMimeType: "application/json",
             },
           });
+
+          recordAiUsage({
+            feature: "실시간 자가 치유",
+            model,
+            mode: "api",
+            usageMetadata: response.usageMetadata,
+            fallbackPromptChars: systemInstruction.length + userPrompt.length + (screenshotBase64 ? 1000 : 0),
+            fallbackOutputChars: (response.text || "").length,
+          });
+
+          console.log(
+            `  [🤖 AI 실시간 자가 치유] Gemini (${model}) 응답 수신 완료 (${Date.now() - aiStart}ms)`
+          );
+
+          rawText = response.text || "";
         }
-        parts.push({ text: userPrompt });
 
-        const aiStart = Date.now();
-        console.log(`  [🤖 AI 실시간 자가 치유] Gemini (${model}) 멀티모달 시나리오 진단 요청 중...`);
-
-        const response = await ai.models.generateContent({
-          model,
-          contents: [{ role: "user", parts }],
-          config: {
-            systemInstruction,
-            temperature: 0.1,
-            maxOutputTokens: 8192,
-            thinkingConfig: { thinkingBudget: 0 },
-            responseMimeType: "application/json",
-          },
-        });
-
-        recordAiUsage({
-          feature: "실시간 자가 치유",
-          model,
-          usageMetadata: response.usageMetadata,
-          fallbackPromptChars: systemInstruction.length + userPrompt.length + (screenshotBase64 ? 1000 : 0),
-          fallbackOutputChars: (response.text || "").length,
-        });
-
-        console.log(
-          `  [🤖 AI 실시간 자가 치유] Gemini (${model}) 응답 수신 완료 (${Date.now() - aiStart}ms)`
-        );
-
-        const rawText = response.text || "";
         let parsed: any = null;
         try {
           const jsonMatch = rawText.match(/\{[\s\S]*\}/);

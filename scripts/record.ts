@@ -185,20 +185,21 @@ function parseTargetHtmlFingerprint(rawTargetHtml?: string): TargetHtmlFingerpri
   return { tag, id, attrs, classes, childHooks, childDataAttrs, text, compactText };
 }
 
-async function pickBestVisibleCandidateByTargetHtml(
+async function evaluateVisibleCandidatesByTargetHtml(
   loc: Locator,
   visibleIndices: number[],
   fp: TargetHtmlFingerprint,
   preferNewEntityIdOverOldDemoId: boolean = false
-): Promise<Locator> {
+): Promise<{ locator: Locator; isUniqueWinner: boolean }> {
   if (visibleIndices.length <= 1) {
-    return loc.nth(visibleIndices[0] ?? 0);
+    return { locator: loc.nth(visibleIndices[0] ?? 0), isUniqueWinner: true };
   }
   try {
-    const bestIndex = await loc.evaluateAll(
+    const evalRes = await loc.evaluateAll(
       (els, { fp, indices, preferNewEntityIdOverOldDemoId }) => {
         let bestIdx = indices[0];
         let bestScore = -9999;
+        let bestScoreCount = 0;
 
         for (const idx of indices) {
           const el = els[idx] as HTMLElement | undefined;
@@ -272,16 +273,35 @@ async function pickBestVisibleCandidateByTargetHtml(
           if (score > bestScore) {
             bestScore = score;
             bestIdx = idx;
+            bestScoreCount = 1;
+          } else if (score === bestScore) {
+            bestScoreCount++;
           }
         }
-        return bestIdx;
+        return {
+          bestIdx,
+          isUniqueWinner: bestScore > 0 && bestScoreCount === 1,
+        };
       },
       { fp, indices: visibleIndices, preferNewEntityIdOverOldDemoId }
     );
-    return loc.nth(typeof bestIndex === "number" ? bestIndex : visibleIndices[0]);
+    return {
+      locator: loc.nth(typeof evalRes?.bestIdx === "number" ? evalRes.bestIdx : visibleIndices[0]),
+      isUniqueWinner: Boolean(evalRes?.isUniqueWinner),
+    };
   } catch {
-    return loc.nth(visibleIndices[0]);
+    return { locator: loc.nth(visibleIndices[0]), isUniqueWinner: false };
   }
+}
+
+async function pickBestVisibleCandidateByTargetHtml(
+  loc: Locator,
+  visibleIndices: number[],
+  fp: TargetHtmlFingerprint,
+  preferNewEntityIdOverOldDemoId: boolean = false
+): Promise<Locator> {
+  const res = await evaluateVisibleCandidatesByTargetHtml(loc, visibleIndices, fp, preferNewEntityIdOverOldDemoId);
+  return res.locator;
 }
 
 async function getLocatorWithWait(page: Page, action: BrowsePlanAction, isFastCheck: boolean = false): Promise<Locator | null> {
@@ -298,11 +318,11 @@ async function getLocatorWithWait(page: Page, action: BrowsePlanAction, isFastCh
   const topAttempts = isFastCheck ? 1 : 2;
   const allAttempts = isFastCheck ? 2 : 5;
 
-  // 1. 초기 시도는 가장 구체적인 상위 셀렉터(우선순위 최고)만으로 탐색하여,
-  // 화면 로딩 중 덜 구체적인 Fallback 셀렉터가 먼저 매칭되어 잘못된 요소를 클릭하는 현상을 방지
-  // (onlyExplicitParts=true 로 설정하여 3-B-TargetHtml / 3-C / 4 폴백으로 조기 이탈하지 않도록 보장)
+  // 1. 초기 시도는 명시적 후보 셀렉터들(onlyExplicitParts=true)만으로 탐색하여,
+  // 화면 로딩 중 3-B-TargetHtml / 3-C / 4 폴백으로 조기 이탈하지 않도록 보장
+  // (후보 중 뒤쪽에 위치한 구조적 :nth-of-type 후보가 잘리지 않도록 최대 12개까지 포함)
   if (parts.length > 1) {
-    const topCandidates = parts.slice(0, Math.min(6, parts.length)).join(", ");
+    const topCandidates = parts.slice(0, Math.min(12, parts.length)).join(", ");
     action.selector = topCandidates;
     for (let i = 0; i < topAttempts; i++) {
       const el = await getLocator(page, action, false, i >= 1, true);
@@ -486,6 +506,14 @@ async function getLocator(
         candidateIdPairs.set(attrKey, oldVal);
       }
     }
+    for (const m of rawOriginalSelector.matchAll(
+      /\[value=['"]((?:TA|TB|TG|TT|TY|ATCL|DOC|WKS|BRD|EML|NOT|SCD|TSK|WBB|WBP)[0-9a-zA-Z]{8,})['"]\]/gi
+    )) {
+      const oldVal = m[1].trim();
+      if (oldVal && !candidateIdPairs.has("value")) {
+        candidateIdPairs.set("value", oldVal);
+      }
+    }
 
     if (candidateIdPairs.size > 0) {
       for (const [attrKey, oldVal] of candidateIdPairs.entries()) {
@@ -586,8 +614,8 @@ async function getLocator(
     .replace(/:last(?!\-child|\-of\-type)\b/g, ":last-child")
     .replace(/\.select2-(?:focused|active|dropdown-open|container-active|drop-above)\b/g, "");
 
-  // Filter out dummy onclick='return false;' candidates and strip erroneous #header prefixes on content/form elements
-  const cleanedCandidates = splitSelectorCandidates(selector)
+  // Filter out dummy onclick='return false;' candidates, generic :has(.ico_*), expand ephemeral entity IDs, and prioritize structural :nth-of-type / :has-text ahead of generic [title]
+  const rawSplitCandidates = splitSelectorCandidates(selector)
     .filter((p) => !/\[onclick\*=['"]?(?:return\s+(?:false|true)|javascript:|void\s*\(0\))/i.test(p))
     .map((p) => {
       if (
@@ -598,10 +626,105 @@ async function getLocator(
       }
       return p;
     });
+  const nonIconCandidates = rawSplitCandidates.filter((p) => !/:has\(\.ico_[a-zA-Z0-9_-]+\)/i.test(p));
+  const baseCandidates = nonIconCandidates.length > 0 ? nonIconCandidates : rawSplitCandidates;
+  const expandedCandidates: string[] = [];
+  for (const part of baseCandidates) {
+    const strippedEphemeralAttr = part.replace(
+      /\[data-[a-z0-9_-]*id=['"](?:TA|TB|TG|TT|TY|ATCL|DOC|WKS|BRD|EML|NOT|SCD|TSK|WBB|WBP)[0-9a-z]{12,}['"]\]/gi,
+      ""
+    );
+    if (strippedEphemeralAttr !== part && strippedEphemeralAttr.includes(":nth-of-type(")) {
+      expandedCandidates.push(strippedEphemeralAttr);
+    }
+    expandedCandidates.push(part);
+    const ephHashM = part.match(
+      /^(\.ui-dialog:visible\s+)?(li|div|tr)#([a-zA-Z0-9_]*?)((?:TA|TB|TG|TT|TY|ATCL|DOC|WKS|BRD|EML|NOT|SCD|TSK|WBB|WBP)[0-9a-z]{12,})(\s+.*)$/i
+    );
+    if (ephHashM && ephHashM[3] && ephHashM[3].length >= 4) {
+      const dlgPre = ephHashM[1] || "";
+      expandedCandidates.push(`${dlgPre}${ephHashM[2]}[id^='${ephHashM[3]}']${ephHashM[5]}`);
+    }
+  }
+  const hasStructuralNthInExpanded = expandedCandidates.some((p) =>
+    /(?:div|li|tr|ul|dl|dd|td)[^,>]*:nth-of-type\(\d+\)\s*>/i.test(p)
+  );
+  const cleanedCandidates = hasStructuralNthInExpanded
+    ? [
+        ...expandedCandidates.filter(
+          (p) =>
+            /(?:div|li|tr|ul|dl|dd|td)[^,>]*:nth-of-type\(\d+\)\s*>|:(?:has-text|text-is)\(/i.test(p) ||
+            !/\[title=['"][^'"]+['"]\]/i.test(p)
+        ),
+        ...expandedCandidates.filter(
+          (p) =>
+            !/(?:div|li|tr|ul|dl|dd|td)[^,>]*:nth-of-type\(\d+\)\s*>|:(?:has-text|text-is)\(/i.test(p) &&
+            /\[title=['"][^'"]+['"]\]/i.test(p)
+        ),
+      ]
+    : expandedCandidates;
   if (cleanedCandidates.length > 0) {
     selector = Array.from(new Set(cleanedCandidates)).join(", ");
   }
   action.selector = selector;
+
+  // Determine if this action targets a specific entity and whether that entity was newly created in the current recording session
+  const rawPartsForOrder = splitSelectorCandidates(action.selector);
+  const parts = action.recordedByEyedropper ? [...rawPartsForOrder] : sortSelectorsBySpecificity(rawPartsForOrder);
+  const hasSpecificEntityInAction =
+    Boolean(
+      targetHtmlFp &&
+        Object.keys(targetHtmlFp.attrs).some(
+          (k) =>
+            k.startsWith("data-") &&
+            !/^data-(?:menu-id|menu-name|folder-id|folder-name|folder-type|page-mode|tab|search-type|app-type-se|app-type-ordr|up-page-id)$/i.test(
+              k
+            )
+        )
+    ) || parts.some((p) => /\b(?:li|tr):has-text\(['"][^'"]+['"]\)/i.test(p));
+
+  const targetsNewlyCreatedEntityInRun =
+    runtimeCreatedTitles.size > 0 &&
+    Array.from(runtimeCreatedTitles).some(
+      (title) =>
+        selector.includes(title) ||
+        (action.targetHtml && action.targetHtml.includes(title)) ||
+        (action.description && action.description.includes(title))
+    );
+
+  const hasUnmappedOldDemoId = (partStr: string): boolean => {
+    if (!targetsNewlyCreatedEntityInRun) return false;
+    for (const m of partStr.matchAll(/\[data-[a-zA-Z0-9_-]*id=['"]([^'"]+)['"]\]/gi)) {
+      const idVal = m[1].trim();
+      const isMappedNewId = Array.from(runtimeEntityIdMap.values()).includes(idVal);
+      if (idVal && !isMappedNewId && !runtimeEntityIdMap.has(idVal)) {
+        return true;
+      }
+    }
+    for (const m of partStr.matchAll(
+      /\[value=['"]((?:TA|TB|TG|TT|TY|ATCL|DOC|WKS|BRD|EML|NOT|SCD|TSK|WBB|WBP)[0-9a-zA-Z]{8,})['"]\]/gi
+    )) {
+      const idVal = m[1].trim();
+      const isMappedNewId = Array.from(runtimeEntityIdMap.values()).includes(idVal);
+      if (idVal && !isMappedNewId && !runtimeEntityIdMap.has(idVal)) {
+        return true;
+      }
+    }
+    for (const m of partStr.matchAll(
+      /\b(?:li|div|tr)#([a-zA-Z0-9_]*(?:TA|TB|TG|TT|TY|ATCL|DOC|WKS|BRD|EML|NOT|SCD|TSK|WBB|WBP)[0-9a-zA-Z]{12,})\b/gi
+    )) {
+      const idVal = m[1].trim();
+      const isMappedNewId = Array.from(runtimeEntityIdMap.values()).includes(idVal);
+      if (idVal && !isMappedNewId && !runtimeEntityIdMap.has(idVal)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const primaryParts = targetsNewlyCreatedEntityInRun ? parts.filter((p) => !hasUnmappedOldDemoId(p)) : parts;
+  const deferredOldIdParts = targetsNewlyCreatedEntityInRun ? parts.filter((p) => hasUnmappedOldDemoId(p)) : [];
+  const orderedParts = [...primaryParts, ...deferredOldIdParts];
 
   // Build candidate bases: prioritized by action.iframe (only if present on current page!), active child frames (page.frames()), and fallback to page and common iframes
   const candidateBases: Array<{ name: string; locator: (sel: string) => Locator }> = [];
@@ -617,8 +740,8 @@ async function getLocator(
         });
       }
     }
-    // Also traverse all active child frames in page.frames() (handles setup_iframe, dynamic iframe names, or nested frames)
-    for (const frame of page.frames()) {
+    // Also traverse all active child frames in page.frames() in reverse (newest modal/popup frame first)
+    for (const frame of [...page.frames()].reverse()) {
       if (frame !== page.mainFrame() && !frame.isDetached()) {
         candidateBases.push({
           name: `frame(${frame.name() || frame.url()})`,
@@ -636,8 +759,8 @@ async function getLocator(
       name: "page(main)",
       locator: (sel: string) => page.locator(sel),
     });
-    // Also check all active child frames in page.frames()
-    for (const frame of page.frames()) {
+    // Also check all active child frames in page.frames() in reverse (newest modal/popup frame first)
+    for (const frame of [...page.frames()].reverse()) {
       if (frame !== page.mainFrame() && !frame.isDetached()) {
         candidateBases.push({
           name: `frame(${frame.name() || frame.url()})`,
@@ -655,13 +778,13 @@ async function getLocator(
     }
   }
 
-  // 2. Active modal dialog scoping (Handles stacked/nested dialogs by prioritizing topmost modal by z-index)
+  // 2. Active modal dialog scoping (Handles stacked/nested dialogs by prioritizing topmost modal by z-index; skip when action targets an explicit iframe)
   const dialogLoc = page.locator(".ui-dialog:visible, .modal:visible, .layer_wrap:visible, .equ_select_lyr:visible, [role='dialog']:visible");
-  const dialogCount = await dialogLoc.count().catch(() => 0);
-  const hasOverlay = (await page.locator(".ui-widget-overlay:visible, .modal-backdrop:visible").count().catch(() => 0)) > 0;
+  const dialogCount = !action.iframe ? await dialogLoc.count().catch(() => 0) : 0;
+  const hasOverlay = !action.iframe && (await page.locator(".ui-widget-overlay:visible, .modal-backdrop:visible").count().catch(() => 0)) > 0;
 
   if (dialogCount > 0 && action.selector) {
-    const dialogSelectors = splitSelectorCandidates(action.selector);
+    const dialogSelectors = orderedParts;
 
     // Calculate z-indices so the true topmost visual dialog is checked first
     const dialogIndicesByZIndex = await page.evaluate(() => {
@@ -686,6 +809,8 @@ async function getLocator(
       if (hasOverlay && orderIdx > 0) break;
       const d = order[orderIdx];
       const topDialog = dialogLoc.nth(d);
+      const hasDialogIframe = (await topDialog.locator("iframe:visible").count().catch(() => 0)) > 0;
+      let multiMatchModalFallback: { locator: Locator; cleanSel: string } | null = null;
       for (const s of dialogSelectors) {
         const isLast = s.endsWith(":last") || s.includes(":last");
         let cleanSel = s.replace(/^\.ui-dialog:visible\s*/, "").replace(/^\.modal:visible\s*/, "").trim();
@@ -693,14 +818,18 @@ async function getLocator(
         if (!cleanSel) continue;
 
         try {
-          const candLoc = topDialog.locator(cleanSel);
-          const cCount = await candLoc.count().catch(() => 0);
+          let candLoc = topDialog.locator(cleanSel);
+          let cCount = await candLoc.count().catch(() => 0);
+          if (cCount === 0 && hasDialogIframe) {
+            candLoc = topDialog.frameLocator("iframe:visible").first().locator(cleanSel);
+            cCount = await candLoc.count().catch(() => 0);
+          }
           if (cCount > 0) {
             if (isLast) {
               const lastCand = candLoc.last();
               if (await lastCand.isVisible().catch(() => false)) {
                 console.log(`  [🎯 최상단 모달 요소 감지] 활성 팝업(z-index 우선) 내부에서 '${cleanSel}' 요소를 우선 선택합니다.`);
-                return lastCand;
+                return await learnRuntimeEntityIdIfChanged(lastCand);
               }
             }
             const visIndices: number[] = [];
@@ -709,18 +838,37 @@ async function getLocator(
                 visIndices.push(ci);
               }
             }
-            if (visIndices.length > 0) {
-              const chosen =
-                visIndices.length > 1 && targetHtmlFp
-                  ? await pickBestVisibleCandidateByTargetHtml(candLoc, visIndices, targetHtmlFp)
-                  : candLoc.nth(visIndices[0]);
-              console.log(`  [🎯 최상단 모달 요소 감지] 활성 팝업(z-index 우선) 내부에서 '${cleanSel}' 요소를 우선 선택합니다.`);
-              return chosen;
+            if (visIndices.length === 1) {
+              console.log(`  [🎯 최상단 모달 요소 감지] 활성 팝업(z-index 우선) 내부에서 '${cleanSel}' 유일 매칭 요소를 선택합니다.`);
+              return await learnRuntimeEntityIdIfChanged(candLoc.nth(visIndices[0]));
+            }
+            if (visIndices.length > 1) {
+              if (targetHtmlFp) {
+                const evalRes = await evaluateVisibleCandidatesByTargetHtml(
+                  candLoc,
+                  visIndices,
+                  targetHtmlFp,
+                  targetsNewlyCreatedEntityInRun
+                );
+                if (evalRes.isUniqueWinner) {
+                  console.log(`  [🎯 최상단 모달 요소 감지] 활성 팝업(z-index 우선) 내부에서 '${cleanSel}' 요소를 우선 선택합니다.`);
+                  return await learnRuntimeEntityIdIfChanged(evalRes.locator);
+                }
+                if (!multiMatchModalFallback) {
+                  multiMatchModalFallback = { locator: evalRes.locator, cleanSel };
+                }
+              } else if (!multiMatchModalFallback) {
+                multiMatchModalFallback = { locator: candLoc.nth(visIndices[0]), cleanSel };
+              }
             }
           }
         } catch {
           // Gracefully skip invalid selector syntax
         }
+      }
+      if (multiMatchModalFallback) {
+        console.log(`  [🎯 최상단 모달 요소 감지] 활성 팝업(z-index 우선) 내부에서 '${multiMatchModalFallback.cleanSel}' 요소를 선택합니다.`);
+        return await learnRuntimeEntityIdIfChanged(multiMatchModalFallback.locator);
       }
     }
 
@@ -746,6 +894,7 @@ async function getLocator(
     }
 
     if (!hasOverlay) {
+      let multiMatchDirectModalFallback: Locator | null = null;
       for (const baseObj of candidateBases) {
         for (const s of dialogSelectors) {
           if (s.includes(".ui-dialog") || s.includes(".modal") || s.includes("layer")) {
@@ -758,7 +907,7 @@ async function getLocator(
               if (dCount > 0) {
                 if (isLast) {
                   const lastCand = directLoc.last();
-                  if (await lastCand.isVisible().catch(() => false)) return lastCand;
+                  if (await lastCand.isVisible().catch(() => false)) return await learnRuntimeEntityIdIfChanged(lastCand);
                 }
                 const visIndices: number[] = [];
                 for (let di = 0; di < Math.min(dCount, 15); di++) {
@@ -766,15 +915,34 @@ async function getLocator(
                     visIndices.push(di);
                   }
                 }
-                if (visIndices.length > 0) {
-                  return visIndices.length > 1 && targetHtmlFp
-                    ? await pickBestVisibleCandidateByTargetHtml(directLoc, visIndices, targetHtmlFp)
-                    : directLoc.nth(visIndices[0]);
+                if (visIndices.length === 1) {
+                  return await learnRuntimeEntityIdIfChanged(directLoc.nth(visIndices[0]));
+                }
+                if (visIndices.length > 1) {
+                  if (targetHtmlFp) {
+                    const evalRes = await evaluateVisibleCandidatesByTargetHtml(
+                      directLoc,
+                      visIndices,
+                      targetHtmlFp,
+                      targetsNewlyCreatedEntityInRun
+                    );
+                    if (evalRes.isUniqueWinner) {
+                      return await learnRuntimeEntityIdIfChanged(evalRes.locator);
+                    }
+                    if (!multiMatchDirectModalFallback) {
+                      multiMatchDirectModalFallback = evalRes.locator;
+                    }
+                  } else if (!multiMatchDirectModalFallback) {
+                    multiMatchDirectModalFallback = directLoc.nth(visIndices[0]);
+                  }
                 }
               }
             } catch {}
           }
         }
+      }
+      if (multiMatchDirectModalFallback) {
+        return await learnRuntimeEntityIdIfChanged(multiMatchDirectModalFallback);
       }
     }
 
@@ -782,9 +950,6 @@ async function getLocator(
 
   // 3. Search target selector across candidate bases
   if (action.selector) {
-    const rawParts = splitSelectorCandidates(action.selector);
-    const parts = action.recordedByEyedropper ? [...rawParts] : sortSelectorsBySpecificity(rawParts);
-
     // 3-0. Universal Dynamic Created Entity / Verification Linking (AI-generated plans only, never Eyedropper)
     const isVerifyingCreatedItem =
       !action.recordedByEyedropper &&
@@ -800,8 +965,8 @@ async function getLocator(
       const title = currentRuntimeVariables.get("lastCreatedTitle")!;
       const kw = currentRuntimeVariables.get("lastCreatedKeyword") || title.slice(0, 10);
 
-      // Check if parts already contains this keyword
-      const alreadyHasKw = parts.some(p => p.includes(kw) || p.includes(title));
+      // Check if orderedParts already contains this keyword
+      const alreadyHasKw = orderedParts.some(p => p.includes(kw) || p.includes(title));
       if (!alreadyHasKw) {
         const titleCandidates = [
           `a.fc-event:has-text('${kw}'):visible`,
@@ -814,7 +979,7 @@ async function getLocator(
           `a:has-text('${kw}'):visible`,
           `button:has-text('${kw}'):visible`
         ];
-        parts.unshift(...titleCandidates);
+        orderedParts.unshift(...titleCandidates);
         console.log(`  [🎯 신규 등록 항목 핀포인트 매칭] 방금 등록된 제목("${kw}") 일치 요소를 최우선으로 탐색합니다.`);
       }
     }
@@ -837,7 +1002,7 @@ async function getLocator(
           ? ["#snb", "#left", "aside", ".snb", "nav"]
           : ["#content", ".content", "main"];
 
-        for (const rawPart of parts) {
+        for (const rawPart of orderedParts) {
           const cleanPart = rawPart.replace(/:first\b/g, "").replace(/:last\b/g, "").trim();
           if (!cleanPart) continue;
           for (const baseObj of candidateBases) {
@@ -856,41 +1021,6 @@ async function getLocator(
       }
     }
 
-    // Determine if this action targets a specific entity (has data-*-id / data-*-name / data-subject or row-scoped :has-text)
-    // and whether that entity was newly created in the current recording session (so unmapped old demo IDs are deprioritized)
-    const hasSpecificEntityInAction =
-      Boolean(
-        targetHtmlFp &&
-          Object.keys(targetHtmlFp.attrs).some(
-            (k) =>
-              k.startsWith("data-") &&
-              !/^data-(?:menu-id|menu-name|folder-id|folder-name|folder-type|page-mode|tab|search-type|app-type-se|app-type-ordr|up-page-id)$/i.test(
-                k
-              )
-          )
-      ) || parts.some((p) => /\b(?:li|tr):has-text\(['"][^'"]+['"]\)/i.test(p));
-
-    const targetsNewlyCreatedEntityInRun =
-      runtimeCreatedTitles.size > 0 &&
-      Array.from(runtimeCreatedTitles).some(
-        (title) =>
-          selector.includes(title) ||
-          (action.targetHtml && action.targetHtml.includes(title)) ||
-          (action.description && action.description.includes(title))
-      );
-
-    const hasUnmappedOldDemoId = (partStr: string): boolean => {
-      if (!targetsNewlyCreatedEntityInRun) return false;
-      for (const m of partStr.matchAll(/\[data-[a-zA-Z0-9_-]*id=['"]([^'"]+)['"]\]/gi)) {
-        const idVal = m[1].trim();
-        const isMappedNewId = Array.from(runtimeEntityIdMap.values()).includes(idVal);
-        if (idVal && !isMappedNewId && !runtimeEntityIdMap.has(idVal)) {
-          return true;
-        }
-      }
-      return false;
-    };
-
     const isUnscopedGenericActionButtonPart = (partStr: string): boolean => {
       if (!hasSpecificEntityInAction) return false;
       if (/\[data-[a-zA-Z0-9_-]+=/i.test(partStr)) return false;
@@ -907,12 +1037,8 @@ async function getLocator(
       return true;
     };
 
-    // Order parts so unmapped old demo IDs are tried ONLY after entity-name / row-scoped candidates when the entity was created in this run
-    const primaryParts = targetsNewlyCreatedEntityInRun ? parts.filter((p) => !hasUnmappedOldDemoId(p)) : parts;
-    const deferredOldIdParts = targetsNewlyCreatedEntityInRun ? parts.filter((p) => hasUnmappedOldDemoId(p)) : [];
-    const orderedParts = [...primaryParts, ...deferredOldIdParts];
-
-    // 3-B. Prioritize elements that are currently visible on screen across bases
+    // 3-B. Prioritize elements that are currently visible on screen across bases (preferring 1-of-1 unique matches over 1-of-N multi-matches)
+    let multiMatchStep3Fallback: Locator | null = null;
     for (const rawPart of orderedParts) {
       const isLast = rawPart.endsWith(":last") || rawPart.includes(":last");
       const cleanPart = rawPart.replace(/:first\b/g, "").replace(/:last\b/g, "").trim();
@@ -937,7 +1063,7 @@ async function getLocator(
             }
             if (isLast) {
               const lastCand = loc.last();
-              if (await lastCand.isVisible().catch(() => false)) return lastCand;
+              if (await lastCand.isVisible().catch(() => false)) return await learnRuntimeEntityIdIfChanged(lastCand);
             }
             const visIndices: number[] = [];
             for (let i = 0; i < Math.min(count, 15); i++) {
@@ -945,22 +1071,33 @@ async function getLocator(
                 visIndices.push(i);
               }
             }
-            if (visIndices.length > 0) {
-              if (visIndices.length > 1 && targetHtmlFp) {
-                return await learnRuntimeEntityIdIfChanged(
-                  await pickBestVisibleCandidateByTargetHtml(
-                    loc,
-                    visIndices,
-                    targetHtmlFp,
-                    targetsNewlyCreatedEntityInRun
-                  )
-                );
-              }
+            if (visIndices.length === 1) {
               return await learnRuntimeEntityIdIfChanged(loc.nth(visIndices[0]));
+            }
+            if (visIndices.length > 1) {
+              if (targetHtmlFp) {
+                const evalRes = await evaluateVisibleCandidatesByTargetHtml(
+                  loc,
+                  visIndices,
+                  targetHtmlFp,
+                  targetsNewlyCreatedEntityInRun
+                );
+                if (evalRes.isUniqueWinner) {
+                  return await learnRuntimeEntityIdIfChanged(evalRes.locator);
+                }
+                if (!multiMatchStep3Fallback) {
+                  multiMatchStep3Fallback = evalRes.locator;
+                }
+              } else if (!multiMatchStep3Fallback) {
+                multiMatchStep3Fallback = loc.nth(visIndices[0]);
+              }
             }
           }
         } catch {}
       }
+    }
+    if (multiMatchStep3Fallback) {
+      return await learnRuntimeEntityIdIfChanged(multiMatchStep3Fallback);
     }
 
     // 3-B-Hover. Resolve CSS-hidden checkbox/radio to wrapping <label>, Auto-Hover Item/Card Container, or (on final retry) Expand Closed Dropdown
@@ -2332,9 +2469,9 @@ async function trySelfHealAction(
     }
 
     if (insertSucceeded && afterInsertLoc) {
-      totalHealedCount++;
       // Only permanently inject prerequisite steps into browse-plan.json for AI-generated plans (never corrupt user Eyedropper action lists!)
       if (!isEyedropperPlan) {
+        totalHealedCount++;
         (action as any)._insertBefore = [
           ...((action as any)._insertBefore || []),
           ...healResult.prerequisiteActions,
@@ -3326,19 +3463,36 @@ async function main() {
     }
   } catch { }
 
-  // 2. Main Recording Context
+  // 2. Main Recording Context (1:1 Window Position & Viewport Synchronization)
+  const rawVw = plan.viewport?.width || 1920;
+  const rawVh = plan.viewport?.height || 1080;
+  const effectiveViewport = {
+    width: Math.max(800, Math.round(rawVw / 2) * 2),
+    height: Math.max(600, Math.round(rawVh / 2) * 2),
+  };
+  plan.viewport = effectiveViewport;
+  const wb = plan.windowBounds;
+
   let browser: Browser;
   if (isHeaded) {
     console.log("👁️ [--headed 모드] 브라우저 화면을 직접 표시하며 녹화합니다.");
+    const posArg =
+      wb && Number.isFinite(wb.left) && Number.isFinite(wb.top)
+        ? `--window-position=${Math.round(wb.left)},${Math.round(wb.top)}`
+        : "--window-position=50,50";
+    const sizeOrMaxArgs =
+      wb && wb.windowState !== "maximized" && wb.width >= 600 && wb.height >= 400
+        ? [`--window-size=${Math.round(wb.width)},${Math.round(wb.height)}`]
+        : ["--start-maximized"];
     try {
       // 1. Try launching system installed Google Chrome (best foreground visibility and taskbar focus on Windows)
       browser = await chromium.launch({
         headless: false,
         channel: "chrome",
         args: [
-          "--start-maximized",
+          ...sizeOrMaxArgs,
           "--new-window",
-          "--window-position=50,50",
+          posArg,
           "--disable-blink-features=AutomationControlled",
         ],
       });
@@ -3348,9 +3502,9 @@ async function main() {
       browser = await chromium.launch({
         headless: false,
         args: [
-          "--start-maximized",
+          ...sizeOrMaxArgs,
           "--new-window",
-          "--window-position=50,50",
+          posArg,
         ],
       });
       console.log("🌐 Playwright Chromium으로 녹화 화면 창을 띄웠습니다.");
@@ -3358,14 +3512,14 @@ async function main() {
   } else {
     browser = await chromium.launch({
       headless: true,
-      args: ["--window-size=1920,1080"],
+      args: [`--window-size=${effectiveViewport.width},${effectiveViewport.height}`],
     });
   }
   const contextOptions: Parameters<typeof browser.newContext>[0] = {
-    viewport: plan.viewport,
+    viewport: effectiveViewport,
     recordVideo: {
       dir: videoDir,
-      size: plan.viewport,
+      size: effectiveViewport,
     },
   };
 
@@ -3393,6 +3547,32 @@ async function main() {
   });
 
   let page: Page = await context.newPage();
+  if (isHeaded && wb && wb.width >= 600 && wb.height >= 400) {
+    try {
+      const cdp = await context.newCDPSession(page);
+      const winInfo: any = await cdp.send("Browser.getWindowForTarget");
+      if (winInfo && typeof winInfo.windowId === "number") {
+        if (wb.windowState === "maximized") {
+          await cdp.send("Browser.setWindowBounds", {
+            windowId: winInfo.windowId,
+            bounds: { windowState: "maximized" },
+          });
+        } else {
+          await cdp.send("Browser.setWindowBounds", {
+            windowId: winInfo.windowId,
+            bounds: {
+              left: Math.round(wb.left),
+              top: Math.round(wb.top),
+              width: Math.round(wb.width),
+              height: Math.round(wb.height),
+              windowState: "normal",
+            },
+          });
+        }
+      }
+      await cdp.detach().catch(() => {});
+    } catch {}
+  }
   const pageStack: Page[] = [page];
   interface ChildPopupVideoSegment {
     page: Page;
@@ -3661,15 +3841,16 @@ async function main() {
           const targetUser = (rawTargetUser.match(/test\d+/i)?.[0] || rawTargetUser.split(/\s+/)[0] || rawTargetUser).trim();
 
           // 1. Locate source element & verify its text matches expectedSrcText / targetUser
-          let srcLoc = await getLocatorWithWait(page, { ...action, selector: srcSelector }, false);
+          // (Clear targetHtml when locating sourceSelector because dragAndDrop's targetHtml describes the DROP container!)
+          let srcLoc = await getLocatorWithWait(page, { ...action, selector: srcSelector, targetHtml: undefined }, false);
           if (!(srcLoc && (await srcLoc.isVisible().catch(() => false)))) {
             const restored = await restoreFromSimulatedPopupIfNeeded(
               page,
               `'${action.description || srcSelector}' 드래그 대상 탐색을 위해 팝업 종료`,
-              { ...action, selector: srcSelector }
+              { ...action, selector: srcSelector, targetHtml: undefined }
             );
             if (restored) {
-              srcLoc = await getLocatorWithWait(page, { ...action, selector: srcSelector }, false);
+              srcLoc = await getLocatorWithWait(page, { ...action, selector: srcSelector, targetHtml: undefined }, false);
             }
           }
           if (srcLoc && (expectedSrcText || targetUser)) {
@@ -3725,7 +3906,7 @@ async function main() {
           }
 
           if (!srcLoc) {
-            const tempSrcAct: BrowsePlanAction = { ...action, selector: srcSelector };
+            const tempSrcAct: BrowsePlanAction = { ...action, selector: srcSelector, targetHtml: undefined };
             srcLoc = await trySelfHealAction(moments, recordingStart, page, tempSrcAct, momentId, plan, dataDir);
             if (srcLoc) {
               action.sourceSelector = tempSrcAct.sourceSelector || tempSrcAct.selector || srcSelector;
@@ -3746,6 +3927,19 @@ async function main() {
           }
 
           // 2. Locate target element
+          // Ensure empty Kanban sortable lists (ul.mg_ul, .ui-sortable) have non-zero height before locating tgtLoc so :visible and boundingBox() succeed!
+          await page
+            .evaluate(() => {
+              document.querySelectorAll("ul.mg_ul, .ui-sortable, .group_lst ul").forEach((ul) => {
+                const htmlUl = ul as HTMLElement;
+                const r = htmlUl.getBoundingClientRect();
+                if (r.width > 20 && r.height < 40) {
+                  htmlUl.style.minHeight = "120px";
+                }
+              });
+            })
+            .catch(() => {});
+
           const descLower = (action.description || "").toLowerCase();
           const isSecondApprSlot = descLower.includes("결재") && (descLower.includes("두번째") || descLower.includes("두 번째") || descLower.includes("2번째") || descLower.includes("칸") || descLower.includes("슬롯"));
 
@@ -3895,6 +4089,55 @@ async function main() {
 
           await page.mouse.up();
           await triggerClickVisualizer(page, toX, toY);
+
+          // Universal jQuery UI Sortable / Kanban Column Drop Sync:
+          // If dragging an item (e.g. li._task) into a sortable list (ul.mg_ul / .ui-sortable) did not move the DOM node
+          // via synthetic mouse events, move the item and invoke the jQuery UI sortable receive/update/stop callbacks!
+          try {
+            const srcHandle = await srcLoc.elementHandle({ timeout: 500 }).catch(() => null);
+            const tgtHandle = await effectiveTgtLoc.elementHandle({ timeout: 500 }).catch(() => null);
+            if (srcHandle && tgtHandle) {
+              await page
+                .evaluate(
+                  ([sNode, tNode]) => {
+                    const srcEl = (sNode as HTMLElement)?.closest?.("li._task, li") as HTMLElement | null;
+                    const tgtUl = (
+                      (tNode as HTMLElement)?.matches?.("ul.mg_ul, ul.ui-sortable, .ui-sortable")
+                        ? tNode
+                        : (tNode as HTMLElement)?.querySelector?.("ul.mg_ul, ul.ui-sortable, .ui-sortable") ||
+                          (tNode as HTMLElement)?.closest?.("ul.mg_ul, ul.ui-sortable, .ui-sortable")
+                    ) as HTMLElement | null;
+                    if (!srcEl || !tgtUl || tgtUl.contains(srcEl)) return;
+                    const senderUl = srcEl.parentElement as HTMLElement | null;
+                    tgtUl.appendChild(srcEl);
+                    const w = window as any;
+                    const $ = w.jQuery || w.$;
+                    if ($ && typeof $(tgtUl).sortable === "function") {
+                      try {
+                        const inst = $(tgtUl).data("ui-sortable") || $(tgtUl).data("sortable");
+                        const uiPayload = {
+                          item: $(srcEl),
+                          sender: senderUl ? $(senderUl) : null,
+                          placeholder: $(),
+                          helper: $(srcEl),
+                        };
+                        if (inst && typeof inst._trigger === "function") {
+                          inst._trigger("receive", null, uiPayload);
+                          inst._trigger("update", null, uiPayload);
+                          inst._trigger("stop", null, uiPayload);
+                        } else {
+                          $(tgtUl).trigger("sortreceive", [uiPayload]);
+                          $(tgtUl).trigger("sortupdate", [uiPayload]);
+                          $(tgtUl).trigger("sortstop", [uiPayload]);
+                        }
+                      } catch {}
+                    }
+                  },
+                  [srcHandle, tgtHandle]
+                )
+                .catch(() => {});
+            }
+          } catch {}
 
           // Strictly check ONLY the target drop slot / approval line (NEVER [class*='box'] which matches #eapLineSelect_orgBox on the left!)
           const afOrdrMatch = (action.targetSelector || tgtSelector || "").match(/#af_(\d+)/);
@@ -5484,27 +5727,68 @@ async function main() {
             } catch {}
           }
 
-          // If a DynaTree folder title (e.g. '유니슨', '테스트 부서') was clicked in an AI plan and remains collapsed, expand its .dynatree-expander so child nodes become visible
-          if (!action.recordedByEyedropper && !plan.recordedByEyedropper && (selLower.includes("dynatree-title") || descLower.includes("부서"))) {
-            try {
-              const parentNode = el.locator("xpath=ancestor::span[contains(@class, 'dynatree-node')]").first();
-              if (await parentNode.isVisible().catch(() => false)) {
-                const shouldExpand = await parentNode.evaluate((node) => {
-                  const cls = node.className || "";
-                  const isFolder = cls.includes("dynatree-folder") || cls.includes("dynatree-has-children") || cls.includes("dynatree-lazy");
-                  const isExpanded = cls.includes("dynatree-expanded") || cls.includes("dynatree-exp-e") || cls.includes("dynatree-exp-el");
-                  return isFolder && !isExpanded;
-                }).catch(() => false);
-                if (shouldExpand) {
-                  const expander = parentNode.locator(".dynatree-expander").first();
-                  if (await expander.isVisible().catch(() => false)) {
-                    console.log(`  [📂 트리 폴더 하위 펼침] 클릭한 폴더 노드의 하위 항목 노출을 위해 확장 아이콘(.dynatree-expander)을 함께 클릭합니다.`);
-                    await expander.click({ force: true }).catch(() => {});
-                    await page.waitForTimeout(600);
+          // If a board radio option inside #aglTaskBrdSelect_boardList ([보드 선택 팝업]) was clicked and the next step targets the parent form/dialog,
+          // ensure the board selection dialog is confirmed/closed if clicking the radio label alone left it open
+          if (selLower.includes("agltaskbrdselect") || (action.targetHtml && action.targetHtml.includes("aglTaskBrdSelect"))) {
+            let nextNonWaitAfterBrd: BrowsePlanAction | null = null;
+            for (let k = actionIdx + 1; k < plan.actions.length; k++) {
+              if (plan.actions[k].type !== "wait") {
+                nextNonWaitAfterBrd = plan.actions[k];
+                break;
+              }
+            }
+            const nextSelAfterBrd = (nextNonWaitAfterBrd?.selector || "").toLowerCase();
+            if (!nextSelAfterBrd.includes("agltaskbrdselect") && !(nextNonWaitAfterBrd?.description || "").includes("보드 선택 팝업] '확인'")) {
+              await page.waitForTimeout(250);
+              const brdConfirmBtn = page
+                .locator(
+                  "#aglTaskBrdSelect button._confirmBtn:visible, #aglTaskBrdSelect_confirm:visible, .ui-dialog:visible:has(#aglTaskBrdSelect_boardList) button._confirmBtn:visible"
+                )
+                .first();
+              if (await brdConfirmBtn.isVisible().catch(() => false)) {
+                console.log(`  [📌 보드 선택 팝업 확정] 선택한 보드를 부모 창에 반영하기 위해 확인 버튼을 함께 클릭합니다.`);
+                await brdConfirmBtn.click({ force: true }).catch(() => {});
+                await page.waitForTimeout(400);
+              }
+            }
+          }
+
+          // If a DynaTree folder title (e.g. '부서', '대학본부', '유니슨') was clicked and the next step targets another tree node (not an explicit expander click),
+          // expand its .dynatree-expander if it remained collapsed so child nodes become visible!
+          if (selLower.includes("dynatree-title") || (!action.recordedByEyedropper && !plan.recordedByEyedropper && descLower.includes("부서"))) {
+            let nextNonWaitTree: BrowsePlanAction | null = null;
+            for (let k = actionIdx + 1; k < plan.actions.length; k++) {
+              if (plan.actions[k].type !== "wait") {
+                nextNonWaitTree = plan.actions[k];
+                break;
+              }
+            }
+            const nextTreeSel = (nextNonWaitTree?.selector || "").toLowerCase();
+            const isNextAnotherTreeNode =
+              (nextTreeSel.includes("dynatree-") || nextTreeSel.includes("fancytree-")) &&
+              !nextTreeSel.includes("dynatree-expander") &&
+              !nextTreeSel.includes("fancytree-expander");
+            if ((!action.recordedByEyedropper && !plan.recordedByEyedropper) || isNextAnotherTreeNode) {
+              try {
+                const parentNode = el.locator("xpath=ancestor::span[contains(@class, 'dynatree-node')]").first();
+                if (await parentNode.isVisible().catch(() => false)) {
+                  const shouldExpand = await parentNode.evaluate((node) => {
+                    const cls = node.className || "";
+                    const isFolder = cls.includes("dynatree-folder") || cls.includes("dynatree-has-children") || cls.includes("dynatree-lazy");
+                    const isExpanded = cls.includes("dynatree-expanded") || cls.includes("dynatree-exp-e") || cls.includes("dynatree-exp-el");
+                    return isFolder && !isExpanded;
+                  }).catch(() => false);
+                  if (shouldExpand) {
+                    const expander = parentNode.locator(".dynatree-expander").first();
+                    if (await expander.isVisible().catch(() => false)) {
+                      console.log(`  [📂 트리 폴더 하위 펼침] 클릭한 폴더 노드의 하위 항목 노출을 위해 확장 아이콘(.dynatree-expander)을 함께 클릭합니다.`);
+                      await expander.click({ force: true }).catch(() => {});
+                      await page.waitForTimeout(600);
+                    }
                   }
                 }
-              }
-            } catch {}
+              } catch {}
+            }
           }
 
           // Handle jQuery UI Datepicker & Timepicker inputs: keep popup visible briefly for video feedback, then close floating overlay so it doesn't cover subsequent fields (do NOT overwrite with stale lastval!)
@@ -6371,9 +6655,41 @@ async function main() {
           }
 
           const isSynapEditor = await el.evaluate((node) => Boolean(node.classList && node.classList.contains("se-contents"))).catch(() => false);
+          const isSingleLineContentEditable = await el
+            .evaluate((node) => {
+              const htmlEl = node as HTMLElement;
+              const tag = (htmlEl.tagName || "").toLowerCase();
+              if (tag === "input" || tag === "textarea" || tag === "select") return false;
+              const isCe = Boolean(htmlEl.isContentEditable || htmlEl.getAttribute?.("contenteditable") === "true");
+              if (!isCe || htmlEl.classList?.contains("se-contents")) return false;
+              const cls = htmlEl.className || "";
+              const hasPh = Boolean(htmlEl.getAttribute?.("placeholder") || htmlEl.getAttribute?.("data-placeholder"));
+              return (
+                hasPh ||
+                /\b(?:sub|_chkNew|_chkItemName|mentiony-content)\b/.test(cls) ||
+                Boolean(htmlEl.closest?.("li.task_write, #aglTaskView_chkNew, .chk_write"))
+              );
+            })
+            .catch(() => false);
+          const isInlineEnterCommitEditable = await el
+            .evaluate((node) => {
+              const htmlEl = node as HTMLElement;
+              const tag = (htmlEl.tagName || "").toLowerCase();
+              if (tag === "input" || tag === "textarea" || tag === "select") return false;
+              const isCe = Boolean(htmlEl.isContentEditable || htmlEl.getAttribute?.("contenteditable") === "true");
+              if (!isCe || htmlEl.classList?.contains("se-contents")) return false;
+              if (htmlEl.id === "aglTaskReg_subject" || htmlEl.closest?.("#aglTaskReg")) return false;
+              const cls = htmlEl.className || "";
+              return (
+                /\b(?:_chkNew|_chkItemName)\b/.test(cls) ||
+                Boolean(htmlEl.closest?.("li.task_write, #aglTaskView_chkNew, .chk_write"))
+              );
+            })
+            .catch(() => false);
           const isRichTextEditor =
             isSynapEditor ||
-            (isEditorAction &&
+            (!isSingleLineContentEditable &&
+              isEditorAction &&
               (await el
                 .evaluate((node) => {
                   const htmlEl = node as HTMLElement;
@@ -7004,7 +7320,7 @@ async function main() {
             desc.includes("엔터") ||
             /\benter\b/i.test(desc);
 
-          if ((hasExplicitEnter || isSearchField) && !isRichTextEditor) {
+          if ((hasExplicitEnter || isSingleLineContentEditable || isSearchField) && !isRichTextEditor) {
             let nextNonWait: BrowsePlanAction | null = null;
             for (let k = actionIdx + 1; k < plan.actions.length; k++) {
               if (plan.actions[k].type !== "wait") {
@@ -7035,8 +7351,17 @@ async function main() {
                nextSel.includes("title='검색'") ||
                nextHtml.includes("ico_srch"));
 
-            // For Eyedropper recordings, NEVER guess-press Enter before a click action unless pressEnter was explicitly recorded!
-            // (Only allow implicit search Enter on legacy Eyedropper plans when the very next action is hovering a filtered search result card.)
+            const isNextExplicitInlineSaveBtn =
+              nextNonWait?.type === "click" &&
+              (nextDescClean.includes("저장") ||
+               nextDescClean.includes("등록") ||
+               nextDescClean.includes("전송") ||
+               nextSel.includes("save") ||
+               nextSel.includes("confirm") ||
+               nextSel.includes("send"));
+
+            // For Eyedropper recordings, NEVER guess-press Enter before a click action unless pressEnter was explicitly recorded
+            // or it's an inline single-line contenteditable (e.g. Kanban card title div.sub or checklist item div._chkNew) that commits via Enter!
             const isLegacyEyedropperCardHoverAfterSearch =
               isEyedropperAction &&
               isSearchField &&
@@ -7045,12 +7370,13 @@ async function main() {
 
             const shouldPressEnter =
               hasExplicitEnter ||
+              (isInlineEnterCommitEditable && !isNextExplicitInlineSaveBtn) ||
               (!isEyedropperAction && isSearchField && !isNextExplicitSearchBtn) ||
               isLegacyEyedropperCardHoverAfterSearch;
 
             if (shouldPressEnter && !isNextExplicitSearchBtn) {
               console.log(
-                hasExplicitEnter
+                hasExplicitEnter || isInlineEnterCommitEditable
                   ? `  [⏎ 엔터(Enter) 키 실행] 사용자가 입력 후 Enter 키를 눌렀으므로 Enter 키를 실행합니다.`
                   : `  [⏎ 검색어 엔터 실행] 후속 검색 버튼 클릭 단계가 없으므로 입력창에서 Enter 키를 눌러 검색을 즉시 실행합니다.`
               );

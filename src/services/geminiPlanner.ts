@@ -14,6 +14,7 @@ import {
 import { getCachedPlan, setCachedPlan } from "./aiCacheManager";
 import { sanitizeBrowsePlan } from "./planSanitizer";
 import { recordAiUsage } from "./aiUsageTracker";
+import { generateAiContent, getGeminiApiKeys } from "./aiClient";
 import { probeTargetScreens, VisualProbeScreen } from "./visualProbeAgent";
 import type { LiveDOMCandidate } from "./elementSelfHealer";
 import { ensureSessionForSlug } from "./authManager";
@@ -846,22 +847,16 @@ export async function polishPromptWithAI(rawPrompt: string): Promise<{
     return det;
   }
 
-  const apiKeys = [process.env.GEMINI_API_KEY, process.env.GEMINI_API_KEY_ALT].filter(Boolean) as string[];
-  if (apiKeys.length === 0) {
+  const config = getConfig();
+  const apiKeys = getGeminiApiKeys();
+  if (config.aiMode !== "cli" && apiKeys.length === 0) {
     return det;
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey: apiKeys[0] });
-    const model = process.env.GEMINI_MODEL || "gemini-3.5-flash";
-    const response = await ai.models.generateContent({
-      model,
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: `Convert the following user scenario request into a step-by-step Korean arrow chain ('단계1 -> 단계2 -> 단계3').
+    const aiRes = await generateAiContent({
+      feature: "프롬프트 다듬기",
+      prompt: `Convert the following user scenario request into a step-by-step Korean arrow chain ('단계1 -> 단계2 -> 단계3').
 Rules:
 1. Wrap every specific target name, template name, user ID, folder name, search keyword, title, and body text in single quotes ('...').
 2. Whenever a popup/modal is opened (결재분류, 문서함 선택, 결재선 선택, 자원 선택 등) and an item is selected, ALWAYS include '-> 팝업에서 확인 클릭' right after.
@@ -869,25 +864,12 @@ Rules:
 4. Return ONLY a JSON object: {"normalizedPrompt": "단계1 -> 단계2 -> ...", "addedHints": ["보완된 사항 요약1", "보완된 사항 요약2"]}
 
 User Request: "${rawPrompt}"`,
-            },
-          ],
-        },
-      ],
-      config: {
-        temperature: 0.1,
-        responseMimeType: "application/json",
-      },
+      temperature: 0.1,
+      jsonMode: true,
+      timeoutMs: 45_000,
     });
 
-    recordAiUsage({
-      feature: "프롬프트 다듬기",
-      model,
-      usageMetadata: response.usageMetadata,
-      fallbackPromptChars: rawPrompt.length + 500,
-      fallbackOutputChars: (response.text || "").length,
-    });
-
-    const parsed = JSON.parse(response.text || "{}");
+    const parsed = JSON.parse(aiRes.text || "{}");
     if (parsed.normalizedPrompt) {
       const reNorm = normalizeUserPrompt(parsed.normalizedPrompt);
       return {
@@ -902,19 +884,19 @@ User Request: "${rawPrompt}"`,
 }
 
 /**
- * Generates BrowsePlan using Google AI Studio Gemini API with unified, autonomous code exploration
+ * Generates BrowsePlan using Google AI Studio Gemini API or Local AI CLI with unified, autonomous code exploration
  * and pre-flight multimodal visual probing.
  */
 export async function generateBrowsePlanWithGemini(
   options: GeneratePlanOptions
 ): Promise<GeneratePlanResult> {
-  const apiKeys = [
-    process.env.GEMINI_API_KEY,
-    process.env.GEMINI_API_KEY_ALT,
-  ].filter(Boolean) as string[];
+  const currentConfig = getConfig();
+  const apiKeys = getGeminiApiKeys();
 
-  if (apiKeys.length === 0) {
-    throw new Error("GEMINI_API_KEY가 .env 또는 시스템 환경변수에 설정되어 있지 않습니다.");
+  if (currentConfig.aiMode !== "cli" && apiKeys.length === 0) {
+    throw new Error(
+      "GEMINI_API_KEY가 .env 또는 시스템 환경변수에 설정되어 있지 않습니다. API 키를 설정하거나 대시보드에서 '💻 CLI 모드'로 전환해주세요."
+    );
   }
 
   // --- Step 0: Automatic Prompt Normalization & Step-Chain Extraction ---
@@ -926,7 +908,6 @@ export async function generateBrowsePlanWithGemini(
     );
   }
 
-  const currentConfig = getConfig();
   const effectiveTargetPath = options.targetProjectPath || currentConfig.targetProjectPath;
   const effectiveTargetUrl = options.targetUrl || currentConfig.targetBaseUrl;
 
@@ -1075,8 +1056,64 @@ Respond ONLY with valid JSON matching this schema:
   let parsed: any = null;
   let lastError: any = null;
 
+  if (currentConfig.aiMode === "cli") {
+    try {
+      options.onProgress?.(
+        `💻 [AI CLI 모드] 로컬 CLI 에이전트(${currentConfig.aiCliProvider}/${currentConfig.aiCliModel})를 호출하여 시나리오를 설계 중입니다...`
+      );
+
+      let cliUserPrompt = userContent;
+      if (visualScreens.length > 0) {
+        cliUserPrompt +=
+          `\n\n### [👁️ 사전 시각 탐색: 실제 브라우저 실시간 캡처 화면 및 우선순위 정제된 DOM 요소 증거]\n` +
+          visualScreens
+            .map((s, i) => {
+              const prioritized = prioritizeProbeCandidates(s.candidates, options.prompt, 65);
+              return (
+                `#### 📸 [화면 #${i + 1}: ${s.name}] (URL: ${s.url})\n` +
+                (s.dialogTitle ? `활성 대화상자: "${s.dialogTitle}"\n` : "") +
+                (s.openedBy ? `⚠️ 필수 진입 트리거: "${s.openedBy}"\n` : "") +
+                `화면에서 추출된 핵심 인터랙티브 엘리먼트 후보군 (중요도순 상위 ${prioritized.length}개):\n` +
+                JSON.stringify(prioritized, null, 2)
+              );
+            })
+            .join("\n\n");
+      }
+
+      const cliRes = await generateAiContent({
+        feature: "시나리오 생성",
+        systemInstruction,
+        prompt: cliUserPrompt,
+        temperature: 0.2,
+        jsonMode: true,
+        slug: options.slug,
+        forceMode: "cli",
+        timeoutMs: 120_000,
+      });
+
+      options.onProgress?.(
+        `💻 [AI CLI 응답 완료] ${cliRes.modelUsed} 실행 완료 (API 요금 ₩0)`
+      );
+
+      const candidateParsed = parseAndRepairJson(cliRes.text);
+      if (
+        candidateParsed &&
+        candidateParsed.plan &&
+        Array.isArray(candidateParsed.plan.actions) &&
+        candidateParsed.plan.actions.length > 0
+      ) {
+        parsed = candidateParsed;
+      } else {
+        throw new Error("CLI 응답 JSON에 유효한 plan.actions 배열이 없습니다.");
+      }
+    } catch (cliErr: any) {
+      lastError = cliErr;
+      console.warn(`[Unified CLI Director] CLI generation failed: ${cliErr.message}`);
+    }
+  }
+
   modelLoop:
-  for (const model of candidateModels) {
+  for (const model of currentConfig.aiMode === "cli" && parsed ? [] : candidateModels) {
     for (const key of apiKeys) {
       try {
         console.log(`[Unified Gemini Director] Attempting with model "${model}"...`);

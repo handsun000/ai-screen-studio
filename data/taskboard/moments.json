@@ -1,0 +1,3550 @@
+{
+  "metadata": {
+    "url": "https://gw.bc.ac.kr/ekp/main/home/homGwMain",
+    "viewportWidth": 1920,
+    "viewportHeight": 1080,
+    "totalDurationMs": 427367,
+    "recordingStart": "2026-10-29T05:19:03.290Z",
+    "calibratedToVideoDurationMs": 427367
+  },
+  "moments": [
+    {
+      "id": 1,
+      "type": "wait",
+      "timestamp": 96,
+      "description": "팝업 닫기 반응 대기"
+    },
+    {
+      "id": 2,
+      "type": "click",
+      "timestamp": 2271,
+      "description": "'포탈 전체메뉴' 버튼 클릭",
+      "cursor": {
+        "x": 1361,
+        "y": 83
+      },
+      "target": {
+        "x": 1339,
+        "y": 60,
+        "width": 45,
+        "height": 45
+      }
+    },
+    {
+      "id": 3,
+      "type": "wait",
+      "timestamp": 3387,
+      "description": "'포탈 전체메뉴' 버튼 반응 대기"
+    },
+    {
+      "id": 4,
+      "type": "click",
+      "timestamp": 4624,
+      "description": "'태스크보드' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 961,
+        "y": 331
+      },
+      "target": {
+        "x": 873,
+        "y": 316,
+        "width": 177,
+        "height": 30
+      }
+    },
+    {
+      "id": 5,
+      "type": "wait",
+      "timestamp": 5698,
+      "description": "'태스크보드' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 6,
+      "type": "click",
+      "timestamp": 7489,
+      "description": "'태양 할일 > 할일' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 353,
+        "y": 303
+      },
+      "target": {
+        "x": 305,
+        "y": 293,
+        "width": 97,
+        "height": 21
+      }
+    },
+    {
+      "id": 7,
+      "type": "wait",
+      "timestamp": 8574,
+      "description": "'태양 할일 > 할일' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 8,
+      "type": "click",
+      "timestamp": 9826,
+      "description": "'모든 보드' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 82,
+        "y": 236
+      },
+      "target": {
+        "x": 54,
+        "y": 224,
+        "width": 55,
+        "height": 24
+      }
+    },
+    {
+      "id": 9,
+      "type": "wait",
+      "timestamp": 10866,
+      "description": "'모든 보드' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 10,
+      "type": "click",
+      "timestamp": 12090,
+      "description": "'태양 할일 임시계정(전임) 전임교원(정보' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 765,
+        "y": 358
+      },
+      "target": {
+        "x": 615,
+        "y": 248,
+        "width": 301,
+        "height": 221
+      }
+    },
+    {
+      "id": 11,
+      "type": "wait",
+      "timestamp": 13177,
+      "description": "'태양 할일 임시계정(전임) 전임교원(정보' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 12,
+      "type": "click",
+      "timestamp": 14371,
+      "description": "'나의 보드' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 82,
+        "y": 270
+      },
+      "target": {
+        "x": 54,
+        "y": 258,
+        "width": 55,
+        "height": 24
+      }
+    },
+    {
+      "id": 13,
+      "type": "wait",
+      "timestamp": 15464,
+      "description": "'나의 보드' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 14,
+      "type": "click",
+      "timestamp": 16646,
+      "description": "'태양 할일 50% 1/2' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 440,
+        "y": 347
+      },
+      "target": {
+        "x": 290,
+        "y": 248,
+        "width": 301,
+        "height": 199
+      }
+    },
+    {
+      "id": 15,
+      "type": "wait",
+      "timestamp": 17721,
+      "description": "'태양 할일 50% 1/2' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 16,
+      "type": "click",
+      "timestamp": 18919,
+      "description": "'공유 보드' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 82,
+        "y": 304
+      },
+      "target": {
+        "x": 54,
+        "y": 292,
+        "width": 55,
+        "height": 24
+      }
+    },
+    {
+      "id": 17,
+      "type": "wait",
+      "timestamp": 20001,
+      "description": "'공유 보드' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 18,
+      "type": "click",
+      "timestamp": 21203,
+      "description": "'스페이스' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 80,
+        "y": 372
+      },
+      "target": {
+        "x": 54,
+        "y": 360,
+        "width": 52,
+        "height": 24
+      }
+    },
+    {
+      "id": 19,
+      "type": "wait",
+      "timestamp": 22303,
+      "description": "'스페이스' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 20,
+      "type": "click",
+      "timestamp": 23470,
+      "description": "'삭제함' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 73,
+        "y": 440
+      },
+      "target": {
+        "x": 54,
+        "y": 428,
+        "width": 39,
+        "height": 24
+      }
+    },
+    {
+      "id": 21,
+      "type": "wait",
+      "timestamp": 24572,
+      "description": "'삭제함' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 22,
+      "type": "click",
+      "timestamp": 25765,
+      "description": "'나의 보드' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 82,
+        "y": 270
+      },
+      "target": {
+        "x": 54,
+        "y": 258,
+        "width": 55,
+        "height": 24
+      }
+    },
+    {
+      "id": 23,
+      "type": "wait",
+      "timestamp": 26836,
+      "description": "'나의 보드' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 24,
+      "type": "click",
+      "timestamp": 28099,
+      "description": "'보드 추가' 버튼 클릭",
+      "cursor": {
+        "x": 401,
+        "y": 197
+      },
+      "target": {
+        "x": 353,
+        "y": 179,
+        "width": 95,
+        "height": 36
+      }
+    },
+    {
+      "id": 25,
+      "type": "wait",
+      "timestamp": 29108,
+      "description": "'보드 추가' 버튼 반응 대기"
+    },
+    {
+      "id": 26,
+      "type": "type",
+      "timestamp": 30352,
+      "description": "[보드 추가 팝업] '보드 타이틀을 입력하세요.' 입력창에 '공동업무 보드' 입력",
+      "cursor": {
+        "x": 831,
+        "y": 100
+      },
+      "target": {
+        "x": 815,
+        "y": 85,
+        "width": 360,
+        "height": 30
+      },
+      "keys": "공동업무 보드"
+    },
+    {
+      "id": 27,
+      "type": "wait",
+      "timestamp": 31382,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 28,
+      "type": "type",
+      "timestamp": 32547,
+      "description": "[보드 추가 팝업] '보드 설명을 입력하세요.' 입력창에 '부서원 간 협조 업무의 진행 상태를 실시간으로 공유하는 보드입니다.' 입력",
+      "cursor": {
+        "x": 831,
+        "y": 133
+      },
+      "target": {
+        "x": 815,
+        "y": 120,
+        "width": 360,
+        "height": 26
+      },
+      "keys": "부서원 간 협조 업무의 진행 상태를 실시간으로 공유하는 보드입니다."
+    },
+    {
+      "id": 29,
+      "type": "wait",
+      "timestamp": 34987,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 30,
+      "type": "click",
+      "timestamp": 36119,
+      "description": "[보드 추가 팝업] '디자인' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 187
+      },
+      "target": {
+        "x": 888,
+        "y": 166,
+        "width": 144,
+        "height": 42
+      }
+    },
+    {
+      "id": 31,
+      "type": "wait",
+      "timestamp": 37238,
+      "description": "[보드 추가 팝업] '디자인' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 32,
+      "type": "click",
+      "timestamp": 38530,
+      "description": "[보드 추가 팝업] 'SKIN9' 요소 클릭",
+      "cursor": {
+        "x": 924,
+        "y": 367
+      },
+      "target": {
+        "x": 895,
+        "y": 338,
+        "width": 57,
+        "height": 57
+      }
+    },
+    {
+      "id": 33,
+      "type": "wait",
+      "timestamp": 39598,
+      "description": "[보드 추가 팝업] 'SKIN9' 요소 반응 대기"
+    },
+    {
+      "id": 34,
+      "type": "click",
+      "timestamp": 40850,
+      "description": "[보드 추가 팝업] 'BG5' 요소 클릭",
+      "cursor": {
+        "x": 1058,
+        "y": 513
+      },
+      "target": {
+        "x": 1030,
+        "y": 484,
+        "width": 57,
+        "height": 57
+      }
+    },
+    {
+      "id": 35,
+      "type": "wait",
+      "timestamp": 41932,
+      "description": "[보드 추가 팝업] 'BG5' 요소 반응 대기"
+    },
+    {
+      "id": 36,
+      "type": "click",
+      "timestamp": 43150,
+      "description": "[보드 추가 팝업] '설정' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1104,
+        "y": 187
+      },
+      "target": {
+        "x": 1031,
+        "y": 166,
+        "width": 145,
+        "height": 42
+      }
+    },
+    {
+      "id": 37,
+      "type": "wait",
+      "timestamp": 44236,
+      "description": "[보드 추가 팝업] '설정' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 38,
+      "type": "click",
+      "timestamp": 45472,
+      "description": "[보드 추가 팝업] '멤버' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 817,
+        "y": 187
+      },
+      "target": {
+        "x": 745,
+        "y": 166,
+        "width": 144,
+        "height": 42
+      }
+    },
+    {
+      "id": 39,
+      "type": "wait",
+      "timestamp": 46552,
+      "description": "[보드 추가 팝업] '멤버' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 40,
+      "type": "click",
+      "timestamp": 47755,
+      "description": "[보드 추가 팝업] '추가' 버튼 클릭",
+      "cursor": {
+        "x": 783,
+        "y": 625
+      },
+      "target": {
+        "x": 756,
+        "y": 612,
+        "width": 54,
+        "height": 26
+      }
+    },
+    {
+      "id": 41,
+      "type": "wait",
+      "timestamp": 48886,
+      "description": "[보드 추가 팝업] '추가' 버튼 반응 대기"
+    },
+    {
+      "id": 42,
+      "type": "click",
+      "timestamp": 50071,
+      "description": "[공유자 설정 팝업] 트리 '부서' 항목 클릭",
+      "cursor": {
+        "x": 612,
+        "y": 335
+      },
+      "target": {
+        "x": 597,
+        "y": 323,
+        "width": 30,
+        "height": 24
+      }
+    },
+    {
+      "id": 43,
+      "type": "wait",
+      "timestamp": 51259,
+      "description": "[공유자 설정 팝업] 트리 '부서' 항목 반응 대기"
+    },
+    {
+      "id": 44,
+      "type": "click",
+      "timestamp": 52532,
+      "description": "[공유자 설정 팝업] 트리 '대학본부' 항목 클릭",
+      "cursor": {
+        "x": 632,
+        "y": 369
+      },
+      "target": {
+        "x": 605,
+        "y": 357,
+        "width": 54,
+        "height": 24
+      }
+    },
+    {
+      "id": 45,
+      "type": "wait",
+      "timestamp": 53640,
+      "description": "[공유자 설정 팝업] 트리 '대학본부' 항목 반응 대기"
+    },
+    {
+      "id": 46,
+      "type": "click",
+      "timestamp": 54882,
+      "description": "[공유자 설정 팝업] 트리 '사무처' 항목 클릭",
+      "cursor": {
+        "x": 634,
+        "y": 437
+      },
+      "target": {
+        "x": 613,
+        "y": 425,
+        "width": 42,
+        "height": 24
+      }
+    },
+    {
+      "id": 47,
+      "type": "wait",
+      "timestamp": 55977,
+      "description": "[공유자 설정 팝업] 트리 '사무처' 항목 반응 대기"
+    },
+    {
+      "id": 48,
+      "type": "click",
+      "timestamp": 57265,
+      "description": "[공유자 설정 팝업] '김병훈 담당 사무처' 요소 클릭",
+      "cursor": {
+        "x": 917,
+        "y": 314
+      },
+      "target": {
+        "x": 873,
+        "y": 268,
+        "width": 88,
+        "height": 94
+      }
+    },
+    {
+      "id": 49,
+      "type": "wait",
+      "timestamp": 58361,
+      "description": "[공유자 설정 팝업] '김병훈 담당 사무처' 요소 반응 대기"
+    },
+    {
+      "id": 50,
+      "type": "click",
+      "timestamp": 59616,
+      "description": "[공유자 설정 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 928,
+        "y": 540
+      },
+      "target": {
+        "x": 899,
+        "y": 523,
+        "width": 59,
+        "height": 34
+      }
+    },
+    {
+      "id": 51,
+      "type": "wait",
+      "timestamp": 60739,
+      "description": "[공유자 설정 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 52,
+      "type": "click",
+      "timestamp": 62566,
+      "description": "[보드 추가 팝업] '저장' 버튼 클릭",
+      "cursor": {
+        "x": 936,
+        "y": 686
+      },
+      "target": {
+        "x": 915,
+        "y": 670,
+        "width": 43,
+        "height": 32
+      }
+    },
+    {
+      "id": 53,
+      "type": "wait",
+      "timestamp": 64533,
+      "description": "[보드 추가 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 54,
+      "type": "click",
+      "timestamp": 66352,
+      "description": "'공동업무 보드 0% 0/0' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 440,
+        "y": 347
+      },
+      "target": {
+        "x": 290,
+        "y": 248,
+        "width": 301,
+        "height": 199
+      }
+    },
+    {
+      "id": 55,
+      "type": "wait",
+      "timestamp": 67455,
+      "description": "'공동업무 보드 0% 0/0' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 56,
+      "type": "click",
+      "timestamp": 68655,
+      "description": "'설정' 버튼 클릭",
+      "cursor": {
+        "x": 1439,
+        "y": 204
+      },
+      "target": {
+        "x": 1428,
+        "y": 191,
+        "width": 22,
+        "height": 26
+      }
+    },
+    {
+      "id": 57,
+      "type": "wait",
+      "timestamp": 69725,
+      "description": "'설정' 버튼 반응 대기"
+    },
+    {
+      "id": 58,
+      "type": "click",
+      "timestamp": 70946,
+      "description": "[할일그룹 설정 팝업] '삭제' 버튼 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 733
+      },
+      "target": {
+        "x": 930,
+        "y": 716,
+        "width": 59,
+        "height": 34
+      }
+    },
+    {
+      "id": 59,
+      "type": "wait",
+      "timestamp": 72039,
+      "description": "[할일그룹 설정 팝업] '삭제' 버튼 반응 대기"
+    },
+    {
+      "id": 60,
+      "type": "click",
+      "timestamp": 73228,
+      "description": "'설정' 버튼 클릭",
+      "cursor": {
+        "x": 1439,
+        "y": 204
+      },
+      "target": {
+        "x": 1428,
+        "y": 191,
+        "width": 22,
+        "height": 26
+      }
+    },
+    {
+      "id": 61,
+      "type": "wait",
+      "timestamp": 74313,
+      "description": "'설정' 버튼 반응 대기"
+    },
+    {
+      "id": 62,
+      "type": "type",
+      "timestamp": 75612,
+      "description": "[할일그룹 설정 팝업] '그룹명' 입력창에 '이슈' 입력",
+      "cursor": {
+        "x": 856,
+        "y": 377
+      },
+      "target": {
+        "x": 840,
+        "y": 361,
+        "width": 240,
+        "height": 32
+      },
+      "keys": "이슈"
+    },
+    {
+      "id": 63,
+      "type": "wait",
+      "timestamp": 76385,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 64,
+      "type": "click",
+      "timestamp": 77530,
+      "description": "[할일그룹 설정 팝업] '#ca4f58' 요소 클릭",
+      "cursor": {
+        "x": 900,
+        "y": 468
+      },
+      "target": {
+        "x": 885,
+        "y": 453,
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
+      "id": 65,
+      "type": "wait",
+      "timestamp": 78619,
+      "description": "[할일그룹 설정 팝업] '#ca4f58' 요소 반응 대기"
+    },
+    {
+      "id": 66,
+      "type": "click",
+      "timestamp": 79865,
+      "description": "[할일그룹 설정 팝업] 'ICON18' 요소 클릭",
+      "cursor": {
+        "x": 1060,
+        "y": 597
+      },
+      "target": {
+        "x": 1044,
+        "y": 581,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "id": 67,
+      "type": "wait",
+      "timestamp": 80956,
+      "description": "[할일그룹 설정 팝업] 'ICON18' 요소 반응 대기"
+    },
+    {
+      "id": 68,
+      "type": "click",
+      "timestamp": 82148,
+      "description": "[할일그룹 설정 팝업] '저장' 버튼 클릭",
+      "cursor": {
+        "x": 897,
+        "y": 733
+      },
+      "target": {
+        "x": 867,
+        "y": 716,
+        "width": 59,
+        "height": 34
+      }
+    },
+    {
+      "id": 69,
+      "type": "wait",
+      "timestamp": 84099,
+      "description": "[할일그룹 설정 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 70,
+      "type": "click",
+      "timestamp": 85931,
+      "description": "'그룹 추가' 버튼 클릭",
+      "cursor": {
+        "x": 1484,
+        "y": 204
+      },
+      "target": {
+        "x": 1471,
+        "y": 191,
+        "width": 26,
+        "height": 26
+      }
+    },
+    {
+      "id": 71,
+      "type": "wait",
+      "timestamp": 86970,
+      "description": "'그룹 추가' 버튼 반응 대기"
+    },
+    {
+      "id": 72,
+      "type": "type",
+      "timestamp": 88236,
+      "description": "[할일그룹 추가 팝업] '그룹명' 입력창에 '취소' 입력",
+      "cursor": {
+        "x": 856,
+        "y": 377
+      },
+      "target": {
+        "x": 840,
+        "y": 361,
+        "width": 240,
+        "height": 32
+      },
+      "keys": "취소"
+    },
+    {
+      "id": 73,
+      "type": "wait",
+      "timestamp": 88989,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 74,
+      "type": "click",
+      "timestamp": 90115,
+      "description": "[할일그룹 추가 팝업] '#8889e2' 요소 클릭",
+      "cursor": {
+        "x": 1020,
+        "y": 468
+      },
+      "target": {
+        "x": 1005,
+        "y": 453,
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
+      "id": 75,
+      "type": "wait",
+      "timestamp": 91196,
+      "description": "[할일그룹 추가 팝업] '#8889e2' 요소 반응 대기"
+    },
+    {
+      "id": 76,
+      "type": "click",
+      "timestamp": 92411,
+      "description": "[할일그룹 추가 팝업] '저장' 버튼 클릭",
+      "cursor": {
+        "x": 928,
+        "y": 733
+      },
+      "target": {
+        "x": 899,
+        "y": 716,
+        "width": 59,
+        "height": 34
+      }
+    },
+    {
+      "id": 77,
+      "type": "wait",
+      "timestamp": 94323,
+      "description": "[할일그룹 추가 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 78,
+      "type": "click",
+      "timestamp": 96163,
+      "description": "'할일 추가' 버튼 클릭",
+      "cursor": {
+        "x": 513,
+        "y": 204
+      },
+      "target": {
+        "x": 502,
+        "y": 191,
+        "width": 22,
+        "height": 26
+      }
+    },
+    {
+      "id": 79,
+      "type": "wait",
+      "timestamp": 97220,
+      "description": "'할일 추가' 버튼 반응 대기"
+    },
+    {
+      "id": 80,
+      "type": "type",
+      "timestamp": 98428,
+      "description": "'제목을 입력하세요.' 입력창에 '교과목 시간표 최종 점검' 입력",
+      "cursor": {
+        "x": 311,
+        "y": 247
+      },
+      "target": {
+        "x": 295,
+        "y": 237,
+        "width": 240,
+        "height": 21
+      },
+      "keys": "교과목 시간표 최종 점검"
+    },
+    {
+      "id": 81,
+      "type": "wait",
+      "timestamp": 100437,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 82,
+      "type": "click",
+      "timestamp": 101511,
+      "description": "'교과목 시간표 최종 점검' 요소 클릭",
+      "cursor": {
+        "x": 415,
+        "y": 247
+      },
+      "target": {
+        "x": 280,
+        "y": 222,
+        "width": 270,
+        "height": 51
+      }
+    },
+    {
+      "id": 83,
+      "type": "wait",
+      "timestamp": 102628,
+      "description": "'교과목 시간표 최종 점검' 요소 반응 대기"
+    },
+    {
+      "id": 84,
+      "type": "click",
+      "timestamp": 103858,
+      "description": "[담당자] '선택' 버튼 클릭",
+      "cursor": {
+        "x": 732,
+        "y": 220
+      },
+      "target": {
+        "x": 720,
+        "y": 208,
+        "width": 24,
+        "height": 24
+      }
+    },
+    {
+      "id": 85,
+      "type": "wait",
+      "timestamp": 104929,
+      "description": "[담당자] '선택' 버튼 반응 대기"
+    },
+    {
+      "id": 86,
+      "type": "click",
+      "timestamp": 106263,
+      "description": "[할일 배정 팝업] '임 임시계정(전임) 전임교원(정보보안센터' 요소 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 444
+      },
+      "target": {
+        "x": 801,
+        "y": 424,
+        "width": 318,
+        "height": 40
+      }
+    },
+    {
+      "id": 87,
+      "type": "wait",
+      "timestamp": 107265,
+      "description": "[할일 배정 팝업] '임 임시계정(전임) 전임교원(정보보안센터' 요소 반응 대기"
+    },
+    {
+      "id": 88,
+      "type": "click",
+      "timestamp": 108549,
+      "description": "[할일 배정 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 928,
+        "y": 743
+      },
+      "target": {
+        "x": 899,
+        "y": 726,
+        "width": 59,
+        "height": 34
+      }
+    },
+    {
+      "id": 89,
+      "type": "wait",
+      "timestamp": 109617,
+      "description": "[할일 배정 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 90,
+      "type": "click",
+      "timestamp": 111440,
+      "description": "[기한] #aglTaskView_periodSetupBtn (button) 클릭",
+      "cursor": {
+        "x": 732,
+        "y": 258
+      },
+      "target": {
+        "x": 720,
+        "y": 246,
+        "width": 24,
+        "height": 24
+      }
+    },
+    {
+      "id": 91,
+      "type": "wait",
+      "timestamp": 112529,
+      "description": "[기한] #aglTaskView_periodSetupBtn (button) 반응 대기"
+    },
+    {
+      "id": 92,
+      "type": "click",
+      "timestamp": 113839,
+      "description": "[달력 팝업] '30일' 날짜 클릭 클릭",
+      "cursor": {
+        "x": 892,
+        "y": 466
+      },
+      "target": {
+        "x": 879,
+        "y": 452,
+        "width": 27,
+        "height": 27
+      }
+    },
+    {
+      "id": 93,
+      "type": "wait",
+      "timestamp": 115243,
+      "description": "[달력 팝업] '30일' 날짜 클릭 반응 대기"
+    },
+    {
+      "id": 94,
+      "type": "click",
+      "timestamp": 116474,
+      "description": "[기한] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 827,
+        "y": 562
+      },
+      "target": {
+        "x": 787,
+        "y": 546,
+        "width": 80,
+        "height": 32
+      }
+    },
+    {
+      "id": 95,
+      "type": "wait",
+      "timestamp": 117545,
+      "description": "[기한] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 96,
+      "type": "click",
+      "timestamp": 119361,
+      "description": "'내용 편집' 버튼 클릭",
+      "cursor": {
+        "x": 677,
+        "y": 310
+      },
+      "target": {
+        "x": 640,
+        "y": 297,
+        "width": 73,
+        "height": 26
+      }
+    },
+    {
+      "id": 97,
+      "type": "wait",
+      "timestamp": 122929,
+      "description": "'내용 편집' 버튼 반응 대기"
+    },
+    {
+      "id": 98,
+      "type": "type",
+      "timestamp": 124303,
+      "description": "'에디터 본문' 입력 영역에 '교과목 시간표 최종 점검 하겠습니다.' 입력",
+      "cursor": {
+        "x": 849,
+        "y": 460
+      },
+      "target": {
+        "x": 664,
+        "y": 421,
+        "width": 592,
+        "height": 23
+      },
+      "keys": "교과목 시간표 최종 점검 하겠습니다."
+    },
+    {
+      "id": 99,
+      "type": "wait",
+      "timestamp": 126144,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 100,
+      "type": "click",
+      "timestamp": 127267,
+      "description": "'저장' 버튼 클릭",
+      "cursor": {
+        "x": 1186,
+        "y": 699
+      },
+      "target": {
+        "x": 1156,
+        "y": 683,
+        "width": 60,
+        "height": 32
+      }
+    },
+    {
+      "id": 101,
+      "type": "wait",
+      "timestamp": 129574,
+      "description": "'저장' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 102,
+      "type": "click",
+      "timestamp": 131432,
+      "description": "'라벨 추가' 버튼 클릭",
+      "cursor": {
+        "x": 1240,
+        "y": 393
+      },
+      "target": {
+        "x": 1228,
+        "y": 381,
+        "width": 24,
+        "height": 24
+      }
+    },
+    {
+      "id": 103,
+      "type": "wait",
+      "timestamp": 132483,
+      "description": "'라벨 추가' 버튼 반응 대기"
+    },
+    {
+      "id": 104,
+      "type": "click",
+      "timestamp": 133740,
+      "description": "[라벨 선택 팝업] '점검' 요소 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 246
+      },
+      "target": {
+        "x": 830,
+        "y": 232,
+        "width": 260,
+        "height": 28
+      }
+    },
+    {
+      "id": 105,
+      "type": "wait",
+      "timestamp": 134817,
+      "description": "[라벨 선택 팝업] '점검' 요소 반응 대기"
+    },
+    {
+      "id": 106,
+      "type": "click",
+      "timestamp": 136072,
+      "description": "[라벨 선택 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 928,
+        "y": 362
+      },
+      "target": {
+        "x": 899,
+        "y": 345,
+        "width": 59,
+        "height": 34
+      }
+    },
+    {
+      "id": 107,
+      "type": "wait",
+      "timestamp": 137168,
+      "description": "[라벨 선택 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 108,
+      "type": "click",
+      "timestamp": 138945,
+      "description": "'부가 기능' 버튼 클릭",
+      "cursor": {
+        "x": 1268,
+        "y": 393
+      },
+      "target": {
+        "x": 1256,
+        "y": 381,
+        "width": 24,
+        "height": 24
+      }
+    },
+    {
+      "id": 109,
+      "type": "wait",
+      "timestamp": 140047,
+      "description": "'부가 기능' 버튼 반응 대기"
+    },
+    {
+      "id": 110,
+      "type": "click",
+      "timestamp": 141295,
+      "description": "'체크 리스트 추가' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1219,
+        "y": 428
+      },
+      "target": {
+        "x": 1159,
+        "y": 413,
+        "width": 120,
+        "height": 30
+      }
+    },
+    {
+      "id": 111,
+      "type": "wait",
+      "timestamp": 142362,
+      "description": "'체크 리스트 추가' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 112,
+      "type": "type",
+      "timestamp": 143614,
+      "description": "'체크 리스트를 입력하세요.' 입력창에 '항목 1번' 입력 후 엔터(Enter)",
+      "cursor": {
+        "x": 681,
+        "y": 478
+      },
+      "target": {
+        "x": 665,
+        "y": 467,
+        "width": 615,
+        "height": 21
+      },
+      "keys": "항목 1번"
+    },
+    {
+      "id": 113,
+      "type": "wait",
+      "timestamp": 145228,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 114,
+      "type": "type",
+      "timestamp": 146386,
+      "description": "'체크 리스트를 입력하세요.' 입력창에 '항목 2번' 입력 후 엔터(Enter)",
+      "cursor": {
+        "x": 681,
+        "y": 510
+      },
+      "target": {
+        "x": 665,
+        "y": 499,
+        "width": 615,
+        "height": 21
+      },
+      "keys": "항목 2번"
+    },
+    {
+      "id": 115,
+      "type": "wait",
+      "timestamp": 147989,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 116,
+      "type": "type",
+      "timestamp": 149150,
+      "description": "'체크 리스트를 입력하세요.' 입력창에 '항목 3번' 입력",
+      "cursor": {
+        "x": 681,
+        "y": 542
+      },
+      "target": {
+        "x": 665,
+        "y": 531,
+        "width": 615,
+        "height": 21
+      },
+      "keys": "항목 3번"
+    },
+    {
+      "id": 117,
+      "type": "wait",
+      "timestamp": 150777,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 118,
+      "type": "click",
+      "timestamp": 151888,
+      "description": "'부가 기능' 버튼 클릭",
+      "cursor": {
+        "x": 1268,
+        "y": 393
+      },
+      "target": {
+        "x": 1256,
+        "y": 381,
+        "width": 24,
+        "height": 24
+      }
+    },
+    {
+      "id": 119,
+      "type": "wait",
+      "timestamp": 152971,
+      "description": "'부가 기능' 버튼 반응 대기"
+    },
+    {
+      "id": 120,
+      "type": "click",
+      "timestamp": 154140,
+      "description": "'첨부파일 추가' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1219,
+        "y": 458
+      },
+      "target": {
+        "x": 1159,
+        "y": 443,
+        "width": 120,
+        "height": 30
+      }
+    },
+    {
+      "id": 121,
+      "type": "wait",
+      "timestamp": 155271,
+      "description": "'첨부파일 추가' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 122,
+      "type": "upload",
+      "timestamp": 156663,
+      "description": "[파일 첨부 팝업] '내 PC' 버튼에 '할일.pdf' 첨부",
+      "cursor": {
+        "x": 660,
+        "y": 458
+      },
+      "target": {
+        "x": 624,
+        "y": 442,
+        "width": 72,
+        "height": 32
+      }
+    },
+    {
+      "id": 123,
+      "type": "click",
+      "timestamp": 157899,
+      "cursor": {
+        "x": 935,
+        "y": 450
+      },
+      "target": {
+        "x": 795,
+        "y": 433,
+        "width": 497,
+        "height": 36
+      },
+      "description": "[파일 선택 팝업] '할일.pdf' 파일 선택"
+    },
+    {
+      "id": 124,
+      "type": "click",
+      "timestamp": 158699,
+      "cursor": {
+        "x": 1149,
+        "y": 730
+      },
+      "target": {
+        "x": 1106,
+        "y": 717,
+        "width": 86,
+        "height": 26
+      },
+      "description": "[파일 선택 팝업] '열기(O)' 버튼 클릭"
+    },
+    {
+      "id": 125,
+      "type": "wait",
+      "timestamp": 160334,
+      "description": "첨부 파일 업로드 및 목록 반영 대기"
+    },
+    {
+      "id": 126,
+      "type": "click",
+      "timestamp": 162029,
+      "description": "[파일 첨부 팝업] '저장' 버튼 클릭",
+      "cursor": {
+        "x": 930,
+        "y": 688
+      },
+      "target": {
+        "x": 903,
+        "y": 670,
+        "width": 55,
+        "height": 36
+      }
+    },
+    {
+      "id": 127,
+      "type": "wait",
+      "timestamp": 163925,
+      "description": "[파일 첨부 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 128,
+      "type": "click",
+      "timestamp": 165753,
+      "description": "'닫기' 버튼 클릭",
+      "cursor": {
+        "x": 1280,
+        "y": 75
+      },
+      "target": {
+        "x": 1265,
+        "y": 60,
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
+      "id": 129,
+      "type": "wait",
+      "timestamp": 166860,
+      "description": "'닫기' 버튼 반응 대기"
+    },
+    {
+      "id": 130,
+      "type": "click",
+      "timestamp": 168040,
+      "description": "'할일 등록' 버튼 클릭",
+      "cursor": {
+        "x": 130,
+        "y": 148
+      },
+      "target": {
+        "x": 20,
+        "y": 124,
+        "width": 219,
+        "height": 47
+      }
+    },
+    {
+      "id": 131,
+      "type": "wait",
+      "timestamp": 169112,
+      "description": "'할일 등록' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 132,
+      "type": "type",
+      "timestamp": 170931,
+      "description": "'제목을 입력하세요.' 입력창에 '복무 규정 개정안 안내문 배포' 입력",
+      "cursor": {
+        "x": 646,
+        "y": 102
+      },
+      "target": {
+        "x": 630,
+        "y": 85,
+        "width": 660,
+        "height": 34
+      },
+      "keys": "복무 규정 개정안 안내문 배포"
+    },
+    {
+      "id": 133,
+      "type": "wait",
+      "timestamp": 172397,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 134,
+      "type": "click",
+      "timestamp": 173511,
+      "description": "[보드] '선택' 버튼 클릭",
+      "cursor": {
+        "x": 1274,
+        "y": 157
+      },
+      "target": {
+        "x": 1258,
+        "y": 141,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "id": 135,
+      "type": "wait",
+      "timestamp": 174609,
+      "description": "[보드] '선택' 버튼 반응 대기"
+    },
+    {
+      "id": 136,
+      "type": "click",
+      "timestamp": 175866,
+      "description": "[보드 선택 팝업] '공동업무 보드' 요소 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 399
+      },
+      "target": {
+        "x": 771,
+        "y": 381,
+        "width": 378,
+        "height": 36
+      }
+    },
+    {
+      "id": 137,
+      "type": "wait",
+      "timestamp": 177377,
+      "description": "[보드 선택 팝업] '공동업무 보드' 요소 반응 대기"
+    },
+    {
+      "id": 138,
+      "type": "click",
+      "timestamp": 178545,
+      "description": "[그룹] '- 그룹 선택 - 할일 진행 해결 이슈 ' 요소에서 '진행' 선택",
+      "cursor": {
+        "x": 1010,
+        "y": 203
+      },
+      "target": {
+        "x": 730,
+        "y": 187,
+        "width": 560,
+        "height": 32
+      }
+    },
+    {
+      "id": 139,
+      "type": "wait",
+      "timestamp": 179603,
+      "description": "[그룹] '- 그룹 선택 - 할일 진행 해결 이슈 ' 요소에서 '진행' 선택 반응 대기"
+    },
+    {
+      "id": 140,
+      "type": "click",
+      "timestamp": 180824,
+      "description": "[담당자] '선택' 버튼 클릭",
+      "cursor": {
+        "x": 742,
+        "y": 245
+      },
+      "target": {
+        "x": 730,
+        "y": 233,
+        "width": 24,
+        "height": 24
+      }
+    },
+    {
+      "id": 141,
+      "type": "wait",
+      "timestamp": 181876,
+      "description": "[담당자] '선택' 버튼 반응 대기"
+    },
+    {
+      "id": 142,
+      "type": "click",
+      "timestamp": 183145,
+      "description": "[할일 배정 팝업] '김 김병훈 담당(사무처)' 요소 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 404
+      },
+      "target": {
+        "x": 801,
+        "y": 384,
+        "width": 318,
+        "height": 40
+      }
+    },
+    {
+      "id": 143,
+      "type": "wait",
+      "timestamp": 184227,
+      "description": "[할일 배정 팝업] '김 김병훈 담당(사무처)' 요소 반응 대기"
+    },
+    {
+      "id": 144,
+      "type": "click",
+      "timestamp": 185499,
+      "description": "[할일 배정 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 928,
+        "y": 743
+      },
+      "target": {
+        "x": 899,
+        "y": 726,
+        "width": 59,
+        "height": 34
+      }
+    },
+    {
+      "id": 145,
+      "type": "wait",
+      "timestamp": 186550,
+      "description": "[할일 배정 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 146,
+      "type": "click",
+      "timestamp": 188364,
+      "description": "[기한] #aglTaskReg_periodSetupBtn (button) 클릭",
+      "cursor": {
+        "x": 742,
+        "y": 283
+      },
+      "target": {
+        "x": 730,
+        "y": 271,
+        "width": 24,
+        "height": 24
+      }
+    },
+    {
+      "id": 147,
+      "type": "wait",
+      "timestamp": 189450,
+      "description": "[기한] #aglTaskReg_periodSetupBtn (button) 반응 대기"
+    },
+    {
+      "id": 148,
+      "type": "click",
+      "timestamp": 190882,
+      "description": "[달력 팝업] '30일' 날짜 클릭 클릭",
+      "cursor": {
+        "x": 902,
+        "y": 491
+      },
+      "target": {
+        "x": 889,
+        "y": 478,
+        "width": 27,
+        "height": 27
+      }
+    },
+    {
+      "id": 149,
+      "type": "wait",
+      "timestamp": 192225,
+      "description": "[달력 팝업] '30일' 날짜 클릭 반응 대기"
+    },
+    {
+      "id": 150,
+      "type": "click",
+      "timestamp": 193441,
+      "description": "[기한] '종일' 요소 클릭",
+      "cursor": {
+        "x": 766,
+        "y": 531
+      },
+      "target": {
+        "x": 742,
+        "y": 516,
+        "width": 50,
+        "height": 30
+      }
+    },
+    {
+      "id": 151,
+      "type": "wait",
+      "timestamp": 194520,
+      "description": "[기한] '종일' 요소 반응 대기"
+    },
+    {
+      "id": 152,
+      "type": "click",
+      "timestamp": 195726,
+      "description": "[기한] 'hh:mm' 입력창 클릭",
+      "cursor": {
+        "x": 849,
+        "y": 532
+      },
+      "target": {
+        "x": 801,
+        "y": 516,
+        "width": 95,
+        "height": 32
+      }
+    },
+    {
+      "id": 153,
+      "type": "wait",
+      "timestamp": 196827,
+      "description": "[기한] 'hh:mm' 입력창 반응 대기"
+    },
+    {
+      "id": 154,
+      "type": "click",
+      "timestamp": 198051,
+      "description": "[시간 선택] '19:00' 시간 클릭 클릭",
+      "cursor": {
+        "x": 842,
+        "y": 626
+      },
+      "target": {
+        "x": 802,
+        "y": 610,
+        "width": 80,
+        "height": 31
+      }
+    },
+    {
+      "id": 155,
+      "type": "wait",
+      "timestamp": 199512,
+      "description": "[시간 선택] '19:00' 시간 클릭 반응 대기"
+    },
+    {
+      "id": 156,
+      "type": "click",
+      "timestamp": 200726,
+      "description": "[기한] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 837,
+        "y": 587
+      },
+      "target": {
+        "x": 797,
+        "y": 571,
+        "width": 80,
+        "height": 32
+      }
+    },
+    {
+      "id": 157,
+      "type": "wait",
+      "timestamp": 201810,
+      "description": "[기한] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 158,
+      "type": "type",
+      "timestamp": 203706,
+      "description": "'에디터 본문' 입력 영역에 '복무 규정 개정안 안내문 배포 하겠습니다.' 입력",
+      "cursor": {
+        "x": 939,
+        "y": 533
+      },
+      "target": {
+        "x": 654,
+        "y": 447,
+        "width": 612,
+        "height": 23
+      },
+      "keys": "복무 규정 개정안 안내문 배포 하겠습니다."
+    },
+    {
+      "id": 159,
+      "type": "wait",
+      "timestamp": 205708,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 160,
+      "type": "upload",
+      "timestamp": 206931,
+      "description": "'내 PC' 버튼에 '할일.pdf' 첨부",
+      "cursor": {
+        "x": 666,
+        "y": 714
+      },
+      "target": {
+        "x": 630,
+        "y": 698,
+        "width": 72,
+        "height": 32
+      }
+    },
+    {
+      "id": 161,
+      "type": "click",
+      "timestamp": 208115,
+      "cursor": {
+        "x": 935,
+        "y": 450
+      },
+      "target": {
+        "x": 795,
+        "y": 433,
+        "width": 497,
+        "height": 36
+      },
+      "description": "[파일 선택 팝업] '할일.pdf' 파일 선택"
+    },
+    {
+      "id": 162,
+      "type": "click",
+      "timestamp": 208948,
+      "cursor": {
+        "x": 1149,
+        "y": 730
+      },
+      "target": {
+        "x": 1106,
+        "y": 717,
+        "width": 86,
+        "height": 26
+      },
+      "description": "[파일 선택 팝업] '열기(O)' 버튼 클릭"
+    },
+    {
+      "id": 163,
+      "type": "wait",
+      "timestamp": 210570,
+      "description": "첨부 파일 업로드 및 목록 반영 대기"
+    },
+    {
+      "id": 164,
+      "type": "click",
+      "timestamp": 212213,
+      "description": "'저장' 버튼 클릭",
+      "cursor": {
+        "x": 936,
+        "y": 921
+      },
+      "target": {
+        "x": 915,
+        "y": 905,
+        "width": 43,
+        "height": 32
+      }
+    },
+    {
+      "id": 165,
+      "type": "wait",
+      "timestamp": 214093,
+      "description": "'저장' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 166,
+      "type": "click",
+      "timestamp": 215928,
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 141
+      },
+      "target": {
+        "x": 910,
+        "y": 121,
+        "width": 100,
+        "height": 40
+      }
+    },
+    {
+      "id": 167,
+      "type": "wait",
+      "timestamp": 217006,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 168,
+      "type": "click",
+      "timestamp": 219638,
+      "description": "'10-30 1 임 1' 요소 클릭",
+      "cursor": {
+        "x": 715,
+        "y": 272
+      },
+      "target": {
+        "x": 595,
+        "y": 258,
+        "width": 240,
+        "height": 28
+      }
+    },
+    {
+      "id": 169,
+      "type": "wait",
+      "timestamp": 220723,
+      "description": "'10-30 1 임 1' 요소 반응 대기"
+    },
+    {
+      "id": 170,
+      "type": "click",
+      "timestamp": 221929,
+      "description": "'라벨 추가' 버튼 클릭",
+      "cursor": {
+        "x": 1240,
+        "y": 393
+      },
+      "target": {
+        "x": 1228,
+        "y": 381,
+        "width": 24,
+        "height": 24
+      }
+    },
+    {
+      "id": 171,
+      "type": "wait",
+      "timestamp": 223014,
+      "description": "'라벨 추가' 버튼 반응 대기"
+    },
+    {
+      "id": 172,
+      "type": "click",
+      "timestamp": 224291,
+      "description": "[라벨 선택 팝업] '수정' 버튼 클릭",
+      "cursor": {
+        "x": 1076,
+        "y": 279
+      },
+      "target": {
+        "x": 1066,
+        "y": 269,
+        "width": 20,
+        "height": 20
+      }
+    },
+    {
+      "id": 173,
+      "type": "wait",
+      "timestamp": 225338,
+      "description": "[라벨 선택 팝업] '수정' 버튼 반응 대기"
+    },
+    {
+      "id": 174,
+      "type": "click",
+      "timestamp": 226610,
+      "description": "[라벨 정보 팝업] '삭제' 버튼 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 618
+      },
+      "target": {
+        "x": 930,
+        "y": 601,
+        "width": 59,
+        "height": 34
+      }
+    },
+    {
+      "id": 175,
+      "type": "wait",
+      "timestamp": 227686,
+      "description": "[라벨 정보 팝업] '삭제' 버튼 반응 대기"
+    },
+    {
+      "id": 176,
+      "type": "click",
+      "timestamp": 228960,
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 903,
+        "y": 141
+      },
+      "target": {
+        "x": 853,
+        "y": 121,
+        "width": 100,
+        "height": 40
+      }
+    },
+    {
+      "id": 177,
+      "type": "wait",
+      "timestamp": 230052,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 178,
+      "type": "click",
+      "timestamp": 231900,
+      "description": "[라벨 선택 팝업] '라벨 추가' 버튼 클릭",
+      "cursor": {
+        "x": 872,
+        "y": 281
+      },
+      "target": {
+        "x": 830,
+        "y": 265,
+        "width": 83,
+        "height": 32
+      }
+    },
+    {
+      "id": 179,
+      "type": "wait",
+      "timestamp": 232994,
+      "description": "[라벨 선택 팝업] '라벨 추가' 버튼 반응 대기"
+    },
+    {
+      "id": 180,
+      "type": "type",
+      "timestamp": 234275,
+      "description": "[라벨 정보 팝업] '라벨 이름' 입력창에 '배포' 입력",
+      "cursor": {
+        "x": 846,
+        "y": 481
+      },
+      "target": {
+        "x": 830,
+        "y": 465,
+        "width": 260,
+        "height": 32
+      },
+      "keys": "배포"
+    },
+    {
+      "id": 181,
+      "type": "wait",
+      "timestamp": 235039,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 182,
+      "type": "click",
+      "timestamp": 236257,
+      "description": "[라벨 정보 팝업] '하늘' 요소 클릭",
+      "cursor": {
+        "x": 1076,
+        "y": 525
+      },
+      "target": {
+        "x": 1063,
+        "y": 512,
+        "width": 26,
+        "height": 26
+      }
+    },
+    {
+      "id": 183,
+      "type": "wait",
+      "timestamp": 237299,
+      "description": "[라벨 정보 팝업] '하늘' 요소 반응 대기"
+    },
+    {
+      "id": 184,
+      "type": "click",
+      "timestamp": 238536,
+      "description": "[라벨 정보 팝업] '저장' 버튼 클릭",
+      "cursor": {
+        "x": 928,
+        "y": 618
+      },
+      "target": {
+        "x": 899,
+        "y": 601,
+        "width": 59,
+        "height": 34
+      }
+    },
+    {
+      "id": 185,
+      "type": "wait",
+      "timestamp": 240440,
+      "description": "[라벨 정보 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 186,
+      "type": "click",
+      "timestamp": 242314,
+      "description": "[라벨 선택 팝업] '배포' 요소 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 279
+      },
+      "target": {
+        "x": 830,
+        "y": 265,
+        "width": 260,
+        "height": 28
+      }
+    },
+    {
+      "id": 187,
+      "type": "wait",
+      "timestamp": 243375,
+      "description": "[라벨 선택 팝업] '배포' 요소 반응 대기"
+    },
+    {
+      "id": 188,
+      "type": "click",
+      "timestamp": 244659,
+      "description": "[라벨 선택 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 928,
+        "y": 362
+      },
+      "target": {
+        "x": 899,
+        "y": 345,
+        "width": 59,
+        "height": 34
+      }
+    },
+    {
+      "id": 189,
+      "type": "wait",
+      "timestamp": 245718,
+      "description": "[라벨 선택 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 190,
+      "type": "click",
+      "timestamp": 247542,
+      "description": "'댓글 작성' 버튼 클릭",
+      "cursor": {
+        "x": 1234,
+        "y": 601
+      },
+      "target": {
+        "x": 1189,
+        "y": 585,
+        "width": 91,
+        "height": 32
+      }
+    },
+    {
+      "id": 191,
+      "type": "wait",
+      "timestamp": 248613,
+      "description": "'댓글 작성' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 192,
+      "type": "type",
+      "timestamp": 250628,
+      "description": "'에디터 본문' 입력 영역에 '배포하겠습니다' 입력",
+      "cursor": {
+        "x": 925,
+        "y": 345
+      },
+      "target": {
+        "x": 640,
+        "y": 333,
+        "width": 640,
+        "height": 23
+      },
+      "keys": "배포하겠습니다"
+    },
+    {
+      "id": 193,
+      "type": "wait",
+      "timestamp": 254683,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 194,
+      "type": "click",
+      "timestamp": 255808,
+      "description": "'저장' 버튼 클릭",
+      "cursor": {
+        "x": 936,
+        "y": 761
+      },
+      "target": {
+        "x": 915,
+        "y": 745,
+        "width": 43,
+        "height": 32
+      }
+    },
+    {
+      "id": 195,
+      "type": "wait",
+      "timestamp": 257700,
+      "description": "'저장' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 196,
+      "type": "click",
+      "timestamp": 259619,
+      "description": "'수정' 버튼 클릭",
+      "cursor": {
+        "x": 1235,
+        "y": 661
+      },
+      "target": {
+        "x": 1225,
+        "y": 651,
+        "width": 19,
+        "height": 20
+      }
+    },
+    {
+      "id": 197,
+      "type": "wait",
+      "timestamp": 260693,
+      "description": "'수정' 버튼 반응 대기"
+    },
+    {
+      "id": 198,
+      "type": "type",
+      "timestamp": 262307,
+      "description": "'에디터 본문' 입력 영역에 '!!' 입력",
+      "cursor": {
+        "x": 796,
+        "y": 713
+      },
+      "target": {
+        "x": 685,
+        "y": 701,
+        "width": 595,
+        "height": 23
+      },
+      "keys": "!!"
+    },
+    {
+      "id": 199,
+      "type": "wait",
+      "timestamp": 266151,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 200,
+      "type": "click",
+      "timestamp": 267283,
+      "description": "'저장' 버튼 클릭",
+      "cursor": {
+        "x": 936,
+        "y": 761
+      },
+      "target": {
+        "x": 915,
+        "y": 745,
+        "width": 43,
+        "height": 32
+      }
+    },
+    {
+      "id": 201,
+      "type": "wait",
+      "timestamp": 269211,
+      "description": "'저장' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 202,
+      "type": "click",
+      "timestamp": 271160,
+      "description": "'삭제' 버튼 클릭",
+      "cursor": {
+        "x": 1266,
+        "y": 661
+      },
+      "target": {
+        "x": 1256,
+        "y": 651,
+        "width": 20,
+        "height": 20
+      }
+    },
+    {
+      "id": 203,
+      "type": "wait",
+      "timestamp": 272228,
+      "description": "'삭제' 버튼 반응 대기"
+    },
+    {
+      "id": 204,
+      "type": "click",
+      "timestamp": 273495,
+      "description": "'활동 내역' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 819,
+        "y": 550
+      },
+      "target": {
+        "x": 759,
+        "y": 529,
+        "width": 120,
+        "height": 40
+      }
+    },
+    {
+      "id": 205,
+      "type": "wait",
+      "timestamp": 274572,
+      "description": "'활동 내역' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 206,
+      "type": "click",
+      "timestamp": 275840,
+      "description": "'닫기' 버튼 클릭",
+      "cursor": {
+        "x": 1280,
+        "y": 75
+      },
+      "target": {
+        "x": 1265,
+        "y": 60,
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
+      "id": 207,
+      "type": "wait",
+      "timestamp": 276901,
+      "description": "'닫기' 버튼 반응 대기"
+    },
+    {
+      "id": 208,
+      "type": "dragAndDrop",
+      "timestamp": 278231,
+      "description": "'점검 교과목 시간표 최종 점검 10-30' 요소을(를) ul 요소으로 드래그 앤 드롭",
+      "cursor": {
+        "x": 415,
+        "y": 266
+      },
+      "dragFrom": {
+        "x": 415,
+        "y": 266
+      },
+      "dragTo": {
+        "x": 1315,
+        "y": 555
+      },
+      "target": {
+        "x": 280,
+        "y": 214,
+        "width": 270,
+        "height": 104
+      }
+    },
+    {
+      "id": 209,
+      "type": "wait",
+      "timestamp": 280149,
+      "description": "드래그 앤 드롭 반영 대기"
+    },
+    {
+      "id": 210,
+      "type": "dragAndDrop",
+      "timestamp": 281737,
+      "description": "'배포 복무 규정 개정안 안내문 배포 10' 요소을(를) ul 요소으로 드래그 앤 드롭",
+      "cursor": {
+        "x": 715,
+        "y": 266
+      },
+      "dragFrom": {
+        "x": 715,
+        "y": 266
+      },
+      "dragTo": {
+        "x": 1015,
+        "y": 555
+      },
+      "target": {
+        "x": 580,
+        "y": 214,
+        "width": 270,
+        "height": 104
+      }
+    },
+    {
+      "id": 211,
+      "type": "wait",
+      "timestamp": 283616,
+      "description": "드래그 앤 드롭 반영 대기"
+    },
+    {
+      "id": 212,
+      "type": "click",
+      "timestamp": 285078,
+      "description": "'점검 교과목 시간표 최종 점검 10-30' 요소 클릭",
+      "cursor": {
+        "x": 1315,
+        "y": 266
+      },
+      "target": {
+        "x": 1180,
+        "y": 214,
+        "width": 270,
+        "height": 104
+      }
+    },
+    {
+      "id": 213,
+      "type": "wait",
+      "timestamp": 286161,
+      "description": "'점검 교과목 시간표 최종 점검 10-30' 요소 반응 대기"
+    },
+    {
+      "id": 214,
+      "type": "click",
+      "timestamp": 287345,
+      "description": "'메뉴' 버튼 클릭",
+      "cursor": {
+        "x": 1281,
+        "y": 135
+      },
+      "target": {
+        "x": 1267,
+        "y": 121,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "id": 215,
+      "type": "wait",
+      "timestamp": 288459,
+      "description": "'메뉴' 버튼 반응 대기"
+    },
+    {
+      "id": 216,
+      "type": "click",
+      "timestamp": 289674,
+      "description": "'이동' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1234,
+        "y": 172
+      },
+      "target": {
+        "x": 1174,
+        "y": 157,
+        "width": 120,
+        "height": 30
+      }
+    },
+    {
+      "id": 217,
+      "type": "wait",
+      "timestamp": 290871,
+      "description": "'이동' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 218,
+      "type": "click",
+      "timestamp": 292096,
+      "description": "[보드 선택 팝업] '선택' 버튼 클릭",
+      "cursor": {
+        "x": 1113,
+        "y": 493
+      },
+      "target": {
+        "x": 1096,
+        "y": 476,
+        "width": 34,
+        "height": 34
+      }
+    },
+    {
+      "id": 219,
+      "type": "wait",
+      "timestamp": 293198,
+      "description": "[보드 선택 팝업] '선택' 버튼 반응 대기"
+    },
+    {
+      "id": 220,
+      "type": "click",
+      "timestamp": 294469,
+      "description": "[보드 선택 팝업] '공동업무 보드' 요소 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 399
+      },
+      "target": {
+        "x": 771,
+        "y": 381,
+        "width": 378,
+        "height": 36
+      }
+    },
+    {
+      "id": 221,
+      "type": "wait",
+      "timestamp": 295885,
+      "description": "[보드 선택 팝업] '공동업무 보드' 요소 반응 대기"
+    },
+    {
+      "id": 222,
+      "type": "click",
+      "timestamp": 297113,
+      "description": "[보드 선택 팝업] '- 그룹 선택 - 할일 진행 해결 이슈 ' 요소에서 '할일' 선택",
+      "cursor": {
+        "x": 960,
+        "y": 537
+      },
+      "target": {
+        "x": 790,
+        "y": 520,
+        "width": 340,
+        "height": 34
+      }
+    },
+    {
+      "id": 223,
+      "type": "wait",
+      "timestamp": 298137,
+      "description": "[보드 선택 팝업] '- 그룹 선택 - 할일 진행 해결 이슈 ' 요소에서 '할일' 선택 반응 대기"
+    },
+    {
+      "id": 224,
+      "type": "click",
+      "timestamp": 299402,
+      "description": "[보드 선택 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 928,
+        "y": 586
+      },
+      "target": {
+        "x": 899,
+        "y": 569,
+        "width": 59,
+        "height": 34
+      }
+    },
+    {
+      "id": 225,
+      "type": "wait",
+      "timestamp": 300479,
+      "description": "[보드 선택 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 226,
+      "type": "click",
+      "timestamp": 302304,
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 141
+      },
+      "target": {
+        "x": 910,
+        "y": 121,
+        "width": 100,
+        "height": 40
+      }
+    },
+    {
+      "id": 227,
+      "type": "wait",
+      "timestamp": 303418,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 228,
+      "type": "click",
+      "timestamp": 305244,
+      "description": "'닫기' 버튼 클릭",
+      "cursor": {
+        "x": 1280,
+        "y": 75
+      },
+      "target": {
+        "x": 1265,
+        "y": 60,
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
+      "id": 229,
+      "type": "wait",
+      "timestamp": 306315,
+      "description": "'닫기' 버튼 반응 대기"
+    },
+    {
+      "id": 230,
+      "type": "click",
+      "timestamp": 307519,
+      "description": "'점검 교과목 시간표 최종 점검 10-30' 요소 클릭",
+      "cursor": {
+        "x": 415,
+        "y": 266
+      },
+      "target": {
+        "x": 280,
+        "y": 214,
+        "width": 270,
+        "height": 104
+      }
+    },
+    {
+      "id": 231,
+      "type": "wait",
+      "timestamp": 308601,
+      "description": "'점검 교과목 시간표 최종 점검 10-30' 요소 반응 대기"
+    },
+    {
+      "id": 232,
+      "type": "click",
+      "timestamp": 309805,
+      "description": "'메뉴' 버튼 클릭",
+      "cursor": {
+        "x": 1281,
+        "y": 135
+      },
+      "target": {
+        "x": 1267,
+        "y": 121,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "id": 233,
+      "type": "wait",
+      "timestamp": 310879,
+      "description": "'메뉴' 버튼 반응 대기"
+    },
+    {
+      "id": 234,
+      "type": "click",
+      "timestamp": 312071,
+      "description": "'이동(댓글)' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1234,
+        "y": 202
+      },
+      "target": {
+        "x": 1174,
+        "y": 187,
+        "width": 120,
+        "height": 30
+      }
+    },
+    {
+      "id": 235,
+      "type": "wait",
+      "timestamp": 313233,
+      "description": "'이동(댓글)' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 236,
+      "type": "click",
+      "timestamp": 314471,
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 903,
+        "y": 162
+      },
+      "target": {
+        "x": 853,
+        "y": 142,
+        "width": 100,
+        "height": 40
+      }
+    },
+    {
+      "id": 237,
+      "type": "wait",
+      "timestamp": 315565,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 238,
+      "type": "click",
+      "timestamp": 317412,
+      "description": "[보드 선택 팝업] '선택' 버튼 클릭",
+      "cursor": {
+        "x": 1113,
+        "y": 471
+      },
+      "target": {
+        "x": 1096,
+        "y": 454,
+        "width": 34,
+        "height": 34
+      }
+    },
+    {
+      "id": 239,
+      "type": "wait",
+      "timestamp": 318510,
+      "description": "[보드 선택 팝업] '선택' 버튼 반응 대기"
+    },
+    {
+      "id": 240,
+      "type": "click",
+      "timestamp": 319743,
+      "description": "[보드 선택 팝업] '공동업무 보드' 요소 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 399
+      },
+      "target": {
+        "x": 771,
+        "y": 381,
+        "width": 378,
+        "height": 36
+      }
+    },
+    {
+      "id": 241,
+      "type": "wait",
+      "timestamp": 321176,
+      "description": "[보드 선택 팝업] '공동업무 보드' 요소 반응 대기"
+    },
+    {
+      "id": 242,
+      "type": "click",
+      "timestamp": 322440,
+      "description": "[보드 선택 팝업] '- 그룹 선택 - 할일 진행 해결 이슈 ' 요소에서 '해결' 선택",
+      "cursor": {
+        "x": 960,
+        "y": 515
+      },
+      "target": {
+        "x": 790,
+        "y": 498,
+        "width": 340,
+        "height": 34
+      }
+    },
+    {
+      "id": 243,
+      "type": "wait",
+      "timestamp": 323473,
+      "description": "[보드 선택 팝업] '- 그룹 선택 - 할일 진행 해결 이슈 ' 요소에서 '해결' 선택 반응 대기"
+    },
+    {
+      "id": 244,
+      "type": "click",
+      "timestamp": 324710,
+      "description": "[보드 선택 팝업] '- 할일 선택 - 복무 규정 개정안 안내' 요소에서 '복무 규정 개정안 안내문 배포' 선택",
+      "cursor": {
+        "x": 960,
+        "y": 559
+      },
+      "target": {
+        "x": 790,
+        "y": 542,
+        "width": 340,
+        "height": 34
+      }
+    },
+    {
+      "id": 245,
+      "type": "wait",
+      "timestamp": 325739,
+      "description": "[보드 선택 팝업] '- 할일 선택 - 복무 규정 개정안 안내' 요소에서 '복무 규정 개정안 안내문 배포' 선택 반응 대기"
+    },
+    {
+      "id": 246,
+      "type": "click",
+      "timestamp": 326962,
+      "description": "[보드 선택 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 928,
+        "y": 608
+      },
+      "target": {
+        "x": 899,
+        "y": 591,
+        "width": 59,
+        "height": 34
+      }
+    },
+    {
+      "id": 247,
+      "type": "wait",
+      "timestamp": 328033,
+      "description": "[보드 선택 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 248,
+      "type": "click",
+      "timestamp": 329950,
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 141
+      },
+      "target": {
+        "x": 910,
+        "y": 121,
+        "width": 100,
+        "height": 40
+      }
+    },
+    {
+      "id": 249,
+      "type": "wait",
+      "timestamp": 330990,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 250,
+      "type": "click",
+      "timestamp": 332804,
+      "description": "'10-30 1 1 임 1' 요소 클릭",
+      "cursor": {
+        "x": 1015,
+        "y": 289
+      },
+      "target": {
+        "x": 895,
+        "y": 275,
+        "width": 240,
+        "height": 28
+      }
+    },
+    {
+      "id": 251,
+      "type": "wait",
+      "timestamp": 333883,
+      "description": "'10-30 1 1 임 1' 요소 반응 대기"
+    },
+    {
+      "id": 252,
+      "type": "click",
+      "timestamp": 335078,
+      "description": "'메뉴' 버튼 클릭",
+      "cursor": {
+        "x": 1281,
+        "y": 135
+      },
+      "target": {
+        "x": 1267,
+        "y": 121,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "id": 253,
+      "type": "wait",
+      "timestamp": 336153,
+      "description": "'메뉴' 버튼 반응 대기"
+    },
+    {
+      "id": 254,
+      "type": "click",
+      "timestamp": 337349,
+      "description": "'보관' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1234,
+        "y": 232
+      },
+      "target": {
+        "x": 1174,
+        "y": 217,
+        "width": 120,
+        "height": 30
+      }
+    },
+    {
+      "id": 255,
+      "type": "wait",
+      "timestamp": 338511,
+      "description": "'보관' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 256,
+      "type": "click",
+      "timestamp": 339754,
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 903,
+        "y": 141
+      },
+      "target": {
+        "x": 853,
+        "y": 121,
+        "width": 100,
+        "height": 40
+      }
+    },
+    {
+      "id": 257,
+      "type": "wait",
+      "timestamp": 340847,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 258,
+      "type": "click",
+      "timestamp": 342685,
+      "description": "'공동업무 보드' 버튼 클릭",
+      "cursor": {
+        "x": 473,
+        "y": 140
+      },
+      "target": {
+        "x": 417,
+        "y": 124,
+        "width": 113,
+        "height": 32
+      }
+    },
+    {
+      "id": 259,
+      "type": "wait",
+      "timestamp": 343732,
+      "description": "'공동업무 보드' 버튼 반응 대기"
+    },
+    {
+      "id": 260,
+      "type": "click",
+      "timestamp": 344921,
+      "description": "'보관함' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 478,
+        "y": 209
+      },
+      "target": {
+        "x": 418,
+        "y": 194,
+        "width": 120,
+        "height": 30
+      }
+    },
+    {
+      "id": 261,
+      "type": "wait",
+      "timestamp": 346015,
+      "description": "'보관함' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 262,
+      "type": "click",
+      "timestamp": 347271,
+      "description": "[보관함 팝업] '복무 규정 개정안 안내문 배포 10-30' 요소 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 219
+      },
+      "target": {
+        "x": 756,
+        "y": 172,
+        "width": 408,
+        "height": 95
+      }
+    },
+    {
+      "id": 263,
+      "type": "wait",
+      "timestamp": 348608,
+      "description": "[보관함 팝업] '복무 규정 개정안 안내문 배포 10-30' 요소 반응 대기"
+    },
+    {
+      "id": 264,
+      "type": "click",
+      "timestamp": 353409,
+      "description": "[보관함 팝업] '복원' 버튼 클릭",
+      "cursor": {
+        "x": 1140,
+        "y": 198
+      },
+      "target": {
+        "x": 1129,
+        "y": 187,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "id": 265,
+      "type": "wait",
+      "timestamp": 354466,
+      "description": "[보관함 팝업] '복원' 버튼 반응 대기"
+    },
+    {
+      "id": 266,
+      "type": "click",
+      "timestamp": 355710,
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 903,
+        "y": 141
+      },
+      "target": {
+        "x": 853,
+        "y": 121,
+        "width": 100,
+        "height": 40
+      }
+    },
+    {
+      "id": 267,
+      "type": "wait",
+      "timestamp": 356813,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 268,
+      "type": "click",
+      "timestamp": 358730,
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 182
+      },
+      "target": {
+        "x": 910,
+        "y": 162,
+        "width": 100,
+        "height": 40
+      }
+    },
+    {
+      "id": 269,
+      "type": "wait",
+      "timestamp": 359745,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 270,
+      "type": "click",
+      "timestamp": 361535,
+      "description": "[보관함 팝업] button 요소 클릭",
+      "cursor": {
+        "x": 1173,
+        "y": 78
+      },
+      "target": {
+        "x": 1164,
+        "y": 69,
+        "width": 17,
+        "height": 17
+      }
+    },
+    {
+      "id": 271,
+      "type": "wait",
+      "timestamp": 362651,
+      "description": "[보관함 팝업] button 요소 반응 대기"
+    },
+    {
+      "id": 272,
+      "type": "click",
+      "timestamp": 363836,
+      "description": "'배포 복무 규정 개정안 안내문 배포 10' 요소 클릭",
+      "cursor": {
+        "x": 1015,
+        "y": 266
+      },
+      "target": {
+        "x": 880,
+        "y": 214,
+        "width": 270,
+        "height": 104
+      }
+    },
+    {
+      "id": 273,
+      "type": "wait",
+      "timestamp": 364962,
+      "description": "'배포 복무 규정 개정안 안내문 배포 10' 요소 반응 대기"
+    },
+    {
+      "id": 274,
+      "type": "click",
+      "timestamp": 366165,
+      "description": "'메뉴' 버튼 클릭",
+      "cursor": {
+        "x": 1281,
+        "y": 135
+      },
+      "target": {
+        "x": 1267,
+        "y": 121,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "id": 275,
+      "type": "wait",
+      "timestamp": 367232,
+      "description": "'메뉴' 버튼 반응 대기"
+    },
+    {
+      "id": 276,
+      "type": "click",
+      "timestamp": 368443,
+      "description": "'삭제' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1234,
+        "y": 262
+      },
+      "target": {
+        "x": 1174,
+        "y": 247,
+        "width": 120,
+        "height": 30
+      }
+    },
+    {
+      "id": 277,
+      "type": "wait",
+      "timestamp": 369542,
+      "description": "'삭제' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 278,
+      "type": "click",
+      "timestamp": 370833,
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 903,
+        "y": 141
+      },
+      "target": {
+        "x": 853,
+        "y": 121,
+        "width": 100,
+        "height": 40
+      }
+    },
+    {
+      "id": 279,
+      "type": "wait",
+      "timestamp": 371890,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 280,
+      "type": "click",
+      "timestamp": 373680,
+      "description": "'공동업무 보드' 버튼 클릭",
+      "cursor": {
+        "x": 473,
+        "y": 140
+      },
+      "target": {
+        "x": 417,
+        "y": 124,
+        "width": 113,
+        "height": 32
+      }
+    },
+    {
+      "id": 281,
+      "type": "wait",
+      "timestamp": 374748,
+      "description": "'공동업무 보드' 버튼 반응 대기"
+    },
+    {
+      "id": 282,
+      "type": "click",
+      "timestamp": 375941,
+      "description": "'삭제함' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 478,
+        "y": 239
+      },
+      "target": {
+        "x": 418,
+        "y": 224,
+        "width": 120,
+        "height": 30
+      }
+    },
+    {
+      "id": 283,
+      "type": "wait",
+      "timestamp": 377091,
+      "description": "'삭제함' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 284,
+      "type": "click",
+      "timestamp": 378327,
+      "description": "[삭제함 팝업] '교과목 시간표 최종 점검 10-30 0/' 요소 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 329
+      },
+      "target": {
+        "x": 756,
+        "y": 282,
+        "width": 408,
+        "height": 95
+      }
+    },
+    {
+      "id": 285,
+      "type": "wait",
+      "timestamp": 379611,
+      "description": "[삭제함 팝업] '교과목 시간표 최종 점검 10-30 0/' 요소 반응 대기"
+    },
+    {
+      "id": 286,
+      "type": "click",
+      "timestamp": 384118,
+      "description": "[삭제함 팝업] '복원' 버튼 클릭",
+      "cursor": {
+        "x": 1140,
+        "y": 308
+      },
+      "target": {
+        "x": 1129,
+        "y": 297,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "id": 287,
+      "type": "wait",
+      "timestamp": 385223,
+      "description": "[삭제함 팝업] '복원' 버튼 반응 대기"
+    },
+    {
+      "id": 288,
+      "type": "click",
+      "timestamp": 386561,
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 903,
+        "y": 141
+      },
+      "target": {
+        "x": 853,
+        "y": 121,
+        "width": 100,
+        "height": 40
+      }
+    },
+    {
+      "id": 289,
+      "type": "wait",
+      "timestamp": 387560,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 290,
+      "type": "click",
+      "timestamp": 389496,
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 182
+      },
+      "target": {
+        "x": 910,
+        "y": 162,
+        "width": 100,
+        "height": 40
+      }
+    },
+    {
+      "id": 291,
+      "type": "wait",
+      "timestamp": 390466,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 292,
+      "type": "click",
+      "timestamp": 392309,
+      "description": "[삭제함 팝업] '복원' 버튼 클릭",
+      "cursor": {
+        "x": 1140,
+        "y": 198
+      },
+      "target": {
+        "x": 1129,
+        "y": 187,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "id": 293,
+      "type": "wait",
+      "timestamp": 393419,
+      "description": "[삭제함 팝업] '복원' 버튼 반응 대기"
+    },
+    {
+      "id": 294,
+      "type": "click",
+      "timestamp": 394693,
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 903,
+        "y": 141
+      },
+      "target": {
+        "x": 853,
+        "y": 121,
+        "width": 100,
+        "height": 40
+      }
+    },
+    {
+      "id": 295,
+      "type": "wait",
+      "timestamp": 395738,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 296,
+      "type": "click",
+      "timestamp": 397652,
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 182
+      },
+      "target": {
+        "x": 910,
+        "y": 162,
+        "width": 100,
+        "height": 40
+      }
+    },
+    {
+      "id": 297,
+      "type": "wait",
+      "timestamp": 398666,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 298,
+      "type": "click",
+      "timestamp": 400513,
+      "description": "[삭제함 팝업] button 요소 클릭",
+      "cursor": {
+        "x": 1173,
+        "y": 78
+      },
+      "target": {
+        "x": 1164,
+        "y": 69,
+        "width": 17,
+        "height": 17
+      }
+    },
+    {
+      "id": 299,
+      "type": "wait",
+      "timestamp": 401595,
+      "description": "[삭제함 팝업] button 요소 반응 대기"
+    },
+    {
+      "id": 300,
+      "type": "click",
+      "timestamp": 402808,
+      "description": "'공동업무 보드' 버튼 클릭",
+      "cursor": {
+        "x": 473,
+        "y": 140
+      },
+      "target": {
+        "x": 417,
+        "y": 124,
+        "width": 113,
+        "height": 32
+      }
+    },
+    {
+      "id": 301,
+      "type": "wait",
+      "timestamp": 403880,
+      "description": "'공동업무 보드' 버튼 반응 대기"
+    },
+    {
+      "id": 302,
+      "type": "click",
+      "timestamp": 405038,
+      "description": "'잠금' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 478,
+        "y": 280
+      },
+      "target": {
+        "x": 418,
+        "y": 265,
+        "width": 120,
+        "height": 30
+      }
+    },
+    {
+      "id": 303,
+      "type": "wait",
+      "timestamp": 406174,
+      "description": "'잠금' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 304,
+      "type": "click",
+      "timestamp": 407349,
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 141
+      },
+      "target": {
+        "x": 910,
+        "y": 121,
+        "width": 100,
+        "height": 40
+      }
+    },
+    {
+      "id": 305,
+      "type": "wait",
+      "timestamp": 408482,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 306,
+      "type": "click",
+      "timestamp": 410325,
+      "description": "'공동업무 보드' 버튼 클릭",
+      "cursor": {
+        "x": 482,
+        "y": 140
+      },
+      "target": {
+        "x": 417,
+        "y": 124,
+        "width": 131,
+        "height": 32
+      }
+    },
+    {
+      "id": 307,
+      "type": "wait",
+      "timestamp": 411361,
+      "description": "'공동업무 보드' 버튼 반응 대기"
+    },
+    {
+      "id": 308,
+      "type": "click",
+      "timestamp": 412554,
+      "description": "'삭제' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 478,
+        "y": 310
+      },
+      "target": {
+        "x": 418,
+        "y": 295,
+        "width": 120,
+        "height": 30
+      }
+    },
+    {
+      "id": 309,
+      "type": "wait",
+      "timestamp": 413685,
+      "description": "'삭제' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 310,
+      "type": "click",
+      "timestamp": 414874,
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 903,
+        "y": 162
+      },
+      "target": {
+        "x": 853,
+        "y": 142,
+        "width": 100,
+        "height": 40
+      }
+    },
+    {
+      "id": 311,
+      "type": "wait",
+      "timestamp": 415992,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 312,
+      "type": "click",
+      "timestamp": 417814,
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 960,
+        "y": 141
+      },
+      "target": {
+        "x": 910,
+        "y": 121,
+        "width": 100,
+        "height": 40
+      }
+    },
+    {
+      "id": 313,
+      "type": "wait",
+      "timestamp": 418904,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 314,
+      "type": "click",
+      "timestamp": 420720,
+      "description": "'모든 보드' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 82,
+        "y": 236
+      },
+      "target": {
+        "x": 54,
+        "y": 224,
+        "width": 55,
+        "height": 24
+      }
+    },
+    {
+      "id": 315,
+      "type": "wait",
+      "timestamp": 421803,
+      "description": "'모든 보드' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 316,
+      "type": "click",
+      "timestamp": 422959,
+      "description": "'나의 할일' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 82,
+        "y": 202
+      },
+      "target": {
+        "x": 54,
+        "y": 190,
+        "width": 55,
+        "height": 24
+      }
+    },
+    {
+      "id": 317,
+      "type": "wait",
+      "timestamp": 424079,
+      "description": "'나의 할일' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 318,
+      "type": "wait",
+      "timestamp": 425087,
+      "description": "최종 시연 결과 화면 클로즈업 확인 대기"
+    }
+  ]
+}

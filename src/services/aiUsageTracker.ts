@@ -10,6 +10,7 @@ export interface AiCallRecord {
   dateKey: string; // YYYY-MM-DD (local time)
   feature: string; // 예: "시나리오 생성", "AI 대본 생성", "셀렉터 자가치유", "프롬프트 다듬기"
   model: string;
+  mode?: "api" | "cli";
   slug?: string;
   promptTokens: number;
   outputTokens: number;
@@ -102,25 +103,34 @@ function saveAiUsageStore(store: AiUsageStore): void {
 export function recordAiUsage(params: {
   feature: string;
   model: string;
+  mode?: "api" | "cli";
   usageMetadata?: any;
   slug?: string;
   fallbackPromptChars?: number;
   fallbackOutputChars?: number;
 }): AiCallRecord {
   const meta = params.usageMetadata || {};
+  const mode: "api" | "cli" = params.mode || (String(params.model || "").startsWith("[CLI]") ? "cli" : "api");
+
   const promptTokens =
     Number(meta.promptTokenCount) ||
+    Number(meta.input_tokens) ||
     Math.max(1, Math.round((params.fallbackPromptChars || 0) / 3.5));
   const candidatesTokens =
     Number(meta.candidatesTokenCount) ||
+    Number(meta.output_tokens) ||
     Math.max(1, Math.round((params.fallbackOutputChars || 0) / 3.5));
-  const thoughtTokens = Number(meta.thoughtsTokenCount) || 0;
-  const outputTokens = candidatesTokens + thoughtTokens;
-  const totalTokens = Number(meta.totalTokenCount) || promptTokens + outputTokens;
+  const thoughtTokens = Number(meta.thoughtsTokenCount) || Number(meta.thinking_tokens) || 0;
+  const outputTokens = candidatesTokens + (meta.output_tokens ? 0 : thoughtTokens);
+  const totalTokens = Number(meta.totalTokenCount) || Number(meta.total_tokens) || promptTokens + outputTokens;
 
-  const { inputPerM, outputPerM } = getModelRatesPerMillion(params.model);
-  const costUsd = (promptTokens / 1_000_000) * inputPerM + (outputTokens / 1_000_000) * outputPerM;
-  const costKrw = costUsd * KRW_PER_USD;
+  let costUsd = 0;
+  let costKrw = 0;
+  if (mode !== "cli") {
+    const { inputPerM, outputPerM } = getModelRatesPerMillion(params.model);
+    costUsd = (promptTokens / 1_000_000) * inputPerM + (outputTokens / 1_000_000) * outputPerM;
+    costKrw = costUsd * KRW_PER_USD;
+  }
 
   const now = new Date();
   const dateKey = getLocalDateKey(now);
@@ -131,6 +141,7 @@ export function recordAiUsage(params: {
     dateKey,
     feature: params.feature,
     model: params.model,
+    mode,
     slug: params.slug,
     promptTokens,
     outputTokens,
@@ -170,9 +181,15 @@ export function recordAiUsage(params: {
 
   saveAiUsageStore(store);
 
-  console.log(
-    `  💰 [AI API 사용량] ${record.feature} (${record.model}) — 입력 ${promptTokens.toLocaleString()} + 출력 ${outputTokens.toLocaleString()} = 총 ${totalTokens.toLocaleString()} 토큰 | 예상 요금: $${record.costUsd.toFixed(5)} (약 ${record.costKrw.toFixed(2)}원)`
-  );
+  if (mode === "cli") {
+    console.log(
+      `  💻 [AI CLI 실행] ${record.feature} (${record.model}) — 입력 ${promptTokens.toLocaleString()} + 출력 ${outputTokens.toLocaleString()} = 총 ${totalTokens.toLocaleString()} 토큰 | CLI 로그인 모드 (API 요금 ₩0)`
+    );
+  } else {
+    console.log(
+      `  💰 [AI API 사용량] ${record.feature} (${record.model}) — 입력 ${promptTokens.toLocaleString()} + 출력 ${outputTokens.toLocaleString()} = 총 ${totalTokens.toLocaleString()} 토큰 | 예상 요금: $${record.costUsd.toFixed(5)} (약 ${record.costKrw.toFixed(2)}원)`
+    );
+  }
 
   return record;
 }

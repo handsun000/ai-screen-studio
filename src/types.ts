@@ -37,9 +37,18 @@ export interface CursorSettings {
   preClickRestMs?: number;
 }
 
+export interface WindowBounds {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  windowState?: "normal" | "maximized" | "minimized" | "fullscreen";
+}
+
 export interface BrowsePlan {
   url: string;
   viewport: { width: number; height: number };
+  windowBounds?: WindowBounds;
   requiresLogin?: boolean;
   recordedByEyedropper?: boolean;
   cursor?: CursorSettings;

@@ -1,7 +1,7 @@
 import React from "react";
 import { useCurrentFrame, interpolate, Easing } from "remotion";
 import type { EditPlan, EditSegment, CursorPosition, Moment } from "../types";
-import { WINDOW_WIDTH, WINDOW_HEIGHT } from "./FloatingWindow";
+import { getFloatingWindowDimensions } from "./FloatingWindow";
 import { videoFrameToCompFrame } from "./FrameMapper";
 
 interface CameraTransformProps {
@@ -48,10 +48,11 @@ function computeTranslate(
   viewportWidth: number,
   viewportHeight: number
 ): { translateX: number; translateY: number } {
-  const windowLeft = (canvasWidth - WINDOW_WIDTH) / 2;
-  const windowTop = (canvasHeight - WINDOW_HEIGHT) / 2;
-  const scaleX = WINDOW_WIDTH / viewportWidth;
-  const scaleY = WINDOW_HEIGHT / viewportHeight;
+  const { windowWidth, windowHeight } = getFloatingWindowDimensions(viewportWidth, viewportHeight);
+  const windowLeft = (canvasWidth - windowWidth) / 2;
+  const windowTop = (canvasHeight - windowHeight) / 2;
+  const scaleX = windowWidth / viewportWidth;
+  const scaleY = windowHeight / viewportHeight;
 
   const targetScreenX = windowLeft + point.x * scaleX;
   const targetScreenY = windowTop + point.y * scaleY;
@@ -65,8 +66,8 @@ function computeTranslate(
   let ty = rawDy * zoom * 0.35;
 
   // Clamp translation so the scaled window edges never pull inside the canvas AND never sway wildly
-  const maxTx = Math.min(MAX_CAMERA_PAN_X, Math.max(0, (WINDOW_WIDTH * zoom - canvasWidth) / 2));
-  const maxTy = Math.min(MAX_CAMERA_PAN_Y, Math.max(0, (WINDOW_HEIGHT * zoom - canvasHeight) / 2));
+  const maxTx = Math.min(MAX_CAMERA_PAN_X, Math.max(0, (windowWidth * zoom - canvasWidth) / 2));
+  const maxTy = Math.min(MAX_CAMERA_PAN_Y, Math.max(0, (windowHeight * zoom - canvasHeight) / 2));
 
   tx = Math.max(-maxTx, Math.min(maxTx, tx));
   ty = Math.max(-maxTy, Math.min(maxTy, ty));

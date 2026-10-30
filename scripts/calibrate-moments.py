@@ -90,13 +90,21 @@ def ensure_cfr_h264_mp4(mp4_path: Path) -> dict:
     return get_video_info(mp4_path)
 
 
-def detect_ripple_diff_ms(mp4_path: Path, cx: int, cy: int, ts_ms: int, video_duration_ms: int):
+def detect_ripple_diff_ms(
+    mp4_path: Path,
+    cx: int,
+    cy: int,
+    ts_ms: int,
+    video_duration_ms: int,
+    vw: int = 1920,
+    vh: int = 1080,
+):
     if ts_ms <= 0 or ts_ms > video_duration_ms + 2500:
         return None, 0
 
     start_s = max(0.0, (ts_ms - 1800) / 1000.0)
-    x1 = max(0, min(1920 - 32, int(cx) - 16))
-    y1 = max(0, min(1080 - 32, int(cy) - 16))
+    x1 = max(0, min(max(32, int(vw)) - 32, int(cx) - 16))
+    y1 = max(0, min(max(32, int(vh)) - 32, int(cy) - 16))
 
     cmd = [
         "ffmpeg",
@@ -180,13 +188,15 @@ def calibrate_scenario(slug: str, force: bool = False) -> bool:
     if not already_calibrated and moments:
         detected = {}
         valid_diffs = []
+        vw = int(meta.get("viewportWidth") or 1920)
+        vh = int(meta.get("viewportHeight") or 1080)
         for idx, m in enumerate(moments):
             if m.get("type") in ("click", "dblclick", "type") and m.get("cursor"):
                 cx = m["cursor"].get("x", 0)
                 cy = m["cursor"].get("y", 0)
                 ts = m.get("timestamp", 0)
                 if cx > 0 and cy > 0 and ts > 0:
-                    diff_ms, score = detect_ripple_diff_ms(mp4_path, cx, cy, ts, vid_ms)
+                    diff_ms, score = detect_ripple_diff_ms(mp4_path, cx, cy, ts, vid_ms, vw=vw, vh=vh)
                     if diff_ms is not None and -2000 <= diff_ms <= 600:
                         detected[idx] = (diff_ms, score)
                         valid_diffs.append(diff_ms)

@@ -2,7 +2,7 @@ import { chromium, Browser, BrowserContext, Page } from "playwright";
 import { GoogleGenAI } from "@google/genai";
 import * as fs from "fs";
 import * as path from "path";
-import { BrowsePlan, BrowsePlanAction } from "../types";
+import { BrowsePlan, BrowsePlanAction, WindowBounds } from "../types";
 import { getConfig } from "./configManager";
 import {
   findExistingAuthSession,
@@ -15,7 +15,7 @@ import { sanitizeBrowsePlan } from "./planSanitizer";
 export interface RecordedRawEvent {
   seq: number;
   timestamp: number;
-  kind: "click" | "rightclick" | "hover" | "type" | "dragAndDrop" | "select" | "scroll" | "upload";
+  kind: "click" | "rightclick" | "dblclick" | "hover" | "type" | "dragAndDrop" | "select" | "scroll" | "upload";
   selector: string;
   sourceSelector?: string;
   targetSelector?: string;
@@ -31,6 +31,14 @@ export interface RecordedRawEvent {
   cursorOffset?: { x: number; y: number };
   pageUrl: string;
   inModal: boolean;
+  windowMetrics?: {
+    innerWidth: number;
+    innerHeight: number;
+    outerWidth: number;
+    outerHeight: number;
+    screenX: number;
+    screenY: number;
+  };
 }
 
 export interface RecorderSessionStatus {
@@ -52,6 +60,8 @@ class ActionRecorderService {
   private slug = "";
   private events: RecordedRawEvent[] = [];
   private initialStorageState: any = null;
+  private capturedViewport: { width: number; height: number } = { width: 1920, height: 1080 };
+  private capturedWindowBounds?: WindowBounds;
   private statusMessage = "대기 중";
   private eventListeners = new Set<(status: RecorderSessionStatus) => void>();
 
@@ -236,11 +246,28 @@ class ActionRecorderService {
         return;
       }
 
+      // If user double-clicked an element (e.g. tree node folder or list row), upgrade the preceding single click on the same selector into a dblclick!
+      if (
+        raw.kind === "dblclick" &&
+        last.kind === "click" &&
+        now - last.timestamp < 700 &&
+        (last.selector === raw.selector ||
+          last.selector.split(",")[0].trim() === raw.selector.split(",")[0].trim())
+      ) {
+        last.kind = "dblclick";
+        last.label = raw.label;
+        last.timestamp = now;
+        this.statusMessage = `🖱️ 더블클릭 #${last.seq}: ${raw.label}`;
+        console.log(`[Live Action Recorder] ${this.statusMessage} -> ${last.selector}`);
+        this.notifyListeners();
+        return;
+      }
+
       // Ignore accidental double-fire on the exact same click selector within 300ms,
       // OR browser's native <label> -> <input type="checkbox"|"radio"> synthetic second click within 300ms
       if (
         raw.kind === "click" &&
-        last.kind === "click" &&
+        (last.kind === "click" || last.kind === "dblclick") &&
         now - last.timestamp < 300 &&
         (last.selector === raw.selector ||
           (last.tagName === "label" && raw.tagName === "input"))
@@ -259,6 +286,8 @@ class ActionRecorderService {
     const icon =
       evt.kind === "click"
         ? "💧 클릭"
+        : evt.kind === "dblclick"
+        ? "🖱️ 더블클릭"
         : evt.kind === "rightclick"
         ? "🖱️ 우클릭"
         : evt.kind === "hover"
@@ -312,6 +341,8 @@ class ActionRecorderService {
     this.targetUrl = entryUrl;
     this.slug = options?.slug || "";
     this.events = [];
+    this.capturedViewport = { width: 1920, height: 1080 };
+    this.capturedWindowBounds = undefined;
     this.active = true;
     this.finishedByBrowserHud = false;
     this.statusMessage = "🌐 브라우저 시범 창을 여는 중입니다...";
@@ -361,6 +392,24 @@ class ActionRecorderService {
             const fName = source.frame.name();
             if (fName && (!payload.iframe || payload.iframe.includes(","))) {
               payload.iframe = `iframe[name='${fName}'], iframe#${fName}, ${payload.iframe || "iframe"}`;
+            }
+          }
+          if (source?.page === this.mainPage && payload.windowMetrics) {
+            const wm = payload.windowMetrics;
+            if (wm.innerWidth >= 320 && wm.innerHeight >= 240) {
+              this.capturedViewport = {
+                width: Math.max(320, Math.floor(wm.innerWidth / 2) * 2),
+                height: Math.max(240, Math.floor(wm.innerHeight / 2) * 2),
+              };
+            }
+            if (wm.outerWidth >= 320 && wm.outerHeight >= 240) {
+              this.capturedWindowBounds = {
+                left: Math.round(wm.screenX || 0),
+                top: Math.round(wm.screenY || 0),
+                width: Math.round(wm.outerWidth),
+                height: Math.round(wm.outerHeight),
+                windowState: this.capturedWindowBounds?.windowState || "normal",
+              };
             }
           }
         } catch {}
@@ -512,7 +561,9 @@ class ActionRecorderService {
       targetBaseUrl,
       options?.customTitleHint,
       options?.slug || this.slug,
-      options?.directingStyle
+      options?.directingStyle,
+      this.capturedViewport,
+      this.capturedWindowBounds
     );
 
     // Ensure any uploaded files are also copied into data/<suggestedSlug>/uploads/ so the scenario folder is self-contained
@@ -556,6 +607,46 @@ class ActionRecorderService {
 
   public async stopRecordingSession(saveAuth = true): Promise<RecordedRawEvent[]> {
     if (this.active && this.context) {
+      if (this.mainPage && !this.mainPage.isClosed()) {
+        try {
+          const metrics = await this.mainPage.evaluate(() => ({
+            innerWidth: window.innerWidth,
+            innerHeight: window.innerHeight,
+            outerWidth: window.outerWidth,
+            outerHeight: window.outerHeight,
+            screenX: window.screenX,
+            screenY: window.screenY,
+          }));
+          if (metrics.innerWidth >= 320 && metrics.innerHeight >= 240) {
+            this.capturedViewport = {
+              width: Math.max(320, Math.floor(metrics.innerWidth / 2) * 2),
+              height: Math.max(240, Math.floor(metrics.innerHeight / 2) * 2),
+            };
+          }
+          if (metrics.outerWidth >= 320 && metrics.outerHeight >= 240) {
+            this.capturedWindowBounds = {
+              left: Math.round(metrics.screenX || 0),
+              top: Math.round(metrics.screenY || 0),
+              width: Math.round(metrics.outerWidth),
+              height: Math.round(metrics.outerHeight),
+              windowState: "normal",
+            };
+          }
+          const cdp = await this.context.newCDPSession(this.mainPage);
+          const winTarget = await cdp.send("Browser.getWindowForTarget").catch(() => null);
+          if (winTarget?.bounds) {
+            const b = winTarget.bounds;
+            this.capturedWindowBounds = {
+              left: typeof b.left === "number" ? b.left : this.capturedWindowBounds?.left ?? 0,
+              top: typeof b.top === "number" ? b.top : this.capturedWindowBounds?.top ?? 0,
+              width: typeof b.width === "number" && b.width >= 320 ? b.width : this.capturedWindowBounds?.width ?? 1920,
+              height: typeof b.height === "number" && b.height >= 240 ? b.height : this.capturedWindowBounds?.height ?? 1080,
+              windowState: (b.windowState as any) || "normal",
+            };
+          }
+          await cdp.detach().catch(() => {});
+        } catch {}
+      }
       for (const p of this.context.pages()) {
         if (!p.isClosed()) {
           await p
@@ -658,11 +749,41 @@ export function getInjectedEyedropperScript(): string {
     }
   }
 
+  function getTopWindowMetrics() {
+    try {
+      const topWin = window.top || window;
+      return {
+        innerWidth: topWin.innerWidth || window.innerWidth || 1920,
+        innerHeight: topWin.innerHeight || window.innerHeight || 1080,
+        outerWidth: topWin.outerWidth || window.outerWidth || 1920,
+        outerHeight: topWin.outerHeight || window.outerHeight || 1080,
+        screenX: typeof topWin.screenX === "number" ? topWin.screenX : 0,
+        screenY: typeof topWin.screenY === "number" ? topWin.screenY : 0
+      };
+    } catch (e) {
+      return {
+        innerWidth: window.innerWidth || 1920,
+        innerHeight: window.innerHeight || 1080,
+        outerWidth: window.outerWidth || 1920,
+        outerHeight: window.outerHeight || 1080,
+        screenX: typeof window.screenX === "number" ? window.screenX : 0,
+        screenY: typeof window.screenY === "number" ? window.screenY : 0
+      };
+    }
+  }
+
+  // Check if an ID is a dynamically generated ephemeral entity ID (e.g. TA01m60td..., aglTaskView_opinTY01..., TT01..., TB01..., TG01...)
+  function isEphemeralEntityId(val) {
+    if (!val || typeof val !== "string") return false;
+    return /(?:^|_)(?:TA|TB|TG|TT|TY|ATCL|DOC|WKS|BRD|EML|NOT|SCD|TSK|WBB|WBP)[0-9a-z]{12,}$/i.test(val) || /^[0-9]{10,}$/.test(val);
+  }
+
   // Check if an ID looks auto-generated / unstable (e.g. ui-id-14, jqg123, ext-gen102, mentiony-content-xxxxxx) or is duplicated across multiple visible elements
   function isStableId(id) {
     if (!id || typeof id !== "string") return false;
     if (/^(ui-id-|jqg|ext-gen|select2-|mceu_|cke_|tinymce|mentiony-|th\\d+$|dp\\d+$|ADRGR\\d+$)/i.test(id)) return false;
     if (/^[0-9]+$/.test(id)) return false;
+    if (isEphemeralEntityId(id)) return false;
     // Long random hex/uuid suffix (must contain UUID dashes or mixed hex [a-f] + digits, never rejecting Naonsoft M123456789 IDs)
     if (/[0-9a-f]{8}-[0-9a-f]{4}/i.test(id) || (/[0-9a-f]{12,}/i.test(id) && /[a-f]/i.test(id) && /[0-9]/.test(id))) return false;
     try {
@@ -909,7 +1030,7 @@ export function getInjectedEyedropperScript(): string {
         }
       }
 
-      // Check any distinguishing data-* attribute on cur automatically (without requiring a pre-defined attribute whitelist!)
+      // Check any distinguishing non-ephemeral data-* attribute on cur automatically (without requiring a pre-defined attribute whitelist!)
       const ignoredDataAttrPattern = /^data-(?:toggle|dismiss|backdrop|keyboard|spy|ride|slide|placement|original-title|qtip|tooltip|placeholder|i18n|bind|reactid|v-|unique-id$|start$|full$|end$|time$|date$)/i;
       if (cur.attributes && cur.attributes.length > 0) {
         for (let i = 0; i < cur.attributes.length; i++) {
@@ -921,6 +1042,7 @@ export function getInjectedEyedropperScript(): string {
             !ignoredDataAttrPattern.test(attrName) &&
             attrVal &&
             attrVal.toLowerCase() !== "empty" &&
+            !isEphemeralEntityId(attrVal) &&
             attrVal.length <= 35 &&
             !/[0-9a-f]{8}-[0-9a-f]{4}-/i.test(attrVal) &&
             !/['"\\\\=]|\\s{2,}/.test(attrVal)
@@ -1477,14 +1599,10 @@ export function getInjectedEyedropperScript(): string {
           candidates.push(scopePrefix + "a.fc-event:has-text('" + fcTxt + "'):visible");
         }
       }
-      const childDistinguishingEl = el.querySelector("[class*='scvr'], [class*='plt_'], [class*='_ai'], i[class*='ico_'], span[class*='ico_']");
+      const childDistinguishingEl = el.querySelector("[class*='scvr'], [class*='plt_'], [class*='_ai']");
       if (childDistinguishingEl && childDistinguishingEl.classList) {
         const distCls = Array.from(childDistinguishingEl.classList).find(function(c) {
-          if (/^(?:scvr\\d+|plt_\\d+|_ai[a-zA-Z0-9_]+)$/i.test(c)) return true;
-          if (tag !== "label" && /^ico_[a-zA-Z0-9_]+$/i.test(c) && !/^ico_(?:chk|rdo|hide|info|user|dept|f\\d+|lst)/i.test(c)) {
-            return true;
-          }
-          return false;
+          return /^(?:scvr\d+|plt_\d+|_ai[a-zA-Z0-9_]+)$/i.test(c);
         });
         if (distCls) {
           candidates.push((modalEl ? ".ui-dialog:visible " : "") + baseCls + ":has(." + distCls + "):visible");
@@ -2149,16 +2267,31 @@ export function getInjectedEyedropperScript(): string {
     return rawStr.replace(/\\u200B/g, "").replace(/\\r\\n/g, "\\n").replace(/^[ \\t\\r\\n]+|[ \\t\\r\\n]+$/g, "");
   }
 
-  // Detect single-line/prompt contenteditable inputs (e.g. AI Chat mentiony-content, Wiki title subject)
-  // which are NOT multi-paragraph document body editors and often clear their DOM immediately upon Enter/Send submission!
+  // Detect single-line/prompt contenteditable inputs (e.g. AI Chat mentiony-content, Wiki title subject, inline task card/checklist creators)
+  // which are NOT multi-paragraph document body editors and often clear or submit their DOM immediately upon Enter/Send submission!
   function isPromptOrSingleLineEditable(el) {
     if (!el || !el.tagName) return false;
     const cls = el.classList;
-    if (cls && (cls.contains("mentiony-content") || cls.contains("chat_input") || cls.contains("title"))) return true;
+    if (
+      cls &&
+      (cls.contains("mentiony-content") ||
+        cls.contains("chat_input") ||
+        cls.contains("title") ||
+        cls.contains("sub") ||
+        cls.contains("_chkNew") ||
+        cls.contains("_chkItemName"))
+    ) {
+      return true;
+    }
     const id = (el.getAttribute && el.getAttribute("id")) || "";
     if (/^(?:mentiony-content|.*(?:subject|title|search|prompt|chat).*)$/i.test(id)) return true;
     if (el.getAttribute && (el.getAttribute("data-placeholder") || el.getAttribute("placeholder"))) return true;
-    if (el.closest && el.closest(".mentiony-container, #cmmAiChat_content, #cmmAiChatMain_content, .ai_chat, .chat_write, .msg_input")) return true;
+    if (
+      el.closest &&
+      el.closest(".mentiony-container, #cmmAiChat_content, #cmmAiChatMain_content, .ai_chat, .chat_write, .msg_input, li.task_write, #aglTaskView_chkNew")
+    ) {
+      return true;
+    }
     return false;
   }
 
@@ -2983,7 +3116,28 @@ export function getInjectedEyedropperScript(): string {
 
     if (e && e.type === "keyup") {
       const k = e.key || "";
-      // For single-line <input> or prompt/chat contenteditable, Enter was already flushed in keydown; for multi-line editors, allow keyup(Enter) so newlines are captured!
+      // Korean IME Enter handling: when the user presses Enter while the last Hangul character is still composing,
+      // keydown fires with e.key === "Process" (keyCode 229) and keyup fires with e.key === "Enter" (keyCode 13).
+      if ((k === "Enter" || e.keyCode === 13) && !e.shiftKey && (tag === "input" || isPromptOrSingleLineEditable(t))) {
+        if (lastTypedElement === t) {
+          const curVal = readEditableValue(t, rawTarget, false);
+          if (curVal) lastTypedValue = curVal;
+          if (lastTypedValue) {
+            lastTypedPressEnter = true;
+            flushPendingType();
+          }
+          return;
+        }
+        if (!lastTypedElement && lastFlushedElement === t && Date.now() - lastFlushedTime < 800 && lastFlushedValue) {
+          lastTypedElement = t;
+          lastTypedValue = lastFlushedValue;
+          lastTypedPressEnter = true;
+          lastFlushedElement = null;
+          flushPendingType();
+          return;
+        }
+      }
+      // For single-line <input> or prompt/chat contenteditable, Enter was already flushed; for multi-line editors, allow keyup(Enter) so newlines are captured!
       if (
         (k === "Enter" && (tag === "input" || isPromptOrSingleLineEditable(t) || t === lastFlushedElement)) ||
         k === "Tab" ||
@@ -3514,7 +3668,41 @@ export function getInjectedEyedropperScript(): string {
         tagName: tag,
         label,
         pageUrl: location.href,
-        inModal
+        inModal,
+        windowMetrics: getTopWindowMetrics()
+      });
+    }
+  }, true);
+
+  // Capture double-clicks on tree folders / list items (e.g. .dynatree-title, .fancytree-title, li.nt_li, tr.lst_tr)
+  window.addEventListener("dblclick", function(e) {
+    if (!e || e.isTrusted === false) return;
+    const rawTarget = e.target;
+    if (!rawTarget || (rawTarget.closest && rawTarget.closest("#__sd_recorder_hud"))) return;
+    const treeOrRow =
+      rawTarget.closest &&
+      rawTarget.closest("a.dynatree-title, .fancytree-title, li.nt_li, tr.lst_tr, .usr_item, .card_item");
+    if (!treeOrRow) return;
+    const el = resolveInteractiveElement(rawTarget) || treeOrRow;
+    if (!el || !el.tagName) return;
+    const tag = el.tagName.toLowerCase();
+    const selector = buildRobustSelector(el);
+    const label = buildHumanLabel(el);
+    const targetHtml = extractTargetHtml(el);
+    const iframe = getCurrentIframeSelector();
+    const inModal = Boolean(el.closest && el.closest(".ui-dialog, .modal, .layer_pop"));
+
+    if (typeof window.__screenDemoRecordAction === "function") {
+      window.__screenDemoRecordAction({
+        kind: "dblclick",
+        selector,
+        targetHtml,
+        iframe,
+        tagName: tag,
+        label: label.replace(/\s*클릭$/, "") + " 더블클릭",
+        pageUrl: location.href,
+        inModal,
+        windowMetrics: getTopWindowMetrics()
       });
     }
   }, true);
@@ -3567,7 +3755,8 @@ export function getInjectedEyedropperScript(): string {
         tagName: tag,
         label: label + " 우클릭",
         pageUrl: location.href,
-        inModal
+        inModal,
+        windowMetrics: getTopWindowMetrics()
       });
     }
   }, true);
@@ -3624,7 +3813,7 @@ export function getInjectedEyedropperScript(): string {
       return;
     }
 
-    if (e.key === "Enter" && !e.shiftKey) {
+    if ((e.key === "Enter" || e.keyCode === 13) && !e.shiftKey) {
       // Flush on Enter for single-line <input> and prompt/chat contenteditable fields (e.g. AI Chat mentiony-content)
       // even if Korean IME composition is active (e.isComposing), because chat/search handlers often submit & clear DOM on Enter keydown!
       // For multi-line <textarea>/rich editors (.se-contents, .ProseMirror), Enter inserts a newline.
@@ -3672,7 +3861,9 @@ async function refineRecordedEventsIntoPlan(
   targetUrl: string,
   _customTitleHint?: string,
   slugHint?: string,
-  directingStyle: "standard" | "fast" | "detailed" = "standard"
+  directingStyle: "standard" | "fast" | "detailed" = "standard",
+  capturedViewport: { width: number; height: number } = { width: 1920, height: 1080 },
+  capturedWindowBounds?: WindowBounds
 ): Promise<{
   plan: BrowsePlan;
   suggestedSlug: string;
@@ -3789,6 +3980,22 @@ async function refineRecordedEventsIntoPlan(
         ms: scaleMs(900),
         description: "우클릭 컨텍스트 메뉴 표시 대기",
       });
+    } else if (ev.kind === "dblclick") {
+      const desc = ev.label.endsWith("더블클릭") ? ev.label : `${ev.label.replace(/\s*클릭$/, "")} 더블클릭`;
+      promptSteps.push(desc);
+      actions.push({
+        type: "dblclick",
+        selector: ev.selector,
+        iframe: ev.iframe,
+        description: desc,
+        recordedByEyedropper: true,
+        targetHtml: ev.targetHtml,
+      });
+      actions.push({
+        type: "wait",
+        ms: scaleMs(1000),
+        description: `${desc} 반응 및 하위 노드 로드 대기`,
+      });
     } else {
       // If a native <select> was clicked to open the dropdown and immediately followed by selecting an option (change event),
       // skip the bare opening click so Playwright directly executes selectOption(...) on the <select>.
@@ -3866,7 +4073,8 @@ async function refineRecordedEventsIntoPlan(
 
   const rawPlan: BrowsePlan = {
     url: targetUrl,
-    viewport: { width: 1920, height: 1080 },
+    viewport: capturedViewport,
+    ...(capturedWindowBounds ? { windowBounds: capturedWindowBounds } : {}),
     requiresLogin: true,
     recordedByEyedropper: true,
     actions,

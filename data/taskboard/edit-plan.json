@@ -1,0 +1,1590 @@
+{
+  "totalDurationFrames": 25943,
+  "rawDurationFrames": 25642,
+  "fps": 60,
+  "defaultZoom": 1,
+  "segments": [
+    {
+      "momentId": 2,
+      "startFrame": 136,
+      "endFrame": 334,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1161,
+        "y": 207
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1361, 83) + Click at (961, 331)"
+    },
+    {
+      "momentId": 6,
+      "startFrame": 449,
+      "endFrame": 647,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 218,
+        "y": 270
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (353, 303) + Click at (82, 236)"
+    },
+    {
+      "momentId": 10,
+      "startFrame": 725,
+      "endFrame": 782,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 765,
+        "y": 358
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (765, 358)"
+    },
+    {
+      "momentId": 12,
+      "startFrame": 862,
+      "endFrame": 1743,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 256,
+        "y": 318
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (82, 270) + Click at (440, 347) + Click at (82, 304) + Click at (80, 372) + Click at (73, 440) + Click at (82, 270) + Click at (401, 197)"
+    },
+    {
+      "momentId": 26,
+      "startFrame": 1821,
+      "endFrame": 2369,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 896,
+        "y": 234
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Typing: 공동업무 보드 + typing: 부서원 간 협조 업무의 진행 상태를 실시간으로 공유하는 + Click at (960, 187) + Click at (924, 367)"
+    },
+    {
+      "momentId": 34,
+      "startFrame": 2451,
+      "endFrame": 2508,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1058,
+        "y": 513
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1058, 513)"
+    },
+    {
+      "momentId": 36,
+      "startFrame": 2589,
+      "endFrame": 2785,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 960,
+        "y": 187
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1104, 187) + Click at (817, 187)"
+    },
+    {
+      "momentId": 40,
+      "startFrame": 2865,
+      "endFrame": 3634,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 770,
+        "y": 470
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (783, 625) + Click at (612, 335) + Click at (632, 369) + Click at (634, 437) + Click at (917, 314) + Click at (928, 540)"
+    },
+    {
+      "momentId": 52,
+      "startFrame": 3754,
+      "endFrame": 3811,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 936,
+        "y": 686
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (936, 686)"
+    },
+    {
+      "momentId": 54,
+      "startFrame": 3981,
+      "endFrame": 4038,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 440,
+        "y": 347
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (440, 347)"
+    },
+    {
+      "momentId": 56,
+      "startFrame": 4119,
+      "endFrame": 4176,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1439,
+        "y": 204
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1439, 204)"
+    },
+    {
+      "momentId": 58,
+      "startFrame": 4257,
+      "endFrame": 4314,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 960,
+        "y": 733
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (960, 733)"
+    },
+    {
+      "momentId": 60,
+      "startFrame": 4394,
+      "endFrame": 4451,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1439,
+        "y": 204
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1439, 204)"
+    },
+    {
+      "momentId": 62,
+      "startFrame": 4537,
+      "endFrame": 4986,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 958,
+        "y": 555
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Typing: 이슈 + Click at (900, 468) + Click at (1060, 597) + Click at (897, 733)"
+    },
+    {
+      "momentId": 70,
+      "startFrame": 5156,
+      "endFrame": 5213,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1484,
+        "y": 204
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1484, 204)"
+    },
+    {
+      "momentId": 72,
+      "startFrame": 5294,
+      "endFrame": 5602,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 938,
+        "y": 555
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Typing: 취소 + Click at (1020, 468) + Click at (928, 733)"
+    },
+    {
+      "momentId": 78,
+      "startFrame": 5770,
+      "endFrame": 6288,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 574,
+        "y": 226
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (513, 204) + typing: 교과목 시간표 최종 점검 + Click at (415, 247) + Click at (732, 220)"
+    },
+    {
+      "momentId": 86,
+      "startFrame": 6376,
+      "endFrame": 6570,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 944,
+        "y": 594
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (960, 444) + Click at (928, 743)"
+    },
+    {
+      "momentId": 90,
+      "startFrame": 6686,
+      "endFrame": 7542,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 784,
+        "y": 410
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (732, 258) + Click at (892, 466) + Click at (827, 562) + Click at (677, 310) + Typing: 교과목 시간표 최종 점검 하겠습니다."
+    },
+    {
+      "momentId": 100,
+      "startFrame": 7636,
+      "endFrame": 7943,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1213,
+        "y": 546
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1186, 699) + Click at (1240, 393)"
+    },
+    {
+      "momentId": 104,
+      "startFrame": 8024,
+      "endFrame": 8535,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1098,
+        "y": 337
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (960, 246) + Click at (928, 362) + Click at (1268, 393) + Click at (1219, 428)"
+    },
+    {
+      "momentId": 112,
+      "startFrame": 8617,
+      "endFrame": 9779,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 964,
+        "y": 562
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Typing: 항목 1번 + typing: 항목 2번 + typing: 항목 3번 + Click at (1268, 393) + Click at (1219, 458) + Click at (660, 458) + Click at (935, 450) + Click at (1149, 730) + Click at (930, 688)"
+    },
+    {
+      "momentId": 128,
+      "startFrame": 9945,
+      "endFrame": 10002,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1280,
+        "y": 75
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1280, 75)"
+    },
+    {
+      "momentId": 130,
+      "startFrame": 10082,
+      "endFrame": 10329,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 388,
+        "y": 125
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (130, 148) + Typing: 복무 규정 개정안 안내문 배포"
+    },
+    {
+      "momentId": 134,
+      "startFrame": 10411,
+      "endFrame": 10770,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1117,
+        "y": 278
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1274, 157) + Click at (960, 399) + Click at (1010, 203)"
+    },
+    {
+      "momentId": 140,
+      "startFrame": 10849,
+      "endFrame": 11046,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 851,
+        "y": 324
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (742, 245) + Click at (960, 404)"
+    },
+    {
+      "momentId": 144,
+      "startFrame": 11130,
+      "endFrame": 11187,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 928,
+        "y": 743
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (928, 743)"
+    },
+    {
+      "momentId": 146,
+      "startFrame": 11302,
+      "endFrame": 11801,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 822,
+        "y": 408
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (742, 283) + Click at (902, 491) + Click at (766, 531) + Click at (849, 532)"
+    },
+    {
+      "momentId": 154,
+      "startFrame": 11883,
+      "endFrame": 12594,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 908,
+        "y": 590
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (842, 626) + Click at (837, 587) + typing: 복무 규정 개정안 안내문 배포 하겠습니다. + Click at (666, 714) + Click at (935, 450) + Click at (1149, 730)"
+    },
+    {
+      "momentId": 164,
+      "startFrame": 12733,
+      "endFrame": 12790,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 936,
+        "y": 921
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (936, 921)"
+    },
+    {
+      "momentId": 166,
+      "startFrame": 12956,
+      "endFrame": 13235,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 838,
+        "y": 206
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (960, 141) + Click at (715, 272)"
+    },
+    {
+      "momentId": 170,
+      "startFrame": 13316,
+      "endFrame": 13514,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1158,
+        "y": 336
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1240, 393) + Click at (1076, 279)"
+    },
+    {
+      "momentId": 174,
+      "startFrame": 13597,
+      "endFrame": 13654,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 960,
+        "y": 618
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (960, 618)"
+    },
+    {
+      "momentId": 176,
+      "startFrame": 13738,
+      "endFrame": 14104,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 888,
+        "y": 211
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (903, 141) + Click at (872, 281) + typing: 배포"
+    },
+    {
+      "momentId": 182,
+      "startFrame": 14175,
+      "endFrame": 14369,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1002,
+        "y": 572
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1076, 525) + Click at (928, 618)"
+    },
+    {
+      "momentId": 186,
+      "startFrame": 14539,
+      "endFrame": 14737,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 944,
+        "y": 320
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (960, 279) + Click at (928, 362)"
+    },
+    {
+      "momentId": 190,
+      "startFrame": 14853,
+      "endFrame": 15087,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1080,
+        "y": 473
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1234, 601) + Typing: 배포하겠습니다"
+    },
+    {
+      "momentId": 194,
+      "startFrame": 15348,
+      "endFrame": 16467,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1031,
+        "y": 656
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (936, 761) + Click at (1235, 661) + Typing: !! + Click at (936, 761) + Click at (1266, 661) + Click at (819, 550)"
+    },
+    {
+      "momentId": 206,
+      "startFrame": 16550,
+      "endFrame": 16607,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1280,
+        "y": 75
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1280, 75)"
+    },
+    {
+      "momentId": 212,
+      "startFrame": 17105,
+      "endFrame": 17437,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1274,
+        "y": 200
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1315, 266) + Click at (1281, 135) + Click at (1234, 172)"
+    },
+    {
+      "momentId": 218,
+      "startFrame": 17526,
+      "endFrame": 18021,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1020,
+        "y": 492
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1113, 493) + Click at (960, 399) + Click at (960, 537) + Click at (928, 586)"
+    },
+    {
+      "momentId": 226,
+      "startFrame": 18138,
+      "endFrame": 18372,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1120,
+        "y": 108
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (960, 141) + Click at (1280, 75)"
+    },
+    {
+      "momentId": 230,
+      "startFrame": 18451,
+      "endFrame": 18508,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 415,
+        "y": 266
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (415, 266)"
+    },
+    {
+      "momentId": 232,
+      "startFrame": 18588,
+      "endFrame": 18925,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1092,
+        "y": 168
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1281, 135) + Click at (1234, 202) + Click at (903, 162)"
+    },
+    {
+      "momentId": 238,
+      "startFrame": 19045,
+      "endFrame": 19675,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1020,
+        "y": 504
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1113, 471) + Click at (960, 399) + Click at (960, 515) + Click at (960, 559) + Click at (928, 608)"
+    },
+    {
+      "momentId": 248,
+      "startFrame": 19797,
+      "endFrame": 20442,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1092,
+        "y": 212
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (960, 141) + Click at (1015, 289) + Click at (1281, 135) + Click at (1234, 232) + Click at (903, 141)"
+    },
+    {
+      "momentId": 258,
+      "startFrame": 20561,
+      "endFrame": 20893,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 716,
+        "y": 180
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (473, 140) + Click at (478, 209) + Click at (960, 219)"
+    },
+    {
+      "momentId": 264,
+      "startFrame": 21205,
+      "endFrame": 22307,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1092,
+        "y": 172
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1140, 198) + Click at (903, 141) + Click at (960, 182) + Click at (1173, 78) + Click at (1015, 266) + Click at (1281, 135) + Click at (1234, 262) + Click at (903, 141)"
+    },
+    {
+      "momentId": 280,
+      "startFrame": 22421,
+      "endFrame": 22757,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 716,
+        "y": 234
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (473, 140) + Click at (478, 239) + Click at (960, 329)"
+    },
+    {
+      "momentId": 286,
+      "startFrame": 23047,
+      "endFrame": 24088,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1038,
+        "y": 193
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1140, 308) + Click at (903, 141) + Click at (960, 182) + Click at (1140, 198) + Click at (903, 141) + Click at (960, 182) + Click at (1173, 78)"
+    },
+    {
+      "momentId": 300,
+      "startFrame": 24168,
+      "endFrame": 25126,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 716,
+        "y": 225
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (473, 140) + Click at (478, 280) + Click at (960, 141) + Click at (482, 140) + Click at (478, 310) + Click at (903, 162) + Click at (960, 141)"
+    },
+    {
+      "momentId": 314,
+      "startFrame": 25243,
+      "endFrame": 25465,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 82,
+        "y": 219
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (82, 236) + Click at (82, 202)"
+    }
+  ],
+  "narration": {
+    "slug": "taskboard",
+    "style": "manual",
+    "voice": "ko-KR-SunHiNeural",
+    "pitch": "+0Hz",
+    "rate": "+5%",
+    "enabled": true,
+    "showSubtitles": true,
+    "updatedAt": "2026-10-29T07:19:17.882Z",
+    "cues": [
+      {
+        "videoStartMs": 0,
+        "startMs": 0,
+        "endMs": 6432,
+        "text": "태스크보드로 업무 보드를 생성하고 할일을 체계적으로 관리하는 방법을 안내하겠습니다.",
+        "isIntro": true,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-01.mp3",
+        "audioDurationMs": 6432,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|태스크보드로 업무 보드를 생성하고 할일을 체계적으로 관리하는 방법을 안내하겠습니다.",
+        "id": 1,
+        "videoEndMs": 2200,
+        "autoHoldMs": 4412,
+        "effectiveDeltaMs": 4412,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 2200,
+        "startMs": 6617,
+        "endMs": 12089,
+        "text": "전체 메뉴에서 태스크보드로 접속한 후 보드 목록 화면으로 이동합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-02.mp3",
+        "audioDurationMs": 5472,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|전체 메뉴에서 태스크보드로 접속한 후 보드 목록 화면으로 이동합니다.",
+        "id": 2,
+        "videoEndMs": 12000,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 12000,
+        "startMs": 16417,
+        "endMs": 21865,
+        "text": "나의 보드와 공유 보드 메뉴를 확인하며 관리할 보드 목록을 조회합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-03.mp3",
+        "audioDurationMs": 5448,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|나의 보드와 공유 보드 메뉴를 확인하며 관리할 보드 목록을 조회합니다.",
+        "id": 3,
+        "videoEndMs": 28000,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 28000,
+        "startMs": 32417,
+        "endMs": 38153,
+        "text": "새 보드를 추가하고 보드명과 설명을 입력한 뒤 스킨 디자인을 선택합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-04.mp3",
+        "audioDurationMs": 5736,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|새 보드를 추가하고 보드명과 설명을 입력한 뒤 스킨 디자인을 선택합니다.",
+        "id": 4,
+        "videoEndMs": 40600,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 40600,
+        "startMs": 45017,
+        "endMs": 50753,
+        "text": "보드 배경을 지정하고 멤버 탭에서 보드를 함께 이용할 사용자를 추가합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-05.mp3",
+        "audioDurationMs": 5736,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|보드 배경을 지정하고 멤버 탭에서 보드를 함께 이용할 사용자를 추가합니다.",
+        "id": 5,
+        "videoEndMs": 50000,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 50000,
+        "startMs": 54417,
+        "endMs": 60273,
+        "text": "조직도에서 공유할 대상자를 선택하여 추가한 뒤 보드 생성을 완료합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-06.mp3",
+        "audioDurationMs": 5856,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|조직도에서 공유할 대상자를 선택하여 추가한 뒤 보드 생성을 완료합니다.",
+        "id": 6,
+        "videoEndMs": 66200,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 66200,
+        "startMs": 70617,
+        "endMs": 75489,
+        "text": "생성된 보드로 진입하여 불필요한 기본 그룹을 삭제합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-07.mp3",
+        "audioDurationMs": 4872,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|생성된 보드로 진입하여 불필요한 기본 그룹을 삭제합니다.",
+        "id": 7,
+        "videoEndMs": 73100,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 73100,
+        "startMs": 77517,
+        "endMs": 83661,
+        "text": "업무 단계 구분을 위해 그룹명을 수정하고 색상과 아이콘을 지정하여 저장합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-08.mp3",
+        "audioDurationMs": 6144,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|업무 단계 구분을 위해 그룹명을 수정하고 색상과 아이콘을 지정하여 저장합니다.",
+        "id": 8,
+        "videoEndMs": 85700,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 85700,
+        "startMs": 90117,
+        "endMs": 95397,
+        "text": "추가 그룹을 생성하여 업무 상태에 맞춘 그룹 구성을 완성합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-09.mp3",
+        "audioDurationMs": 5280,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|추가 그룹을 생성하여 업무 상태에 맞춘 그룹 구성을 완성합니다.",
+        "id": 9,
+        "videoEndMs": 96100,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 96100,
+        "startMs": 100517,
+        "endMs": 106013,
+        "text": "그룹 내 할일 추가를 통해 업무 제목을 입력하고 상세 화면을 엽니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-10.mp3",
+        "audioDurationMs": 5496,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|그룹 내 할일 추가를 통해 업무 제목을 입력하고 상세 화면을 엽니다.",
+        "id": 10,
+        "videoEndMs": 103800,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 103800,
+        "startMs": 108217,
+        "endMs": 111865,
+        "text": "해당 업무를 진행할 담당자를 지정합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-11.mp3",
+        "audioDurationMs": 3648,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|해당 업무를 진행할 담당자를 지정합니다.",
+        "id": 11,
+        "videoEndMs": 111300,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 111300,
+        "startMs": 115717,
+        "endMs": 120133,
+        "text": "업무 마감 일자를 지정하여 완료 기한을 설정합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-12.mp3",
+        "audioDurationMs": 4416,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|업무 마감 일자를 지정하여 완료 기한을 설정합니다.",
+        "id": 12,
+        "videoEndMs": 119300,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 119300,
+        "startMs": 123717,
+        "endMs": 129501,
+        "text": "내용 편집을 통해 업무의 세부 지침과 요청 사항을 작성하고 저장합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-13.mp3",
+        "audioDurationMs": 5784,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|내용 편집을 통해 업무의 세부 지침과 요청 사항을 작성하고 저장합니다.",
+        "id": 13,
+        "videoEndMs": 131300,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 131300,
+        "startMs": 135717,
+        "endMs": 140421,
+        "text": "업무 성격을 쉽게 식별할 수 있도록 분류 라벨을 지정합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-14.mp3",
+        "audioDurationMs": 4704,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|업무 성격을 쉽게 식별할 수 있도록 분류 라벨을 지정합니다.",
+        "id": 14,
+        "videoEndMs": 138800,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 138800,
+        "startMs": 143217,
+        "endMs": 148329,
+        "text": "체크리스트를 추가하여 세부 점검 항목들을 단계별로 입력합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-15.mp3",
+        "audioDurationMs": 5112,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|체크리스트를 추가하여 세부 점검 항목들을 단계별로 입력합니다.",
+        "id": 15,
+        "videoEndMs": 151800,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 151800,
+        "startMs": 156217,
+        "endMs": 161593,
+        "text": "업무 참고를 위해 관련 문서를 첨부 파일로 업로드하고 저장합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-16.mp3",
+        "audioDurationMs": 5376,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|업무 참고를 위해 관련 문서를 첨부 파일로 업로드하고 저장합니다.",
+        "id": 16,
+        "videoEndMs": 165700,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 165700,
+        "startMs": 170117,
+        "endMs": 174797,
+        "text": "상세 창을 닫고 좌측 메뉴의 할일 등록을 진행합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-17.mp3",
+        "audioDurationMs": 4680,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|상세 창을 닫고 좌측 메뉴의 할일 등록을 진행합니다.",
+        "id": 17,
+        "videoEndMs": 170800,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 170800,
+        "startMs": 175217,
+        "endMs": 180593,
+        "text": "업무 제목을 입력하고 대상 보드와 그룹, 담당자를 지정합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-18.mp3",
+        "audioDurationMs": 5376,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|업무 제목을 입력하고 대상 보드와 그룹, 담당자를 지정합니다.",
+        "id": 18,
+        "videoEndMs": 188300,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 188300,
+        "startMs": 192717,
+        "endMs": 197949,
+        "text": "마감 날짜와 구체적인 시간을 지정하여 업무 기한을 설정합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-19.mp3",
+        "audioDurationMs": 5232,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|마감 날짜와 구체적인 시간을 지정하여 업무 기한을 설정합니다.",
+        "id": 19,
+        "videoEndMs": 203600,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 203600,
+        "startMs": 208017,
+        "endMs": 213465,
+        "text": "본문 내용 작성과 첨부 파일 등록을 완료한 후 할일을 저장합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-20.mp3",
+        "audioDurationMs": 5448,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|본문 내용 작성과 첨부 파일 등록을 완료한 후 할일을 저장합니다.",
+        "id": 20,
+        "videoEndMs": 219500,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 219500,
+        "startMs": 223917,
+        "endMs": 229677,
+        "text": "등록된 할일을 열어 기존 분류 라벨을 수정하고 불필요한 라벨을 삭제합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-21.mp3",
+        "audioDurationMs": 5760,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|등록된 할일을 열어 기존 분류 라벨을 수정하고 불필요한 라벨을 삭제합니다.",
+        "id": 21,
+        "videoEndMs": 231800,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 231800,
+        "startMs": 236217,
+        "endMs": 241737,
+        "text": "새로운 분류 라벨을 생성하여 색상을 지정한 뒤 해당 업무에 적용합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-22.mp3",
+        "audioDurationMs": 5520,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|새로운 분류 라벨을 생성하여 색상을 지정한 뒤 해당 업무에 적용합니다.",
+        "id": 22,
+        "videoEndMs": 247400,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 247400,
+        "startMs": 251817,
+        "endMs": 257385,
+        "text": "업무 소통을 위해 진행 관련 코멘트를 작성하고 댓글로 등록합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-23.mp3",
+        "audioDurationMs": 5568,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|업무 소통을 위해 진행 관련 코멘트를 작성하고 댓글로 등록합니다.",
+        "id": 23,
+        "videoEndMs": 259500,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 259500,
+        "startMs": 263917,
+        "endMs": 268717,
+        "text": "등록된 댓글 내용을 수정한 뒤 변경 사항을 저장합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-24.mp3",
+        "audioDurationMs": 4800,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|등록된 댓글 내용을 수정한 뒤 변경 사항을 저장합니다.",
+        "id": 24,
+        "videoEndMs": 271100,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 271100,
+        "startMs": 275517,
+        "endMs": 280533,
+        "text": "댓글을 삭제하고 활동 내역에서 업무 변경 이력을 확인합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-25.mp3",
+        "audioDurationMs": 5016,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|댓글을 삭제하고 활동 내역에서 업무 변경 이력을 확인합니다.",
+        "id": 25,
+        "videoEndMs": 275700,
+        "autoHoldMs": 596,
+        "effectiveDeltaMs": 596,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 275700,
+        "startMs": 280717,
+        "endMs": 286549,
+        "text": "보드 화면에서 할일 카드를 드래그하여 업무 진행 단계별로 그룹을 이동합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-26.mp3",
+        "audioDurationMs": 5832,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|보드 화면에서 할일 카드를 드래그하여 업무 진행 단계별로 그룹을 이동합니다.",
+        "id": 26,
+        "videoEndMs": 285000,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 285000,
+        "startMs": 290017,
+        "endMs": 295801,
+        "text": "메뉴의 이동 기능을 활용하여 해당 할일을 다른 보드나 그룹으로 재배치합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-27.mp3",
+        "audioDurationMs": 5784,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|메뉴의 이동 기능을 활용하여 해당 할일을 다른 보드나 그룹으로 재배치합니다.",
+        "id": 27,
+        "videoEndMs": 305000,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 305000,
+        "startMs": 310017,
+        "endMs": 316737,
+        "text": "이동(댓글) 기능을 통해 기존 할일의 내용을 다른 업무의 댓글로 전환 통합합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-28.mp3",
+        "audioDurationMs": 6720,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|이동(댓글) 기능을 통해 기존 할일의 내용을 다른 업무의 댓글로 전환 통합합니다.",
+        "id": 28,
+        "videoEndMs": 332600,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 332600,
+        "startMs": 337617,
+        "endMs": 342849,
+        "text": "완료되었거나 숨길 업무 카드를 보관 처리하여 보드를 정리합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-29.mp3",
+        "audioDurationMs": 5232,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|완료되었거나 숨길 업무 카드를 보관 처리하여 보드를 정리합니다.",
+        "id": 29,
+        "videoEndMs": 342600,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 342600,
+        "startMs": 347617,
+        "endMs": 353065,
+        "text": "보드 메뉴의 보관함에서 보관된 업무를 확인하고 원래 보드로 복원합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-30.mp3",
+        "audioDurationMs": 5448,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|보드 메뉴의 보관함에서 보관된 업무를 확인하고 원래 보드로 복원합니다.",
+        "id": 30,
+        "videoEndMs": 363700,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 363700,
+        "startMs": 368717,
+        "endMs": 372701,
+        "text": "더 이상 불필요한 할일 카드를 삭제 처리합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-31.mp3",
+        "audioDurationMs": 3984,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|더 이상 불필요한 할일 카드를 삭제 처리합니다.",
+        "id": 31,
+        "videoEndMs": 373600,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 373600,
+        "startMs": 378617,
+        "endMs": 384689,
+        "text": "삭제함에서 삭제된 할일 목록을 조회하고 필요한 업무 카드를 다시 복원합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-32.mp3",
+        "audioDurationMs": 6072,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|삭제함에서 삭제된 할일 목록을 조회하고 필요한 업무 카드를 다시 복원합니다.",
+        "id": 32,
+        "videoEndMs": 400300,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 400300,
+        "startMs": 405317,
+        "endMs": 410117,
+        "text": "보드 잠금 기능을 설정하여 추가적인 변경을 방지합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-33.mp3",
+        "audioDurationMs": 4800,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|보드 잠금 기능을 설정하여 추가적인 변경을 방지합니다.",
+        "id": 33,
+        "videoEndMs": 410200,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      },
+      {
+        "videoStartMs": 410200,
+        "startMs": 415217,
+        "endMs": 418289,
+        "text": "운영이 종료된 보드를 삭제합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/taskboard/cue-34.mp3",
+        "audioDurationMs": 3072,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|운영이 종료된 보드를 삭제합니다.",
+        "id": 34,
+        "videoEndMs": 427367,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1
+      }
+    ]
+  },
+  "timeRegions": [
+    {
+      "videoStartFrame": 0,
+      "videoEndFrame": 1,
+      "compStartFrame": 0,
+      "compEndFrame": 266,
+      "speed": 0.00376,
+      "cueId": 1
+    },
+    {
+      "videoStartFrame": 1,
+      "videoEndFrame": 132,
+      "compStartFrame": 266,
+      "compEndFrame": 397,
+      "speed": 1,
+      "cueId": 1
+    },
+    {
+      "videoStartFrame": 132,
+      "videoEndFrame": 720,
+      "compStartFrame": 397,
+      "compEndFrame": 985,
+      "speed": 1,
+      "cueId": 2
+    },
+    {
+      "videoStartFrame": 720,
+      "videoEndFrame": 1680,
+      "compStartFrame": 985,
+      "compEndFrame": 1945,
+      "speed": 1,
+      "cueId": 3
+    },
+    {
+      "videoStartFrame": 1680,
+      "videoEndFrame": 2436,
+      "compStartFrame": 1945,
+      "compEndFrame": 2701,
+      "speed": 1,
+      "cueId": 4
+    },
+    {
+      "videoStartFrame": 2436,
+      "videoEndFrame": 3000,
+      "compStartFrame": 2701,
+      "compEndFrame": 3265,
+      "speed": 1,
+      "cueId": 5
+    },
+    {
+      "videoStartFrame": 3000,
+      "videoEndFrame": 3972,
+      "compStartFrame": 3265,
+      "compEndFrame": 4237,
+      "speed": 1,
+      "cueId": 6
+    },
+    {
+      "videoStartFrame": 3972,
+      "videoEndFrame": 4386,
+      "compStartFrame": 4237,
+      "compEndFrame": 4651,
+      "speed": 1,
+      "cueId": 7
+    },
+    {
+      "videoStartFrame": 4386,
+      "videoEndFrame": 5142,
+      "compStartFrame": 4651,
+      "compEndFrame": 5407,
+      "speed": 1,
+      "cueId": 8
+    },
+    {
+      "videoStartFrame": 5142,
+      "videoEndFrame": 5766,
+      "compStartFrame": 5407,
+      "compEndFrame": 6031,
+      "speed": 1,
+      "cueId": 9
+    },
+    {
+      "videoStartFrame": 5766,
+      "videoEndFrame": 6228,
+      "compStartFrame": 6031,
+      "compEndFrame": 6493,
+      "speed": 1,
+      "cueId": 10
+    },
+    {
+      "videoStartFrame": 6228,
+      "videoEndFrame": 6678,
+      "compStartFrame": 6493,
+      "compEndFrame": 6943,
+      "speed": 1,
+      "cueId": 11
+    },
+    {
+      "videoStartFrame": 6678,
+      "videoEndFrame": 7158,
+      "compStartFrame": 6943,
+      "compEndFrame": 7423,
+      "speed": 1,
+      "cueId": 12
+    },
+    {
+      "videoStartFrame": 7158,
+      "videoEndFrame": 7878,
+      "compStartFrame": 7423,
+      "compEndFrame": 8143,
+      "speed": 1,
+      "cueId": 13
+    },
+    {
+      "videoStartFrame": 7878,
+      "videoEndFrame": 8328,
+      "compStartFrame": 8143,
+      "compEndFrame": 8593,
+      "speed": 1,
+      "cueId": 14
+    },
+    {
+      "videoStartFrame": 8328,
+      "videoEndFrame": 9108,
+      "compStartFrame": 8593,
+      "compEndFrame": 9373,
+      "speed": 1,
+      "cueId": 15
+    },
+    {
+      "videoStartFrame": 9108,
+      "videoEndFrame": 9942,
+      "compStartFrame": 9373,
+      "compEndFrame": 10207,
+      "speed": 1,
+      "cueId": 16
+    },
+    {
+      "videoStartFrame": 9942,
+      "videoEndFrame": 10248,
+      "compStartFrame": 10207,
+      "compEndFrame": 10513,
+      "speed": 1,
+      "cueId": 17
+    },
+    {
+      "videoStartFrame": 10248,
+      "videoEndFrame": 11298,
+      "compStartFrame": 10513,
+      "compEndFrame": 11563,
+      "speed": 1,
+      "cueId": 18
+    },
+    {
+      "videoStartFrame": 11298,
+      "videoEndFrame": 12216,
+      "compStartFrame": 11563,
+      "compEndFrame": 12481,
+      "speed": 1,
+      "cueId": 19
+    },
+    {
+      "videoStartFrame": 12216,
+      "videoEndFrame": 13170,
+      "compStartFrame": 12481,
+      "compEndFrame": 13435,
+      "speed": 1,
+      "cueId": 20
+    },
+    {
+      "videoStartFrame": 13170,
+      "videoEndFrame": 13908,
+      "compStartFrame": 13435,
+      "compEndFrame": 14173,
+      "speed": 1,
+      "cueId": 21
+    },
+    {
+      "videoStartFrame": 13908,
+      "videoEndFrame": 14844,
+      "compStartFrame": 14173,
+      "compEndFrame": 15109,
+      "speed": 1,
+      "cueId": 22
+    },
+    {
+      "videoStartFrame": 14844,
+      "videoEndFrame": 15570,
+      "compStartFrame": 15109,
+      "compEndFrame": 15835,
+      "speed": 1,
+      "cueId": 23
+    },
+    {
+      "videoStartFrame": 15570,
+      "videoEndFrame": 16266,
+      "compStartFrame": 15835,
+      "compEndFrame": 16531,
+      "speed": 1,
+      "cueId": 24
+    },
+    {
+      "videoStartFrame": 16266,
+      "videoEndFrame": 16510,
+      "compStartFrame": 16531,
+      "compEndFrame": 16775,
+      "speed": 1,
+      "cueId": 25
+    },
+    {
+      "videoStartFrame": 16510,
+      "videoEndFrame": 16515,
+      "compStartFrame": 16775,
+      "compEndFrame": 16816,
+      "speed": 0.12195,
+      "cueId": 25
+    },
+    {
+      "videoStartFrame": 16515,
+      "videoEndFrame": 16542,
+      "compStartFrame": 16816,
+      "compEndFrame": 16843,
+      "speed": 1,
+      "cueId": 25
+    },
+    {
+      "videoStartFrame": 16542,
+      "videoEndFrame": 17100,
+      "compStartFrame": 16843,
+      "compEndFrame": 17401,
+      "speed": 1,
+      "cueId": 26
+    },
+    {
+      "videoStartFrame": 17100,
+      "videoEndFrame": 18300,
+      "compStartFrame": 17401,
+      "compEndFrame": 18601,
+      "speed": 1,
+      "cueId": 27
+    },
+    {
+      "videoStartFrame": 18300,
+      "videoEndFrame": 19956,
+      "compStartFrame": 18601,
+      "compEndFrame": 20257,
+      "speed": 1,
+      "cueId": 28
+    },
+    {
+      "videoStartFrame": 19956,
+      "videoEndFrame": 20556,
+      "compStartFrame": 20257,
+      "compEndFrame": 20857,
+      "speed": 1,
+      "cueId": 29
+    },
+    {
+      "videoStartFrame": 20556,
+      "videoEndFrame": 21822,
+      "compStartFrame": 20857,
+      "compEndFrame": 22123,
+      "speed": 1,
+      "cueId": 30
+    },
+    {
+      "videoStartFrame": 21822,
+      "videoEndFrame": 22416,
+      "compStartFrame": 22123,
+      "compEndFrame": 22717,
+      "speed": 1,
+      "cueId": 31
+    },
+    {
+      "videoStartFrame": 22416,
+      "videoEndFrame": 24018,
+      "compStartFrame": 22717,
+      "compEndFrame": 24319,
+      "speed": 1,
+      "cueId": 32
+    },
+    {
+      "videoStartFrame": 24018,
+      "videoEndFrame": 24612,
+      "compStartFrame": 24319,
+      "compEndFrame": 24913,
+      "speed": 1,
+      "cueId": 33
+    },
+    {
+      "videoStartFrame": 24612,
+      "videoEndFrame": 25642,
+      "compStartFrame": 24913,
+      "compEndFrame": 25943,
+      "speed": 1,
+      "cueId": 34
+    }
+  ]
+}

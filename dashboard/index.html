@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261028_del_scenario1">
+  <link rel="stylesheet" href="style.css?v=20261030_ai_mode_cli1">
 </head>
 <body>
   <div class="app-container">
@@ -30,9 +30,15 @@
 
       <!-- Live Environment Status Indicators -->
       <div class="status-pills">
-        <div class="status-pill clickable-pill" id="pill-ai" title="클릭하여 AI API 사용량 및 요금 내역 보기">
-          <span class="status-dot"></span>
-          <span class="pill-label">Gemini 3.8 Flash</span>
+        <div class="ai-mode-header-group">
+          <div class="ai-mode-seg-toggle" id="header-ai-mode-toggle" title="AI 실행 모드 원클릭 전환 (API 모드 vs 로컬 CLI 모드)">
+            <button type="button" class="ai-mode-seg-btn active" data-ai-mode="api" title="API 모드 (.env의 GEMINI_API_KEY로 직접 호출)">🔌 API</button>
+            <button type="button" class="ai-mode-seg-btn" data-ai-mode="cli" title="CLI 모드 (로컬 로그인 Antigravity/Claude CLI 호출 · API 요금 ₩0)">💻 CLI</button>
+          </div>
+          <div class="status-pill clickable-pill" id="pill-ai" title="클릭하여 AI 실행 모드 상세 설정 및 토큰/요금 내역 보기">
+            <span class="status-dot"></span>
+            <span class="pill-label">Gemini 3.8 Flash</span>
+          </div>
         </div>
         <div class="status-pill clickable-pill" id="pill-gw" title="클릭하여 타겟 접속 URL 설정 열기">
           <span class="status-dot"></span>
@@ -430,6 +436,10 @@
                         </label>
                       </div>
                       <div class="narration-toolbar-actions">
+                        <div class="ai-mode-seg-toggle" id="narration-ai-mode-toggle" title="AI 대본 생성 시 사용할 실행 모드 전환 (API 모드 vs 로컬 CLI 모드)">
+                          <button type="button" class="ai-mode-seg-btn active" data-ai-mode="api" title="API 모드 (.env의 GEMINI_API_KEY로 직접 호출)">🔌 API</button>
+                          <button type="button" class="ai-mode-seg-btn" data-ai-mode="cli" title="CLI 모드 (로컬 로그인 Antigravity/Claude CLI 호출 · API 요금 ₩0)">💻 CLI</button>
+                        </div>
                         <button type="button" class="btn btn-sm btn-outline" id="btn-add-narration-intro" title="영상 맨 앞(0.2초)에 매뉴얼 소개 오프닝 대본 구간을 추가합니다">
                           🎬 오프닝 추가
                         </button>
@@ -617,6 +627,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=20261028_del_scenario1"></script>
+  <script src="app.js?v=20261030_ai_mode_cli1"></script>
 </body>
 </html>

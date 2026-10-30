@@ -15,6 +15,20 @@
     },
     {
       "type": "click",
+      "selector": "[title='닫기']:visible, button:has-text('닫기'):visible, a:has-text('닫기'):visible, :text-is('닫기'):visible",
+      "description": "'닫기' 클릭",
+      "force": false,
+      "_lastHumanTarget": "닫기"
+    },
+    {
+      "type": "wait",
+      "description": "팝업 닫기 반응 대기",
+      "force": false,
+      "_lastHumanTarget": "",
+      "ms": 2000
+    },
+    {
+      "type": "click",
       "selector": "div#main_menu button[onclick*='GwMainMenu.fn.showAllMenuBox()']:visible, div#main_menu button.btn_svc_open[title='포탈 전체메뉴']:visible, div#main_menu button[title='포탈 전체메뉴']:visible, div#main_menu button[onclick*='GwMainMenu.fn.showAllMenuBox']:visible, div#main_menu > div.optn_btns > button.btn_svc_open:visible, div#main_menu button.btn_svc_open:has-text('포탈 전체메뉴'):visible, div#main_menu button.btn_svc_open:visible, button[onclick*='GwMainMenu.fn.showAllMenuBox()']:visible, button.btn_svc_open[title='포탈 전체메뉴']:visible, button[title='포탈 전체메뉴']:visible, button[onclick*='GwMainMenu.fn.showAllMenuBox']:visible",
       "description": "'포탈 전체메뉴' 버튼 클릭",
       "recordedByEyedropper": true,
@@ -395,7 +409,7 @@
     },
     {
       "type": "click",
-      "selector": "div#task_board button._taskGrpSetup[title='설정']:visible, div#task_board button[title='설정']:visible, div#task_board > div.task_group.color_7:nth-of-type(4) > div.group_tit:nth-of-type(1) > div.optn:nth-of-type(2) > button._taskGrpSetup.btn.btn_ico:nth-of-type(2):visible, div#task_board button._taskGrpSetup:has-text('설정'):visible, div#task_board button._taskGrpSetup:visible",
+      "selector": "div#task_board > div.task_group.color_7:nth-of-type(4) > div.group_tit:nth-of-type(1) > div.optn:nth-of-type(2) > button._taskGrpSetup.btn.btn_ico:nth-of-type(2):visible, div#task_board button._taskGrpSetup:has-text('설정'):visible, div#task_board button._taskGrpSetup:visible, div#task_board button._taskGrpSetup[title='설정']:visible, div#task_board button[title='설정']:visible",
       "description": "'설정' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"설정\" class=\"btn btn_ico _taskGrpSetup\"><i class=\"ico ico_setup\"><span>설정</span></i></button>",
@@ -423,7 +437,7 @@
     },
     {
       "type": "click",
-      "selector": "div#task_board button._taskGrpSetup[title='설정']:visible, div#task_board button[title='설정']:visible, div#task_board > div.task_group.color_11:nth-of-type(4) > div.group_tit:nth-of-type(1) > div.optn:nth-of-type(2) > button._taskGrpSetup.btn.btn_ico:nth-of-type(2):visible, div#task_board button._taskGrpSetup:has-text('설정'):visible, div#task_board button._taskGrpSetup:visible",
+      "selector": "div#task_board > div.task_group.color_11:nth-of-type(4) > div.group_tit:nth-of-type(1) > div.optn:nth-of-type(2) > button._taskGrpSetup.btn.btn_ico:nth-of-type(2):visible, div#task_board button._taskGrpSetup:has-text('설정'):visible, div#task_board button._taskGrpSetup:visible, div#task_board button._taskGrpSetup[title='설정']:visible, div#task_board button[title='설정']:visible",
       "description": "'설정' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"설정\" class=\"btn btn_ico _taskGrpSetup\"><i class=\"ico ico_setup\"><span>설정</span></i></button>",
@@ -551,7 +565,7 @@
     },
     {
       "type": "click",
-      "selector": "div#task_board button._taskAdd[title='할일 추가']:visible, div#task_board button[title='할일 추가']:visible, div#task_board > div.task_group.color_10:nth-of-type(1) > div.group_tit:nth-of-type(1) > div.optn:nth-of-type(2) > button._taskAdd.btn.btn_ico:nth-of-type(1):visible, div#task_board button._taskAdd:has-text('할일 추가'):visible, div#task_board button._taskAdd:visible, button._taskAdd[title='할일 추가']:visible, button[title='할일 추가']:visible",
+      "selector": "div#task_board > div.task_group.color_10:nth-of-type(1) > div.group_tit:nth-of-type(1) > div.optn:nth-of-type(2) > button._taskAdd.btn.btn_ico:nth-of-type(1):visible, div#task_board button._taskAdd:has-text('할일 추가'):visible, div#task_board button._taskAdd:visible, div#task_board button._taskAdd[title='할일 추가']:visible, div#task_board button[title='할일 추가']:visible, button._taskAdd[title='할일 추가']:visible, button[title='할일 추가']:visible",
       "description": "'할일 추가' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"할일 추가\" class=\"btn btn_ico _taskAdd\"><i class=\"ico ico_plus\"><span>할일 추가</span></i></button>",
@@ -580,7 +594,7 @@
     },
     {
       "type": "click",
-      "selector": "div.sub:has-text('교과목 시간표 최종 점검'):visible, div.task_card:has-text('교과목 시간표 최종 점검'):visible",
+      "selector": "div.group_lst:nth-of-type(2) > ul.mg_ul > li._task > div.task_card > div.task_info._taskInfo:nth-of-type(2) > div.task_inner:visible",
       "description": "'교과목 시간표 최종 점검' 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<div class=\"task_inner\"> <div class=\"sub\">교과목 시간표 최종 점검</div> <div class=\"desc\"></div> <div class=\"info\"> <div class=\"count\"> </div> <div class=\"date\"><em>등록일:</em> 2026-10-29</div> <div class=\"user\"> </div> </div> </div>",
@@ -727,7 +741,7 @@
     },
     {
       "type": "click",
-      "selector": "div#aglTaskView_labelBox button._addLabel[title='라벨 추가']:visible, div#aglTaskView_labelBox button[title='라벨 추가']:visible, div#aglTaskView_labelBox button:has(.ico_label):visible, div#aglTaskView_labelBox > div.box_cont:nth-of-type(2) > div.label_bar > div.optn:nth-of-type(2) > button._addLabel.btn.btn_ico:visible, div#aglTaskView_labelBox button._addLabel:has-text('라벨 추가'):visible, div#aglTaskView_labelBox button._addLabel:visible, button:has(.ico_label):visible, button._addLabel[title='라벨 추가']:visible, button[title='라벨 추가']:visible",
+      "selector": "div#aglTaskView_labelBox > div.box_cont:nth-of-type(2) > div.label_bar > div.optn:nth-of-type(2) > button._addLabel.btn.btn_ico:visible, div#aglTaskView_labelBox button._addLabel:has-text('라벨 추가'):visible, div#aglTaskView_labelBox button._addLabel:visible, div#aglTaskView_labelBox button._addLabel[title='라벨 추가']:visible, div#aglTaskView_labelBox button[title='라벨 추가']:visible, button._addLabel[title='라벨 추가']:visible, button[title='라벨 추가']:visible",
       "description": "'라벨 추가' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"라벨 추가\" class=\"btn btn_ico _addLabel\"><i class=\"ico ico_label\"><span>라벨 추가</span></i></button>",
@@ -741,7 +755,7 @@
     },
     {
       "type": "click",
-      "selector": ".ui-dialog:visible li#TA01m60seypssx5nwz772e74p3hp label:has(input[value='TA01m60seypssx5nwz772e74p3hp']):visible, .ui-dialog:visible label:has(input[value='TA01m60seypssx5nwz772e74p3hp']):visible, .ui-dialog:visible li._label label:text-is('점검'):visible, li#TA01m60seypssx5nwz772e74p3hp > label:visible, .ui-dialog:visible label:text-is('점검'):visible",
+      "selector": ".ui-dialog:visible li#TA01m60seypssx5nwz772e74p3hp label:has(input[value='TA01m60seypssx5nwz772e74p3hp']):visible, .ui-dialog:visible label:has(input[value='TA01m60seypssx5nwz772e74p3hp']):visible, .ui-dialog:visible li:has-text('점검') label:has(input[value='TA01m60seypssx5nwz772e74p3hp']):visible, .ui-dialog:visible li:has-text('점검') > label:visible, .ui-dialog:visible li._label label:text-is('점검'):visible, li#TA01m60seypssx5nwz772e74p3hp > label:visible, .ui-dialog:visible label:text-is('점검'):visible",
       "description": "[라벨 선택 팝업] '점검' 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<label> <input type=\"checkbox\" value=\"TA01m60seypssx5nwz772e74p3hp\" class=\"input_chk\"> <span title=\"점검\" class=\"label lb_red\"><span class=\"label_txt\">점검</span></span> </label>",
@@ -769,7 +783,7 @@
     },
     {
       "type": "click",
-      "selector": "div#aglTaskView_labelBox button.drop_tgl[title='부가 기능']:visible, div#aglTaskView_labelBox button[title='부가 기능']:visible, div#aglTaskView_labelBox > div.box_cont:nth-of-type(2) > div.label_bar > div.optn:nth-of-type(2) > div.btn_drop > button.drop_tgl.btn.btn_ico:visible, div#aglTaskView_labelBox button.drop_tgl:has-text('부가 기능'):visible, div#aglTaskView_labelBox button.drop_tgl:visible, button.drop_tgl[title='부가 기능']:visible, button[title='부가 기능']:visible",
+      "selector": "div#aglTaskView_labelBox > div.box_cont:nth-of-type(2) > div.label_bar > div.optn:nth-of-type(2) > div.btn_drop > button.drop_tgl.btn.btn_ico:visible, div#aglTaskView_labelBox button.drop_tgl:has-text('부가 기능'):visible, div#aglTaskView_labelBox button.drop_tgl:visible, div#aglTaskView_labelBox button.drop_tgl[title='부가 기능']:visible, div#aglTaskView_labelBox button[title='부가 기능']:visible, button.drop_tgl[title='부가 기능']:visible, button[title='부가 기능']:visible",
       "description": "'부가 기능' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"부가 기능\" data-toggle=\"dropdown\" class=\"btn btn_ico drop_tgl\"><i class=\"ico ico_plus\"><span>부가 기능</span></i></button>",
@@ -844,7 +858,7 @@
     },
     {
       "type": "click",
-      "selector": "div#aglTaskView_labelBox button.drop_tgl[title='부가 기능']:visible, div#aglTaskView_labelBox button[title='부가 기능']:visible, div#aglTaskView_labelBox > div.box_cont:nth-of-type(2) > div.label_bar > div.optn:nth-of-type(2) > div.btn_drop > button.drop_tgl.btn.btn_ico:visible, div#aglTaskView_labelBox button.drop_tgl:has-text('부가 기능'):visible, div#aglTaskView_labelBox button.drop_tgl:visible, button.drop_tgl[title='부가 기능']:visible, button[title='부가 기능']:visible",
+      "selector": "div#aglTaskView_labelBox > div.box_cont:nth-of-type(2) > div.label_bar > div.optn:nth-of-type(2) > div.btn_drop > button.drop_tgl.btn.btn_ico:visible, div#aglTaskView_labelBox button.drop_tgl:has-text('부가 기능'):visible, div#aglTaskView_labelBox button.drop_tgl:visible, div#aglTaskView_labelBox button.drop_tgl[title='부가 기능']:visible, div#aglTaskView_labelBox button[title='부가 기능']:visible, button.drop_tgl[title='부가 기능']:visible, button[title='부가 기능']:visible",
       "description": "'부가 기능' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"부가 기능\" data-toggle=\"dropdown\" class=\"btn btn_ico drop_tgl\"><i class=\"ico ico_plus\"><span>부가 기능</span></i></button>",
@@ -959,7 +973,7 @@
     },
     {
       "type": "click",
-      "selector": ".ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible li._brd label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has-text('공동업무 보드'):visible",
+      "selector": ".ui-dialog:visible li._brd label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible",
       "description": "[보드 선택 팝업] '공동업무 보드' 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<label class=\"rdobtn\"><input name=\"aglTaskBrdSelect_taskBrdId\" type=\"radio\" value=\"TB01m62jjtekjvv9gb1sa392k3yq\" class=\"input_rdo lst_rdo\"> 공동업무 보드</label>",
@@ -1194,7 +1208,7 @@
     },
     {
       "type": "click",
-      "selector": "div#aglTaskView_labelBox button._addLabel[title='라벨 추가']:visible, div#aglTaskView_labelBox button[title='라벨 추가']:visible, div#aglTaskView_labelBox button:has(.ico_label):visible, div#aglTaskView_labelBox > div.box_cont:nth-of-type(2) > div.label_bar > div.optn:nth-of-type(2) > button._addLabel.btn.btn_ico:visible, div#aglTaskView_labelBox button._addLabel:has-text('라벨 추가'):visible, div#aglTaskView_labelBox button._addLabel:visible, button:has(.ico_label):visible, button._addLabel[title='라벨 추가']:visible, button[title='라벨 추가']:visible",
+      "selector": "div#aglTaskView_labelBox > div.box_cont:nth-of-type(2) > div.label_bar > div.optn:nth-of-type(2) > button._addLabel.btn.btn_ico:visible, div#aglTaskView_labelBox button._addLabel:has-text('라벨 추가'):visible, div#aglTaskView_labelBox button._addLabel:visible, div#aglTaskView_labelBox button._addLabel[title='라벨 추가']:visible, div#aglTaskView_labelBox button[title='라벨 추가']:visible, button._addLabel[title='라벨 추가']:visible, button[title='라벨 추가']:visible",
       "description": "'라벨 추가' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"라벨 추가\" class=\"btn btn_ico _addLabel\"><i class=\"ico ico_label\"><span>라벨 추가</span></i></button>",
@@ -1208,7 +1222,7 @@
     },
     {
       "type": "click",
-      "selector": "li#TA01m60td69gncytr4xr9gp0cb06 button.btn_edit[title='수정']:visible, li#TA01m60td69gncytr4xr9gp0cb06 button[title='수정']:visible, li#TA01m60td69gncytr4xr9gp0cb06 > button.btn_edit:visible, li#TA01m60td69gncytr4xr9gp0cb06 button.btn_edit:has-text('수정'):visible, li#TA01m60td69gncytr4xr9gp0cb06 button.btn_edit:visible",
+      "selector": "li:has-text('배포') > button.btn_edit:visible, li:has-text('배포') button.btn_edit:has-text('수정'):visible, li:has-text('배포') button.btn_edit:visible, li:has-text('배포') button.btn_edit[title='수정']:visible, li:has-text('배포') button[title='수정']:visible, li#TA01m60td69gncytr4xr9gp0cb06 > button.btn_edit:visible, li#TA01m60td69gncytr4xr9gp0cb06 button.btn_edit:has-text('수정'):visible, li#TA01m60td69gncytr4xr9gp0cb06 button.btn_edit:visible, li#TA01m60td69gncytr4xr9gp0cb06 button.btn_edit[title='수정']:visible, li#TA01m60td69gncytr4xr9gp0cb06 button[title='수정']:visible",
       "description": "[라벨 선택 팝업] '수정' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"수정\" class=\"btn_edit\"><i class=\"ico ico_write\"><span>수정</span></i></button>",
@@ -1307,7 +1321,7 @@
     },
     {
       "type": "click",
-      "selector": ".ui-dialog:visible li#TA01m62jvd5qheq6x99mqehmxzhs label:has(input[value='TA01m62jvd5qheq6x99mqehmxzhs']):visible, .ui-dialog:visible label:has(input[value='TA01m62jvd5qheq6x99mqehmxzhs']):visible, .ui-dialog:visible li._label label:text-is('배포'):visible, li#TA01m62jvd5qheq6x99mqehmxzhs > label:visible, .ui-dialog:visible label:text-is('배포'):visible",
+      "selector": ".ui-dialog:visible li#TA01m62jvd5qheq6x99mqehmxzhs label:has(input[value='TA01m62jvd5qheq6x99mqehmxzhs']):visible, .ui-dialog:visible label:has(input[value='TA01m62jvd5qheq6x99mqehmxzhs']):visible, .ui-dialog:visible li:has-text('배포') label:has(input[value='TA01m62jvd5qheq6x99mqehmxzhs']):visible, .ui-dialog:visible li:has-text('배포') > label:visible, .ui-dialog:visible li._label label:text-is('배포'):visible, li#TA01m62jvd5qheq6x99mqehmxzhs > label:visible, .ui-dialog:visible label:text-is('배포'):visible",
       "description": "[라벨 선택 팝업] '배포' 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<label> <input type=\"checkbox\" value=\"TA01m62jvd5qheq6x99mqehmxzhs\" class=\"input_chk\"> <span title=\"배포\" class=\"label lb_sky\"><span class=\"label_txt\">배포</span></span> </label>",
@@ -1383,7 +1397,7 @@
     },
     {
       "type": "click",
-      "selector": "li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_edit[title='수정']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button[title='수정']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button._btn_edit:visible, button._btn_edit:visible, button.btn_edit[title='수정']:visible, button[title='수정']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_edit._btn_edit[title='수정']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_edit._btn_edit:has-text('수정'):visible",
+      "selector": "li:has-text('복무 규정 개정안 안내문 배포') button._btn_edit:visible, li:has-text('복무 규정 개정안 안내문 배포') button.btn_edit._btn_edit:has-text('수정'):visible, li:has-text('복무 규정 개정안 안내문 배포') button.btn_edit[title='수정']:visible, li:has-text('복무 규정 개정안 안내문 배포') button[title='수정']:visible, li:has-text('복무 규정 개정안 안내문 배포') button.btn_edit._btn_edit[title='수정']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button._btn_edit:visible, li[id^='aglTaskView_opin'] button._btn_edit:visible, button._btn_edit:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_edit._btn_edit:has-text('수정'):visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_edit[title='수정']:visible, li[id^='aglTaskView_opin'] button.btn_edit[title='수정']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button[title='수정']:visible, li[id^='aglTaskView_opin'] button[title='수정']:visible, button.btn_edit[title='수정']:visible, button[title='수정']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_edit._btn_edit[title='수정']:visible, li[id^='aglTaskView_opin'] button.btn_edit._btn_edit[title='수정']:visible, li[id^='aglTaskView_opin'] button.btn_edit._btn_edit:has-text('수정'):visible",
       "description": "'수정' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"수정\" class=\"btn_edit _btn_edit\"><span>수정</span></button>",
@@ -1431,7 +1445,7 @@
     },
     {
       "type": "click",
-      "selector": "li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_del[title='삭제']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button[title='삭제']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button._btn_del:visible, button._btn_del:visible, div.optn button.btn_del._btn_del:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_del._btn_del[title='삭제']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_del._btn_del:has-text('삭제'):visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm > div.cmt_item > div.cmt_user:nth-of-type(1) > div.user:nth-of-type(2) > div.optn:nth-of-type(3) > button.btn_del._btn_del:nth-of-type(2):visible",
+      "selector": "li:has-text('복무 규정 개정안 안내문 배포') button._btn_del:visible, li:has-text('복무 규정 개정안 안내문 배포') button.btn_del._btn_del:has-text('삭제'):visible, li:has-text('복무 규정 개정안 안내문 배포') > div.cmt_item > div.cmt_user:nth-of-type(1) > div.user:nth-of-type(2) > div.optn:nth-of-type(3) > button.btn_del._btn_del:nth-of-type(2):visible, li:has-text('복무 규정 개정안 안내문 배포') button.btn_del[title='삭제']:visible, li:has-text('복무 규정 개정안 안내문 배포') button[title='삭제']:visible, li:has-text('복무 규정 개정안 안내문 배포') button.btn_del._btn_del[title='삭제']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button._btn_del:visible, li[id^='aglTaskView_opin'] button._btn_del:visible, button._btn_del:visible, div.optn button.btn_del._btn_del:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_del._btn_del:has-text('삭제'):visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_del[title='삭제']:visible, li[id^='aglTaskView_opin'] button.btn_del[title='삭제']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button[title='삭제']:visible, li[id^='aglTaskView_opin'] button[title='삭제']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_del._btn_del[title='삭제']:visible, li[id^='aglTaskView_opin'] button.btn_del._btn_del[title='삭제']:visible, li[id^='aglTaskView_opin'] button.btn_del._btn_del:has-text('삭제'):visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm > div.cmt_item > div.cmt_user:nth-of-type(1) > div.user:nth-of-type(2) > div.optn:nth-of-type(3) > button.btn_del._btn_del:nth-of-type(2):visible, li[id^='aglTaskView_opin'] > div.cmt_item > div.cmt_user:nth-of-type(1) > div.user:nth-of-type(2) > div.optn:nth-of-type(3) > button.btn_del._btn_del:nth-of-type(2):visible",
       "description": "'삭제' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"삭제\" class=\"btn_del _btn_del\"><span>삭제</span></button>",
@@ -1519,7 +1533,7 @@
     },
     {
       "type": "click",
-      "selector": "div#aglTaskView_topBox button.btn_menu[title='메뉴']:visible, div#aglTaskView_topBox button[title='메뉴']:visible, div#aglTaskView_topBox > div.optn:nth-of-type(3) > div.btn_drop > button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu:has-text('메뉴'):visible, div#aglTaskView_topBox button.btn_menu:visible, button.btn_menu[title='메뉴']:visible, button[title='메뉴']:visible",
+      "selector": "div#aglTaskView_topBox > div.optn:nth-of-type(3) > div.btn_drop > button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu:has-text('메뉴'):visible, div#aglTaskView_topBox button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu[title='메뉴']:visible, div#aglTaskView_topBox button[title='메뉴']:visible, button.btn_menu[title='메뉴']:visible, button[title='메뉴']:visible",
       "description": "'메뉴' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"메뉴\" data-toggle=\"dropdown\" class=\"btn_menu\"><i class=\"icon\"><span>메뉴</span></i></button>",
@@ -1561,7 +1575,7 @@
     },
     {
       "type": "click",
-      "selector": ".ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible li._brd label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has-text('공동업무 보드'):visible",
+      "selector": ".ui-dialog:visible li._brd label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible",
       "description": "[보드 선택 팝업] '공동업무 보드' 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<label class=\"rdobtn\"><input name=\"aglTaskBrdSelect_taskBrdId\" type=\"radio\" value=\"TB01m62jjtekjvv9gb1sa392k3yq\" class=\"input_rdo lst_rdo\"> 공동업무 보드</label>",
@@ -1646,7 +1660,7 @@
     },
     {
       "type": "click",
-      "selector": "div#aglTaskView_topBox button.btn_menu[title='메뉴']:visible, div#aglTaskView_topBox button[title='메뉴']:visible, div#aglTaskView_topBox > div.optn:nth-of-type(3) > div.btn_drop > button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu:has-text('메뉴'):visible, div#aglTaskView_topBox button.btn_menu:visible, button.btn_menu[title='메뉴']:visible, button[title='메뉴']:visible",
+      "selector": "div#aglTaskView_topBox > div.optn:nth-of-type(3) > div.btn_drop > button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu:has-text('메뉴'):visible, div#aglTaskView_topBox button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu[title='메뉴']:visible, div#aglTaskView_topBox button[title='메뉴']:visible, button.btn_menu[title='메뉴']:visible, button[title='메뉴']:visible",
       "description": "'메뉴' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"메뉴\" data-toggle=\"dropdown\" class=\"btn_menu\"><i class=\"icon\"><span>메뉴</span></i></button>",
@@ -1702,7 +1716,7 @@
     },
     {
       "type": "click",
-      "selector": ".ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible li._brd label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has-text('공동업무 보드'):visible",
+      "selector": ".ui-dialog:visible li._brd label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible",
       "description": "[보드 선택 팝업] '공동업무 보드' 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<label class=\"rdobtn\"><input name=\"aglTaskBrdSelect_taskBrdId\" type=\"radio\" value=\"TB01m62jjtekjvv9gb1sa392k3yq\" class=\"input_rdo lst_rdo\"> 공동업무 보드</label>",
@@ -1713,35 +1727,6 @@
       "ms": 1000,
       "description": "[보드 선택 팝업] '공동업무 보드' 요소 반응 대기",
       "_lastHumanTarget": "공동업무 보드"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible select#aglBrdTaskGrpSelect_taskGrpList:visible, select#aglBrdTaskGrpSelect_taskGrpList:visible",
-      "text": "할일",
-      "description": "[보드 선택 팝업] '- 그룹 선택 - 할일 진행 해결 이슈 ' 요소에서 '할일' 선택",
-      "recordedByEyedropper": true,
-      "targetHtml": "<select id=\"aglBrdTaskGrpSelect_taskGrpList\" class=\"frm_select\"><option value=\"\">- 그룹 선택 -</option> <option value=\"TG01m62jjtem5b5g512bsp10p3h8\">할일</option> <option value=\"TG01m62jjten9pdy9j15c2qvkzm1\">진행</option> <option value=\"TG01m62jjten9pdy9j15c2qvkzm2\">해결</option> <option value=\"TG01m62jjtepmqx9ytjgw5f84hne\">이슈</option> <option value=\"TG01m62jmr3bxb6ap2v7hkxhkd8s\">취소</option></select>",
-      "_lastHumanTarget": "- 그룹 선택 - 할일 진행 해결 이슈"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "[보드 선택 팝업] '- 그룹 선택 - 할일 진행 해결 이슈 ' 요소에서 '할일' 선택 반응 대기",
-      "_lastHumanTarget": "- 그룹 선택 - 할일 진행 해결 이슈"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible select#aglBrdTaskGrpSelect_taskList:visible, select#aglBrdTaskGrpSelect_taskList:visible",
-      "description": "[보드 선택 팝업] '- 할일 선택 -' 요소 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<select id=\"aglBrdTaskGrpSelect_taskList\" class=\"frm_select\"><option value=\"\">- 할일 선택 -</option></select>",
-      "_lastHumanTarget": "- 할일 선택 -"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "[보드 선택 팝업] '- 할일 선택 -' 요소 반응 대기",
-      "_lastHumanTarget": "- 할일 선택 -"
     },
     {
       "type": "click",
@@ -1817,7 +1802,7 @@
     },
     {
       "type": "click",
-      "selector": "div#aglTaskView_topBox button.btn_menu[title='메뉴']:visible, div#aglTaskView_topBox button[title='메뉴']:visible, div#aglTaskView_topBox > div.optn:nth-of-type(3) > div.btn_drop > button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu:has-text('메뉴'):visible, div#aglTaskView_topBox button.btn_menu:visible, button.btn_menu[title='메뉴']:visible, button[title='메뉴']:visible",
+      "selector": "div#aglTaskView_topBox > div.optn:nth-of-type(3) > div.btn_drop > button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu:has-text('메뉴'):visible, div#aglTaskView_topBox button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu[title='메뉴']:visible, div#aglTaskView_topBox button[title='메뉴']:visible, button.btn_menu[title='메뉴']:visible, button[title='메뉴']:visible",
       "description": "'메뉴' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"메뉴\" data-toggle=\"dropdown\" class=\"btn_menu\"><i class=\"icon\"><span>메뉴</span></i></button>",
@@ -1901,7 +1886,7 @@
     },
     {
       "type": "click",
-      "selector": ".ui-dialog:visible ul#aglTaskArchive_taskList button.btn_rstn[title='복원']:visible, .ui-dialog:visible ul#aglTaskArchive_taskList button[title='복원']:visible, .ui-dialog:visible button:has(.ico_cncl):visible, .ui-dialog:visible button.btn_rstn[title='복원']:visible, .ui-dialog:visible button[title='복원']:visible, .ui-dialog:visible ul#aglTaskArchive_taskList button.btn_rstn._restoreTask[title='복원']:visible, .ui-dialog:visible ul#aglTaskArchive_taskList button.btn_rstn._restoreTask:has-text('복원'):visible, .ui-dialog:visible ul#aglTaskArchive_taskList button._restoreTask:visible, ul#aglTaskArchive_taskList > li._task > div.task_card > div.task_optn:nth-of-type(2) > button.btn_rstn._restoreTask:visible",
+      "selector": ".ui-dialog:visible ul#aglTaskArchive_taskList button.btn_rstn._restoreTask:has-text('복원'):visible, .ui-dialog:visible ul#aglTaskArchive_taskList button._restoreTask:visible, .ui-dialog:visible ul#aglTaskArchive_taskList button.btn_rstn[title='복원']:visible, .ui-dialog:visible ul#aglTaskArchive_taskList button[title='복원']:visible, .ui-dialog:visible button.btn_rstn[title='복원']:visible, .ui-dialog:visible button[title='복원']:visible, .ui-dialog:visible ul#aglTaskArchive_taskList button.btn_rstn._restoreTask[title='복원']:visible, ul#aglTaskArchive_taskList > li._task > div.task_card > div.task_optn:nth-of-type(2) > button.btn_rstn._restoreTask:visible",
       "description": "[보관함 팝업] '복원' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"복원\" class=\"btn_rstn _restoreTask\"><i class=\"ico ico_cncl\"><span>복원</span></i></button>",
@@ -1957,20 +1942,6 @@
     },
     {
       "type": "click",
-      "selector": "div.btn_drop button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, div#aglHeader_title button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, div#aglHeader_title button.btn_tit._taskBrdName:has-text('공동업무 보드'):visible, div#aglHeader_title button._taskBrdName:visible",
-      "description": "'공동업무 보드' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button type=\"button\" data-toggle=\"dropdown\" class=\"btn btn_tit _taskBrdName\"> 공동업무 보드 <span class=\"caret\"></span></button>",
-      "_lastHumanTarget": "공동업무 보드"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "'공동업무 보드' 버튼 반응 대기",
-      "_lastHumanTarget": "공동업무 보드"
-    },
-    {
-      "type": "click",
       "selector": "div.task_inner:has-text('복무 규정 개정안 안내문 배포 10-30 1 1 임'):visible, div.group_lst:nth-of-type(2) > ul.mg_ul > li._task > div.task_card > div.task_info._taskInfo:nth-of-type(2) > div.task_inner:visible",
       "description": "'배포 복무 규정 개정안 안내문 배포 10' 요소 클릭",
       "recordedByEyedropper": true,
@@ -1985,7 +1956,7 @@
     },
     {
       "type": "click",
-      "selector": "div#aglTaskView_topBox button.btn_menu[title='메뉴']:visible, div#aglTaskView_topBox button[title='메뉴']:visible, div#aglTaskView_topBox > div.optn:nth-of-type(3) > div.btn_drop > button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu:has-text('메뉴'):visible, div#aglTaskView_topBox button.btn_menu:visible, button.btn_menu[title='메뉴']:visible, button[title='메뉴']:visible",
+      "selector": "div#aglTaskView_topBox > div.optn:nth-of-type(3) > div.btn_drop > button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu:has-text('메뉴'):visible, div#aglTaskView_topBox button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu[title='메뉴']:visible, div#aglTaskView_topBox button[title='메뉴']:visible, button.btn_menu[title='메뉴']:visible, button[title='메뉴']:visible",
       "description": "'메뉴' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"메뉴\" data-toggle=\"dropdown\" class=\"btn_menu\"><i class=\"icon\"><span>메뉴</span></i></button>",
@@ -2055,7 +2026,7 @@
     },
     {
       "type": "click",
-      "selector": "ul#aglTaskTrash_taskList > li._task[data-task-id='TT01m62jnbtz31r9jxn2nhv6a03w']:nth-of-type(2) > div.task_card > div.task_info._taskInfo:nth-of-type(1):visible",
+      "selector": "ul#aglTaskTrash_taskList > li._task[data-task-id='TT01m62jnbtz31r9jxn2nhv6a03w']:nth-of-type(2) > div.task_card > div.task_info._taskInfo:nth-of-type(1):visible, ul#aglTaskTrash_taskList > li._task:nth-of-type(2) > div.task_card > div.task_info._taskInfo:nth-of-type(1):visible",
       "description": "[삭제함 팝업] '교과목 시간표 최종 점검 10-30 0/' 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<div class=\"task_info _taskInfo\"><span class=\"label lb_red\" data-lbl-id=\"TA01m60seypssx5nwz772e74p3hp\">교과목 시간표 최종 점검 10-30 0/3 1 임</div>",
@@ -2069,7 +2040,7 @@
     },
     {
       "type": "click",
-      "selector": ".ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn[title='복원']:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button[title='복원']:visible, .ui-dialog:visible button:has(.ico_cncl):visible, .ui-dialog:visible button.btn_rstn[title='복원']:visible, .ui-dialog:visible button[title='복원']:visible, ul#aglTaskTrash_taskList > li._task[data-task-id='TT01m62jnbtz31r9jxn2nhv6a03w']:nth-of-type(2) > div.task_card > div.task_optn:nth-of-type(2) > button.btn_rstn._restoreTask:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn._restoreTask[title='복원']:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn._restoreTask:has-text('복원'):visible, .ui-dialog:visible ul#aglTaskTrash_taskList button._restoreTask:visible",
+      "selector": "ul#aglTaskTrash_taskList > li._task[data-task-id='TT01m62jnbtz31r9jxn2nhv6a03w']:nth-of-type(2) > div.task_card > div.task_optn:nth-of-type(2) > button.btn_rstn._restoreTask:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn._restoreTask:has-text('복원'):visible, .ui-dialog:visible ul#aglTaskTrash_taskList button._restoreTask:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn[title='복원']:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button[title='복원']:visible, .ui-dialog:visible button.btn_rstn[title='복원']:visible, .ui-dialog:visible button[title='복원']:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn._restoreTask[title='복원']:visible, ul#aglTaskTrash_taskList > li._task:nth-of-type(2) > div.task_card > div.task_optn:nth-of-type(2) > button.btn_rstn._restoreTask:visible",
       "description": "[삭제함 팝업] '복원' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"복원\" class=\"btn_rstn _restoreTask\"><i class=\"ico ico_cncl\"><span>복원</span></i></button>",
@@ -2111,7 +2082,7 @@
     },
     {
       "type": "click",
-      "selector": ".ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn[title='복원']:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button[title='복원']:visible, .ui-dialog:visible button:has(.ico_cncl):visible, .ui-dialog:visible button.btn_rstn[title='복원']:visible, .ui-dialog:visible button[title='복원']:visible, ul#aglTaskTrash_taskList > li._task[data-task-id='TT01m62jtndhtefk24t10c0azg4w'] > div.task_card > div.task_optn:nth-of-type(2) > button.btn_rstn._restoreTask:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn._restoreTask[title='복원']:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn._restoreTask:has-text('복원'):visible, .ui-dialog:visible ul#aglTaskTrash_taskList button._restoreTask:visible",
+      "selector": "ul#aglTaskTrash_taskList > li._task[data-task-id='TT01m62jtndhtefk24t10c0azg4w'] > div.task_card > div.task_optn:nth-of-type(2) > button.btn_rstn._restoreTask:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn._restoreTask:has-text('복원'):visible, .ui-dialog:visible ul#aglTaskTrash_taskList button._restoreTask:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn[title='복원']:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button[title='복원']:visible, .ui-dialog:visible button.btn_rstn[title='복원']:visible, .ui-dialog:visible button[title='복원']:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn._restoreTask[title='복원']:visible, ul#aglTaskTrash_taskList > li._task > div.task_card > div.task_optn:nth-of-type(2) > button.btn_rstn._restoreTask:visible",
       "description": "[삭제함 팝업] '복원' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"복원\" class=\"btn_rstn _restoreTask\"><i class=\"ico ico_cncl\"><span>복원</span></i></button>",
@@ -2209,7 +2180,7 @@
     },
     {
       "type": "click",
-      "selector": "div.btn_drop button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, button:has(.ico_lock):visible, div#aglHeader_title button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, div#aglHeader_title button.btn_tit._taskBrdName:has-text('잠금 공동업무 보드'):visible, div#aglHeader_title button._taskBrdName:visible",
+      "selector": "div.btn_drop button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, div#aglHeader_title button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, div#aglHeader_title button.btn_tit._taskBrdName:has-text('잠금 공동업무 보드'):visible, div#aglHeader_title button._taskBrdName:visible",
       "description": "'공동업무 보드' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" data-toggle=\"dropdown\" class=\"btn btn_tit _taskBrdName\"> <i title=\"잠금\" class=\"ico ico_lock\"><span>잠금</span></i> 공동업무 보드 <span class=\"caret\"></span></button>",

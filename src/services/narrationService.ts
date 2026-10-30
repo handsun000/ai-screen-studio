@@ -4,6 +4,7 @@ import * as path from "path";
 import { spawnSync } from "child_process";
 import * as dotenv from "dotenv";
 import { recordAiUsage } from "./aiUsageTracker";
+import { generateAiContent, getGeminiApiKeys } from "./aiClient";
 import type {
   BrowsePlan,
   BrowsePlanAction,
@@ -558,17 +559,9 @@ export async function generateNarrationScript(
   let finalWindows: NarrationWindow[] = windows.map((w) => ({ ...w }));
   let generatedLines: string[] = finalWindows.map((w) => w.fallbackLine);
 
-  const apiKeys = [process.env.GEMINI_API_KEY, process.env.GEMINI_API_KEY_ALT].filter(Boolean) as string[];
-  if (apiKeys.length > 0) {
-    const config = getConfig();
-    const candidateModels = Array.from(
-      new Set([
-        config.geminiModel || "gemini-2.5-flash",
-        "gemini-2.5-flash",
-        "gemini-flash-latest",
-      ])
-    );
-
+  const config = getConfig();
+  const apiKeys = getGeminiApiKeys();
+  if (config.aiMode === "cli" || apiKeys.length > 0) {
     const styleInstruction = getStylePromptInstruction(style);
     const prompt = `당신은 기업용 그룹웨어 교육 영상의 전문 매뉴얼 해설 작가입니다.
 
@@ -615,102 +608,83 @@ ${JSON.stringify(
   2
 )}`;
 
-    let aiSuccess = false;
-    for (const model of candidateModels) {
-      if (aiSuccess) break;
-      for (const apiKey of apiKeys) {
-        try {
-          const ai = new GoogleGenAI({ apiKey });
-          const response = await ai.models.generateContent({
-            model,
-            contents: prompt,
-            config: {
-              temperature: 0.3,
-              responseMimeType: "application/json",
-            },
-          });
+    try {
+      const aiRes = await generateAiContent({
+        feature: "AI 대본 생성",
+        prompt,
+        temperature: 0.3,
+        jsonMode: true,
+        slug,
+        timeoutMs: 120_000,
+      });
 
-          const rawText = (response.text || "").trim();
-          recordAiUsage({
-            feature: "AI 대본 생성",
-            model,
-            slug,
-            usageMetadata: response.usageMetadata,
-            fallbackPromptChars: prompt.length,
-            fallbackOutputChars: rawText.length,
-          });
-          const parsed = JSON.parse(rawText);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            const hasMergedIndices = parsed.some(
-              (item) => Array.isArray(item?.windowIndices) && item.windowIndices.length > 0
+      const rawText = aiRes.text;
+      const parsed = JSON.parse(rawText);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const hasMergedIndices = parsed.some(
+          (item) => Array.isArray(item?.windowIndices) && item.windowIndices.length > 0
+        );
+        if (hasMergedIndices) {
+          const rebuiltWindows: NarrationWindow[] = [];
+          const rebuiltLines: string[] = [];
+          const covered = new Set<number>();
+
+          for (const item of parsed) {
+            const rawIndices: number[] = Array.isArray(item.windowIndices)
+              ? item.windowIndices.map((n: any) => Number(n))
+              : item.index !== undefined
+              ? [Number(item.index)]
+              : [];
+            const validIndices = rawIndices
+              .filter((n) => Number.isInteger(n) && n >= 1 && n <= windows.length && !covered.has(n))
+              .sort((a, b) => a - b);
+            if (validIndices.length === 0) continue;
+
+            validIndices.forEach((n) => covered.add(n));
+            const firstW = windows[validIndices[0] - 1];
+            const lastW = windows[validIndices[validIndices.length - 1] - 1];
+            const mergedSteps = validIndices.flatMap((n) => windows[n - 1].stepsInWindow);
+            const mergedW: NarrationWindow = {
+              index: rebuiltWindows.length + 1,
+              startMs: firstW.startMs,
+              endMs: lastW.endMs,
+              maxChars: Math.min(74, firstW.maxChars + (validIndices.length > 1 ? 12 : 0)),
+              isIntro: Boolean(firstW.isIntro),
+              stepsInWindow: mergedSteps,
+              fallbackLine: firstW.fallbackLine,
+            };
+            rebuiltWindows.push(mergedW);
+            rebuiltLines.push(
+              typeof item.text === "string" && item.text.trim() ? item.text.trim() : mergedW.fallbackLine
             );
-            if (hasMergedIndices) {
-              const rebuiltWindows: NarrationWindow[] = [];
-              const rebuiltLines: string[] = [];
-              const covered = new Set<number>();
+          }
 
-              for (const item of parsed) {
-                const rawIndices: number[] = Array.isArray(item.windowIndices)
-                  ? item.windowIndices.map((n: any) => Number(n))
-                  : item.index !== undefined
-                  ? [Number(item.index)]
-                  : [];
-                const validIndices = rawIndices
-                  .filter((n) => Number.isInteger(n) && n >= 1 && n <= windows.length && !covered.has(n))
-                  .sort((a, b) => a - b);
-                if (validIndices.length === 0) continue;
-
-                validIndices.forEach((n) => covered.add(n));
-                const firstW = windows[validIndices[0] - 1];
-                const lastW = windows[validIndices[validIndices.length - 1] - 1];
-                const mergedSteps = validIndices.flatMap((n) => windows[n - 1].stepsInWindow);
-                const mergedW: NarrationWindow = {
-                  index: rebuiltWindows.length + 1,
-                  startMs: firstW.startMs,
-                  endMs: lastW.endMs,
-                  maxChars: Math.min(74, firstW.maxChars + (validIndices.length > 1 ? 12 : 0)),
-                  isIntro: Boolean(firstW.isIntro),
-                  stepsInWindow: mergedSteps,
-                  fallbackLine: firstW.fallbackLine,
-                };
-                rebuiltWindows.push(mergedW);
-                rebuiltLines.push(
-                  typeof item.text === "string" && item.text.trim() ? item.text.trim() : mergedW.fallbackLine
-                );
-              }
-
-              // 만약 AI가 일부 구간 번호를 누락했다면 누락된 구간도 안전하게 보존
-              for (let wIdx = 1; wIdx <= windows.length; wIdx++) {
-                if (!covered.has(wIdx)) {
-                  const w = windows[wIdx - 1];
-                  rebuiltWindows.push({ ...w, index: rebuiltWindows.length + 1 });
-                  rebuiltLines.push(w.fallbackLine);
-                }
-              }
-
-              if (rebuiltWindows.length > 0) {
-                const pairs = rebuiltWindows.map((w, i) => ({ w, line: rebuiltLines[i] }));
-                pairs.sort((a, b) => a.w.startMs - b.w.startMs);
-                finalWindows = pairs.map((p, i) => ({ ...p.w, index: i + 1 }));
-                generatedLines = pairs.map((p) => p.line);
-                aiSuccess = true;
-                break;
-              }
-            } else {
-              for (const item of parsed) {
-                const idx = Number(item.index) - 1;
-                if (idx >= 0 && idx < finalWindows.length && typeof item.text === "string" && item.text.trim()) {
-                  generatedLines[idx] = item.text.trim();
-                }
-              }
-              aiSuccess = true;
-              break;
+          // 만약 AI가 일부 구간 번호를 누락했다면 누락된 구간도 안전하게 보존
+          for (let wIdx = 1; wIdx <= windows.length; wIdx++) {
+            if (!covered.has(wIdx)) {
+              const w = windows[wIdx - 1];
+              rebuiltWindows.push({ ...w, index: rebuiltWindows.length + 1 });
+              rebuiltLines.push(w.fallbackLine);
             }
           }
-        } catch (err: any) {
-          console.warn(`[Narration AI] 모델 ${model} 호출 실패, 다음 후보 시도 (${err?.message || err})`);
+
+          if (rebuiltWindows.length > 0) {
+            const pairs = rebuiltWindows.map((w, i) => ({ w, line: rebuiltLines[i] }));
+            pairs.sort((a, b) => a.w.startMs - b.w.startMs);
+            finalWindows = pairs.map((p, i) => ({ ...p.w, index: i + 1 }));
+            generatedLines = pairs.map((p) => p.line);
+          }
+        } else {
+          for (const item of parsed) {
+            const idx = Number(item.index) - 1;
+            if (idx >= 0 && idx < finalWindows.length && typeof item.text === "string" && item.text.trim()) {
+              generatedLines[idx] = item.text.trim();
+            }
+          }
         }
       }
+    } catch (err: any) {
+      console.warn(`[Narration AI] 호출 실패, 규칙 기반 폴백 대본 사용 (${err?.message || err})`);
     }
   }
 

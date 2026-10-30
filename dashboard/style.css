@@ -3213,3 +3213,82 @@ input[type="checkbox"] {
   padding: 0 8px !important;
   font-size: 11px !important;
 }
+
+/* ── AI Execution Mode Segmented Switch (API vs CLI) ─────────── */
+.ai-mode-header-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-mode-seg-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: var(--subtle-2);
+  border: 1px solid var(--stroke);
+  border-radius: 999px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.ai-mode-seg-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.14s ease;
+  white-space: nowrap;
+}
+
+.ai-mode-seg-btn:hover {
+  color: var(--text);
+}
+
+.ai-mode-seg-btn.active[data-ai-mode="api"] {
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 95, 184, 0.25);
+}
+
+.ai-mode-seg-btn.active[data-ai-mode="cli"] {
+  background: #0f7b0f;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 123, 15, 0.28);
+}
+
+.ai-mode-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.ai-mode-option-card {
+  border: 1.5px solid var(--stroke);
+  background: var(--layer);
+  border-radius: var(--r-card);
+  padding: 11px 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.ai-mode-option-card:hover {
+  border-color: var(--accent);
+}
+
+.ai-mode-option-card.selected-api {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.ai-mode-option-card.selected-cli {
+  border-color: var(--ok);
+  background: var(--ok-soft);
+}
+

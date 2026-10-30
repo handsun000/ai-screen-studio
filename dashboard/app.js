@@ -409,7 +409,73 @@ async function handleSaveConfig() {
   }
 }
 
-// 4. API Status
+// 4. API & CLI Execution Mode Status
+let latestAiStatusData = {
+  aiMode: "api",
+  aiCliProvider: "agy",
+  aiCliModel: "gemini-3.8-flash-low",
+  geminiModel: "gemini-3.8-flash",
+  geminiApiKeySet: false,
+  geminiApiKeyPreview: "미설정",
+  availableClis: [],
+};
+
+function syncAiModeUI(data) {
+  if (data) {
+    latestAiStatusData = {
+      ...latestAiStatusData,
+      ...data,
+    };
+  }
+  const mode = latestAiStatusData.aiMode === "cli" ? "cli" : "api";
+
+  document.querySelectorAll(".ai-mode-seg-btn").forEach((btn) => {
+    const btnMode = btn.getAttribute("data-ai-mode");
+    btn.classList.toggle("active", btnMode === mode);
+  });
+
+  const pillAi = document.getElementById("pill-ai");
+  if (!pillAi) return;
+
+  if (mode === "cli") {
+    const provider = latestAiStatusData.aiCliProvider || "agy";
+    const cliModel = latestAiStatusData.aiCliModel || "gemini-3.8-flash-low";
+    pillAi.innerHTML = `<span class="status-dot" style="background:var(--ok)"></span><span>CLI · ${provider} (${cliModel})</span>`;
+    pillAi.title = `현재 💻 로컬 CLI 모드 활성 (${provider}/${cliModel} · API 요금 ₩0) — 클릭하여 모델 변경 및 사용량 보기`;
+  } else if (latestAiStatusData.geminiApiKeySet) {
+    pillAi.innerHTML = `<span class="status-dot"></span><span>API · ${latestAiStatusData.geminiModel || "gemini-3.8-flash"}</span>`;
+    pillAi.title = `현재 🔌 API 모드 활성 (API Key: ${latestAiStatusData.geminiApiKeyPreview}) — 클릭하여 CLI/API 모드 설정 및 사용량 보기`;
+  } else {
+    pillAi.innerHTML = `<span class="status-dot" style="background:var(--fail)"></span><span>API · Key 미설정 (CLI 전환 가능)</span>`;
+    pillAi.title = "GEMINI_API_KEY가 설정되지 않았습니다. 옆의 [💻 CLI] 버튼을 누르거나 클릭하여 모드를 변경하세요.";
+  }
+}
+
+async function switchAiExecutionModeQuick(nextMode, extra = {}) {
+  const mode = nextMode === "cli" ? "cli" : "api";
+  try {
+    const res = await fetch("/api/ai-mode", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ aiMode: mode, ...extra }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "AI 모드 변경 실패");
+    if (data.config) {
+      syncAiModeUI({
+        aiMode: data.config.aiMode,
+        aiCliProvider: data.config.aiCliProvider,
+        aiCliModel: data.config.aiCliModel,
+        geminiModel: data.config.geminiModel,
+        availableClis: data.availableClis || latestAiStatusData.availableClis,
+      });
+    }
+    await fetchStatus();
+  } catch (err) {
+    showAppAlert("AI 실행 모드 전환 실패: " + err.message);
+  }
+}
+
 async function fetchStatus() {
   try {
     const res = await fetch("/api/status");
@@ -419,14 +485,7 @@ async function fetchStatus() {
       activeSlugLabel.textContent = data.activeSlug || "none";
     }
 
-    const pillAi = document.getElementById("pill-ai");
-    if (data.geminiApiKeySet) {
-      pillAi.innerHTML = `<span class="status-dot"></span><span>${data.geminiModel}</span>`;
-      pillAi.title = `클릭하여 AI API 토큰 사용량 및 요금 내역 보기 (API Key: ${data.geminiApiKeyPreview})`;
-    } else {
-      pillAi.innerHTML = `<span class="status-dot" style="background:var(--fail)"></span><span>Gemini Key 미설정</span>`;
-      pillAi.title = "클릭하여 AI API 사용량 및 요금 내역 보기";
-    }
+    syncAiModeUI(data);
 
     const pillAuth = document.getElementById("pill-auth");
     const authDot = document.getElementById("auth-status-dot");
@@ -458,21 +517,47 @@ async function openAiUsageModal() {
     const total = usage.total || { calls: 0, promptTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0, costKrw: 0 };
     const history = Array.isArray(usage.recentHistory) ? usage.recentHistory : [];
 
+    const currentMode = usage.aiMode || latestAiStatusData.aiMode || "api";
+    const currentCliProvider = usage.aiCliProvider || latestAiStatusData.aiCliProvider || "agy";
+    const currentCliModel = usage.aiCliModel || latestAiStatusData.aiCliModel || "gemini-3.8-flash-low";
+    const availableClis = Array.isArray(usage.availableClis)
+      ? usage.availableClis
+      : latestAiStatusData.availableClis || [];
+
     const existing = document.querySelector(".fluent-dialog-overlay");
     if (existing) existing.remove();
 
     const overlay = document.createElement("div");
     overlay.className = "fluent-dialog-overlay";
 
+    const cliProviderOptionsHtml = availableClis
+      .map((c) => {
+        const statusText = c.installed ? "✅ 설치됨" : "⚠️ 미설치";
+        return `<option value="${c.id}" ${c.id === currentCliProvider ? "selected" : ""}>${c.name} (${statusText})</option>`;
+      })
+      .join("");
+
+    const getModelsHtmlForProvider = (providerId, selectedModel) => {
+      const found = availableClis.find((c) => c.id === providerId) || availableClis[0];
+      const models = Array.isArray(found?.models) ? found.models : [{ id: "gemini-3.8-flash-low", label: "Gemini 3.8 Flash (Low)" }];
+      return models
+        .map((m) => `<option value="${m.id}" ${m.id === selectedModel ? "selected" : ""}>${m.label}</option>`)
+        .join("");
+    };
+
     const historyRowsHtml =
       history.length === 0
-        ? `<tr><td colspan="5" style="padding:28px 12px;text-align:center;color:var(--text-3);">아직 기록된 AI API 호출 내역이 없습니다.<br><span style="font-size:11.5px;">(스포이드 동작 감지는 AI API를 호출하지 않아 요금이 발생하지 않습니다.)</span></td></tr>`
+        ? `<tr><td colspan="5" style="padding:24px 12px;text-align:center;color:var(--text-3);">아직 기록된 AI 호출 내역이 없습니다.<br><span style="font-size:11.5px;">(스포이드 동작 감지는 AI를 호출하지 않아 요금이 발생하지 않습니다.)</span></td></tr>`
         : history
             .map((item) => {
               const dt = new Date(item.timestamp);
               const timeStr = isNaN(dt.getTime())
                 ? item.timestamp
                 : `${String(dt.getMonth() + 1).padStart(2, "0")}/${String(dt.getDate()).padStart(2, "0")} ${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}:${String(dt.getSeconds()).padStart(2, "0")}`;
+              const isCliCall = item.mode === "cli" || String(item.model || "").startsWith("[CLI]");
+              const costCellHtml = isCliCall
+                ? `<span style="color:var(--ok);font-weight:700;">₩0 (CLI 로그인)</span>`
+                : `₩${Number(item.costKrw || 0).toFixed(2)} <span style="color:var(--text-3);font-weight:400;">($${Number(item.costUsd || 0).toFixed(5)})</span>`;
               return `
                 <tr style="border-bottom:1px solid var(--stroke);">
                   <td style="padding:7px 8px;color:var(--text-3);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap;">${timeStr}</td>
@@ -482,40 +567,89 @@ async function openAiUsageModal() {
                     ${Number(item.totalTokens || 0).toLocaleString()} <span style="color:var(--text-3);font-size:10.5px;">(${Number(item.promptTokens || 0).toLocaleString()}+${Number(item.outputTokens || 0).toLocaleString()})</span>
                   </td>
                   <td style="padding:7px 8px;color:var(--accent);font-family:var(--font-mono);font-size:11.5px;font-weight:600;text-align:right;white-space:nowrap;">
-                    ₩${Number(item.costKrw || 0).toFixed(2)} <span style="color:var(--text-3);font-weight:400;">($${Number(item.costUsd || 0).toFixed(5)})</span>
+                    ${costCellHtml}
                   </td>
                 </tr>`;
             })
             .join("");
 
     overlay.innerHTML = `
-      <div class="fluent-dialog-card" style="max-width:680px;" role="dialog" aria-modal="true">
+      <div class="fluent-dialog-card" style="max-width:720px;" role="dialog" aria-modal="true">
         <div class="fluent-dialog-header">
-          <div class="fluent-dialog-icon type-info">💰</div>
-          <div class="fluent-dialog-title">AI API 사용량 및 예상 요금 내역</div>
+          <div class="fluent-dialog-icon type-info">⚙️</div>
+          <div class="fluent-dialog-title">AI 실행 모드 설정 (API 모드 / CLI 모드) 및 사용량</div>
           <button type="button" class="fluent-dialog-close" id="btn-close-ai-usage" title="닫기 (Esc)">✕</button>
         </div>
         <div class="fluent-dialog-body" style="white-space:normal;padding-top:8px;">
+          <div style="font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:6px;">
+            1. AI 실행 엔진 방식 선택 (대본 생성 · 시나리오 생성 · 실시간 자가치유 공통 적용)
+          </div>
+          <div class="ai-mode-card-grid">
+            <div class="ai-mode-option-card ${currentMode === "api" ? "selected-api" : ""}" id="card-select-api-mode">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <span style="font-weight:700;font-size:13px;color:var(--text);">🔌 API 모드 (Google Gemini SDK)</span>
+                <span class="status-tag" style="background:${usage.geminiApiKeySet ? "var(--accent-soft)" : "var(--fail-soft)"};color:${usage.geminiApiKeySet ? "var(--accent)" : "var(--fail)"};">
+                  ${usage.geminiApiKeySet ? `Key: ${usage.geminiApiKeyPreview}` : "Key 미설정"}
+                </span>
+              </div>
+              <div style="font-size:11.5px;color:var(--text-2);line-height:1.45;">
+                <code>.env</code>에 설정된 <code>GEMINI_API_KEY</code>로 직접 호출합니다. 응답 속도가 가장 빠르며 멀티모달 화면 이미지 분석을 지원합니다.
+              </div>
+            </div>
+
+            <div class="ai-mode-option-card ${currentMode === "cli" ? "selected-cli" : ""}" id="card-select-cli-mode">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <span style="font-weight:700;font-size:13px;color:var(--text);">💻 CLI 모드 (로컬 로그인 AI CLI)</span>
+                <span class="status-tag" style="background:var(--ok-soft);color:var(--ok);">API 요금 ₩0</span>
+              </div>
+              <div style="font-size:11.5px;color:var(--text-2);line-height:1.45;">
+                PC에 로그인된 <strong>Antigravity CLI (agy)</strong> 또는 <strong>Claude CLI</strong>를 백그라운드로 호출합니다. 별도 API 키가 필요 없습니다.
+              </div>
+            </div>
+          </div>
+
+          <div id="modal-cli-settings-box" style="background:var(--layer);border:1px solid var(--stroke);border-radius:var(--r-card);padding:10px 12px;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">💻 로컬 CLI 도구:</span>
+              <select id="modal-cli-provider-select" class="narration-select" style="flex:1;min-width:190px;">
+                ${cliProviderOptionsHtml}
+              </select>
+              <span style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">모델:</span>
+              <select id="modal-cli-model-select" class="narration-select" style="flex:1;min-width:210px;">
+                ${getModelsHtmlForProvider(currentCliProvider, currentCliModel)}
+              </select>
+              <button type="button" class="btn btn-sm btn-outline" id="btn-test-ai-mode" style="white-space:nowrap;">
+                ⚡ 연결 테스트
+              </button>
+            </div>
+            <div id="modal-ai-test-result" style="font-size:11.5px;color:var(--text-3);margin-top:6px;font-family:var(--font-mono);">
+              ※ 상단 헤더 우측의 <strong>[🔌 API | 💻 CLI]</strong> 스위치로도 언제든 1클릭 전환할 수 있습니다.
+            </div>
+          </div>
+
+          <div style="font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:6px;">
+            2. 토큰 사용량 및 예상 API 요금 요약
+          </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-            <div style="background:var(--layer);border:1px solid var(--stroke);border-radius:var(--r-card);padding:12px 14px;">
+            <div style="background:var(--layer);border:1px solid var(--stroke);border-radius:var(--r-card);padding:11px 14px;">
               <div style="font-size:12px;color:var(--text-2);margin-bottom:4px;display:flex;justify-content:space-between;">
                 <span>오늘 사용량 (${usage.todayKey || "오늘"})</span>
                 <span style="font-weight:600;color:var(--text);">${today.calls}회 호출</span>
               </div>
-              <div style="font-size:18px;font-weight:700;color:var(--accent);font-family:var(--font-mono);">
-                약 ₩${Number(today.costKrw || 0).toFixed(1)}원 <span style="font-size:12.5px;color:var(--text-2);font-weight:500;">($${Number(today.costUsd || 0).toFixed(4)})</span>
+              <div style="font-size:17px;font-weight:700;color:var(--accent);font-family:var(--font-mono);">
+                약 ₩${Number(today.costKrw || 0).toFixed(1)}원 <span style="font-size:12px;color:var(--text-2);font-weight:500;">($${Number(today.costUsd || 0).toFixed(4)})</span>
               </div>
               <div style="font-size:11.5px;color:var(--text-3);margin-top:4px;font-family:var(--font-mono);">
                 총 ${Number(today.totalTokens || 0).toLocaleString()} 토큰 (입력 ${Number(today.promptTokens || 0).toLocaleString()} · 출력 ${Number(today.outputTokens || 0).toLocaleString()})
               </div>
             </div>
-            <div style="background:var(--layer);border:1px solid var(--stroke);border-radius:var(--r-card);padding:12px 14px;">
+            <div style="background:var(--layer);border:1px solid var(--stroke);border-radius:var(--r-card);padding:11px 14px;">
               <div style="font-size:12px;color:var(--text-2);margin-bottom:4px;display:flex;justify-content:space-between;">
                 <span>전체 누적 사용량</span>
                 <span style="font-weight:600;color:var(--text);">${total.calls}회 호출</span>
               </div>
-              <div style="font-size:18px;font-weight:700;color:var(--text);font-family:var(--font-mono);">
-                약 ₩${Number(total.costKrw || 0).toFixed(1)}원 <span style="font-size:12.5px;color:var(--text-2);font-weight:500;">($${Number(total.costUsd || 0).toFixed(4)})</span>
+              <div style="font-size:17px;font-weight:700;color:var(--text);font-family:var(--font-mono);">
+                약 ₩${Number(total.costKrw || 0).toFixed(1)}원 <span style="font-size:12px;color:var(--text-2);font-weight:500;">($${Number(total.costUsd || 0).toFixed(4)})</span>
               </div>
               <div style="font-size:11.5px;color:var(--text-3);margin-top:4px;font-family:var(--font-mono);">
                 총 ${Number(total.totalTokens || 0).toLocaleString()} 토큰 (입력 ${Number(total.promptTokens || 0).toLocaleString()} · 출력 ${Number(total.outputTokens || 0).toLocaleString()})
@@ -524,13 +658,13 @@ async function openAiUsageModal() {
           </div>
 
           <div style="font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px;">최근 호출 상세 내역 (최대 30건)</div>
-          <div style="max-height:240px;overflow-y:auto;border:1px solid var(--stroke);border-radius:var(--r-ctl);background:var(--layer);">
+          <div style="max-height:200px;overflow-y:auto;border:1px solid var(--stroke);border-radius:var(--r-ctl);background:var(--layer);">
             <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:left;">
               <thead>
                 <tr style="border-bottom:1px solid var(--stroke);background:var(--card);color:var(--text-2);font-size:11.5px;position:sticky;top:0;">
                   <th style="padding:7px 8px;font-weight:600;">시각</th>
                   <th style="padding:7px 8px;font-weight:600;">기능</th>
-                  <th style="padding:7px 8px;font-weight:600;">모델</th>
+                  <th style="padding:7px 8px;font-weight:600;">실행 모델</th>
                   <th style="padding:7px 8px;font-weight:600;text-align:right;">토큰 (입력+출력)</th>
                   <th style="padding:7px 8px;font-weight:600;text-align:right;">예상 요금</th>
                 </tr>
@@ -541,8 +675,8 @@ async function openAiUsageModal() {
             </table>
           </div>
           <div style="margin-top:8px;font-size:11.5px;color:var(--text-3);display:flex;justify-content:space-between;">
-            <span>※ Google AI Studio 유료 티어 공식 단가 및 환율($1 = ₩${usage.exchangeRateKrw || 1400}) 기준 추정치</span>
-            <span>무료 등급(Free Tier) 키 사용 시 실제 청구액은 ₩0원입니다.</span>
+            <span>※ API 모드: Google AI Studio 공식 단가($1 = ₩${usage.exchangeRateKrw || 1400}) 기준 추정치</span>
+            <span>💻 CLI 모드 호출은 구독 세션을 사용하므로 API 요금이 ₩0원입니다.</span>
           </div>
         </div>
         <div class="fluent-dialog-footer" style="justify-content:space-between;">
@@ -554,12 +688,84 @@ async function openAiUsageModal() {
 
     document.body.appendChild(overlay);
 
+    let selectedModeInModal = currentMode;
+    const apiCard = overlay.querySelector("#card-select-api-mode");
+    const cliCard = overlay.querySelector("#card-select-cli-mode");
+    const providerSelect = overlay.querySelector("#modal-cli-provider-select");
+    const modelSelect = overlay.querySelector("#modal-cli-model-select");
+    const testBtn = overlay.querySelector("#btn-test-ai-mode");
+    const testResultEl = overlay.querySelector("#modal-ai-test-result");
+
+    const applyModalModeSelection = async (nextMode) => {
+      selectedModeInModal = nextMode;
+      apiCard?.classList.toggle("selected-api", nextMode === "api");
+      cliCard?.classList.toggle("selected-cli", nextMode === "cli");
+      await switchAiExecutionModeQuick(nextMode, {
+        aiCliProvider: providerSelect?.value || "agy",
+        aiCliModel: modelSelect?.value || "gemini-3.8-flash-low",
+      });
+      if (testResultEl) {
+        testResultEl.style.color = "var(--ok)";
+        testResultEl.textContent =
+          nextMode === "cli"
+            ? `✅ 로컬 CLI 모드(${providerSelect?.value}/${modelSelect?.value})로 즉시 전환되었습니다.`
+            : `✅ Google Gemini API 모드로 즉시 전환되었습니다.`;
+      }
+    };
+
+    apiCard?.addEventListener("click", () => applyModalModeSelection("api"));
+    cliCard?.addEventListener("click", () => applyModalModeSelection("cli"));
+
+    providerSelect?.addEventListener("change", async () => {
+      const nextProvider = providerSelect.value;
+      if (modelSelect) {
+        modelSelect.innerHTML = getModelsHtmlForProvider(nextProvider, "");
+      }
+      await applyModalModeSelection("cli");
+    });
+
+    modelSelect?.addEventListener("change", async () => {
+      await applyModalModeSelection("cli");
+    });
+
+    testBtn?.addEventListener("click", async () => {
+      if (!testResultEl) return;
+      testBtn.disabled = true;
+      testBtn.textContent = "⏳ 테스트 중...";
+      testResultEl.style.color = "var(--accent)";
+      testResultEl.textContent = `⏳ ${selectedModeInModal.toUpperCase()} 모드로 테스트 요청을 전송하고 있습니다...`;
+      try {
+        const resTest = await fetch("/api/ai-mode/test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            aiMode: selectedModeInModal,
+            aiCliProvider: providerSelect?.value,
+            aiCliModel: modelSelect?.value,
+          }),
+        });
+        const dataTest = await resTest.json();
+        if (!resTest.ok || !dataTest.success) {
+          throw new Error(dataTest.error || "연결 실패");
+        }
+        testResultEl.style.color = "var(--ok)";
+        testResultEl.textContent = `✅ 연결 성공! (${(dataTest.elapsedMs / 1000).toFixed(1)}s) — 모델: ${dataTest.modelUsed} · 응답: ${dataTest.responseText}`;
+        fetchStatus();
+      } catch (errTest) {
+        testResultEl.style.color = "var(--fail)";
+        testResultEl.textContent = `❌ 연결 실패: ${errTest.message}`;
+      } finally {
+        testBtn.disabled = false;
+        testBtn.textContent = "⚡ 연결 테스트";
+      }
+    });
+
     const close = () => {
       document.removeEventListener("keydown", onKey, true);
       overlay.remove();
     };
     const onKey = (e) => {
-      if (e.key === "Escape" || e.key === "Enter") {
+      if (e.key === "Escape") {
         e.preventDefault();
         close();
       }
@@ -4595,6 +4801,16 @@ function bindEvents() {
           openAiUsageModal();
         });
       }
+
+      document.querySelectorAll(".ai-mode-seg-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const targetMode = btn.getAttribute("data-ai-mode");
+          if (targetMode === "api" || targetMode === "cli") {
+            switchAiExecutionModeQuick(targetMode);
+          }
+        });
+      });
 
       if (pillGw) {
         pillGw.addEventListener("click", () => {

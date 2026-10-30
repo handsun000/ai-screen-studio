@@ -81,6 +81,11 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       const idMatches = [
         ...Array.from(openAttrs.matchAll(/\b(data-[a-zA-Z0-9_-]*id)=["']([^"']+)["']/gi)),
         ...Array.from(rawSel.matchAll(/\[(data-[a-zA-Z0-9_-]*id)=['"]([^'"]+)['"]\]/gi)),
+        ...Array.from(
+          rawSel.matchAll(
+            /\b(?:li|div|tr)#([a-zA-Z0-9_]*(?:TA|TB|TG|TT|TY|ATCL|DOC|WKS|BRD|EML|NOT|SCD|TSK|WBB|WBP)[0-9a-z]{12,})/gi
+          )
+        ).map((m) => [m[0], "id", m[1]] as unknown as RegExpMatchArray),
       ];
       if (idMatches.length === 0) continue;
 
@@ -97,7 +102,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         .replace(/'/g, "")
         .trim();
 
-      const rowScopedNameM = rawSel.match(/\b(?:li|tr):has-text\(['"]([^'"]{2,40})['"]\)/i);
+      const rowScopedNameM = rawSel.match(/\b(?:li|tr|label):has-text\(['"]([^'"]{2,40})['"]\)/i);
       const rowScopedName = rowScopedNameM ? rowScopedNameM[1].trim() : "";
 
       for (const im of idMatches) {
@@ -135,6 +140,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
     // Pass 2: For any newly created entity ID that had no explicit name/innerTxt in Pass 1,
     // correlate it with the most recent title/subject typed AFTER all pre-existing IDs
     let lastTypedEntityTitle = "";
+    let lastTypedLabelTitle = "";
     const preCreationSeenIds = new Set<string>();
     const currentRunIdsBeforeType = new Set<string>();
     for (const act of actualPlan.actions) {
@@ -145,6 +151,11 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       const idMatches = [
         ...Array.from(openAttrs.matchAll(/\b(data-[a-zA-Z0-9_-]*id)=["']([^"']+)["']/gi)),
         ...Array.from(rawSel.matchAll(/\[(data-[a-zA-Z0-9_-]*id)=['"]([^'"]+)['"]\]/gi)),
+        ...Array.from(
+          rawSel.matchAll(
+            /\b(?:li|div|tr)#([a-zA-Z0-9_]*(?:TA|TB|TG|TT|TY|ATCL|DOC|WKS|BRD|EML|NOT|SCD|TSK|WBB|WBP)[0-9a-z]{12,})/gi
+          )
+        ).map((m) => [m[0], "id", m[1]] as unknown as RegExpMatchArray),
       ];
 
       if (act.type === "type" && act.text && act.text.trim()) {
@@ -153,17 +164,31 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         const isSearchField = /(?:search|srch|검색|schword)/i.test(combinedCtx);
         const isBodyOrCommentEditor =
           cleanTxt.includes("\n") ||
-          /(?:ProseMirror|se-contents|bn-editor|ck-editor|npage_editor|본문|내용|댓글|의견|cmnt|comment|mentiony|cmmAiChat|프롬프트)/i.test(
+          /(?:ProseMirror|se-contents|bn-editor|ck-editor|npage_editor|본문|내용|mentiony|cmmAiChat|프롬프트)/i.test(
             combinedCtx
           );
+        const isLabelNameField = /(?:lblName|라벨\s*이름|라벨명)/i.test(combinedCtx);
         const isTitleOrNameField =
-          /(?:제목|주제|업무명|일정명|폴더명|분류명|그룹명|라벨명|태그명|캘린더명|자원명|프로젝트명|스페이스명|위키명|subject|title|bookName|brdName|fldName|wksName|prjName|cldrName)/i.test(
+          /(?:제목|주제|업무명|일정명|폴더명|분류명|그룹명|라벨명|라벨\s*이름|태그명|캘린더명|자원명|프로젝트명|스페이스명|위키명|댓글|의견|subject|title|bookName|brdName|fldName|wksName|prjName|cldrName|lblName|opinCn)/i.test(
             combinedCtx
           );
         if (!isSearchField && !isBodyOrCommentEditor && isTitleOrNameField && cleanTxt.length >= 2 && cleanTxt.length <= 40) {
-          lastTypedEntityTitle = cleanTxt.replace(/'/g, "");
-          for (const seenId of currentRunIdsBeforeType) {
-            preCreationSeenIds.add(seenId);
+          const sanitizedTitle = cleanTxt.replace(/'/g, "");
+          if (isLabelNameField) {
+            lastTypedLabelTitle = sanitizedTitle;
+            // Retroactively bind any TA01... label ID that was edited/deleted right before recreating this label!
+            for (const seenId of currentRunIdsBeforeType) {
+              if (/^TA01/i.test(seenId) && !entityIdToNameMap.has(seenId)) {
+                entityIdToNameMap.set(seenId, sanitizedTitle);
+              }
+            }
+          } else {
+            lastTypedEntityTitle = sanitizedTitle;
+            for (const seenId of currentRunIdsBeforeType) {
+              if (!/^TA01/i.test(seenId)) {
+                preCreationSeenIds.add(seenId);
+              }
+            }
           }
         }
       }
@@ -181,7 +206,11 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
           continue;
         }
         currentRunIdsBeforeType.add(idVal);
-        if (!entityIdToNameMap.has(idVal) && !preCreationSeenIds.has(idVal) && lastTypedEntityTitle) {
+        if (/^TA01/i.test(idVal)) {
+          if (!entityIdToNameMap.has(idVal) && lastTypedLabelTitle) {
+            entityIdToNameMap.set(idVal, lastTypedLabelTitle);
+          }
+        } else if (!entityIdToNameMap.has(idVal) && !preCreationSeenIds.has(idVal) && lastTypedEntityTitle) {
           entityIdToNameMap.set(idVal, lastTypedEntityTitle);
         }
       }
@@ -907,7 +936,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
           }
         }
         const isGenericSharedTitle =
-          /^(선택|체크|검색|초기화|삭제|수정|인쇄|별표|설정|관리|등록|추가|확인|취소|닫기|조직도|목록|조회|저장|옵션|비우기|접기\/펴기)$/i.test(
+          /^(선택|체크|검색|초기화|삭제|수정|인쇄|별표|설정|관리|등록|추가|확인|취소|닫기|조직도|목록|조회|저장|옵션|비우기|접기\/펴기|복원|할일\s*추가|라벨\s*추가|부가\s*기능|메뉴|더보기|이동|복사|보관)$/i.test(
             outerTitleVal
           );
         if (
@@ -920,6 +949,9 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         ) {
           const currentParts = splitSelectorCandidates(workingSel);
           const alreadyHasTitleSel = currentParts.some((p) => p.includes(`[title='${outerTitleVal}']`));
+          const hasStructuralNthAncestor = currentParts.some((p) =>
+            /(?:div|li|tr|ul|dl|dd|td)[^,>]*:nth-of-type\(\d+\)\s*>/i.test(p)
+          );
           const clsAttrForTitle = openTagAttrs.match(/\bclass=["']([^"']+)["']/i);
           const semClsForTitle = clsAttrForTitle
             ? clsAttrForTitle[1]
@@ -941,7 +973,18 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
             titleCandidates.push(`${modalPrefix}${tagName}[title='${outerTitleVal}']:visible`);
           }
           if (titleCandidates.length > 0) {
-            workingSel = Array.from(new Set([...titleCandidates, ...currentParts])).join(", ");
+            if (isGenericSharedTitle || hasStructuralNthAncestor) {
+              // Never prepend generic shared-title selectors (e.g. [title='설정'], [title='복원'], [title='할일 추가']) ahead of structural :nth-of-type(n) or row-scoped candidates!
+              const specificFirst = currentParts.filter(
+                (p) =>
+                  /(?:div|li|tr|ul|dl|dd|td)[^,>]*:nth-of-type\(\d+\)\s*>|:(?:has-text|text-is)\(/i.test(p) ||
+                  !p.includes(`[title='${outerTitleVal}']`)
+              );
+              const genericTitleRest = currentParts.filter((p) => !specificFirst.includes(p));
+              workingSel = Array.from(new Set([...specificFirst, ...genericTitleRest, ...titleCandidates])).join(", ");
+            } else {
+              workingSel = Array.from(new Set([...titleCandidates, ...currentParts])).join(", ");
+            }
           }
         }
 
@@ -1292,13 +1335,49 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
             ) {
               return false;
             }
-            if (/:has\(\.ico_(?:hide|info|chk|rdo|user|dept|plus|write|org|add|del|fldr|srch|lst|f\d+)\)/i.test(p)) {
+            if (/:has\(\.ico_[a-zA-Z0-9_-]+\)/i.test(p)) {
               return false;
             }
             return true;
           });
           if (cleanedHookIconParts.length > 0) {
-            workingSel = cleanedHookIconParts.join(", ");
+            // Also expand any structural path that has an ephemeral entity ID baked into an :nth-of-type step or #id prefix
+            // (e.g. li._task[data-task-id='TT01...']:nth-of-type(2) -> also add li._task:nth-of-type(2),
+            // and li#TA01... button.btn_edit -> also add li:has-text('배포') button.btn_edit)
+            const expandedParts: string[] = [];
+            const mappedTextFirstParts: string[] = [];
+            for (const part of cleanedHookIconParts) {
+              const strippedEphemeralAttr = part.replace(
+                /\[data-[a-z0-9_-]*id=['"](?:TA|TB|TG|TT|TY|ATCL|DOC|WKS|BRD|EML|NOT|SCD|TSK|WBB|WBP)[0-9a-z]{12,}['"]\]/gi,
+                ""
+              );
+              if (strippedEphemeralAttr !== part && strippedEphemeralAttr.includes(":nth-of-type(")) {
+                expandedParts.push(strippedEphemeralAttr);
+              }
+              const ephHashM = part.match(
+                /^(\.ui-dialog:visible\s+)?(li|div|tr)#([a-zA-Z0-9_]*?)((?:TA|TB|TG|TT|TY|ATCL|DOC|WKS|BRD|EML|NOT|SCD|TSK|WBB|WBP)[0-9a-z]{12,})(\s+.*)$/i
+              );
+              if (ephHashM) {
+                const dlgPre = ephHashM[1] || modalPrefix || "";
+                const itemTag = ephHashM[2];
+                const staticIdPrefix = ephHashM[3] || "";
+                const fullEphId = `${staticIdPrefix}${ephHashM[4]}`;
+                const restSel = ephHashM[5];
+                const mappedName = entityIdToNameMap.get(fullEphId) || entityIdToNameMap.get(ephHashM[4]);
+                if (mappedName && !restSel.includes(`:has-text('${mappedName}')`)) {
+                  mappedTextFirstParts.push(`${dlgPre}${itemTag}:has-text('${mappedName}')${restSel}`);
+                }
+                expandedParts.push(part);
+                if (staticIdPrefix.length >= 4) {
+                  expandedParts.push(`${dlgPre}${itemTag}[id^='${staticIdPrefix}']${restSel}`);
+                } else if (!mappedName) {
+                  expandedParts.push(`${dlgPre}${itemTag}${restSel}`);
+                }
+              } else {
+                expandedParts.push(part);
+              }
+            }
+            workingSel = Array.from(new Set([...mappedTextFirstParts, ...expandedParts])).join(", ");
           }
         }
 
@@ -1353,7 +1432,8 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
           const childVal = childValMatch ? childValMatch[1].replace(/'/g, "").trim() : "";
           const childNameMatch = innerHtmlAfterOpen.match(/<input\b[^<>]*?\bname=["']([^"']+)["']/i);
           const childName = childNameMatch ? childNameMatch[1].replace(/'/g, "").trim() : "";
-          const isEphemeralChildVal = /^[0-9]{8,}$|^(?:ATCL|DOC|WKS|BRD|EML|NOT|SCD|TSK|WBB|WBP)[0-9a-zA-Z]{8,}$/i.test(childVal);
+          const isEphemeralChildVal =
+            /^[0-9]{8,}$|^(?:TA|TB|TG|TT|TY|ATCL|DOC|WKS|BRD|EML|NOT|SCD|TSK|WBB|WBP)[0-9a-zA-Z]{8,}$/i.test(childVal);
           if (childVal && childVal.length <= 35 && !/^(on|true|false|y|n|1|0)$/i.test(childVal)) {
             if (childName) {
               hasChildCandidates.push(`${idContainerPrefix}${baseCls}:has(input[name='${childName}'][value='${childVal}']):visible`);
@@ -1404,7 +1484,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
             const leadingRowScopedChk =
               !childInputId && isEphemeralChildVal
                 ? currentParts.filter((p) =>
-                    /^(?:\.ui-dialog:visible\s+)?(?:[a-z0-9#._-]+\s+)?(?:tr|li):has-text\(['"][^'"]+['"]\)\s+label\.(?:chkbox|rdobtn):visible$/i.test(
+                    /^(?:\.ui-dialog:visible\s+)?(?:[a-z0-9#._-]+\s+)?(?:(?:tr|li):has-text\(['"][^'"]+['"]\)\s+label\.(?:chkbox|rdobtn)|label\.(?:chkbox|rdobtn):has-text\(['"][^'"]+['"]\)):visible$/i.test(
                       p.trim()
                     )
                   )
