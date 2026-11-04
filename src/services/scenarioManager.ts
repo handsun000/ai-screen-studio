@@ -63,7 +63,7 @@ export function listScenarios(): ScenarioSummary[] {
     const hasEditPlan = fs.existsSync(editPlanPath);
     const hasNarration = fs.existsSync(narrationPath);
     const hasVideo = fs.existsSync(videoPath);
-    const hasRenderedVideo = fs.existsSync(renderedVideoPath);
+    let hasRenderedVideo = fs.existsSync(renderedVideoPath);
 
     let actionsCount = 0;
     let zoomSegmentsCount = 0;
@@ -126,10 +126,12 @@ export function listScenarios(): ScenarioSummary[] {
       } catch {}
     }
 
+    let videoMtimeMs = 0;
     if (hasVideo) {
       try {
         const stat = fs.statSync(videoPath);
         videoSizeBytes = stat.size;
+        videoMtimeMs = stat.mtimeMs;
         if (!lastModified || stat.mtime.toISOString() > lastModified) {
           lastModified = stat.mtime.toISOString();
         }
@@ -143,7 +145,9 @@ export function listScenarios(): ScenarioSummary[] {
         if (!lastModified || stat.mtime.toISOString() > lastModified) {
           lastModified = stat.mtime.toISOString();
         }
-      } catch {}
+      } catch {
+        hasRenderedVideo = false;
+      }
     }
 
     list.push({

@@ -1,0 +1,156 @@
+{
+  "metadata": {
+    "url": "https://gwdev.unison.co.kr/ekp/main/home/homGwMain",
+    "viewportWidth": 1920,
+    "viewportHeight": 1080,
+    "totalDurationMs": 37187,
+    "recordingStart": "2026-10-31T15:43:57.658Z",
+    "calibratedToVideoDurationMs": 37187
+  },
+  "moments": [
+    {
+      "id": 1,
+      "type": "wait",
+      "timestamp": 15530,
+      "description": "초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기"
+    },
+    {
+      "id": 2,
+      "type": "click",
+      "timestamp": 17421,
+      "description": "'자원예약관리' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 943,
+        "y": 82
+      },
+      "target": {
+        "x": 871,
+        "y": 55,
+        "width": 144,
+        "height": 55
+      }
+    },
+    {
+      "id": 3,
+      "type": "wait",
+      "timestamp": 19142,
+      "description": "'자원예약관리' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 4,
+      "type": "click",
+      "timestamp": 21119,
+      "description": "트리 '사천본사 회의실' 항목 클릭",
+      "cursor": {
+        "x": 100,
+        "y": 381
+      },
+      "target": {
+        "x": 50,
+        "y": 369,
+        "width": 100,
+        "height": 24
+      }
+    },
+    {
+      "id": 5,
+      "type": "wait",
+      "timestamp": 23220,
+      "description": "트리 '사천본사 회의실' 항목 반응 대기"
+    },
+    {
+      "id": 6,
+      "type": "click",
+      "timestamp": 24561,
+      "description": "트리 '서울사무소 회의실' 항목 클릭",
+      "cursor": {
+        "x": 106,
+        "y": 619
+      },
+      "target": {
+        "x": 50,
+        "y": 607,
+        "width": 113,
+        "height": 24
+      }
+    },
+    {
+      "id": 7,
+      "type": "wait",
+      "timestamp": 26675,
+      "description": "트리 '서울사무소 회의실' 항목 반응 대기"
+    },
+    {
+      "id": 8,
+      "type": "click",
+      "timestamp": 28036,
+      "description": "트리 '풍력연구소 회의실' 항목 클릭",
+      "cursor": {
+        "x": 106,
+        "y": 789
+      },
+      "target": {
+        "x": 50,
+        "y": 777,
+        "width": 113,
+        "height": 24
+      }
+    },
+    {
+      "id": 9,
+      "type": "wait",
+      "timestamp": 29097,
+      "description": "트리 '풍력연구소 회의실' 항목 반응 대기"
+    },
+    {
+      "id": 10,
+      "type": "click",
+      "timestamp": 30478,
+      "description": "'내 예약' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 211,
+        "y": 209
+      },
+      "target": {
+        "x": 183,
+        "y": 185,
+        "width": 57,
+        "height": 48
+      }
+    },
+    {
+      "id": 11,
+      "type": "wait",
+      "timestamp": 31567,
+      "description": "'내 예약' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 12,
+      "type": "click",
+      "timestamp": 32946,
+      "description": "'예약승인관리' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 92,
+        "y": 981
+      },
+      "target": {
+        "x": 54,
+        "y": 969,
+        "width": 77,
+        "height": 24
+      }
+    },
+    {
+      "id": 13,
+      "type": "wait",
+      "timestamp": 34028,
+      "description": "'예약승인관리' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 14,
+      "type": "wait",
+      "timestamp": 35043,
+      "description": "최종 시연 결과 화면 클로즈업 확인 대기"
+    }
+  ]
+}

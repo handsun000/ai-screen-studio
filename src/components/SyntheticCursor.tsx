@@ -363,6 +363,13 @@ export const SyntheticCursor: React.FC<SyntheticCursorProps> = ({
     [moments, editPlan]
   );
 
+  const bakedIntroDurationMs = editPlan.narration?.introBakedIntoVideo
+    ? Number(editPlan.narration.bakedIntroDurationMs || 0)
+    : 0;
+  if (bakedIntroDurationMs > 0 && compTimeMs < bakedIntroDurationMs) {
+    return null;
+  }
+
   const { x, y, opacity, isClick, clickProgress } = getCursorState(
     compTimeMs,
     mappedMoments

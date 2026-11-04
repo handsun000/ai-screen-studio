@@ -1,0 +1,2181 @@
+{
+  "url": "https://gw.bc.ac.kr/ekp/main/home/homGwMain",
+  "viewport": {
+    "width": 1920,
+    "height": 944
+  },
+  "windowBounds": {
+    "left": 1528,
+    "top": -8,
+    "width": 1936,
+    "height": 1048,
+    "windowState": "maximized"
+  },
+  "requiresLogin": true,
+  "recordedByEyedropper": true,
+  "actions": [
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": "div#main_menu button[onclick*='GwMainMenu.fn.showAllMenuBox()']:visible, div#main_menu button.btn_svc_open[title='포탈 전체메뉴']:visible, div#main_menu button[title='포탈 전체메뉴']:visible, div#main_menu button[onclick*='GwMainMenu.fn.showAllMenuBox']:visible, div#main_menu > div.optn_btns > button.btn_svc_open:visible, div#main_menu button.btn_svc_open:has-text('포탈 전체메뉴'):visible, div#main_menu button.btn_svc_open:visible, button[onclick*='GwMainMenu.fn.showAllMenuBox()']:visible, button.btn_svc_open[title='포탈 전체메뉴']:visible, button[title='포탈 전체메뉴']:visible, button[onclick*='GwMainMenu.fn.showAllMenuBox']:visible",
+      "cursorOffset": {
+        "x": 24,
+        "y": 26
+      },
+      "clickCoords": {
+        "x": 1363,
+        "y": 86
+      },
+      "description": "'포탈 전체메뉴' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" title=\"포탈 전체메뉴\" onclick=\"GwMainMenu.fn.showAllMenuBox();return false;\" class=\"btn_svc_open\"><span>포탈 전체메뉴</span></button>",
+      "_lastHumanTarget": "포탈 전체메뉴"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'포탈 전체메뉴' 버튼 반응 대기",
+      "_lastHumanTarget": "포탈 전체메뉴"
+    },
+    {
+      "type": "click",
+      "selector": "div#all_svc_inner a[title='프로젝트'][onclick*='/ekp/scr/prj/prjMain']:visible, div#all_svc_inner a[title='프로젝트']:visible, div#all_svc_inner a[onclick*='/ekp/scr/prj/prjMain']:visible, a[onclick*='/ekp/scr/prj/prjMain']:visible, div.svc_tit a:has-text('프로젝트'):visible, a[title='프로젝트']:visible",
+      "cursorOffset": {
+        "x": 38,
+        "y": 14
+      },
+      "clickCoords": {
+        "x": 715,
+        "y": 331
+      },
+      "description": "'프로젝트' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"if(GwMainMenu.fn.checkedEditMode()){GwMainMenu.fn.goPage('MNU12040924204585197979','https://gw.bc.ac.kr/ekp/scr/prj/prjMain','G','L','0','0');}return false;\" title=\"프로젝트\"><i class=\"nti nti_prj _punchHandle\"></i>프로젝트</a>",
+      "_lastHumanTarget": "프로젝트"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'프로젝트' 메뉴/링크 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "프로젝트"
+    },
+    {
+      "type": "click",
+      "selector": "a#prjMyProjectSnb_goTotalStatus:visible, #prjMyProjectSnb_goTotalStatus:visible, div.mn a.item:has-text('종합 현황'):visible, div#prjMyProjectSnb_mscroll a.item:has-text('종합 현황'):visible",
+      "cursorOffset": {
+        "x": 24,
+        "y": 6
+      },
+      "clickCoords": {
+        "x": 82,
+        "y": 248
+      },
+      "description": "'종합 현황' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"item\" id=\"prjMyProjectSnb_goTotalStatus\">종합 현황</a>",
+      "_lastHumanTarget": "종합 현황"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'종합 현황' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "종합 현황"
+    },
+    {
+      "type": "click",
+      "selector": "a#prjMyProjectSnb_goWorkStatus:visible, #prjMyProjectSnb_goWorkStatus:visible, div.mn a.item:has-text('업무 현황'):visible, div#prjMyProjectSnb_mscroll a.item:has-text('업무 현황'):visible",
+      "cursorOffset": {
+        "x": 23,
+        "y": 14
+      },
+      "clickCoords": {
+        "x": 81,
+        "y": 290
+      },
+      "description": "'업무 현황' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"item\" id=\"prjMyProjectSnb_goWorkStatus\">업무 현황</a>",
+      "_lastHumanTarget": "업무 현황"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'업무 현황' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "업무 현황"
+    },
+    {
+      "type": "click",
+      "selector": "a#prjMyProjectSnb_goProject:visible, #prjMyProjectSnb_goProject:visible, div.mn a.item:has-text('내 프로젝트'):visible, div#prjMyProjectSnb_mscroll a.item:has-text('내 프로젝트'):visible",
+      "cursorOffset": {
+        "x": 36,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 94,
+        "y": 327
+      },
+      "description": "'내 프로젝트' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"item\" id=\"prjMyProjectSnb_goProject\">내 프로젝트</a>",
+      "_lastHumanTarget": "내 프로젝트"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'내 프로젝트' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "내 프로젝트"
+    },
+    {
+      "type": "click",
+      "selector": "a#prjMyProjectSnb_goTask:visible, #prjMyProjectSnb_goTask:visible, div.mn a.item:has-text('내 일감'):visible, div#prjMyProjectSnb_mscroll a.item:has-text('내 일감'):visible",
+      "cursorOffset": {
+        "x": 34,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 92,
+        "y": 361
+      },
+      "description": "'내 일감' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"item\" id=\"prjMyProjectSnb_goTask\">내 일감</a>",
+      "_lastHumanTarget": "내 일감"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'내 일감' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "내 일감"
+    },
+    {
+      "type": "click",
+      "selector": "a#prjMyProjectSnb_goIssue:visible, #prjMyProjectSnb_goIssue:visible, div.mn a.item:has-text('내 이슈'):visible, div#prjMyProjectSnb_mscroll a.item:has-text('내 이슈'):visible",
+      "cursorOffset": {
+        "x": 34,
+        "y": 20
+      },
+      "clickCoords": {
+        "x": 92,
+        "y": 398
+      },
+      "description": "'내 이슈' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"item\" id=\"prjMyProjectSnb_goIssue\">내 이슈</a>",
+      "_lastHumanTarget": "내 이슈"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'내 이슈' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "내 이슈"
+    },
+    {
+      "type": "click",
+      "selector": "a#prjMyProjectSnb_goProject:visible, #prjMyProjectSnb_goProject:visible, div.mn a.item:has-text('내 프로젝트'):visible, div#prjMyProjectSnb_mscroll a.item:has-text('내 프로젝트'):visible",
+      "cursorOffset": {
+        "x": 17,
+        "y": 14
+      },
+      "clickCoords": {
+        "x": 75,
+        "y": 324
+      },
+      "description": "'내 프로젝트' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"item\" id=\"prjMyProjectSnb_goProject\">내 프로젝트</a>",
+      "_lastHumanTarget": "내 프로젝트"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'내 프로젝트' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "내 프로젝트"
+    },
+    {
+      "type": "click",
+      "selector": "button#prjMyProjectSnb_btnAddProject:visible, #prjMyProjectSnb_btnAddProject:visible, button[title='프로젝트 추가']:visible, div.workset_btn button.btn.btn_block:has-text('프로젝트 추가'):visible, button.btn[title='프로젝트 추가']:visible",
+      "cursorOffset": {
+        "x": 106,
+        "y": 38
+      },
+      "clickCoords": {
+        "x": 126,
+        "y": 162
+      },
+      "description": "'프로젝트 추가' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjMyProjectSnb_btnAddProject\" type=\"button\" class=\"btn btn_block\" title=\"프로젝트 추가\"><i class=\"ico ico_plus\"></i> 프로젝트 추가</button>",
+      "_lastHumanTarget": "프로젝트 추가"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'프로젝트 추가' 버튼 반응 대기",
+      "_lastHumanTarget": "프로젝트 추가"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible div.guide_btn button._addProject.btn.btn_pri:has-text('새 프로젝트 생성'):visible, .ui-dialog:visible ul#prjProjectTemplate_templateList button._addProject.btn.btn_pri:has-text('새 프로젝트 생성'):visible, .ui-dialog:visible button._addProject.btn.btn_pri:has-text('새 프로젝트 생성'):visible, .ui-dialog:visible ul#prjProjectTemplate_templateList button._addProject:has-text('새 프로젝트 생성'):visible, .ui-dialog:visible ul#prjProjectTemplate_templateList button._addProject:visible, ul#prjProjectTemplate_templateList > li.no_data > div.guide_btn:nth-of-type(3) > button._addProject.btn.btn_pri:visible",
+      "cursorOffset": {
+        "x": 49,
+        "y": 22
+      },
+      "clickCoords": {
+        "x": 936,
+        "y": 505
+      },
+      "description": "[프로젝트 추가 팝업] '새 프로젝트 생성' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"btn btn_pri _addProject\">새 프로젝트 생성</button>",
+      "_lastHumanTarget": "새 프로젝트 생성"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[프로젝트 추가 팝업] '새 프로젝트 생성' 버튼 반응 대기",
+      "_lastHumanTarget": "새 프로젝트 생성"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible div.btn_group button.btn:text-is('진행'):visible, .ui-dialog:visible div#prjProjectForm_statusBtnList button.btn:has-text('진행'):visible, .ui-dialog:visible button.btn:has-text('진행'):visible",
+      "cursorOffset": {
+        "x": 40,
+        "y": 23
+      },
+      "clickCoords": {
+        "x": 852,
+        "y": 210
+      },
+      "description": "[프로젝트 추가 팝업] '진행' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"btn\" data-prj-status=\"S\">진행</button>",
+      "_lastHumanTarget": "진행"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[프로젝트 추가 팝업] '진행' 버튼 반응 대기",
+      "_lastHumanTarget": "진행"
+    },
+    {
+      "type": "type",
+      "selector": ".ui-dialog:visible input#prjNames_ko:visible, .ui-dialog:visible input[data-lang='ko']:visible, .ui-dialog:visible input[name='prjNames_ko']:visible, input#prjNames_ko:visible",
+      "text": "학사제도 및 교육과정 개편 프로젝트",
+      "cursorOffset": {
+        "x": 24,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 763,
+        "y": 253
+      },
+      "description": "[프로젝트 추가 팝업] '한국어' 입력창에 '학사제도 및 교육과정 개편 프로젝트' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input name=\"prjNames_ko\" id=\"prjNames_ko\" data-lang=\"ko\" title=\"한국어\" type=\"text\" class=\"input_txt\">",
+      "_lastHumanTarget": "한국어"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#prjProjectForm_btnSelIncharge:visible, button#prjProjectForm_btnSelIncharge:visible, .ui-dialog:visible tr:has(th:has-text('관리자')) button.btn.btn_ico:visible",
+      "cursorOffset": {
+        "x": 10,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 1271,
+        "y": 303
+      },
+      "description": "[프로젝트 추가 팝업] '선택' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjProjectForm_btnSelIncharge\" type=\"button\" title=\"선택\" class=\"btn btn_ico\"><i class=\"ico ico_user\"><span>선택</span></i></button>",
+      "_lastHumanTarget": "관리자"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[프로젝트 추가 팝업] '선택' 버튼 반응 대기",
+      "_lastHumanTarget": "선택"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible .dynatree-title:text-is('부서'):visible, .ui-dialog:visible .dynatree-title:has-text('부서'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서']:has-text('부서'):visible, .ui-dialog:visible span.dynatree-node.dynatree-lazy a.dynatree-title:text-is('부서'):visible, .ui-dialog:visible a.dynatree-title:has-text('부서'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서']:visible",
+      "cursorOffset": {
+        "x": 6,
+        "y": 14
+      },
+      "clickCoords": {
+        "x": 581,
+        "y": 338
+      },
+      "description": "[관리자 팝업] 트리 '부서' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"dynatree-title\" title=\"부천대학교 &gt; 부서\"> 부서 </a>",
+      "_lastHumanTarget": "부서"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[관리자 팝업] 트리 '부서' 항목 반응 대기",
+      "_lastHumanTarget": "부서"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible .dynatree-title:text-is('대학본부'):visible, .ui-dialog:visible .dynatree-title:has-text('대학본부'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서 > 대학본부']:has-text('대학본부'):visible, .ui-dialog:visible span.dynatree-node.dynatree-lazy a.dynatree-title:has-text('대학본부'):visible, .ui-dialog:visible a.dynatree-title:has-text('대학본부'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서 > 대학본부']:visible",
+      "cursorOffset": {
+        "x": 48,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 631,
+        "y": 371
+      },
+      "description": "[관리자 팝업] 트리 '대학본부' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"dynatree-title\" title=\"부천대학교 &gt; 부서 &gt; 대학본부\"> 대학본부 </a>",
+      "_lastHumanTarget": "대학본부"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[관리자 팝업] 트리 '대학본부' 항목 반응 대기",
+      "_lastHumanTarget": "대학본부"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible .dynatree-title:text-is('사무처'):visible, .ui-dialog:visible .dynatree-title:has-text('사무처'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서 > 대학본부 > 사무처']:has-text('사무처'):visible, .ui-dialog:visible span.dynatree-node.dynatree-lazy a.dynatree-title:has-text('사무처'):visible, .ui-dialog:visible a.dynatree-title:has-text('사무처'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서 > 대학본부 > 사무처']:visible",
+      "cursorOffset": {
+        "x": 25,
+        "y": 6
+      },
+      "clickCoords": {
+        "x": 616,
+        "y": 432
+      },
+      "description": "[관리자 팝업] 트리 '사무처' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"dynatree-title\" title=\"부천대학교 &gt; 부서 &gt; 대학본부 &gt; 사무처\"> 사무처 </a>",
+      "_lastHumanTarget": "사무처"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[관리자 팝업] 트리 '사무처' 항목 반응 대기",
+      "_lastHumanTarget": "사무처"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible li#user_M445200858 label.chkbox:has([data-emp-id='M445200858']):visible, .ui-dialog:visible label.chkbox:has([data-emp-id='M445200858']):visible, .ui-dialog:visible li#user_M445200858 label:has(._chk):visible, .ui-dialog:visible label:has([data-emp-id='M445200858']):visible, .ui-dialog:visible li#user_M445200858 label:has-text('임시계정(전임)'):visible",
+      "cursorOffset": {
+        "x": 37,
+        "y": 52
+      },
+      "clickCoords": {
+        "x": 911,
+        "y": 322
+      },
+      "description": "[관리자 팝업] '임시계정(전임) 전임교원 정보보안센터' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<label class=\"user_info chkbox\"><input type=\"checkbox\" value=\"\" title=\"선택\" class=\"input_chk lst_chk _chk\"><a name=\"userLyr\" href=\"#\" onclick=\"return false;\" title=\"사용자 정보\" class=\"ico ico_info\" data-emp-id=\"M445200858\">임시계정(전임) 전임교원 정보보안센터</label>",
+      "_lastHumanTarget": "임시계정(전임)"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[관리자 팝업] '임시계정(전임) 전임교원 정보보안센터' 요소 반응 대기",
+      "_lastHumanTarget": "임시계정(전임) 전임교원 정보보안센터"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible div.btn_area button._confirm.btn.btn_med:text-is('확인'):visible, .ui-dialog:visible div#btnArea button._confirm:visible, .ui-dialog:visible button._confirm:visible, .ui-dialog:visible div#btnArea button._confirm.btn.btn_med:has-text('확인'):visible, .ui-dialog:visible div#btnArea button._confirm:has-text('확인'):visible",
+      "cursorOffset": {
+        "x": 36,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 934,
+        "y": 537
+      },
+      "description": "[관리자 팝업] '확인' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"btn btn_med btn_pri _confirm\"><strong>확인</strong></button>",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "[관리자 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#prjProjectForm_btnSelMember:visible, button#prjProjectForm_btnSelMember:visible, .ui-dialog:visible tr:has(th:has-text('담당자')) button.btn.btn_ico:visible",
+      "cursorOffset": {
+        "x": 19,
+        "y": 20
+      },
+      "clickCoords": {
+        "x": 1280,
+        "y": 354
+      },
+      "description": "[프로젝트 추가 팝업] '선택' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjProjectForm_btnSelMember\" type=\"button\" title=\"선택\" class=\"btn btn_ico\"><i class=\"ico ico_user\"><span>선택</span></i></button>",
+      "_lastHumanTarget": "담당자"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[프로젝트 추가 팝업] '선택' 버튼 반응 대기",
+      "_lastHumanTarget": "선택"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible .dynatree-title:text-is('부서'):visible, .ui-dialog:visible .dynatree-title:has-text('부서'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서']:has-text('부서'):visible, .ui-dialog:visible span.dynatree-node.dynatree-lazy a.dynatree-title:text-is('부서'):visible, .ui-dialog:visible a.dynatree-title:has-text('부서'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서']:visible",
+      "cursorOffset": {
+        "x": 18,
+        "y": 10
+      },
+      "clickCoords": {
+        "x": 593,
+        "y": 334
+      },
+      "description": "[담당자 팝업] 트리 '부서' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"dynatree-title\" title=\"부천대학교 &gt; 부서\"> 부서 </a>",
+      "_lastHumanTarget": "부서"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[담당자 팝업] 트리 '부서' 항목 반응 대기",
+      "_lastHumanTarget": "부서"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible .dynatree-title:text-is('대학본부'):visible, .ui-dialog:visible .dynatree-title:has-text('대학본부'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서 > 대학본부']:has-text('대학본부'):visible, .ui-dialog:visible span.dynatree-node.dynatree-lazy a.dynatree-title:has-text('대학본부'):visible, .ui-dialog:visible a.dynatree-title:has-text('대학본부'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서 > 대학본부']:visible",
+      "cursorOffset": {
+        "x": 23,
+        "y": 9
+      },
+      "clickCoords": {
+        "x": 606,
+        "y": 367
+      },
+      "description": "[담당자 팝업] 트리 '대학본부' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"dynatree-title\" title=\"부천대학교 &gt; 부서 &gt; 대학본부\"> 대학본부 </a>",
+      "_lastHumanTarget": "대학본부"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[담당자 팝업] 트리 '대학본부' 항목 반응 대기",
+      "_lastHumanTarget": "대학본부"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible .dynatree-title:text-is('사무처'):visible, .ui-dialog:visible .dynatree-title:has-text('사무처'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서 > 대학본부 > 사무처']:has-text('사무처'):visible, .ui-dialog:visible span.dynatree-node.dynatree-lazy a.dynatree-title:has-text('사무처'):visible, .ui-dialog:visible a.dynatree-title:has-text('사무처'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서 > 대학본부 > 사무처']:visible",
+      "cursorOffset": {
+        "x": 27,
+        "y": 7
+      },
+      "clickCoords": {
+        "x": 618,
+        "y": 433
+      },
+      "description": "[담당자 팝업] 트리 '사무처' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"dynatree-title\" title=\"부천대학교 &gt; 부서 &gt; 대학본부 &gt; 사무처\"> 사무처 </a>",
+      "_lastHumanTarget": "사무처"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[담당자 팝업] 트리 '사무처' 항목 반응 대기",
+      "_lastHumanTarget": "사무처"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible ul#orgUserList label.chkbox:has([data-emp-id='M574690975']):visible, .ui-dialog:visible ul#orgUserList label.user_info.chkbox:has-text('김병훈 담당 사무처'):visible, .ui-dialog:visible label.user_info.chkbox:has-text('김병훈 담당 사무처'):visible, ul#orgUserList > li:has-text('김병훈') > label.user_info.chkbox:visible, .ui-dialog:visible label.chkbox:has([data-emp-id='M574690975']):visible",
+      "cursorOffset": {
+        "x": 50,
+        "y": 29
+      },
+      "clickCoords": {
+        "x": 924,
+        "y": 395
+      },
+      "description": "[담당자 팝업] '김병훈 담당 사무처' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<label class=\"user_info chkbox\"><input type=\"checkbox\" value=\"\" title=\"선택\" class=\"input_chk lst_chk _chk\"><a name=\"userLyr\" href=\"#\" onclick=\"return false;\" title=\"사용자 정보\" class=\"ico ico_info\" data-emp-id=\"M574690975\">김병훈 담당 사무처</label>",
+      "_lastHumanTarget": "김병훈 담당 사무처"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[담당자 팝업] '김병훈 담당 사무처' 요소 반응 대기",
+      "_lastHumanTarget": "김병훈 담당 사무처"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible div.btn_area button._confirm.btn.btn_med:text-is('확인'):visible, .ui-dialog:visible div#btnArea button._confirm:visible, .ui-dialog:visible button._confirm:visible, .ui-dialog:visible div#btnArea button._confirm.btn.btn_med:has-text('확인'):visible, .ui-dialog:visible div#btnArea button._confirm:has-text('확인'):visible",
+      "cursorOffset": {
+        "x": 35,
+        "y": 25
+      },
+      "clickCoords": {
+        "x": 933,
+        "y": 550
+      },
+      "description": "[담당자 팝업] '확인' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"btn btn_med btn_pri _confirm\"><strong>확인</strong></button>",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "[담당자 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "type",
+      "selector": ".ui-dialog:visible tr:has(th:has-text('공유자')) input.select2-input:visible, div#s2id_prjProjectForm_share > ul.select2-choices > li.select2-search-field > input.select2-input:visible",
+      "text": "김병훈",
+      "cursorOffset": {
+        "x": 91,
+        "y": 10
+      },
+      "clickCoords": {
+        "x": 832,
+        "y": 397
+      },
+      "description": "[프로젝트 추가 팝업] '입력란' 입력창에 '김병훈' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input type=\"text\" autocomplete=\"off\" class=\"select2-input select2-focused\" style=\"width: 503.234px;\">",
+      "_lastHumanTarget": "공유자"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": "li.select2-result div.select2-result-label:has-text('김병훈 담당(사무처)'):visible, div.select2-drop.select2-drop-multi.select2-drop-active:nth-of-type(19) > ul.select2-results > li.select2-result.select2-result-selectable > div.select2-result-label:visible",
+      "text": "김병훈 담당(사무처)",
+      "cursorOffset": {
+        "x": 73,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 817,
+        "y": 441
+      },
+      "description": "'김병훈 담당(사무처)' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<div class=\"select2-result-label\"><span class=\"select2-match\">김병훈</span> 담당(사무처)</div>",
+      "_lastHumanTarget": "김병훈 담당(사무처)"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'김병훈 담당(사무처)' 요소 반응 대기",
+      "_lastHumanTarget": "김병훈 담당(사무처)"
+    },
+    {
+      "type": "type",
+      "selector": ".ui-dialog:visible textarea#prjInfoerForm_desc:visible, .ui-dialog:visible textarea[name='prjDesc']:visible, textarea#prjInfoerForm_desc:visible",
+      "text": "학과별 교육과정 개편안 수합 및 학칙 개정안 마련을 위한 협업 프로젝트입니다.",
+      "cursorOffset": {
+        "x": 77,
+        "y": 34
+      },
+      "clickCoords": {
+        "x": 816,
+        "y": 466
+      },
+      "description": "[프로젝트 추가 팝업] 'prjInfoerForm_desc' 입력창에 '학과별 교육과정 개편안 수합 및 학칙 개정안 마련을 위한 협업 프로젝트입니다.' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<textarea id=\"prjInfoerForm_desc\" name=\"prjDesc\" cols=\"90\" rows=\"3\" class=\"textarea\" style=\"width:100%; height:60px;\"></textarea>",
+      "_lastHumanTarget": "prjInfoerForm_desc"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible input#prjProjectForm_deadlineBgnDe:visible, .ui-dialog:visible input[name='deadlineBgnDe']:visible, input#prjProjectForm_deadlineBgnDe:visible, .ui-dialog:visible input[title*='시작일']:visible",
+      "cursorOffset": {
+        "x": 98,
+        "y": 19
+      },
+      "clickCoords": {
+        "x": 837,
+        "y": 528
+      },
+      "description": "[프로젝트 추가 팝업] 'yyyy-mm-dd' 입력창 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input id=\"prjProjectForm_deadlineBgnDe\" name=\"deadlineBgnDe\" type=\"text\" title=\"시작일\" placeholder=\"yyyy-mm-dd\" class=\"input_date hasDatepicker\">",
+      "_lastHumanTarget": "시작일"
+    },
+    {
+      "type": "wait",
+      "ms": 300,
+      "description": "[프로젝트 추가 팝업] 'yyyy-mm-dd' 입력창 반응 대기",
+      "_lastHumanTarget": "yyyy-mm-dd"
+    },
+    {
+      "type": "click",
+      "selector": "td.ui-datepicker-days-cell-over.ui-datepicker-current-day a:text-is('30'):visible, div#ui-datepicker-div > table.ui-datepicker-calendar > tbody > tr:nth-of-type(5) > td.ui-datepicker-days-cell-over.ui-datepicker-current-day.ui-datepicker-today[data-handler='selectDay']:nth-of-type(6) > a:visible, a:text-is('30'):visible, div#ui-datepicker-div a.ui-state-default:has-text('30'):visible, div#ui-datepicker-div a.ui-state-default.ui-state-highlight:has-text('30'):visible",
+      "cursorOffset": {
+        "x": 11,
+        "y": 8
+      },
+      "clickCoords": {
+        "x": 931,
+        "y": 752
+      },
+      "description": "'30' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a class=\"ui-state-default ui-state-highlight ui-state-active ui-state-hover\" href=\"#\">30</a>",
+      "_lastHumanTarget": "30"
+    },
+    {
+      "type": "wait",
+      "ms": 300,
+      "description": "'30' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "30"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible input#prjProjectForm_deadlineEndDe:visible, .ui-dialog:visible input[name='deadlineEndDe']:visible, input#prjProjectForm_deadlineEndDe:visible, .ui-dialog:visible input[title*='완료일']:visible",
+      "cursorOffset": {
+        "x": 87,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 945,
+        "y": 525
+      },
+      "description": "[프로젝트 추가 팝업] 'yyyy-mm-dd' 입력창 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input id=\"prjProjectForm_deadlineEndDe\" name=\"deadlineEndDe\" type=\"text\" title=\"완료일\" placeholder=\"yyyy-mm-dd\" class=\"input_date hasDatepicker\" lastval=\" - - \">",
+      "_lastHumanTarget": "완료일"
+    },
+    {
+      "type": "wait",
+      "ms": 300,
+      "description": "[프로젝트 추가 팝업] 'yyyy-mm-dd' 입력창 반응 대기",
+      "_lastHumanTarget": "yyyy-mm-dd"
+    },
+    {
+      "type": "click",
+      "selector": "a.ui-datepicker-next.ui-corner-all[data-handler='next']:visible, a[data-handler='next']:visible, a.ui-datepicker-next.ui-corner-all[data-event='click']:visible, a[data-event='click']:visible, a.ui-datepicker-next[title='다음달']:visible, a[title='다음달']:visible, a.ui-datepicker-next.ui-datepicker-next-hover[data-handler='next']:visible, a.ui-datepicker-next.ui-datepicker-next-hover[data-event='click']:visible, a.ui-datepicker-next.ui-corner-all[title='다음달']:visible, a.ui-datepicker-next.ui-corner-all:has-text('다음달'):visible",
+      "cursorOffset": {
+        "x": 16,
+        "y": 9
+      },
+      "clickCoords": {
+        "x": 1090,
+        "y": 567
+      },
+      "description": "'다음달' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a class=\"ui-datepicker-next ui-corner-all ui-state-hover ui-datepicker-next-hover\" data-handler=\"next\" data-event=\"click\" title=\"다음달\"><span class=\"ui-icon ui-icon-circle-triangle-e\">다음달</span></a>",
+      "_lastHumanTarget": "다음달"
+    },
+    {
+      "type": "wait",
+      "ms": 300,
+      "description": "'다음달' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "다음달"
+    },
+    {
+      "type": "click",
+      "selector": "a.ui-datepicker-next.ui-corner-all[data-handler='next']:visible, a[data-handler='next']:visible, a.ui-datepicker-next.ui-corner-all[data-event='click']:visible, a[data-event='click']:visible, a.ui-datepicker-next[title='다음달']:visible, a[title='다음달']:visible, a.ui-datepicker-next.ui-datepicker-next-hover[data-handler='next']:visible, a.ui-datepicker-next.ui-datepicker-next-hover[data-event='click']:visible, a.ui-datepicker-next.ui-corner-all[title='다음달']:visible, a.ui-datepicker-next.ui-corner-all:has-text('다음달'):visible",
+      "cursorOffset": {
+        "x": 16,
+        "y": 9
+      },
+      "clickCoords": {
+        "x": 1090,
+        "y": 567
+      },
+      "description": "'다음달' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a class=\"ui-datepicker-next ui-corner-all ui-state-hover ui-datepicker-next-hover\" data-handler=\"next\" data-event=\"click\" title=\"다음달\"><span class=\"ui-icon ui-icon-circle-triangle-e\">다음달</span></a>",
+      "_lastHumanTarget": "다음달"
+    },
+    {
+      "type": "wait",
+      "ms": 300,
+      "description": "'다음달' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "다음달"
+    },
+    {
+      "type": "click",
+      "selector": "a.ui-datepicker-next.ui-corner-all[data-handler='next']:visible, a[data-handler='next']:visible, a.ui-datepicker-next.ui-corner-all[data-event='click']:visible, a[data-event='click']:visible, a.ui-datepicker-next[title='다음달']:visible, a[title='다음달']:visible, a.ui-datepicker-next.ui-datepicker-next-hover[data-handler='next']:visible, a.ui-datepicker-next.ui-datepicker-next-hover[data-event='click']:visible, a.ui-datepicker-next.ui-corner-all[title='다음달']:visible, a.ui-datepicker-next.ui-corner-all:has-text('다음달'):visible",
+      "cursorOffset": {
+        "x": 16,
+        "y": 9
+      },
+      "clickCoords": {
+        "x": 1090,
+        "y": 567
+      },
+      "description": "'다음달' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a class=\"ui-datepicker-next ui-corner-all ui-state-hover ui-datepicker-next-hover\" data-handler=\"next\" data-event=\"click\" title=\"다음달\"><span class=\"ui-icon ui-icon-circle-triangle-e\">다음달</span></a>",
+      "_lastHumanTarget": "다음달"
+    },
+    {
+      "type": "wait",
+      "ms": 300,
+      "description": "'다음달' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "다음달"
+    },
+    {
+      "type": "click",
+      "selector": "div#ui-datepicker-div > table.ui-datepicker-calendar > tbody > tr:nth-of-type(4) > td[data-handler='selectDay']:nth-of-type(6) > a:visible, a:text-is('26'):visible, div#ui-datepicker-div a.ui-state-default:has-text('26'):visible, div#ui-datepicker-div a.ui-state-default.ui-state-hover:has-text('26'):visible",
+      "cursorOffset": {
+        "x": 7,
+        "y": 6
+      },
+      "clickCoords": {
+        "x": 1046,
+        "y": 719
+      },
+      "description": "'26' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a class=\"ui-state-default ui-state-hover\" href=\"#\">26</a>",
+      "_lastHumanTarget": "26"
+    },
+    {
+      "type": "wait",
+      "ms": 300,
+      "description": "'26' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "26"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#prjProjectForm_btnSelectTask:visible, .ui-dialog:visible tr#prjProjectForm_relateTaskTr button.btn:has-text('일감선택'):visible, .ui-dialog:visible button.btn:has-text('일감선택'):visible, button#prjProjectForm_btnSelectTask:visible",
+      "cursorOffset": {
+        "x": 36,
+        "y": 23
+      },
+      "clickCoords": {
+        "x": 775,
+        "y": 581
+      },
+      "description": "[프로젝트 추가 팝업] '일감선택' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjProjectForm_btnSelectTask\" type=\"button\" class=\"btn\">일감선택</button>",
+      "_lastHumanTarget": "일감선택"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[프로젝트 추가 팝업] '일감선택' 버튼 반응 대기",
+      "_lastHumanTarget": "일감선택"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#prjSelectTask_btnClose:visible, .ui-dialog:visible div#prjSelectTask_content button.btn.btn_med:has-text('닫기'):visible, .ui-dialog:visible div.btn_area button.btn.btn_med:text-is('닫기'):visible, .ui-dialog:visible button.btn.btn_med:has-text('닫기'):visible",
+      "cursorOffset": {
+        "x": 45,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 1000,
+        "y": 545
+      },
+      "description": "[일감 선택 팝업] '닫기' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjSelectTask_btnClose\" type=\"button\" class=\"btn btn_med\">닫기</button>",
+      "_lastHumanTarget": "닫기"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[일감 선택 팝업] '닫기' 버튼 반응 대기",
+      "_lastHumanTarget": "닫기"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible tr#prjProjectForm_recordWorkingTimeTr label.rdobtn:has(input[name='timeLogRegType'][value='B']):visible, .ui-dialog:visible tr#prjProjectForm_recordWorkingTimeTr label.rdobtn:has(input[value='B']):visible, .ui-dialog:visible label.rdobtn:has(input[value='B']):visible, .ui-dialog:visible div.rdo_div label.rdobtn:has-text('버튼 방식'):visible, .ui-dialog:visible label.rdobtn:has(input[name='timeLogRegType'][value='B']):visible, .ui-dialog:visible tr#prjProjectForm_recordWorkingTimeTr label.rdobtn:has-text('버튼 방식'):visible",
+      "cursorOffset": {
+        "x": 30,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 910,
+        "y": 522
+      },
+      "description": "[프로젝트 추가 팝업] '버튼 방식' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<label class=\"rdobtn\"><input name=\"timeLogRegType\" type=\"radio\" value=\"B\" class=\"input_rdo\"> 버튼 방식</label>",
+      "_lastHumanTarget": "버튼 방식"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[프로젝트 추가 팝업] '버튼 방식' 요소 반응 대기",
+      "_lastHumanTarget": "버튼 방식"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible label.chkbox:has(#prjProjectForm_ratePrevAcceptYn):visible, .ui-dialog:visible label:has(#prjProjectForm_ratePrevAcceptYn):visible, .ui-dialog:visible tr#prjProjectForm_itemInputRuleTr label.chkbox:has-text('진척도 이전 값 보다 낮은 값 허용'):visible, .ui-dialog:visible label.chkbox:has-text('진척도 이전 값 보다 낮은 값 허용'):visible",
+      "cursorOffset": {
+        "x": 114,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 853,
+        "y": 568
+      },
+      "description": "[프로젝트 추가 팝업] '진척도 이전 값 보다 낮은 값 허용' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<label class=\"chkbox\"><input id=\"prjProjectForm_ratePrevAcceptYn\" name=\"\" type=\"checkbox\" value=\"\" class=\"input_chk\"> 진척도 이전 값 보다 낮은 값 허용</label>",
+      "_lastHumanTarget": "진척도 이전 값 보다 낮은 값 허용"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[프로젝트 추가 팝업] '진척도 이전 값 보다 낮은 값 허용' 요소 반응 대기",
+      "_lastHumanTarget": "진척도 이전 값 보다 낮은 값 허용"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible ul#prjProjectForm_taskTypeList label.chkbox:has-text('할일'):visible, .ui-dialog:visible ul#prjProjectForm_taskTypeList label.chkbox:has(input[name='taskTypeIdList'][value='57942927682159162']):visible, .ui-dialog:visible ul#prjProjectForm_taskTypeList label.chkbox:has(input[value='57942927682159162']):visible, .ui-dialog:visible label.chkbox:has(input[value='57942927682159162']):visible, .ui-dialog:visible ul.chk_slt label.chkbox:text-is('할일'):visible, .ui-dialog:visible label.chkbox:has(input[name='taskTypeIdList'][value='57942927682159162']):visible",
+      "cursorOffset": {
+        "x": 7,
+        "y": 14
+      },
+      "clickCoords": {
+        "x": 746,
+        "y": 677
+      },
+      "description": "[프로젝트 추가 팝업] '할일' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<label class=\"chkbox\"> <input name=\"taskTypeIdList\" type=\"checkbox\" value=\"57942927682159162\" class=\"input_chk\"> 할일 </label>",
+      "_lastHumanTarget": "할일"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[프로젝트 추가 팝업] '할일' 요소 반응 대기",
+      "_lastHumanTarget": "할일"
+    },
+    {
+      "type": "upload",
+      "selector": ".ui-dialog:visible div#prjProjectForm_attach div.fileupload-buttonbar div.fileinput-button.btn:has-text('내 PC'):visible, .ui-dialog:visible div#prjProjectForm_attach div.fileinput-button.btn:has-text('내 PC'):visible, div#prjProjectForm_attach > div.fileupload-buttonbar:nth-of-type(1) > div.fileinput-button.btn:visible, .ui-dialog:visible div#prjProjectForm_attach input[type='file'][name='files[]'], .ui-dialog:visible div.fileupload-buttonbar div.fileinput-button.btn:has-text('내 PC'):visible, .ui-dialog:visible div.fileinput-button.btn:has-text('내 PC'):visible, input[type='file'][name='files[]']",
+      "filePath": "data/live-demo-506781/uploads/프로젝트.pdf",
+      "text": "프로젝트.pdf",
+      "description": "[프로젝트 추가 팝업] '내 PC' 버튼에 '프로젝트.pdf' 첨부",
+      "recordedByEyedropper": true,
+      "targetHtml": "<div class=\"btn fileinput-button\"> <i class=\"ico ico_atch\"></i> <span>내 PC</span> <input type=\"file\" title=\"내 PC\" name=\"files[]\" multiple=\"\"> </div>",
+      "_lastHumanTarget": "내 PC"
+    },
+    {
+      "type": "wait",
+      "ms": 1400,
+      "description": "첨부 파일 업로드 및 목록 반영 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#prjProjectForm_btnCreate:visible, .ui-dialog:visible div.btn_area button.btn.btn_med.btn_pri:has-text('프로젝트 생성'):visible, .ui-dialog:visible div#prjt_information button.btn.btn_med.btn_pri:has-text('프로젝트 생성'):visible",
+      "cursorOffset": {
+        "x": 54,
+        "y": 11
+      },
+      "clickCoords": {
+        "x": 922,
+        "y": 796
+      },
+      "description": "[프로젝트 추가 팝업] '프로젝트 생성' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjProjectForm_btnCreate\" type=\"button\" class=\"btn btn_med btn_pri\"><strong>프로젝트 생성</strong></button>",
+      "_lastHumanTarget": "프로젝트 생성"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[프로젝트 추가 팝업] '프로젝트 생성' 버튼 반응 대기",
+      "_lastHumanTarget": "프로젝트 생성"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#naon-cmm-alert-confirm:visible",
+      "cursorOffset": {
+        "x": 37,
+        "y": 31
+      },
+      "clickCoords": {
+        "x": 947,
+        "y": 151
+      },
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"naon-cmm-alert-confirm\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "click",
+      "selector": "a._prj_name[data-prj-id='PRJ8889439736249348446']:visible, a[data-prj-id='PRJ8889439736249348446']:visible, a._prj_name[data-prj-auth='2']:visible, a[data-prj-auth='2']:visible, a._prj_name[data-display='Y']:visible, a[data-display='Y']:visible, a._prj_name[data-interest-cnt='0']:visible, a[data-interest-cnt='0']:visible, div.sub a._prj_name:has-text('학사제도 및 교육과정 개편 프로젝트'):visible, a._prj_name:has-text('학사제도 및 교육과정 개편 프로젝트'):visible",
+      "cursorOffset": {
+        "x": 130,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 877,
+        "y": 321
+      },
+      "description": "'학사제도 및 교육과정 개편 프로젝트' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" class=\"_prj_name\" data-prj-id=\"PRJ8889439736249348446\" data-prj-auth=\"2\" data-prj-status=\"S\" data-road-map-yn=\"N\" data-share-prj-yn=\"N\" data-display=\"Y\" data-interest-cnt=\"0\">학사제도 및 교육과정 개편 프로젝트</a>",
+      "_lastHumanTarget": "학사제도 및 교육과정 개편 프로젝트"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'학사제도 및 교육과정 개편 프로젝트' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "학사제도 및 교육과정 개편 프로젝트"
+    },
+    {
+      "type": "click",
+      "selector": "button#prjDetailTaskList_btnAddTask:visible, #prjDetailTaskList_btnAddTask:visible, div#prjDetailTaskList_btnToolBar button.btn:has-text('등록'):visible, div.btn_toolbar button.btn:text-is('등록'):visible",
+      "cursorOffset": {
+        "x": 47,
+        "y": 27
+      },
+      "clickCoords": {
+        "x": 1509,
+        "y": 343
+      },
+      "description": "'등록' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjDetailTaskList_btnAddTask\" type=\"button\" class=\"btn\"><i class=\"ico ico_plus\"></i> 등록</button>",
+      "_lastHumanTarget": "등록"
+    },
+    {
+      "type": "wait",
+      "ms": 3100,
+      "description": "'등록' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "등록"
+    },
+    {
+      "type": "type",
+      "selector": "input#prjTaskDetailForm_taskSubject:visible, #prjTaskDetailForm_taskSubject:visible, input[placeholder*='제목을 입력하세요']:visible",
+      "text": "학과별 교육과정 개편 요구사항 수합 및 분석",
+      "cursorOffset": {
+        "x": 171,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 963,
+        "y": 160
+      },
+      "description": "'제목을 입력하세요' 입력창에 '학과별 교육과정 개편 요구사항 수합 및 분석' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input id=\"prjTaskDetailForm_taskSubject\" type=\"text\" class=\"input_txt\" value=\"\" placeholder=\"제목을 입력하세요\">",
+      "_lastHumanTarget": "제목을 입력하세요"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": "button#prjTaskDetailForm_btnSelIncharge:visible, #prjTaskDetailForm_btnSelIncharge:visible, button[title='담당자']:visible, button.btn[title='담당자']:visible",
+      "cursorOffset": {
+        "x": 21,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 1121,
+        "y": 278
+      },
+      "description": "[담당자] '담당자' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjTaskDetailForm_btnSelIncharge\" type=\"button\" title=\"담당자\" class=\"btn btn_ico\"><i class=\"ico ico_user\"><span>담당자</span></i></button>",
+      "_lastHumanTarget": "담당자"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[담당자] '담당자' 버튼 반응 대기",
+      "_lastHumanTarget": "담당자"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible label.rdobtn:has(#prjProjectMemberDialog_member_199078885):visible, .ui-dialog:visible label:has(#prjProjectMemberDialog_member_199078885):visible, .ui-dialog:visible li#prjProjectMemberDialog_li_199078885 label:has-text('임시계정(전임)'):visible, .ui-dialog:visible label:has-text('임시계정(전임)'):visible, .ui-dialog:visible li#prjProjectMemberDialog_li_199078885 label.user_info.rdobtn:has-text('임시계정(전임) 전임교원 정보보안센터'):visible",
+      "cursorOffset": {
+        "x": 28,
+        "y": 44
+      },
+      "clickCoords": {
+        "x": 809,
+        "y": 425
+      },
+      "description": "[담당자 팝업] '임시계정(전임) 전임교원 정보보안센터' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<label class=\"user_info rdobtn\"><input id=\"prjProjectMemberDialog_member_199078885\" name=\"prjProjectMemberDialog_members\" type=\"radio\" value=\"\" title=\"선택\" class=\"input_rdo lst_rdo\">임시계정(전임) 전임교원 정보보안센터</label>",
+      "_lastHumanTarget": "임시계정(전임)"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[담당자 팝업] '임시계정(전임) 전임교원 정보보안센터' 요소 반응 대기",
+      "_lastHumanTarget": "임시계정(전임) 전임교원 정보보안센터"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible div.btn_area button._confirm.btn.btn_med:text-is('확인'):visible, .ui-dialog:visible div#prjProjectMemberDialog_cont button._confirm:visible, .ui-dialog:visible button._confirm:visible, .ui-dialog:visible div#prjProjectMemberDialog_cont button._confirm.btn.btn_med:has-text('확인'):visible, .ui-dialog:visible div#prjProjectMemberDialog_cont button._confirm:has-text('확인'):visible",
+      "cursorOffset": {
+        "x": 32,
+        "y": 31
+      },
+      "clickCoords": {
+        "x": 928,
+        "y": 708
+      },
+      "description": "[담당자 팝업] '확인' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"btn btn_med btn_pri _confirm\"><strong>확인</strong></button>",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "[담당자 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "click",
+      "selector": "input#prjTaskDetailForm_bgnDe:visible, #prjTaskDetailForm_bgnDe:visible, input[name='bgnDe']:visible, input[title*='시작일']:visible",
+      "cursorOffset": {
+        "x": 228,
+        "y": 24
+      },
+      "clickCoords": {
+        "x": 1657,
+        "y": 296
+      },
+      "description": "[담당자] 'yyyy-mm-dd' 입력창 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input id=\"prjTaskDetailForm_bgnDe\" name=\"bgnDe\" title=\"시작일\" type=\"text\" placeholder=\"yyyy-mm-dd\" class=\"input_date hasDatepicker\" style=\"width:240px;\" readonly=\"\">",
+      "_lastHumanTarget": "시작일"
+    },
+    {
+      "type": "wait",
+      "ms": 300,
+      "description": "[담당자] 'yyyy-mm-dd' 입력창 반응 대기",
+      "_lastHumanTarget": "yyyy-mm-dd"
+    },
+    {
+      "type": "click",
+      "selector": "td.ui-datepicker-days-cell-over.ui-datepicker-current-day a:text-is('30'):visible, div#ui-datepicker-div > table.ui-datepicker-calendar > tbody > tr:nth-of-type(5) > td.ui-datepicker-days-cell-over.ui-datepicker-current-day.ui-datepicker-today[data-handler='selectDay']:nth-of-type(6) > a:visible, a:text-is('30'):visible, div#ui-datepicker-div a.ui-state-default:has-text('30'):visible, div#ui-datepicker-div a.ui-state-default.ui-state-highlight:has-text('30'):visible",
+      "cursorOffset": {
+        "x": 13,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 1623,
+        "y": 519
+      },
+      "description": "'30' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a class=\"ui-state-default ui-state-highlight ui-state-active ui-state-hover\" href=\"#\">30</a>",
+      "_lastHumanTarget": "30"
+    },
+    {
+      "type": "wait",
+      "ms": 300,
+      "description": "'30' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "30"
+    },
+    {
+      "type": "click",
+      "selector": "input#prjTaskDetailForm_endDe:visible, #prjTaskDetailForm_endDe:visible, input[name='endDe']:visible, input[title*='완료기한']:visible",
+      "cursorOffset": {
+        "x": 214,
+        "y": 21
+      },
+      "clickCoords": {
+        "x": 1643,
+        "y": 362
+      },
+      "description": "[요청자] 'yyyy-mm-dd' 입력창 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input id=\"prjTaskDetailForm_endDe\" name=\"endDe\" title=\"완료기한\" type=\"text\" placeholder=\"yyyy-mm-dd\" class=\"input_date hasDatepicker\" style=\"width:240px;\" readonly=\"\">",
+      "_lastHumanTarget": "완료기한"
+    },
+    {
+      "type": "wait",
+      "ms": 300,
+      "description": "[요청자] 'yyyy-mm-dd' 입력창 반응 대기",
+      "_lastHumanTarget": "yyyy-mm-dd"
+    },
+    {
+      "type": "click",
+      "selector": "a.ui-datepicker-next.ui-corner-all[data-handler='next']:visible, a[data-handler='next']:visible, a.ui-datepicker-next.ui-corner-all[data-event='click']:visible, a[data-event='click']:visible, a.ui-datepicker-next[title='다음달']:visible, a[title='다음달']:visible, a.ui-datepicker-next.ui-datepicker-next-hover[data-handler='next']:visible, a.ui-datepicker-next.ui-datepicker-next-hover[data-event='click']:visible, a.ui-datepicker-next.ui-corner-all[title='다음달']:visible, a.ui-datepicker-next.ui-corner-all:has-text('다음달'):visible",
+      "cursorOffset": {
+        "x": 10,
+        "y": 10
+      },
+      "clickCoords": {
+        "x": 1655,
+        "y": 400
+      },
+      "description": "'다음달' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a class=\"ui-datepicker-next ui-corner-all ui-state-hover ui-datepicker-next-hover\" data-handler=\"next\" data-event=\"click\" title=\"다음달\"><span class=\"ui-icon ui-icon-circle-triangle-e\">다음달</span></a>",
+      "_lastHumanTarget": "다음달"
+    },
+    {
+      "type": "wait",
+      "ms": 300,
+      "description": "'다음달' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "다음달"
+    },
+    {
+      "type": "click",
+      "selector": "div#ui-datepicker-div > table.ui-datepicker-calendar > tbody > tr:nth-of-type(2) > td[data-handler='selectDay']:nth-of-type(6) > a:visible, a:text-is('13'):visible, div#ui-datepicker-div a.ui-state-default:has-text('13'):visible, div#ui-datepicker-div a.ui-state-default.ui-state-hover:has-text('13'):visible",
+      "cursorOffset": {
+        "x": 5,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 1615,
+        "y": 496
+      },
+      "description": "'13' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a class=\"ui-state-default ui-state-hover\" href=\"#\">13</a>",
+      "_lastHumanTarget": "13"
+    },
+    {
+      "type": "wait",
+      "ms": 300,
+      "description": "'13' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "13"
+    },
+    {
+      "type": "click",
+      "selector": "div#prjTaskDetailForm_priorityOrder div.combobox button.select_code:text-is('보통'):visible, div#prjTaskDetailForm_priorityOrder button.select_code:has-text('보통'):visible, div#prjTaskDetailForm_priorityOrder > button.select_code:visible, div#prjTaskDetailForm_priorityOrder button.select_code:visible, div.combobox button.select_code:text-is('보통'):visible, button.select_code:has-text('보통'):visible",
+      "cursorOffset": {
+        "x": 42,
+        "y": 14
+      },
+      "clickCoords": {
+        "x": 1471,
+        "y": 412
+      },
+      "description": "[배정시간] '보통' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" data-toggle=\"dropdown\" class=\"select_code\"><span class=\"label label_lv label_none\">보통</span></button>",
+      "_lastHumanTarget": "보통"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[배정시간] '보통' 버튼 반응 대기",
+      "_lastHumanTarget": "보통"
+    },
+    {
+      "type": "click",
+      "selector": "div#prjTaskDetailForm_priorityOrder label[for='priority1']:visible, label[for='priority1']:visible, ul.drop_menu label:text-is('높음'):visible, label:text-is('높음'):visible, div#prjTaskDetailForm_priorityOrder > ul.drop_menu > li:nth-of-type(2) > label:visible",
+      "cursorOffset": {
+        "x": 32,
+        "y": 8
+      },
+      "clickCoords": {
+        "x": 1462,
+        "y": 476
+      },
+      "description": "[배정시간] '높음' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<label for=\"priority1\"><span class=\"label label_lv label_none\">높음</span></label>",
+      "_lastHumanTarget": "높음"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[배정시간] '높음' 요소 반응 대기",
+      "_lastHumanTarget": "높음"
+    },
+    {
+      "type": "type",
+      "selector": "div[data-document-fixed-width='false']:visible, div[data-document-padding-top='18']:visible, div[data-document-padding-bottom='18']:visible, div[data-document-padding-left='23']:visible, div[data-document-padding-right='23']:visible, [role='textbox'].se-contents:visible",
+      "text": "각 학과별 개편 의견서를 수합하여 결과 보고서 초안을 작성해 주세요.",
+      "editorParaIndex": 0,
+      "cursorOffset": {
+        "x": 397,
+        "y": 91
+      },
+      "clickCoords": {
+        "x": 1175,
+        "y": 690
+      },
+      "description": "'에디터 본문' 입력 영역에 '각 학과별 개편 의견서를 수합하여 결과 보고서 초안을 작성해 주세요.' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<div class=\"se-contents\" role=\"textbox\" data-document-fixed-width=\"false\" data-document-padding-top=\"18\" data-document-padding-bottom=\"18\" data-document-padding-left=\"23\" data-document-padding-right=\"23\"><p id=\"se_17be25ca-44a8-4dc0-8936-9326e7ab23f5\" style=\"margin: 0px; display: block; overflow-wrap: break-word;\">각 학과별 개편 의견서를 수합하여 결과 보고서 초안을 작성해 주</div>",
+      "_lastHumanTarget": "에디터 본문"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": "button[name='prjTaskDetailForm_btnSave']:visible, div.btn_area button.btn.btn_med.btn_pri:text-is('저장'):visible, div#prjTaskDetailForm_content button.btn.btn_med.btn_pri:has-text('저장'):visible, button.btn.btn_med.btn_pri:has-text('저장'):visible",
+      "cursorOffset": {
+        "x": 40,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 1243,
+        "y": 900
+      },
+      "description": "'저장' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button name=\"prjTaskDetailForm_btnSave\" type=\"button\" class=\"btn btn_med btn_pri\" data-save-type=\"once\"><strong>저장</strong></button>",
+      "_lastHumanTarget": "저장"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'저장' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "저장"
+    },
+    {
+      "type": "click",
+      "selector": "button#prjTaskDetailInfo_btnClose:visible, #prjTaskDetailInfo_btnClose:visible, button.btn_close[title='닫기']:visible, button[title='닫기']:visible",
+      "cursorOffset": {
+        "x": 10,
+        "y": 11
+      },
+      "clickCoords": {
+        "x": 1901,
+        "y": 23
+      },
+      "description": "'닫기' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjTaskDetailInfo_btnClose\" type=\"button\" title=\"닫기\" class=\"btn_close\"><span>닫기</span></button>",
+      "_lastHumanTarget": "닫기"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'닫기' 버튼 반응 대기",
+      "_lastHumanTarget": "닫기"
+    },
+    {
+      "type": "click",
+      "selector": "tbody#prjDetailTaskList_tbody a.task_subject[data-task-id='TSK01m65j6956y8vqghe0ynypmfm1']:visible, a.task_subject[data-task-id='TSK01m65j6956y8vqghe0ynypmfm1']:visible, tbody#prjDetailTaskList_tbody a[data-task-id='TSK01m65j6956y8vqghe0ynypmfm1']:visible, a[data-task-id='TSK01m65j6956y8vqghe0ynypmfm1']:visible, tbody#prjDetailTaskList_tbody a.task_subject[data-prj-id='PRJ8889439736249348446']:visible, a.task_subject[data-prj-id='PRJ8889439736249348446']:visible, tbody#prjDetailTaskList_tbody a[data-prj-id='PRJ8889439736249348446']:visible, a[data-prj-id='PRJ8889439736249348446']:visible, tbody#prjDetailTaskList_tbody a.task_subject:has-text('학과별 교육과정 개편 요구사항 수합 및 분석'):visible, a.task_subject:has-text('학과별 교육과정 개편 요구사항 수합 및 분석'):visible",
+      "cursorOffset": {
+        "x": 77,
+        "y": 9
+      },
+      "clickCoords": {
+        "x": 914,
+        "y": 420
+      },
+      "description": "'학과별 교육과정 개편 요구사항 수합 및 ' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" data-task-id=\"TSK01m65j6956y8vqghe0ynypmfm1\" data-prj-id=\"PRJ8889439736249348446\" class=\"task_subject\">학과별 교육과정 개편 요구사항 수합 및 분석</a>",
+      "_lastHumanTarget": "학과별 교육과정 개편 요구사항 수합 및 분석"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'학과별 교육과정 개편 요구사항 수합 및 ' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "학과별 교육과정 개편 요구사항 수합 및"
+    },
+    {
+      "type": "click",
+      "selector": "button#prjTaskDetailInfo_btnAddChildTask:visible, #prjTaskDetailInfo_btnAddChildTask:visible, div#prjTaskDetailInfo_underTaskBox button.btn_add:has-text('추가'):visible, div#prjTaskDetailInfo_underTaskBox button.btn_add[title='추가']:visible, div#prjTaskDetailInfo_underTaskBox button[title='추가']:visible, div.fr button.btn_add:text-is('추가'):visible",
+      "cursorOffset": {
+        "x": 45,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 1854,
+        "y": 631
+      },
+      "description": "'추가' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjTaskDetailInfo_btnAddChildTask\" type=\"button\" title=\"추가\" class=\"btn_add\" style=\"\"><span>추가</span></button>",
+      "_lastHumanTarget": "추가"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'추가' 버튼 반응 대기",
+      "_lastHumanTarget": "추가"
+    },
+    {
+      "type": "type",
+      "selector": "input#prjTaskDetailForm_taskSubject:visible, #prjTaskDetailForm_taskSubject:visible, input[placeholder*='제목을 입력하세요']:visible",
+      "text": "학과별 개편 의견서 취합표 작성",
+      "cursorOffset": {
+        "x": 173,
+        "y": 14
+      },
+      "clickCoords": {
+        "x": 965,
+        "y": 158
+      },
+      "description": "'제목을 입력하세요' 입력창에 '학과별 개편 의견서 취합표 작성' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input id=\"prjTaskDetailForm_taskSubject\" type=\"text\" class=\"input_txt\" value=\"\" placeholder=\"제목을 입력하세요\">",
+      "_lastHumanTarget": "제목을 입력하세요"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": "button#prjTaskDetailForm_btnSelIncharge:visible, #prjTaskDetailForm_btnSelIncharge:visible, button[title='담당자']:visible, button.btn[title='담당자']:visible",
+      "cursorOffset": {
+        "x": 14,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 1114,
+        "y": 272
+      },
+      "description": "[담당자] '담당자' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjTaskDetailForm_btnSelIncharge\" type=\"button\" title=\"담당자\" class=\"btn btn_ico\"><i class=\"ico ico_user\"><span>담당자</span></i></button>",
+      "_lastHumanTarget": "담당자"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[담당자] '담당자' 버튼 반응 대기",
+      "_lastHumanTarget": "담당자"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible label.rdobtn:has(#prjProjectMemberDialog_member_975287882):visible, .ui-dialog:visible label:has(#prjProjectMemberDialog_member_975287882):visible, .ui-dialog:visible li#prjProjectMemberDialog_li_975287882 label:has-text('김병훈'):visible, .ui-dialog:visible label:has-text('김병훈'):visible, .ui-dialog:visible li#prjProjectMemberDialog_li_975287882 label.user_info.rdobtn:has-text('김병훈 담당 사무처'):visible",
+      "cursorOffset": {
+        "x": 58,
+        "y": 49
+      },
+      "clickCoords": {
+        "x": 932,
+        "y": 430
+      },
+      "description": "[담당자 팝업] '김병훈 담당 사무처' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<label class=\"user_info rdobtn\"><input id=\"prjProjectMemberDialog_member_975287882\" name=\"prjProjectMemberDialog_members\" type=\"radio\" value=\"\" title=\"선택\" class=\"input_rdo lst_rdo\">김병훈 담당 사무처</label>",
+      "_lastHumanTarget": "김병훈"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[담당자 팝업] '김병훈 담당 사무처' 요소 반응 대기",
+      "_lastHumanTarget": "김병훈 담당 사무처"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible div.btn_area button._confirm.btn.btn_med:text-is('확인'):visible, .ui-dialog:visible div#prjProjectMemberDialog_cont button._confirm:visible, .ui-dialog:visible button._confirm:visible, .ui-dialog:visible div#prjProjectMemberDialog_cont button._confirm.btn.btn_med:has-text('확인'):visible, .ui-dialog:visible div#prjProjectMemberDialog_cont button._confirm:has-text('확인'):visible",
+      "cursorOffset": {
+        "x": 15,
+        "y": 25
+      },
+      "clickCoords": {
+        "x": 911,
+        "y": 702
+      },
+      "description": "[담당자 팝업] '확인' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"btn btn_med btn_pri _confirm\"><strong>확인</strong></button>",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "[담당자 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "click",
+      "selector": "input#prjTaskDetailForm_bgnDe:visible, #prjTaskDetailForm_bgnDe:visible, input[name='bgnDe']:visible, input[title*='시작일']:visible",
+      "cursorOffset": {
+        "x": 222,
+        "y": 25
+      },
+      "clickCoords": {
+        "x": 1651,
+        "y": 285
+      },
+      "description": "[담당자] 'yyyy-mm-dd' 입력창 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input id=\"prjTaskDetailForm_bgnDe\" name=\"bgnDe\" title=\"시작일\" type=\"text\" placeholder=\"yyyy-mm-dd\" class=\"input_date hasDatepicker\" style=\"width:240px;\" readonly=\"\">",
+      "_lastHumanTarget": "시작일"
+    },
+    {
+      "type": "wait",
+      "ms": 300,
+      "description": "[담당자] 'yyyy-mm-dd' 입력창 반응 대기",
+      "_lastHumanTarget": "yyyy-mm-dd"
+    },
+    {
+      "type": "click",
+      "selector": "td.ui-datepicker-days-cell-over.ui-datepicker-current-day a:text-is('30'):visible, div#ui-datepicker-div > table.ui-datepicker-calendar > tbody > tr:nth-of-type(5) > td.ui-datepicker-days-cell-over.ui-datepicker-current-day.ui-datepicker-today[data-handler='selectDay']:nth-of-type(6) > a:visible, a:text-is('30'):visible, div#ui-datepicker-div a.ui-state-default:has-text('30'):visible, div#ui-datepicker-div a.ui-state-default.ui-state-highlight:has-text('30'):visible",
+      "cursorOffset": {
+        "x": 5,
+        "y": 10
+      },
+      "clickCoords": {
+        "x": 1615,
+        "y": 505
+      },
+      "description": "'30' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a class=\"ui-state-default ui-state-highlight ui-state-active ui-state-hover\" href=\"#\">30</a>",
+      "_lastHumanTarget": "30"
+    },
+    {
+      "type": "wait",
+      "ms": 300,
+      "description": "'30' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "30"
+    },
+    {
+      "type": "click",
+      "selector": "input#prjTaskDetailForm_endDe:visible, #prjTaskDetailForm_endDe:visible, input[name='endDe']:visible, input[title*='완료기한']:visible",
+      "cursorOffset": {
+        "x": 220,
+        "y": 10
+      },
+      "clickCoords": {
+        "x": 1649,
+        "y": 326
+      },
+      "description": "[요청자] 'yyyy-mm-dd' 입력창 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input id=\"prjTaskDetailForm_endDe\" name=\"endDe\" title=\"완료기한\" type=\"text\" placeholder=\"yyyy-mm-dd\" class=\"input_date hasDatepicker\" style=\"width:240px;\" readonly=\"\">",
+      "_lastHumanTarget": "완료기한"
+    },
+    {
+      "type": "wait",
+      "ms": 300,
+      "description": "[요청자] 'yyyy-mm-dd' 입력창 반응 대기",
+      "_lastHumanTarget": "yyyy-mm-dd"
+    },
+    {
+      "type": "click",
+      "selector": "a.ui-datepicker-next.ui-corner-all[data-handler='next']:visible, a[data-handler='next']:visible, a.ui-datepicker-next.ui-corner-all[data-event='click']:visible, a[data-event='click']:visible, a.ui-datepicker-next[title='다음달']:visible, a[title='다음달']:visible, a.ui-datepicker-next.ui-datepicker-next-hover[data-handler='next']:visible, a.ui-datepicker-next.ui-datepicker-next-hover[data-event='click']:visible, a.ui-datepicker-next.ui-corner-all[title='다음달']:visible, a.ui-datepicker-next.ui-corner-all:has-text('다음달'):visible",
+      "cursorOffset": {
+        "x": 15,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 1660,
+        "y": 378
+      },
+      "description": "'다음달' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a class=\"ui-datepicker-next ui-corner-all ui-state-hover ui-datepicker-next-hover\" data-handler=\"next\" data-event=\"click\" title=\"다음달\"><span class=\"ui-icon ui-icon-circle-triangle-e\">다음달</span></a>",
+      "_lastHumanTarget": "다음달"
+    },
+    {
+      "type": "wait",
+      "ms": 300,
+      "description": "'다음달' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "다음달"
+    },
+    {
+      "type": "click",
+      "selector": "div#ui-datepicker-div > table.ui-datepicker-calendar > tbody > tr:nth-of-type(1) > td[data-handler='selectDay']:nth-of-type(6) > a:visible, a:text-is('6'):visible, div#ui-datepicker-div a.ui-state-default:has-text('6'):visible, div#ui-datepicker-div a.ui-state-default.ui-state-hover:has-text('6'):visible",
+      "cursorOffset": {
+        "x": 9,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 1619,
+        "y": 443
+      },
+      "description": "'6' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a class=\"ui-state-default ui-state-hover\" href=\"#\">6</a>",
+      "_lastHumanTarget": "6"
+    },
+    {
+      "type": "wait",
+      "ms": 300,
+      "description": "'6' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "6"
+    },
+    {
+      "type": "click",
+      "selector": "button[name='prjTaskDetailForm_btnSave']:visible, div.btn_area button.btn.btn_med.btn_pri:text-is('저장'):visible, div#prjTaskDetailForm_content button.btn.btn_med.btn_pri:has-text('저장'):visible, button.btn.btn_med.btn_pri:has-text('저장'):visible",
+      "cursorOffset": {
+        "x": 28,
+        "y": 30
+      },
+      "clickCoords": {
+        "x": 1231,
+        "y": 912
+      },
+      "description": "'저장' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button name=\"prjTaskDetailForm_btnSave\" type=\"button\" class=\"btn btn_med btn_pri\" data-save-type=\"once\"><strong>저장</strong></button>",
+      "_lastHumanTarget": "저장"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'저장' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "저장"
+    },
+    {
+      "type": "click",
+      "selector": "button#prjTaskDetailInfo_btnClose:visible, #prjTaskDetailInfo_btnClose:visible, button.btn_close[title='닫기']:visible, button[title='닫기']:visible",
+      "cursorOffset": {
+        "x": 15,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 1906,
+        "y": 24
+      },
+      "description": "'닫기' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjTaskDetailInfo_btnClose\" type=\"button\" title=\"닫기\" class=\"btn_close\"><span>닫기</span></button>",
+      "_lastHumanTarget": "닫기"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'닫기' 버튼 반응 대기",
+      "_lastHumanTarget": "닫기"
+    },
+    {
+      "type": "click",
+      "selector": "button#prjDetailTaskList_btnTreeView:visible, #prjDetailTaskList_btnTreeView:visible, div.btn_toolbar button.btn_txt.btn:has-text('트리보기'):visible, div#prjDetailTaskList_btnToolBar button.btn_txt.btn:has-text('트리보기'):visible",
+      "cursorOffset": {
+        "x": 49,
+        "y": 22
+      },
+      "clickCoords": {
+        "x": 1580,
+        "y": 338
+      },
+      "description": "'트리보기' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjDetailTaskList_btnTreeView\" type=\"button\" class=\"btn btn_txt\" title=\"트리보기는 상/하위 일감 관계를 계층형으로 목록에 표기합니다. 다시 클릭하면 바로 이전에 정렬한 목록으로 표시됩니다.\"> <i class=\"ico ico_tree\"></i> 트리보기 </button>",
+      "_lastHumanTarget": "트리보기"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'트리보기' 버튼 반응 대기",
+      "_lastHumanTarget": "트리보기"
+    },
+    {
+      "type": "click",
+      "selector": "tbody#prjDetailTaskList_tbody a.task_subject[data-task-id='TSK01m65j6956y8vqghe0ynypmfm1']:visible, a.task_subject[data-task-id='TSK01m65j6956y8vqghe0ynypmfm1']:visible, tbody#prjDetailTaskList_tbody a[data-task-id='TSK01m65j6956y8vqghe0ynypmfm1']:visible, a[data-task-id='TSK01m65j6956y8vqghe0ynypmfm1']:visible, tbody#prjDetailTaskList_tbody a.task_subject[data-prj-id='PRJ8889439736249348446']:visible, a.task_subject[data-prj-id='PRJ8889439736249348446']:visible, tbody#prjDetailTaskList_tbody a[data-prj-id='PRJ8889439736249348446']:visible, a[data-prj-id='PRJ8889439736249348446']:visible, tbody#prjDetailTaskList_tbody a.task_subject:has-text('학과별 교육과정 개편 요구사항 수합 및 분석'):visible, a.task_subject:has-text('학과별 교육과정 개편 요구사항 수합 및 분석'):visible, tbody#prjDetailTaskList_tbody > tr.overdue.prjDetailTaskListPrint_dataTR:nth-of-type(1) > td.sub:nth-of-type(7) > a.task_subject[data-prj-id='PRJ8889439736249348446']:nth-of-type(1):visible",
+      "cursorOffset": {
+        "x": 180,
+        "y": 14
+      },
+      "clickCoords": {
+        "x": 1021,
+        "y": 425
+      },
+      "description": "'학과별 교육과정 개편 요구사항 수합 및 ' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" data-task-id=\"TSK01m65j6956y8vqghe0ynypmfm1\" data-prj-id=\"PRJ8889439736249348446\" class=\"task_subject\">학과별 교육과정 개편 요구사항 수합 및 분석</a>",
+      "_lastHumanTarget": "학과별 교육과정 개편 요구사항 수합 및 분석"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'학과별 교육과정 개편 요구사항 수합 및 ' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "학과별 교육과정 개편 요구사항 수합 및"
+    },
+    {
+      "type": "click",
+      "selector": "button#prjTaskDetailInfo_btnModify:visible, #prjTaskDetailInfo_btnModify:visible, button[name='prjTaskDetailInfo_btnModify']:visible, div.btn_toolbar button.btn:text-is('수정'):visible",
+      "cursorOffset": {
+        "x": 24,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 776,
+        "y": 68
+      },
+      "description": "'수정' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjTaskDetailInfo_btnModify\" name=\"prjTaskDetailInfo_btnModify\" type=\"button\" class=\"btn\" style=\"\">수정</button>",
+      "_lastHumanTarget": "수정"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'수정' 버튼 반응 대기",
+      "_lastHumanTarget": "수정"
+    },
+    {
+      "type": "dragAndDrop",
+      "sourceSelector": "div#prjTaskUpdateForm_slider > a.ui-slider-handle:visible",
+      "targetSelector": "div#prjTaskUpdateForm_slider:visible, #prjTaskUpdateForm_slider:visible, div.slider_select div.ui-slider.ui-slider-horizontal:visible, div.ui-slider.ui-slider-horizontal:visible",
+      "dragFromCoords": {
+        "x": 1724,
+        "y": 217
+      },
+      "dragToCoords": {
+        "x": 1779,
+        "y": 215
+      },
+      "description": "a 요소을(를) #prjTaskUpdateForm_slider (div)으로 드래그 앤 드롭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<div id=\"prjTaskUpdateForm_slider\" class=\"ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all\" aria-disabled=\"false\"></div>",
+      "selector": "div#prjTaskUpdateForm_slider > a.ui-slider-handle:visible",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "wait",
+      "ms": 1200,
+      "description": "드래그 앤 드롭 반영 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": "select#prjTaskUpdateForm_comptRate:visible, #prjTaskUpdateForm_comptRate:visible, select[name='comptRate']:visible",
+      "text": "80%",
+      "cursorOffset": {
+        "x": 24,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 1834,
+        "y": 215
+      },
+      "description": "'0% 5% 10% 15% 20% 25% ' 요소에서 '80%' 선택",
+      "recordedByEyedropper": true,
+      "targetHtml": "<select name=\"comptRate\" id=\"prjTaskUpdateForm_comptRate\" class=\"frm_select\">0% 5% 10% 15% 20% 25% 30% 35% 40% 4</select>",
+      "_lastHumanTarget": "0% 5% 10% 15% 20% 25%"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'0% 5% 10% 15% 20% 25% ' 요소에서 '80%' 선택 반응 대기",
+      "_lastHumanTarget": "0% 5% 10% 15% 20% 25%"
+    },
+    {
+      "type": "upload",
+      "selector": "div#prjTaskUpdateForm_upload div.fileupload-buttonbar div.fileinput-button.btn:has-text('내 PC'):visible, div#prjTaskUpdateForm_upload div.fileinput-button.btn:has-text('내 PC'):visible, div#prjTaskUpdateForm_upload > div.fileupload-buttonbar:nth-of-type(1) > div.fileinput-button.btn:visible, div#prjTaskUpdateForm_upload input[type='file'][name='files[]'], div.fileupload-buttonbar div.fileinput-button.btn:has-text('내 PC'):visible, div.fileinput-button.btn:has-text('내 PC'):visible, input[type='file'][name='files[]']",
+      "filePath": "data/live-demo-506781/uploads/프로젝트.pdf",
+      "text": "프로젝트.pdf",
+      "description": "'내 PC' 버튼에 '프로젝트.pdf' 첨부",
+      "recordedByEyedropper": true,
+      "targetHtml": "<div class=\"btn fileinput-button\"> <i class=\"ico ico_atch\"></i> <span>내 PC</span> <input type=\"file\" title=\"내 PC\" name=\"files[]\" multiple=\"\"> </div>",
+      "_lastHumanTarget": "내 PC"
+    },
+    {
+      "type": "wait",
+      "ms": 1400,
+      "description": "첨부 파일 업로드 및 목록 반영 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": "button#prjTaskUpdateForm_btnSave:visible, #prjTaskUpdateForm_btnSave:visible, form#prjTaskUpdateForm_infoForm div.btn_area button.btn.btn_med.btn_pri:text-is('저장'):visible, form#prjTaskUpdateForm_infoForm > div.task_data_box.task_opinion_box:nth-of-type(7) > div.box_cont:nth-of-type(2) > div.btn_area:nth-of-type(2) > button.btn.btn_med.btn_pri:nth-of-type(1):visible, form#prjTaskUpdateForm_infoForm button.btn.btn_med.btn_pri:has-text('저장'):visible, div.btn_area button.btn.btn_med.btn_pri:text-is('저장'):visible, button.btn.btn_med.btn_pri:has-text('저장'):visible",
+      "cursorOffset": {
+        "x": 17,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 1277,
+        "y": 836
+      },
+      "description": "'저장' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjTaskUpdateForm_btnSave\" type=\"button\" class=\"btn btn_med btn_pri\"><strong>저장</strong></button>",
+      "_lastHumanTarget": "저장"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'저장' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "저장"
+    },
+    {
+      "type": "type",
+      "selector": "block-editor#NaonCommentEditor8155_blocknote div.tiptap.ProseMirror.bn-editor[contenteditable='true']:visible, div.tiptap.ProseMirror.bn-editor[contenteditable='true']:visible, block-editor#NaonCommentEditor8155_blocknote > div.block-editor-container.light.web-component > div.editor-content:nth-of-type(2) > div.bn-root.bn-container.light[data-color-scheme='light'] > div.tiptap.ProseMirror.bn-editor:visible, div[contenteditable='true']:visible",
+      "text": "학과별 취합 1차 완료하여 중간 산출물 파일을 첨부합니다.",
+      "editorParaIndex": 0,
+      "cursorOffset": {
+        "x": 47,
+        "y": 23
+      },
+      "clickCoords": {
+        "x": 801,
+        "y": 316
+      },
+      "description": "'에디터 본문' 입력 영역에 '학과별 취합 1차 완료하여 중간 산출물 파일을 첨부합니다.' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<div aria-autocomplete=\"list\" aria-haspopup=\"listbox\" contenteditable=\"true\" role=\"textbox\" tabindex=\"0\" translate=\"no\" class=\"tiptap ProseMirror bn-editor bn-default-styles placeholder-selector-bd68a79c-c4d9-4932-a748-f2f24f9040ac ProseMirror-focused\"><div class=\"bn-block-outer\" data-node-type=\"blockOuter\" data-id=\"d2a40b96-9e4c-41ac-8dbf-481154db533b\">학과별 취합 1차 완료하여 중간 산출물 파일을 첨부합니다.</div>",
+      "_lastHumanTarget": "에디터 본문"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": "button#NaonComponentUploadBtn5423:visible, #NaonComponentUploadBtn5423:visible, div#NaonComponentCommentWrite513 button._fileUploadBtn[title='첨부']:visible, div#NaonComponentCommentWrite513 button[title='첨부']:visible, button[title='첨부']:visible, div#NaonComponentCommentWrite513 button._fileUploadBtn:visible, button._fileUploadBtn:visible",
+      "cursorOffset": {
+        "x": 6,
+        "y": 22
+      },
+      "clickCoords": {
+        "x": 768,
+        "y": 362
+      },
+      "description": "'첨부' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" title=\"첨부\" class=\"btn btn_ico _fileUploadBtn\" tabindex=\"1\" id=\"NaonComponentUploadBtn5423\"> <i class=\"ico ico_atch\"><span>파일 첨부</span></i> </button>",
+      "_lastHumanTarget": "첨부"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'첨부' 버튼 반응 대기",
+      "_lastHumanTarget": "첨부"
+    },
+    {
+      "type": "upload",
+      "selector": ".ui-dialog:visible div#uploadComponentTarget_NaonComponentUploadManager5000 div.fileupload-buttonbar div.fileinput-button.btn:has-text('내 PC'):visible, .ui-dialog:visible div#uploadComponentTarget_NaonComponentUploadManager5000 div.fileinput-button.btn:has-text('내 PC'):visible, div#uploadComponentTarget_NaonComponentUploadManager5000 > div.fileupload-buttonbar:nth-of-type(1) > div.fileinput-button.btn:visible, .ui-dialog:visible div#uploadComponentTarget_NaonComponentUploadManager5000 input[type='file'][name='files[]'], .ui-dialog:visible div.fileupload-buttonbar div.fileinput-button.btn:has-text('내 PC'):visible, .ui-dialog:visible div.fileinput-button.btn:has-text('내 PC'):visible, input[type='file'][name='files[]']",
+      "filePath": "data/live-demo-506781/uploads/중간 산출물.pdf",
+      "text": "중간 산출물.pdf",
+      "description": "[파일 첨부 팝업] '내 PC' 버튼에 '중간 산출물.pdf' 첨부",
+      "recordedByEyedropper": true,
+      "targetHtml": "<div class=\"btn fileinput-button\"> <i class=\"ico ico_atch\"></i> <span>내 PC</span> <input type=\"file\" title=\"내 PC\" name=\"files[]\" multiple=\"\"> </div>",
+      "_lastHumanTarget": "내 PC"
+    },
+    {
+      "type": "wait",
+      "ms": 1400,
+      "description": "첨부 파일 업로드 및 목록 반영 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#naonUploadLayer_NaonComponentUploadManager5000_submitBtn:visible, .ui-dialog:visible div.btn_area button.btn.btn_med.btn_pri:text-is('저장'):visible, .ui-dialog:visible div#naonUploadLayer_NaonComponentUploadManager5000 button.btn.btn_med.btn_pri:has-text('저장'):visible, .ui-dialog:visible button.btn.btn_med.btn_pri:has-text('저장'):visible",
+      "cursorOffset": {
+        "x": 25,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 927,
+        "y": 621
+      },
+      "description": "[파일 첨부 팝업] '저장' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"naonUploadLayer_NaonComponentUploadManager5000_submitBtn\" type=\"submit\" class=\"btn btn_med btn_pri\"><strong>저장</strong></button>",
+      "_lastHumanTarget": "저장"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "[파일 첨부 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "저장"
+    },
+    {
+      "type": "click",
+      "selector": "div#NaonComponentCommentWrite513 > div.comment_tools:nth-of-type(2) > div.tool_rgt:nth-of-type(2) > button.btn_send._writeBtn.btn:visible, div#NaonComponentCommentWrite513 button.btn_send._writeBtn.btn:has-text('등록'):visible, div#NaonComponentCommentWrite513 button.btn_send._writeBtn:has-text('등록'):visible, div.tool_rgt button.btn_send._writeBtn.btn:text-is('등록'):visible, button.btn_send._writeBtn.btn:has-text('등록'):visible",
+      "cursorOffset": {
+        "x": 28,
+        "y": 8
+      },
+      "clickCoords": {
+        "x": 1829,
+        "y": 381
+      },
+      "description": "'등록' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" tabindex=\"0\" class=\"btn btn_send _writeBtn\">등록</button>",
+      "_lastHumanTarget": "등록"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'등록' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "등록"
+    },
+    {
+      "type": "click",
+      "selector": "button#prjTaskDetailInfo_btnClose:visible, #prjTaskDetailInfo_btnClose:visible, button.btn_close[title='닫기']:visible, button[title='닫기']:visible",
+      "cursorOffset": {
+        "x": 8,
+        "y": 11
+      },
+      "clickCoords": {
+        "x": 1899,
+        "y": 23
+      },
+      "description": "'닫기' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjTaskDetailInfo_btnClose\" type=\"button\" title=\"닫기\" class=\"btn_close\"><span>닫기</span></button>",
+      "_lastHumanTarget": "닫기"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'닫기' 버튼 반응 대기",
+      "_lastHumanTarget": "닫기"
+    },
+    {
+      "type": "click",
+      "selector": "ul#prjProjectMenu_tab a[data-tab-idx='3']:visible, a[data-tab-idx='3']:visible, ul.nav.nav_tabs a:has-text('간트차트'):visible, ul#prjProjectMenu_tab > li:nth-of-type(2) > a[data-tab-idx='3']:visible, a:has-text('간트차트'):visible",
+      "cursorOffset": {
+        "x": 88,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 523,
+        "y": 217
+      },
+      "description": "'간트차트' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" data-tab-idx=\"3\">간트차트</a>",
+      "_lastHumanTarget": "간트차트"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'간트차트' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "간트차트"
+    },
+    {
+      "type": "click",
+      "selector": "div.gantt_container > div.gantt_task:nth-of-type(2) > div.gantt_data_area:nth-of-type(2) > div.gantt_bars_area[data-layer='true']:nth-of-type(3) > div.gantt_task_line.gantt_dependent_task:nth-of-type(1) > div.gantt_task_content:nth-of-type(2):visible, div.gantt_task_line.gantt_dependent_task div.gantt_task_content:has-text('80%'):visible",
+      "cursorOffset": {
+        "x": 111,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 877,
+        "y": 432
+      },
+      "description": "'80%' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<div class=\"gantt_task_content\">80%</div>",
+      "_lastHumanTarget": "80%"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'80%' 요소 반응 대기",
+      "_lastHumanTarget": "80%"
+    },
+    {
+      "type": "click",
+      "selector": "div.gantt_container > div.gantt_task:nth-of-type(2) > div.gantt_data_area:nth-of-type(2) > div.gantt_bars_area[data-layer='true']:nth-of-type(3) > div.gantt_task_line.gantt_dependent_task:nth-of-type(2) > div.gantt_task_content:nth-of-type(2):visible",
+      "cursorOffset": {
+        "x": 101,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 867,
+        "y": 466
+      },
+      "description": "'80%' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<div class=\"gantt_task_content\">80%</div>",
+      "_lastHumanTarget": "80%"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'80%' 요소 반응 대기",
+      "_lastHumanTarget": "80%"
+    },
+    {
+      "type": "click",
+      "selector": "button#prjTaskGanttChart_btnWeekView:visible, #prjTaskGanttChart_btnWeekView:visible, div.button_group button.btn:text-is('주간'):visible, div#prjProjectMenu_content button.btn:has-text('주간'):visible",
+      "cursorOffset": {
+        "x": 52,
+        "y": 26
+      },
+      "clickCoords": {
+        "x": 1087,
+        "y": 364
+      },
+      "description": "'주간' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjTaskGanttChart_btnWeekView\" type=\"button\" class=\"btn\">주간</button>",
+      "_lastHumanTarget": "주간"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'주간' 버튼 반응 대기",
+      "_lastHumanTarget": "주간"
+    },
+    {
+      "type": "click",
+      "selector": "button#prjTaskGanttChart_btnMonthView:visible, #prjTaskGanttChart_btnMonthView:visible, div.button_group button.btn:text-is('월간'):visible, div#prjProjectMenu_content button.btn:has-text('월간'):visible",
+      "cursorOffset": {
+        "x": 40,
+        "y": 19
+      },
+      "clickCoords": {
+        "x": 1175,
+        "y": 355
+      },
+      "description": "'월간' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"prjTaskGanttChart_btnMonthView\" type=\"button\" class=\"btn\">월간</button>",
+      "_lastHumanTarget": "월간"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'월간' 버튼 반응 대기",
+      "_lastHumanTarget": "월간"
+    },
+    {
+      "type": "click",
+      "selector": "ul#prjProjectMenu_tab a[data-tab-idx='4']:visible, a[data-tab-idx='4']:visible, ul.nav.nav_tabs a:has-text('일감 첨부파일'):visible, ul#prjProjectMenu_tab > li:nth-of-type(3) > a[data-tab-idx='4']:visible, a:has-text('일감 첨부파일'):visible",
+      "cursorOffset": {
+        "x": 72,
+        "y": 19
+      },
+      "clickCoords": {
+        "x": 652,
+        "y": 220
+      },
+      "description": "'일감 첨부파일' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" data-tab-idx=\"4\">일감 첨부파일</a>",
+      "_lastHumanTarget": "일감 첨부파일"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'일감 첨부파일' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "일감 첨부파일"
+    },
+    {
+      "type": "click",
+      "selector": "a#prjProjectSnb_goActiveLogMain:visible, #prjProjectSnb_goActiveLogMain:visible, li.snb_li a.mn:has-text('활동로그'):visible, div#prjProjectSnb_mscroll a.mn:has-text('활동로그'):visible",
+      "cursorOffset": {
+        "x": 60,
+        "y": 8
+      },
+      "clickCoords": {
+        "x": 60,
+        "y": 437
+      },
+      "description": "'활동로그' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"mn\" id=\"prjProjectSnb_goActiveLogMain\"><i class=\"tico pi9\"></i> 활동로그</a>",
+      "_lastHumanTarget": "활동로그"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'활동로그' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "활동로그"
+    },
+    {
+      "type": "click",
+      "selector": "a#prjMain_project_main_btn:visible, #prjMain_project_main_btn:visible, div.svc a:has-text('프로젝트'):visible",
+      "cursorOffset": {
+        "x": 19,
+        "y": 11
+      },
+      "clickCoords": {
+        "x": 337,
+        "y": 138
+      },
+      "description": "'프로젝트' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" id=\"prjMain_project_main_btn\">프로젝트</a>",
+      "_lastHumanTarget": "프로젝트"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'프로젝트' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "프로젝트"
+    },
+    {
+      "type": "click",
+      "selector": "a#prjMyProjectSnb_goTotalStatus:visible, #prjMyProjectSnb_goTotalStatus:visible, div.mn a.item:has-text('종합 현황'):visible, div#prjMyProjectSnb_mscroll a.item:has-text('종합 현황'):visible",
+      "cursorOffset": {
+        "x": 34,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 92,
+        "y": 258
+      },
+      "description": "'종합 현황' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"item\" id=\"prjMyProjectSnb_goTotalStatus\">종합 현황</a>",
+      "_lastHumanTarget": "종합 현황"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'종합 현황' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "종합 현황"
+    },
+    {
+      "type": "click",
+      "selector": "a#prjMyProjectSnb_goWorkStatus:visible, #prjMyProjectSnb_goWorkStatus:visible, div.mn a.item:has-text('업무 현황'):visible, div#prjMyProjectSnb_mscroll a.item:has-text('업무 현황'):visible",
+      "cursorOffset": {
+        "x": 36,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 94,
+        "y": 294
+      },
+      "description": "'업무 현황' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"item\" id=\"prjMyProjectSnb_goWorkStatus\">업무 현황</a>",
+      "_lastHumanTarget": "업무 현황"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'업무 현황' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "업무 현황"
+    },
+    {
+      "type": "click",
+      "selector": "a#prjMyProjectSnb_goProject:visible, #prjMyProjectSnb_goProject:visible, div.mn a.item:has-text('내 프로젝트'):visible, div#prjMyProjectSnb_mscroll a.item:has-text('내 프로젝트'):visible",
+      "cursorOffset": {
+        "x": 31,
+        "y": 19
+      },
+      "clickCoords": {
+        "x": 89,
+        "y": 329
+      },
+      "description": "'내 프로젝트' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"item\" id=\"prjMyProjectSnb_goProject\">내 프로젝트</a>",
+      "_lastHumanTarget": "내 프로젝트"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'내 프로젝트' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "내 프로젝트"
+    },
+    {
+      "type": "click",
+      "selector": "a#prjMyProjectSnb_goTask:visible, #prjMyProjectSnb_goTask:visible, div.mn a.item:has-text('내 일감'):visible, div#prjMyProjectSnb_mscroll a.item:has-text('내 일감'):visible",
+      "cursorOffset": {
+        "x": 32,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 90,
+        "y": 357
+      },
+      "description": "'내 일감' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"item\" id=\"prjMyProjectSnb_goTask\">내 일감</a>",
+      "_lastHumanTarget": "내 일감"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'내 일감' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "내 일감"
+    },
+    {
+      "type": "click",
+      "selector": "a#prjMyProjectSnb_goProject:visible, #prjMyProjectSnb_goProject:visible, div.mn a.item:has-text('내 프로젝트'):visible, div#prjMyProjectSnb_mscroll a.item:has-text('내 프로젝트'):visible",
+      "cursorOffset": {
+        "x": 18,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 76,
+        "y": 326
+      },
+      "description": "'내 프로젝트' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"item\" id=\"prjMyProjectSnb_goProject\">내 프로젝트</a>",
+      "_lastHumanTarget": "내 프로젝트"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'내 프로젝트' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "내 프로젝트"
+    },
+    {
+      "type": "click",
+      "selector": "button.btn_menu:has-text('메뉴'):visible, button.btn_menu[title='메뉴']:visible, div.prjt_box.prjt_ing > div.pj_sub:nth-of-type(1) > div.sub_optn:nth-of-type(1) > div.optn > div.btn_drop > button.btn_menu:visible",
+      "cursorOffset": {
+        "x": 14,
+        "y": 23
+      },
+      "clickCoords": {
+        "x": 1053,
+        "y": 295
+      },
+      "description": "'메뉴' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" title=\"메뉴\" data-toggle=\"dropdown\" class=\"btn_menu\"><i class=\"ico ico_menu\"><span>메뉴</span></i></button>",
+      "_lastHumanTarget": "메뉴"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'메뉴' 버튼 반응 대기",
+      "_lastHumanTarget": "메뉴"
+    },
+    {
+      "type": "wait",
+      "ms": 2000,
+      "description": "최종 시연 결과 화면 클로즈업 확인 대기",
+      "_lastHumanTarget": ""
+    }
+  ]
+}

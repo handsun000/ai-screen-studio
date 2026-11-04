@@ -54,6 +54,7 @@ __pycache__/
 
 # Debug Screenshots, Verification Frames, Uploaded Attachments & Test Scenarios
 data/**/*.png
+!data/_site_brands/**/*.png
 data/**/*.jpg
 data/**/*.jpeg
 data/**/*.webm
@@ -61,6 +62,10 @@ data/**/*.mp3
 data/**/*.wav
 data/**/*.orig
 data/**/*.undo
+data/**/*.orig.json
+data/**/*.undo.json
+data/**/*.body.json
+data/**/rendered.base.json
 data/**/audio/
 data/**/uploads/
 data/**/narration.json
@@ -71,6 +76,7 @@ data/_uploads/
 data/ai-usage.json
 data/test-*/
 data/live-demo-*/
+data/merged-demo-*/
 data/visual-test-*/
 data/msg/
 data/scd-*/

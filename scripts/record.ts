@@ -9,6 +9,8 @@ import type { BrowsePlan, BrowsePlanAction, Moment, MomentsFile, BoundingBox } f
 import { sanitizeBrowsePlan, splitSelectorCandidates } from "../src/services/planSanitizer";
 import { selfHealElement, saveHealedPlan } from "../src/services/elementSelfHealer";
 import { findExistingAuthSession, syncAuthSession } from "../src/services/authManager";
+import { captureSiteBrandFromLivePage } from "../src/services/siteBrandService";
+import { generateNarrationScript } from "../src/services/narrationService";
 
 // Universal runtime tracking for created entities across scenarios
 const currentRuntimeVariables = new Map<string, string>();
@@ -615,17 +617,9 @@ async function getLocator(
     .replace(/\.select2-(?:focused|active|dropdown-open|container-active|drop-above)\b/g, "");
 
   // Filter out dummy onclick='return false;' candidates, generic :has(.ico_*), expand ephemeral entity IDs, and prioritize structural :nth-of-type / :has-text ahead of generic [title]
-  const rawSplitCandidates = splitSelectorCandidates(selector)
-    .filter((p) => !/\[onclick\*=['"]?(?:return\s+(?:false|true)|javascript:|void\s*\(0\))/i.test(p))
-    .map((p) => {
-      if (
-        p.startsWith("#header ") &&
-        /(input\[name|textarea|a:has-text\(['"]결재선|button:has-text\(['"]결재선|button\.btn\.btn_pri|a\.sub\._doc|#eapDocReg_|#eapWorkSelect_|eapHeader_option|_search_option_hide|\._eapSearch|\.tbl_lst|\.lst_type1)/i.test(p)
-      ) {
-        return p.replace(/^#header\s+/, "");
-      }
-      return p;
-    });
+  const rawSplitCandidates = splitSelectorCandidates(selector).filter(
+    (p) => !/\[onclick\*=['"]?(?:return\s+(?:false|true)|javascript:|void\s*\(0\))/i.test(p)
+  );
   const nonIconCandidates = rawSplitCandidates.filter((p) => !/:has\(\.ico_[a-zA-Z0-9_-]+\)/i.test(p));
   const baseCandidates = nonIconCandidates.length > 0 ? nonIconCandidates : rawSplitCandidates;
   const expandedCandidates: string[] = [];
@@ -872,25 +866,26 @@ async function getLocator(
       }
     }
 
-    // 2-B. Check floating body-level popovers (Datepicker, Timepicker, Autocomplete, Select2) that render ABOVE .ui-dialog outside the dialog DOM tree
+    // 2-B. Check floating body-level popovers (date/time pickers, autocomplete/select dropdowns, context menus)
+    // that render on <body> outside the .ui-dialog DOM subtree
     for (const s of dialogSelectors) {
-      const cleanS = s.replace(/:first\b/g, "").replace(/:last\b/g, "").trim();
+      const cleanS = s
+        .replace(/^\.ui-dialog:visible\s*/, "")
+        .replace(/^\.modal:visible\s*/, "")
+        .replace(/:first\b/g, "")
+        .replace(/:last\b/g, "")
+        .trim();
       if (!cleanS) continue;
-      if (
-        cleanS.includes("datepicker") ||
-        cleanS.includes("timepicker") ||
-        cleanS.includes("ui-state-default") ||
-        cleanS.includes("autocomplete") ||
-        cleanS.includes("select2")
-      ) {
-        try {
-          const floatLoc = page.locator(cleanS).first();
-          if (await floatLoc.isVisible().catch(() => false)) {
-            console.log(`  [📅 최상단 플로팅 피커 감지] 모달 위 플로팅 위젯('${cleanS}') 요소를 선택합니다.`);
-            return floatLoc;
-          }
-        } catch {}
-      }
+      // Only allow root fallback when selector has a specific #id, class, attribute, or structural path (never bare 'button:visible' or 'a:visible')
+      if (/^[a-z]+(?::visible)?$/i.test(cleanS)) continue;
+      if (hasOverlay && /^button\b/i.test(cleanS) && !cleanS.includes("#")) continue;
+      try {
+        const floatLoc = page.locator(cleanS);
+        const fCount = await floatLoc.count().catch(() => 0);
+        if (fCount === 1 && (await floatLoc.first().isVisible().catch(() => false))) {
+          return await learnRuntimeEntityIdIfChanged(floatLoc.first());
+        }
+      } catch {}
     }
 
     if (!hasOverlay) {
@@ -950,77 +945,6 @@ async function getLocator(
 
   // 3. Search target selector across candidate bases
   if (action.selector) {
-    // 3-0. Universal Dynamic Created Entity / Verification Linking (AI-generated plans only, never Eyedropper)
-    const isVerifyingCreatedItem =
-      !action.recordedByEyedropper &&
-      (desc.includes("등록된") ||
-       desc.includes("신규") ||
-       desc.includes("작성된") ||
-       desc.includes("기안된") ||
-       desc.includes("생성된") ||
-       desc.includes("추가된") ||
-       (desc.includes("검증") && (action.type === "click" || action.type === "hover")));
-
-    if (isVerifyingCreatedItem && currentRuntimeVariables.has("lastCreatedTitle")) {
-      const title = currentRuntimeVariables.get("lastCreatedTitle")!;
-      const kw = currentRuntimeVariables.get("lastCreatedKeyword") || title.slice(0, 10);
-
-      // Check if orderedParts already contains this keyword
-      const alreadyHasKw = orderedParts.some(p => p.includes(kw) || p.includes(title));
-      if (!alreadyHasKw) {
-        const titleCandidates = [
-          `a.fc-event:has-text('${kw}'):visible`,
-          `.fc-event-title:has-text('${kw}'):visible`,
-          `.fc-event:has-text('${kw}'):visible`,
-          `table tbody tr:has-text('${kw}'):visible a:visible`,
-          `table tbody tr:has-text('${kw}'):visible`,
-          `ul[class*='lst'] li:has-text('${kw}'):visible a:visible`,
-          `ul[class*='lst'] li:has-text('${kw}'):visible`,
-          `a:has-text('${kw}'):visible`,
-          `button:has-text('${kw}'):visible`
-        ];
-        orderedParts.unshift(...titleCandidates);
-        console.log(`  [🎯 신규 등록 항목 핀포인트 매칭] 방금 등록된 제목("${kw}") 일치 요소를 최우선으로 탐색합니다.`);
-      }
-    }
-
-    // 3-A. Contextual Description Prioritization (Disambiguate identical buttons across header/sidebar/content)
-    // Skip for Eyedropper actions since their selectors already have exact DOM/ID scoping
-    if (!action.recordedByEyedropper) {
-      const isHeaderIntent = desc.includes("상단") || desc.includes("헤더") || desc.includes("gnb") || desc.includes("전체메뉴");
-      const isSidebarIntent =
-        desc.includes("좌측") ||
-        desc.includes("사이드바") ||
-        (desc.includes("메뉴") && !desc.includes("메뉴/링크")) ||
-        desc.includes("snb");
-      const isContentIntent = desc.includes("본문") || desc.includes("목록") || desc.includes("콘텐츠");
-
-      if (isHeaderIntent || isSidebarIntent || isContentIntent) {
-        const scopePrefixes = isHeaderIntent
-          ? ["header", "#header", ".gnb", "#top"]
-          : isSidebarIntent
-          ? ["#snb", "#left", "aside", ".snb", "nav"]
-          : ["#content", ".content", "main"];
-
-        for (const rawPart of orderedParts) {
-          const cleanPart = rawPart.replace(/:first\b/g, "").replace(/:last\b/g, "").trim();
-          if (!cleanPart) continue;
-          for (const baseObj of candidateBases) {
-            for (const prefix of scopePrefixes) {
-              if (!cleanPart.includes(prefix)) {
-                try {
-                  const scoped = baseObj.locator(`${prefix} ${cleanPart}`).first();
-                  if (await scoped.isVisible().catch(() => false)) {
-                    return scoped;
-                  }
-                } catch {}
-              }
-            }
-          }
-        }
-      }
-    }
-
     const isUnscopedGenericActionButtonPart = (partStr: string): boolean => {
       if (!hasSpecificEntityInAction) return false;
       if (/\[data-[a-zA-Z0-9_-]+=/i.test(partStr)) return false;
@@ -1226,13 +1150,6 @@ async function getLocator(
                             tag === "tr" ||
                             tag === "dd" ||
                             tag === "td" ||
-                            cur.classList.contains("app_work_box") ||
-                            cur.classList.contains("wiki_sub_box") ||
-                            cur.classList.contains("sub_box") ||
-                            cur.classList.contains("mn") ||
-                            cur.classList.contains("card_item") ||
-                            cur.classList.contains("hover_box") ||
-                            cur.classList.contains("lst_box") ||
                             (r.width >= 40 && r.width <= 680 && r.height >= 20 && r.height <= 480);
                           if (isItemContainer && r.width <= 1900 && r.height <= 550) {
                             hoverEl = cur;
@@ -1391,265 +1308,7 @@ async function getLocator(
     }
   }
 
-  // 3-C. Universal First Item / Detail View Fallback (AI-generated plans only — never override Eyedropper actions!)
-  const isFirstItemIntent =
-    !action.recordedByEyedropper &&
-    (desc.includes("목록") || desc.includes("항목") || desc.includes("문서") || desc.includes("결과") || desc.includes("데이터")) &&
-    (desc.includes("첫") || desc.includes("최상단") || desc.includes("상세") || desc.includes("조회") || desc.includes("상단"));
-
-  if (isFirstItemIntent) {
-    const listSelectors = [
-      "table tbody tr:first-child td.sub a:visible",
-      "table tbody tr:first-child a:visible",
-      "ul.lst_vr_ul li:first-child a.sub_tp:visible",
-      "ul.lst_vr_ul li:first-child .sub a:visible",
-      "ul[id*='List'] li:first-child a.sub_tp:visible",
-      "#atclList_list2 li:first-child a.sub_tp:visible",
-      "ul.lst_vr_ul li:first-child a:visible",
-      "ul[id*='List'] li:first-child a:visible",
-      ".lst_type1 li:first-child a:visible",
-      ".list_box li:first-child a:visible"
-    ];
-    for (const baseObj of candidateBases) {
-      for (const sel of listSelectors) {
-        try {
-          const loc = baseObj.locator(sel).first();
-          if (await loc.isVisible().catch(() => false)) {
-            console.log(`  [🎯 목록 상세 조회 요소 자동 연결] 화면 목록의 첫 번째 유효 항목을 대상(${baseObj.name})으로 연결합니다.`);
-            return loc;
-          }
-        } catch {}
-      }
-    }
-  }
-
-
-  // 3-D. Universal Calendar Hover Fallback (AI-generated plans only)
-  if (!action.recordedByEyedropper && dialogCount === 0 && action.type === "hover" && (desc.includes("캘린더 본문") || desc.includes("달력 본문") || desc.includes("캘린더 영역") || desc.includes("달력 영역") || desc.includes("일정 항목"))) {
-    const calendarSelectors = [
-      ".fc-daygrid-day-frame:visible",
-      ".fc-view-harness:visible",
-      ".fc-view:visible",
-      ".cal_skd_wrap:visible",
-      "#calendar:visible",
-      ".fc-scrollgrid-sync-inner:visible"
-    ];
-    for (const baseObj of candidateBases) {
-      for (const sel of calendarSelectors) {
-        try {
-          const loc = baseObj.locator(sel).first();
-          if (await loc.isVisible().catch(() => false)) {
-            console.log(`  [🎯 캘린더 빈 영역 자동 연결] 일정 요소를 찾지 못해 캘린더 기본 영역(${sel})으로 호버를 대체합니다.`);
-            return loc;
-          }
-        } catch {}
-      }
-    }
-  }
-
-  // 4. Intelligent Self-Healing for Buttons / Interactive Elements
-  // If selector is empty or failed to match, extract button/action names from description and try verified patterns
-  // Note: If action was recorded by Eyedropper with an explicit selector, do NOT hijack it via loose quote text matching!
-  if (desc && !(action.recordedByEyedropper && action.selector)) {
-    const fallbackSelectors: string[] = [];
-
-    // 1. Extract any text inside brackets or quotes: [문서 등록], [일정 등록], [저장], [확인], [상신], [검색] 등
-    const bracketMatch = desc.match(/\[(.*?)\]/);
-    const quoteMatch = bracketMatch || desc.match(/[\'\"\(](.*?)[\'\"\)]/);
-    if (quoteMatch && quoteMatch[1] && quoteMatch[1].length >= 2 && quoteMatch[1].trim() !== "검색") {
-      const textKey = quoteMatch[1].trim();
-      fallbackSelectors.push(
-        `.ui-dialog:visible button:has-text('${textKey}'):visible`,
-        `.modal:visible button:has-text('${textKey}'):visible`,
-        `button:not(._header_writeBtn):not(#header *):has-text('${textKey}'):visible`,
-        `button:not(._header_writeBtn):not(#header *):has-text('${textKey.replace(/\s+/g, "")}'):visible`,
-        `a:not(._his):has-text('${textKey}'):visible`,
-        `a:not(._his):has-text('${textKey.replace(/\s+/g, "")}'):visible`,
-        `[role='button']:has-text('${textKey}'):visible`,
-        `:text-is('${textKey}'):visible`,
-        `span.txt:has-text('${textKey}'):visible`,
-        `label:has-text('${textKey}'):visible`
-      );
-    }
-
-    // 2. Universal Action Intent Fallbacks (No module-specific IDs - works across all features!)
-    if (action.type === "click" && desc.includes("저장")) {
-      fallbackSelectors.push(
-        ".ui-dialog:visible button:has-text('저장'):visible",
-        ".modal:visible button:has-text('저장'):visible",
-        "button:has-text('저장'):visible",
-        "button[title*='저장']:visible",
-        "[id*='save']:visible",
-        "[class*='save']:visible"
-      );
-    }
-
-    const isNewDraftAction =
-      (desc.includes("문서 등록") || desc.includes("일정 등록") || desc.includes("게시글 등록") || desc.includes("신규 등록") || desc.includes("신규 작성") || desc.includes("글작성")) &&
-      !desc.includes("등록된") && !desc.includes("대상자") && !desc.includes("사용자") && !desc.includes("추가");
-
-    if (action.type === "click" && isNewDraftAction) {
-      fallbackSelectors.push(
-        "#snb button:has-text('등록'):visible",
-        "#snb button:has-text('작성'):visible",
-        ".snb button:has-text('등록'):visible",
-        "button:has-text('등록'):visible",
-        "button:has-text('작성'):visible",
-        "a:has-text('등록'):visible",
-        "a:has-text('작성'):visible",
-        "button:has-text('글작성'):visible"
-      );
-    }
-
-    if (action.type === "click" && desc.includes("추가") && !isNewDraftAction) {
-      fallbackSelectors.push(
-        ".ui-dialog:visible button:has-text('추가'):visible",
-        ".modal:visible button:has-text('추가'):visible",
-        "button:has-text('추가'):visible",
-        "button._addBtn:visible",
-        "button.btn_add:visible"
-      );
-    }
-
-    if (action.type === "click" && (desc.includes("확인") || desc.includes("선택 완료") || desc.includes("적용"))) {
-      fallbackSelectors.push(
-        ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible",
-        ".ui-dialog:visible button:text-is('확인'):visible",
-        ".modal:visible button:text-is('확인'):visible",
-        "button:text-is('확인'):visible",
-        "button:has-text('확인'):visible"
-      );
-    }
-
-    // Binder / Folder selection button (Must precede draft/submit to prevent false positive match)
-    if (action.type === "click" && (desc.includes("보관함") || desc.includes("기록물철")) && !desc.includes("트리") && !desc.includes("노드") && !desc.includes("확인")) {
-      fallbackSelectors.push(
-        "button#eapDocReg_binderSelBtn:visible",
-        "button#gapDocReg_bindBtn:visible",
-        "#eapDocReg_bind button:visible",
-        "button.btn_ico:has(.ico_fldr1):visible",
-        "button[title='선택'].btn_ico:visible",
-        "tr:has-text('결재문서보관함') button:visible",
-        "tr:has-text('보관함') button:visible"
-      );
-    }
-
-    // Submission / Draft button (Strictly exclude binder/line/navigation actions)
-    if (
-      action.type === "click" &&
-      (desc.includes("상신") || desc.includes("결재상신") || (desc.includes("기안") && (desc.includes("제출") || desc.includes("상신")))) &&
-      !desc.includes("보관함") &&
-      !desc.includes("기록물철") &&
-      !desc.includes("결재선") &&
-      !desc.includes("결재작성") &&
-      !desc.includes("결재 작성")
-    ) {
-      fallbackSelectors.push(
-        "button._draftBtn:visible",
-        "button._draft:visible",
-        "button:has-text('결재상신'):visible",
-        "button:has-text('상신'):visible",
-        ".btn_toolbar button:has-text('상신'):visible"
-      );
-    }
-
-    if (action.type === "click" && desc.includes("검색") && (desc.includes("버튼") || desc.includes("실행") || desc.includes("클릭"))) {
-      const isFolderTreeSearch = desc.includes("문서함") || desc.includes("폴더") || desc.includes("트리") || desc.includes("사이드바");
-      if (!isFolderTreeSearch) {
-        fallbackSelectors.push(
-          "button#atclList_srchBtn:visible",
-          "button[id*='srchBtn']:visible",
-          "button[id*='searchBtn']:visible",
-          ".new_srch_bar button:visible",
-          "#content .srch_input button:has(.ico_srch):visible",
-          "#content .srch_input button[title='검색']:visible",
-          "#content button[title='검색']:visible",
-          "#content button.btn_srch:visible"
-        );
-      }
-      fallbackSelectors.push(
-        "#snb .srch_bar button.btn_srch:visible",
-        "#snb .srch_bar button[title='검색']:visible",
-        "#snb button.btn_srch:visible"
-      );
-    }
-
-    if (action.type === "click" && (desc.includes("닫기") || desc.includes("취소"))) {
-      fallbackSelectors.push(
-        ".ui-dialog:visible button:has-text('닫기'):visible",
-        ".ui-dialog:visible button:has-text('취소'):visible",
-        "button:has-text('닫기'):visible",
-        "button:has-text('취소'):visible"
-      );
-    }
-
-    for (const baseObj of candidateBases) {
-      for (const sel of fallbackSelectors) {
-        const cand = baseObj.locator(sel).first();
-        if (await cand.isVisible().catch(() => false)) {
-          console.log(`  [✨ Self-Heal 지능형 복구] '${action.description}'에 일치하는 화면 요소를 발견했습니다! (${sel} in ${baseObj.name})`);
-          return cand;
-        }
-      }
-    }
-  }
-
-  // 5. Intelligent Drawer Unfolding (Self-Healing ONLY for Pure Menu Navigation in AI-generated plans!)
-  // 🚨 CRITICAL: Never unfold all-menu drawer for Eyedropper actions or button clicks!
-  const isInteractionAction =
-    Boolean(action.recordedByEyedropper) ||
-    desc.includes("버튼") ||
-    desc.includes("등록") ||
-    desc.includes("작성") ||
-    desc.includes("저장") ||
-    desc.includes("상신") ||
-    desc.includes("확인") ||
-    desc.includes("취소") ||
-    desc.includes("입력") ||
-    desc.includes("타이핑") ||
-    desc.includes("선택") ||
-    desc.includes("체크") ||
-    action.type === "type" ||
-    action.selector.includes("button") ||
-    action.selector.includes("input") ||
-    action.selector.includes("#save") ||
-    action.selector.includes("#reg_");
-
-  const isPureMenuNavigation =
-    !action.recordedByEyedropper &&
-    action.type === "click" &&
-    !(dialogCount > 0) &&
-    !isInteractionAction && // 🚨 인터랙션/버튼 액션 중에는 절대 서랍을 열지 않음!
-    (desc.includes("메뉴") || desc.includes("모듈")) &&
-    (desc.includes("이동") || desc.includes("진입") || desc.includes("열기"));
-
-  if (isPureMenuNavigation) {
-    const btnSvcOpen = page
-      .locator("button.btn_svc_open:visible, button[title*='전체메뉴']:visible, .btn_svc_open:visible, [title='포탈 전체메뉴']:visible")
-      .first();
-
-    if (await btnSvcOpen.isVisible().catch(() => false)) {
-      console.log(`  [✨ 지능형 런타임 구제] 대상 메뉴('${action.description || action.selector}')가 화면에 보이지 않아, 상단 '포탈 전체메뉴(btn_svc_open)' 버튼을 먼저 클릭하여 서랍을 펼칩니다...`);
-      await btnSvcOpen.click({ timeout: 2000 }).catch(() => {});
-      await page.waitForTimeout(1000);
-
-      // Now re-check visibility of the target selector parts inside the opened drawer
-      const parts = (action.selector || "").split(",").map((s) => s.trim()).filter(Boolean);
-      for (const part of parts) {
-        const reLoc = page.locator(part);
-        const count = await reLoc.count().catch(() => 0);
-        for (let i = 0; i < count; i++) {
-          const candidate = reLoc.nth(i);
-          if (await candidate.isVisible().catch(() => false)) {
-            console.log(`  [✨ 지능형 런타임 구제 성공] 전체메뉴 서랍 안에서 대상 메뉴를 성공적으로 찾아 연결했습니다!`);
-            return candidate;
-          }
-        }
-      }
-    }
-  }
-
-  // 6. Do NOT return an unverified non-visible locator from top-page (which breaks iframe scoping and masks missing elements).
+  // Do NOT return an unverified non-visible locator from top-page (which breaks iframe scoping and masks missing elements).
   return null;
 }
 
@@ -1728,14 +1387,8 @@ async function resolveAtomicTarget(
       if (tag === "article" || tag === "main" || tag === "aside" || (rect.width > 500 && rect.height > 250)) {
         return false;
       }
-      if (
-        node.classList.contains("sub_cover") ||
-        node.classList.contains("Selected") ||
-        node.classList.contains("select_Value") ||
-        node.classList.contains("sp-replacer") ||
-        node.classList.contains("app_work_box") ||
-        !!node.closest("label.rdobtn, label.wiki_sub_box")
-      ) {
+      const style = window.getComputedStyle(node);
+      if (style && style.cursor === "pointer" && rect.height <= 120) {
         return false;
       }
       const isLarge = rect.width > 280 || rect.height > 80;
@@ -2269,122 +1922,13 @@ async function trySelfHealAction(
     }
   }
 
-  // For Eyedropper recordings, give slow AJAX lists/modals an extra settle retry before self-healing,
-  // and NEVER clear search inputs or overwrite browse-plan.json with a random 1st DB card!
+  // For Eyedropper recordings, give slow AJAX lists/modals an extra settle retry before self-healing
   if (action.recordedByEyedropper || plan.recordedByEyedropper) {
     await page.waitForTimeout(900);
     const delayedLoc = await getLocator(page, action);
     if (delayedLoc && (await delayedLoc.isVisible().catch(() => false))) {
       console.log(`  [✨ 지연 렌더링 요소 확인] 비동기 로딩 대기 후 원본 요소 '${action.selector}' 탐색을 완료했습니다.`);
       return delayedLoc;
-    }
-  }
-
-  // 🩺 On-Demand Real-Time DB Scraping Fallback (AI-generated plans ONLY — never mutate Eyedropper plans!)
-  if (!action.recordedByEyedropper && !plan.recordedByEyedropper && (action.type === "hover" || action.type === "click")) {
-    const selStr = action.selector || "";
-    const descStr = action.description || "";
-    const isWorkCardTarget =
-      selStr.includes("aw_li") ||
-      selStr.includes("app_work_box") ||
-      (selStr.includes("btn_write") &&
-        (selStr.includes("aw_li") || selStr.includes("app_work_box") || selStr.includes("WorkSelect") || descStr.includes("결재"))) ||
-      descStr.includes("양식 카드");
-    const isListSearchResultTarget =
-      !isWorkCardTarget &&
-      (descStr.includes("검색된") || descStr.includes("검색 결과") || (descStr.includes("결과") && descStr.includes("항목")));
-
-    if (isWorkCardTarget) {
-      try {
-        // If a search filter left 0 matching cards, clear the search input to restore available DB cards
-        const srchInput = page
-          .locator("input#gapWorkSelect_searchWord:visible, input#eapWorkSelect_searchWord:visible, input[id*='searchWord']:visible")
-          .first();
-        if (await srchInput.isVisible().catch(() => false)) {
-          const curVal = await srchInput.inputValue().catch(() => "");
-          if (curVal && curVal.trim().length > 0) {
-            console.log(
-              `  [🩺 자가복구 검색 필터 초기화] 검색어("${curVal}")에 일치하는 양식이 DB에 없어 검색 필터를 초기화하고 가용 양식을 탐색합니다.`
-            );
-            await srchInput.fill("").catch(() => {});
-            await srchInput.press("Enter").catch(() => {});
-            await page.waitForTimeout(700);
-          }
-        }
-
-        const firstCardTitLoc = page
-          .locator("ul.aw_ul li.aw_li:visible .tit_box strong.tit, ul.aw_ul li.aw_li:visible strong.tit, ul.aw_ul li.aw_li:visible .tit")
-          .first();
-        if (await firstCardTitLoc.isVisible().catch(() => false)) {
-          const liveCardTitle = ((await firstCardTitLoc.innerText().catch(() => "")) || "").trim();
-          if (liveCardTitle) {
-            console.log(
-              `  [📋 자가복구 DB 데이터 스크래핑 성공] 지정한 양식 대신 현재 DB의 가용 양식("${liveCardTitle}")으로 자동 전환하여 복구합니다!`
-            );
-            currentRuntimeVariables.set("lastSearchKeyword", liveCardTitle);
-
-            // Link subsequent card hover/click actions to this recovered DB card
-            for (let k = momentId; k < plan.actions.length; k++) {
-              const fAct = plan.actions[k];
-              const fSel = fAct.selector || "";
-              const fDesc = fAct.description || "";
-              if (fSel.includes("aw_li") || fSel.includes("app_work_box") || fDesc.includes("양식 카드")) {
-                if (fAct.type === "hover") {
-                  fAct.selector = `ul.aw_ul li.aw_li:has-text('${liveCardTitle}') .app_work_box:visible, li.aw_li:has-text('${liveCardTitle}'):visible`;
-                } else if (fAct.type === "click" && fSel.includes("btn_write")) {
-                  fAct.selector = `ul.aw_ul li.aw_li:has-text('${liveCardTitle}') button.btn_write:visible, li.aw_li:has-text('${liveCardTitle}') button.btn.btn_write:visible`;
-                }
-                if (fAct.description) {
-                  fAct.description = fAct.description.replace(/'[^']+'/, `'${liveCardTitle}'`);
-                }
-              }
-            }
-
-            const cardBoxLoc = page
-              .locator(`ul.aw_ul li.aw_li:has-text('${liveCardTitle}') .app_work_box:visible, ul.aw_ul li.aw_li:visible .app_work_box:visible`)
-              .first();
-            if (action.type === "hover") {
-              if (await cardBoxLoc.isVisible().catch(() => false)) {
-                action.selector = `ul.aw_ul li.aw_li:has-text('${liveCardTitle}') .app_work_box:visible, li.aw_li:has-text('${liveCardTitle}'):visible`;
-                totalHealedCount++;
-                saveHealedPlan(dataDir, plan);
-                return cardBoxLoc;
-              }
-            } else if (action.type === "click") {
-              if (await cardBoxLoc.isVisible().catch(() => false)) {
-                await cardBoxLoc.scrollIntoViewIfNeeded({ timeout: 1500 }).catch(() => {});
-                await cardBoxLoc.hover({ timeout: 1500, force: true }).catch(() => {});
-                await page.waitForTimeout(450);
-              }
-              const cardBtnLoc = page
-                .locator(`ul.aw_ul li.aw_li:has-text('${liveCardTitle}') button.btn_write:visible, ul.aw_ul li.aw_li:visible button.btn_write:visible`)
-                .first();
-              if (await cardBtnLoc.isVisible().catch(() => false)) {
-                action.selector = `ul.aw_ul li.aw_li:has-text('${liveCardTitle}') button.btn_write:visible, li.aw_li:has-text('${liveCardTitle}') button.btn.btn_write:visible`;
-                totalHealedCount++;
-                saveHealedPlan(dataDir, plan);
-                return cardBtnLoc;
-              }
-            }
-          }
-        }
-      } catch {}
-    } else if (isListSearchResultTarget) {
-      try {
-        const liveItemText = await scrapeLiveText(page, action);
-        if (liveItemText) {
-          console.log(
-            `  [📋 자가복구 DB 데이터 스크래핑 성공] 검색 대상이 DB에 없어 현재 화면 목록의 실제 데이터("${liveItemText}")로 자동 복구합니다!`
-          );
-          const itemLoc = page.locator(`a:has-text('${liveItemText}'):visible`).first();
-          if (await itemLoc.isVisible().catch(() => false)) {
-            action.selector = `a:has-text('${liveItemText}'):visible`;
-            totalHealedCount++;
-            saveHealedPlan(dataDir, plan);
-            return itemLoc;
-          }
-        }
-      } catch {}
     }
   }
 
@@ -2658,590 +2202,11 @@ async function trySelfHealAction(
   return null;
 }
 
-/**
- * Universal Tree / Folder / Category Selection Engine:
- * Dynamically resolves folder modals (DocSelect, BrdSelect, CateSelect, OrgTree, etc.)
- * Expands all tree nodes, strictly excludes top-level non-writable root folders,
- * and pinpoints the first writable leaf node (node.data.isFolder === false or nodeType === 'B' or no child list).
- */
-async function ensureTreeLeafSelected(page: Page): Promise<{ success: boolean; title?: string }> {
-  try {
-    const isTreeModal = await page.evaluate(() => {
-      const modals = Array.from(document.querySelectorAll(".ui-dialog, .modal, [role='dialog']")).filter((d) => {
-        const r = d.getBoundingClientRect();
-        const s = window.getComputedStyle(d);
-        return r.width > 100 && r.height > 60 && s.display !== "none" && s.visibility !== "hidden";
-      });
-      const modal = modals[modals.length - 1];
-      return Boolean(
-        modal?.querySelector(".dynatree-container, .fancytree-container, [id*='treeBox'], [class*='treeBox'], [id*='Tree']") ||
-        document.querySelector("#docSelect_treeBox, #docSelect_expandTree, #brdSelect_treeBox")
-      );
-    });
-    if (!isTreeModal) return { success: false };
-
-    console.log(`  [📁 트리/폴더 정밀 분석] 선택 팝업 확인: 트리 확장 및 실제 등록 가능 말단 노드(Leaf Node) 탐색 시작`);
-
-    // 1. Trigger tree expansion via button and Dynatree/Fancytree API (strictly inside topmost modal!)
-    const topDialog = page.locator(".ui-dialog:visible, .modal:visible, [role='dialog']:visible").last();
-    const expandBtn = topDialog.locator("#docSelect_expandTree, #eapBinderSelect_expandTree, .btn_fopn, button:has-text('모두펼침'), .dynatree-expander").first();
-    if (await expandBtn.isVisible().catch(() => false)) {
-      await expandBtn.click({ force: true }).catch(() => {});
-    }
-
-    await page.evaluate(() => {
-      try {
-        const win = window as any;
-        const dialogs = Array.from(document.querySelectorAll(".ui-dialog, .modal, [role='dialog']")).filter((d) => {
-          const r = d.getBoundingClientRect();
-          const s = window.getComputedStyle(d);
-          return r.width > 100 && r.height > 60 && s.display !== "none" && s.visibility !== "hidden";
-        });
-        const topModal = dialogs[dialogs.length - 1];
-        if (!topModal) return;
-
-        if (win.DocSelect && win.DocSelect.tree) {
-          win.DocSelect.tree.expandTree();
-        }
-        if (win.EapBinderSelect && win.EapBinderSelect.tree) {
-          try { win.EapBinderSelect.tree.expandTree(); } catch {}
-        }
-        if (win.$ && topModal) {
-          // Strictly find tree inside topModal only - NEVER search window globally!
-          const treeEls = win.$(topModal).find(".dynatree-container, [id*='treeBox'], [id*='Tree']");
-          treeEls.each(function(this: any) {
-            try {
-              const dynatree = win.$(this).dynatree("getRoot");
-              if (dynatree) {
-                dynatree.visit((node: any) => {
-                  node.data.isChildExpand = true;
-                  node.expand(true);
-                });
-              }
-            } catch {}
-          });
-        }
-      } catch {}
-    });
-
-    // 2. WAIT for lazy load AJAX to complete and real child board nodes to render (Timeout 4s)
-    const childBoardLoc = topDialog.locator(
-      ".dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .dynatree-container li:not(:has(ul)) a.dynatree-title:visible, .dynatree-container li:last-child a.dynatree-title:visible, [id*='treeBox'] .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .dynatree-container a.dynatree-title:visible"
-    ).first();
-
-    await childBoardLoc.waitFor({ state: "visible", timeout: 4000 }).catch(() => {});
-
-    // 3. Activate in tree data model directly to guarantee writable leaf node is selected
-    const activatedData = await page.evaluate(() => {
-      try {
-        const win = window as any;
-        const dialogs = Array.from(document.querySelectorAll(".ui-dialog, .modal, [role='dialog']")).filter((d) => {
-          const r = d.getBoundingClientRect();
-          const s = window.getComputedStyle(d);
-          return r.width > 100 && r.height > 60 && s.display !== "none" && s.visibility !== "hidden";
-        });
-        const topModal = dialogs[dialogs.length - 1];
-        if (!topModal) return { success: false };
-
-        let targetNode: any = null;
-        if (win.$) {
-          // Strictly limit to treeEls inside topModal!
-          const treeEls = win.$(topModal).find(".dynatree-container, [id*='treeBox'], [id*='Tree']");
-          treeEls.each(function(this: any) {
-            try {
-              const tree = win.$(this).dynatree("getTree");
-              if (tree && !targetNode) {
-                tree.getRoot().visit((node: any) => {
-                  // Select first real leaf item (not a folder, or nodeType 'B', or has no children)
-                  const isFolder = Boolean(node.data.isFolder);
-                  const isNodeTypeB = node.data.nodeType === "B";
-                  const hasNoChildren = !node.childList || node.childList.length === 0;
-                  if (!isFolder || isNodeTypeB || hasNoChildren) {
-                    targetNode = node;
-                    return false; // break
-                  }
-                });
-              }
-            } catch {}
-          });
-        }
-        if (targetNode) {
-          targetNode.activate();
-          targetNode.focus();
-          if (typeof targetNode.select === "function") {
-            try { targetNode.select(true); } catch {}
-          }
-          return { success: true, title: targetNode.data.title, key: targetNode.data.key };
-        }
-      } catch {}
-      return { success: false };
-    });
-
-    if (activatedData && activatedData.success) {
-      console.log(`  [✨ 실제 등록 가능 리프 노드 활성화] "${activatedData.title}" (key: ${activatedData.key}) 선택 완료`);
-    }
-
-    // 4. Also physically click the DOM element so cursor coordinates and visual highlight are recorded
-    const checkboxLoc = topDialog.locator(".dynatree-checkbox:visible").first();
-    if (await checkboxLoc.isVisible().catch(() => false)) {
-      await checkboxLoc.click({ force: true }).catch(() => {});
-      await page.waitForTimeout(500);
-      return { success: true, title: activatedData?.title };
-    }
-
-    if (await childBoardLoc.isVisible().catch(() => false)) {
-      await childBoardLoc.click({ force: true }).catch(() => {});
-      await page.waitForTimeout(500);
-      return { success: true, title: activatedData?.title };
-    }
-
-    return { success: Boolean(activatedData?.success), title: activatedData?.title };
-  } catch (err: any) {
-    console.warn(`  [TreeLeaf 헬퍼 예외]: ${err?.message}`);
-    return { success: false };
-  }
-}
-
-/**
- * Universal Tree Modal Confirmation & Graceful Dismissal
- */
-async function confirmTreeSelectionModal(page: Page): Promise<boolean> {
-  try {
-    // 1. Ensure leaf node is selected first
-    await ensureTreeLeafSelected(page);
-
-    // 2. Click confirm button
-    const confirmBtn = page.locator(
-      ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button.btn_pri:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, #docSelect_confirm:visible, #eapBinderSelect_confirm:visible, button._confirm:visible"
-    ).first();
-    if (await confirmBtn.isVisible().catch(() => false)) {
-      console.log(`  [🔘 확인 버튼 클릭] 팝업 확인 버튼 클릭하여 모달 닫기`);
-      await confirmBtn.click({ force: true }).catch(() => {});
-      await page.waitForTimeout(800);
-    }
-
-    // 3. Dismiss any unexpected system alert layer (strictly excluding main form .ui-dialog which may have buttons like '사용자 일정확인')
-    const alertBtn = page.locator(
-      "#alert_lyr:visible button:has-text('확인'):visible, button#naon-cmm-alert-confirm:visible, .ui-dialog.alert_dialog:visible button:text-is('확인'):visible"
-    ).first();
-    if (await alertBtn.isVisible().catch(() => false)) {
-      console.log(`  [⚠️ 차단 알림 감지] 알림 닫고 재시도`);
-      await alertBtn.click().catch(() => {});
-      await page.waitForTimeout(400);
-      await page.evaluate(() => {
-        try {
-          const win = window as any;
-          if (win.DocSelect && win.DocSelect.fn) {
-            win.DocSelect.fn.confirm();
-          }
-          if (win.EapBinderSelect && win.EapBinderSelect.fn) {
-            try { win.EapBinderSelect.fn.confirm(); } catch {}
-          }
-        } catch {}
-      });
-    }
-
-    // 4. Wait for tree modal to disappear
-    await page.locator(".ui-dialog:visible:has(.dynatree-container)").waitFor({ state: "hidden", timeout: 4000 }).catch(() => {});
-    console.log(`  [✨ 팝업 닫힘 완료] 선택 팝업이 완전히 닫히고 본문 폼으로 전환되었습니다.`);
-    return true;
-  } catch (err: any) {
-    console.warn(`  [confirmTreeSelectionModal 예외]: ${err?.message}`);
-    return false;
-  }
-}
-
-/**
- * Live Modal & Popup Auto-Recovery Sentinel:
- * Detects if an active modal (e.g. folder/tree selection, validation alert, etc.) is blocking
- * the next actions (title, content, save) and autonomously completes or dismisses it.
- */
-async function autoRecoverActiveModals(page: Page, action: BrowsePlanAction, moments: any[], startTime: number): Promise<boolean> {
-  // If current action is wait or recorded by Eyedropper, do NOT autonomously close/submit modals!
-  if (action.type === 'wait' || action.recordedByEyedropper) return false;
-
-  try {
-    const desc = (action.description || "").toLowerCase();
-    const sel = (action.selector || "").toLowerCase();
-
-    // If the action is explicitly interacting with or confirming a modal, DO NOT auto-close it!
-    const isActionForModal =
-      desc.includes("선택 팝업") ||
-      desc.includes("팝업 확인") ||
-      desc.includes("다이얼로그") ||
-      desc.includes("조직도") ||
-      desc.includes("주소록") ||
-      desc.includes("모달") ||
-      desc.includes("팝업") ||
-      desc.includes("사원") ||
-      desc.includes("수신자") ||
-      sel.includes(".ui-dialog") ||
-      sel.includes("role='dialog'") ||
-      sel.includes("confirm") ||
-      sel.includes("org_") ||
-      sel.includes("userList");
-
-    if (isActionForModal) {
-      return false;
-    }
-
-    // 1. Detect Alert/Notice modals ONLY (strictly excludes selection dialogs with dynatree/inputs or main registration forms)
-    const isPureAlertModal = await page.evaluate(() => {
-      const dialogs = Array.from(document.querySelectorAll(".ui-dialog, .modal, [role='dialog'], #alert_lyr")).filter((d) => {
-        const r = d.getBoundingClientRect();
-        const s = window.getComputedStyle(d);
-        return r.width > 100 && r.height > 60 && s.display !== "none" && s.visibility !== "hidden";
-      });
-      const top = dialogs[dialogs.length - 1];
-      if (!top) return false;
-      // If it contains a tree, form inputs, textareas, or form tables, it is a selection/registration dialog, NOT an alert!
-      if (
-        top.querySelector(
-          ".dynatree-container, .fancytree-container, input[type='text'], input.input_txt, textarea, select, table.tbl_frm, #subject, #savebtn"
-        )
-      ) {
-        return false;
-      }
-      const title = (top.querySelector(".ui-dialog-title, .title, h3, h4")?.textContent || "").trim();
-      const txt = (top.textContent || "").trim();
-      return top.id === "alert_lyr" || title.includes("알림") || title.includes("확인") || txt.includes("등록할 수 없습니다") || txt.includes("선택하세요");
-    });
-
-    if (isPureAlertModal) {
-      const txt = await page.evaluate(() => {
-        const dialogs = Array.from(document.querySelectorAll(".ui-dialog, .modal, [role='dialog']")).filter((d) => window.getComputedStyle(d).display !== "none");
-        return dialogs.length > 0 ? (dialogs[dialogs.length - 1].textContent || "").trim() : "";
-      });
-      console.log(`[DEBUG] Detected modal text: "${txt}"`);
-      const isValidationError = txt.includes("입력") || txt.includes("선택") || txt.includes("등록할 수 없습니다") || txt.includes("오류") || txt.includes("필수") || txt.includes("지정");
-      const isSubmitAction = desc.includes("상신") || desc.includes("저장") || desc.includes("제출") || desc.includes("완료");
-
-      if (isValidationError && isSubmitAction) {
-        console.error(`\n  🚨 [치명적 폼 검증 에러 발생] 시스템 알림: "${txt}"`);
-        await page.waitForTimeout(1000);
-        throw new Error(`폼 유효성 검증 실패 (Validation Error): ${txt}`);
-      }
-
-      // If it's an alert or notice during intermediate steps, dismiss it via confirm button on topmost dialog!
-      const topAlert = page.locator("#alert_lyr:visible, .ui-dialog:visible, .modal:visible").last();
-      const confirmBtn = topAlert.locator(
-        "button:text-is('확인'):visible, button.btn_pri:visible, button._confirmBtn:visible, button:has-text('확인'):not(#userScheduleCheckBtn):visible, .ui-dialog-buttonpane button:visible"
-      ).first();
-      if (await confirmBtn.isVisible().catch(() => false)) {
-        console.log(`\n  [🤖 팝업 자가 복구] 차단 알림 팝업("${txt}") 감지 ➔ [확인] 버튼을 클릭하여 정상 진행합니다.`);
-        await confirmBtn.click({ force: true }).catch(() => {});
-        await page.waitForTimeout(800);
-        return true;
-      } else {
-        await page.evaluate(() => {
-          const dialogs = document.querySelectorAll(".ui-dialog, #alert_lyr, .ui-widget-overlay");
-          if (dialogs.length > 0) dialogs[dialogs.length - 1].remove();
-        }).catch(() => {});
-        await page.waitForTimeout(400);
-        return true;
-      }
-    }
-
-    // 2. Check if a folder/board selection modal is currently open and blocking subsequent steps
-    const isTreeSelectModal = await page.evaluate(() => {
-      const dialogs = Array.from(document.querySelectorAll(".ui-dialog, .modal, [role='dialog']")).filter((d) => {
-        const r = d.getBoundingClientRect();
-        const s = window.getComputedStyle(d);
-        return r.width > 200 && r.height > 150 && s.display !== "none" && s.visibility !== "hidden";
-      });
-      const top = dialogs[dialogs.length - 1];
-      if (!top) return false;
-      const title = (top.querySelector(".ui-dialog-title, .title, h3, h4")?.textContent || "").trim();
-      const hasTree = Boolean(top.querySelector(".dynatree-container, .fancytree-container, [id*='treeBox']"));
-      const isSelectionTitle = title.includes("선택") || title.includes("문서함") || title.includes("폴더") || title.includes("게시판");
-      return hasTree && isSelectionTitle && !title.includes("권한") && !title.includes("조직도") && !title.includes("주소록");
-    });
-
-    // If the action is explicitly interacting with the modal, DO NOT auto-close it!
-    if (isTreeSelectModal && isActionForModal) {
-      return false;
-    }
-
-    const isPostModalAction =
-      desc.includes("제목") ||
-      desc.includes("본문") ||
-      desc.includes("내용") ||
-      desc.includes("저장") ||
-      desc.includes("상신") ||
-      desc.includes("등록 진행") ||
-      desc.includes("공개");
-
-    // ONLY auto-recover tree selection modal when the plan has moved on to filling form inputs (title, body)
-    if (isTreeSelectModal && isPostModalAction) {
-      console.log(`\n  [🤖 팝업 자가 복구] 화면을 가로막고 있는 선택 팝업을 감지했습니다.`);
-      console.log(`     ➡️ 대상 리프 노드를 자동으로 선택하고 [확인]을 클릭하여 본문 등록 폼으로 진입합니다.`);
-      await confirmTreeSelectionModal(page);
-      return true;
-    }
-
-    // 3. 2-Tier Nested Picker Auto-Summoning:
-    // If action wants to select a user/attendee or expand org tree, but we are inside an outer settings layer
-    // that requires clicking [추가] or [조직도] to summon the actual picker:
-    const isUserOrTreeIntent =
-      desc.includes("사원") ||
-      desc.includes("사용자") ||
-      desc.includes("대상자") ||
-      desc.includes("조직도") ||
-      desc.includes("직원") ||
-      desc.includes("부서") ||
-      sel.includes("user_info") ||
-      sel.includes("orgUser") ||
-      sel.includes("user_card");
-
-    if (isUserOrTreeIntent) {
-      const hasInnerTrigger = (await page.locator(".ui-dialog:visible button:has-text('추가'):visible, .ui-dialog:visible button:has-text('조직도'):visible, .ui-dialog:visible button:has-text('주소록'):visible").count().catch(() => 0)) > 0;
-      const hasUserListAlready = (await page.locator(".ui-dialog:visible label.user_info, .ui-dialog:visible .user_card, .ui-dialog:visible #orgUserList_listbox, .ui-dialog:visible .dynatree-container").count().catch(() => 0)) > 0;
-      if (hasInnerTrigger && !hasUserListAlready) {
-        console.log(`\n  [🤖 팝업 자가 복구] 설정 대화상자 내 하위 조직도/피커 호출 버튼 감지 ➔ [추가/조직도] 클릭하여 선택 팝업 오픈`);
-        const innerTrigger = page.locator(".ui-dialog:visible button:has-text('추가'):visible, .ui-dialog:visible button:has-text('조직도'):visible, .ui-dialog:visible button:has-text('주소록'):visible").first();
-        await innerTrigger.click().catch(() => {});
-        await page.waitForTimeout(1500);
-        return true;
-      }
-    }
-
-    // 4. Outer Setting Layer Auto-Dismissal for Form Actions (Body, Save, Submit):
-    // If the plan has returned to main form actions (writing body, clicking save) but an outer sub-modal is still open:
-    const isMainFormAction =
-      desc.includes("본문") ||
-      desc.includes("내용") ||
-      desc.includes("저장") ||
-      desc.includes("상신") ||
-      desc.includes("등록 진행");
-
-    if (isMainFormAction) {
-      const hasSubDialogBlockingMainForm = await page.evaluate(() => {
-        const dialogs = Array.from(document.querySelectorAll(".ui-dialog, .modal, [role='dialog']")).filter((d) => {
-          const r = d.getBoundingClientRect();
-          const s = window.getComputedStyle(d);
-          return r.width > 120 && r.height > 80 && s.display !== "none" && s.visibility !== "hidden";
-        });
-        const top = dialogs[dialogs.length - 1];
-        if (!top) return false;
-        // Never treat a main registration dialog (containing #subject, #savebtn, textarea#cn, etc.) as an auxiliary popup to auto-dismiss!
-        if (top.querySelector("#subject, #savebtn, textarea#cn, #eapDocReg_docSubject, #atclReg_subject")) {
-          return false;
-        }
-        return true;
-      }).catch(() => false);
-
-      if (hasSubDialogBlockingMainForm) {
-        console.log(`\n  [🤖 팝업 자가 복구] 본문 작성/저장 진행 중 열려 있는 상위 설정 팝업 감지 ➔ [확인] 또는 [닫기] 버튼을 클릭하여 본문 복귀`);
-        const topDialog = page.locator(".ui-dialog:visible, .modal:visible, [role='dialog']:visible").last();
-        const confirmBtn = topDialog.locator(".ui-dialog-buttonpane button:has-text('확인'):not(#userScheduleCheckBtn):visible, button:text-is('확인'):visible, button._confirmBtn:visible, button.btn_pri:visible, button:has-text('확인'):not(#userScheduleCheckBtn):visible").first();
-        if (await confirmBtn.isVisible().catch(() => false)) {
-          await confirmBtn.click({ force: true }).catch(() => {});
-          await page.waitForTimeout(1200);
-          return true;
-        }
-        const closeBtn = topDialog.locator(".ui-dialog-titlebar-close:visible, button:has-text('닫기'):visible, button.close:visible, button.btn_close:visible").first();
-        if (await closeBtn.isVisible().catch(() => false)) {
-          console.log(`\n  [🤖 팝업 자가 복구] 확인 버튼 없음 ➔ [닫기/X] 버튼으로 차단 모달 닫기 수행`);
-          await closeBtn.click().catch(() => {});
-          await page.waitForTimeout(1200);
-          return true;
-        }
-      }
-    }
-  } catch (err: any) {
-    if (err?.message?.includes("Validation Error")) {
-      throw err; // Re-throw critical validation errors to halt recording
-    }
-    console.warn(`  [팝업 자가 복구 알림] 검사 중 무시된 예외: ${err?.message}`);
-  }
+async function autoRecoverActiveModals(_page: Page, _action: BrowsePlanAction, _moments: any[], _startTime: number): Promise<boolean> {
   return false;
 }
 
-/**
- * Dynamic Live Data Scraper (Method 2).
- * Reads real, existing text from the live web page (tables, lists, org trees)
- * so search/lookup actions never fail with "0 results".
- */
-async function scrapeLiveText(page: Page, action: BrowsePlanAction): Promise<string | null> {
-  const candidateSelectors: string[] = [];
-
-  // 1. Explicit selector if specified
-  if (action.dynamicFrom) {
-    candidateSelectors.push(action.dynamicFrom);
-  }
-  if (action.type === "scrape" && action.selector) {
-    candidateSelectors.push(action.selector);
-  }
-
-  // 2. Strategy or Auto-Detection selectors for enterprise lists & tables
-  const strategy = action.dynamicStrategy || "auto";
-
-  if (strategy === "first-row-title" || strategy === "auto") {
-    candidateSelectors.push(
-      // Standard table subjects/titles (Naonsoft / Enterprise GW)
-      ".tbl_lst tbody tr:first-child td.sub a:visible",
-      ".tbl_lst tbody tr:first-child td[class*='sub'] a:visible",
-      ".tbl_lst tbody tr:first-child td[class*='title'] a:visible",
-      ".tbl_lst tbody tr:first-child td[class*='subject'] a:visible",
-      ".lst_type1 tbody tr:first-child a:visible",
-      "table tbody tr:first-child td:nth-child(2) a:visible",
-      "table tbody tr:first-child td:nth-child(3) a:visible",
-      "table.tbl_lst tbody tr:first-child a:visible",
-      // Vertical Split View / Card Lists (Naonsoft lst_vr, Daou, Hanbiro, etc.)
-      "ul.lst_vr_ul li:first-child a.sub_tp:visible",
-      "ul.lst_vr_ul li:first-child .sub a:visible",
-      "ul.lst_vr_ul li:first-child a._atcl:visible",
-      "ul[id*='List'] li:first-child a.sub_tp:visible",
-      "ul[id*='List'] li:first-child .sub a:visible",
-      "#atclList_list2 li:first-child a.sub_tp:visible",
-      "#atclList_list2 li:first-child .sub a:visible",
-      ".lst_vr li:first-child a.sub_tp:visible",
-      ".lst_vr li:first-child .sub a:visible",
-      ".post_lst li:first-child .sub a:visible",
-      ".doc_lst li:first-child a.sub_tp:visible",
-      ".doc_lst li:first-child .sub a:visible",
-      "ul.lst_vr_ul li:first-child a:not(.star_chk):not(.star):visible",
-      "ul[id*='List'] li:first-child a:not(.star_chk):not(.star):visible",
-      "ul[id*='list'] li:first-child a:not(.star_chk):not(.star):visible",
-      "#atclList_list2 li:first-child a:not(.star_chk):not(.star):visible",
-      ".lst_vr li:first-child a:not(.star_chk):not(.star):visible",
-      ".list_vr_scroll li:first-child a:not(.star_chk):not(.star):visible",
-      ".bu_lst li:first-child a:not(.star_chk):not(.star):visible",
-      ".lst_type1 li:first-child a:not(.star_chk):not(.star):visible",
-      "ul.list_box li:first-child a:not(.star_chk):not(.star):visible",
-      ".doc_lst li:first-child a:not(.star_chk):not(.star):visible",
-      ".list_box tbody tr:first-child a:not(.star_chk):not(.star):visible",
-      "table tbody tr:first-child a:not(.star_chk):not(.star):visible"
-    );
-  }
-
-  if (strategy === "first-row-user" || strategy === "first-tree-node" || strategy === "auto") {
-    const isUserSearch = action.description && (action.description.includes("사원") || action.description.includes("사용자") || action.description.includes("담당자") || action.description.includes("수신자") || action.description.includes("받는 사람") || action.description.includes("조직도") || action.description.includes("검색"));
-    
-    // Org chart and tree nodes
-    if (!isUserSearch) {
-      candidateSelectors.push(
-        ".dynatree-container:visible li:visible span.dynatree-node:visible .dynatree-title:visible",
-        ".tree_box li:visible span.txt:visible"
-      );
-    }
-    candidateSelectors.push(
-      ".lst_type1 li:visible .name:visible",
-      ".lst_type1 li:visible .user:visible",
-      ".lst_type1 li:visible:not(:empty)",
-      ".lst_type1 tbody tr:first-child td:nth-child(2):visible",
-      "table tbody tr:not(:first-child):visible td:nth-child(2):visible",
-      "table tbody tr:not(:first-child):visible td:nth-child(3):visible",
-      ".org_tree li:visible a:visible",
-      ".user_list li:visible .name:visible",
-      ".tbl_lst tbody tr:first-child td[class*='user']:visible",
-      ".tbl_lst tbody tr:first-child td[class*='writer']:visible",
-      ".info_box .name:visible",
-      ".user_card .name:visible",
-      ".user_ul li:visible:first-child"
-    );
-  }
-
-  // Check candidate bases (top-level and visible iframes like #subBody)
-  const candidateBases: Array<{ name: string; locator: (sel: string) => Locator }> = [];
-  if (action.iframe) {
-    candidateBases.push({
-      name: `iframe(${action.iframe})`,
-      locator: (sel: string) => page.frameLocator(action.iframe!).locator(sel),
-    });
-  }
-  candidateBases.push({
-    name: "page",
-    locator: (sel: string) => page.locator(sel),
-  });
-  const commonFrames = ["iframe#subBody", "iframe#contentFrame", "iframe:visible"];
-  for (const f of commonFrames) {
-    if (f !== action.iframe) {
-      candidateBases.push({
-        name: `iframe(${f})`,
-        locator: (sel: string) => page.frameLocator(f).locator(sel),
-      });
-    }
-  }
-
-  for (const base of candidateBases) {
-    for (const sel of candidateSelectors) {
-      try {
-        const loc = base.locator(sel).first();
-        const count = await loc.count().catch(() => 0);
-        if (count > 0 && (await loc.isVisible().catch(() => false))) {
-          const raw = (await loc.innerText().catch(() => loc.textContent().catch(() => ""))) || "";
-          let text = raw.trim();
-          if (text) {
-            // Exclude bookmark stars or button noise
-            if (text === "별표하기" || text === "중요" || text === "선택" || text === "보기") {
-              continue;
-            }
-
-            // Clean up noise (badges, count brackets like [1], (3), [공지], etc.)
-            text = text
-              .replace(/\[[^\]]+\]/g, "") // remove [공지], [중요]
-              .replace(/\([0-9]+\)/g, "") // remove reply counts (3)
-              .replace(/\s+/g, " ")
-              .trim();
-
-            if (text.length >= 2) {
-              // Extract clean search term (e.g. max 22 chars if very long title)
-              const keyword = text.length > 25 ? text.slice(0, 20).trim() : text;
-              console.log(`  [📋 실시간 DB 데이터 스크래핑 성공] 화면에서 실제 텍스트("${keyword}")를 추출했습니다! (${sel} in ${base.name})`);
-              return keyword;
-            }
-          }
-        }
-      } catch {}
-    }
-  }
-
-  const isUserSearch = action.description && (action.description.includes("사원") || action.description.includes("사용자") || action.description.includes("담당자") || action.description.includes("수신자") || action.description.includes("받는 사람") || action.description.includes("조직도") || action.description.includes("검색"));
-
-  if (isUserSearch) {
-    try {
-      const folderLocators = [
-        page.locator(".dynatree-container:visible li li a.dynatree-title").first(), // sub-folder first
-        page.locator(".dynatree-container:visible li:nth-child(2) a.dynatree-title").first(), // second root folder
-        page.locator(".dynatree-container:visible li:first-child a.dynatree-title").first() // root folder
-      ];
-      
-      let clicked = false;
-      for (const folderBtn of folderLocators) {
-        if (await folderBtn.isVisible().catch(() => false)) {
-          console.log(`  [💡 빈 사원 목록 감지] 스크래핑을 위해 좌측 트리 폴더를 자율적으로 선클릭하여 목록을 활성화합니다...`);
-          await folderBtn.click().catch(() => {});
-          await page.waitForTimeout(1000);
-          clicked = true;
-          
-          // Retry scraping after the list is populated
-          for (const base of candidateBases) {
-            for (const sel of candidateSelectors) {
-              try {
-                const loc = base.locator(sel).first();
-                const count = await loc.count().catch(() => 0);
-                if (count > 0 && (await loc.isVisible().catch(() => false))) {
-                  const raw = (await loc.innerText().catch(() => loc.textContent().catch(() => ""))) || "";
-                  let text = raw.trim();
-                  if (text && text !== "별표하기" && text !== "중요" && text !== "선택" && text !== "보기") {
-                    text = text.replace(/\[[^\]]+\]/g, "").replace(/\([0-9]+\)/g, "").replace(/\s+/g, " ").trim();
-                    if (text.length >= 2) {
-                      const keyword = text.length > 25 ? text.slice(0, 20).trim() : text;
-                      console.log(`  [✨ 자율 활성화 스크래핑 성공] 폴더 클릭 후 렌더링된 사원 목록에서 "${keyword}" 추출 성공!`);
-                      return keyword;
-                    }
-                  }
-                }
-              } catch {}
-            }
-          }
-        }
-        if (clicked) break; // Try next locator only if we didn't click anything
-      }
-    } catch {}
-  }
-
+async function scrapeLiveText(_page: Page, _action: BrowsePlanAction): Promise<string | null> {
   return null;
 }
 
@@ -3905,7 +2870,7 @@ async function main() {
             }
           }
 
-          if (!srcLoc) {
+          if (!srcLoc && !action.dragFromCoords) {
             const tempSrcAct: BrowsePlanAction = { ...action, selector: srcSelector, targetHtml: undefined };
             srcLoc = await trySelfHealAction(moments, recordingStart, page, tempSrcAct, momentId, plan, dataDir);
             if (srcLoc) {
@@ -3922,12 +2887,11 @@ async function main() {
               saveHealedPlan(dataDir, plan);
             }
           }
-          if (!srcLoc) {
+          if (!srcLoc && !action.dragFromCoords) {
             throw new Error(`[드래그 앤 드롭 실패] 시작 요소를 찾을 수 없습니다: ${srcSelector}`);
           }
 
           // 2. Locate target element
-          // Ensure empty Kanban sortable lists (ul.mg_ul, .ui-sortable) have non-zero height before locating tgtLoc so :visible and boundingBox() succeed!
           await page
             .evaluate(() => {
               document.querySelectorAll("ul.mg_ul, .ui-sortable, .group_lst ul").forEach((ul) => {
@@ -3940,9 +2904,6 @@ async function main() {
             })
             .catch(() => {});
 
-          const descLower = (action.description || "").toLowerCase();
-          const isSecondApprSlot = descLower.includes("결재") && (descLower.includes("두번째") || descLower.includes("두 번째") || descLower.includes("2번째") || descLower.includes("칸") || descLower.includes("슬롯"));
-
           let tgtLoc: Locator | null = null;
           if (action.targetSelector || tgtSelector) {
             tgtLoc = await getLocatorWithWait(
@@ -3950,44 +2911,14 @@ async function main() {
               {
                 ...action,
                 selector: action.targetSelector || tgtSelector,
-                description: "결재선 드롭 도착지 영역",
+                description: "드래그 도착지 영역",
                 recordedByEyedropper: true,
               },
               false
             );
           }
 
-          if (!action.recordedByEyedropper && !plan.recordedByEyedropper && !tgtLoc && hasModal && isSecondApprSlot) {
-            // Fallback to the 2nd approval slot in Naonsoft EAP (#af_4)
-            const slot4 = topDlg.locator("#af_4, table#eapLineSelect_line td:nth-child(4) div.app_flow, .appline_flow table td:nth-child(4) div.app_flow, div.app_flow:has(strong:has-text('결재')):nth-of-type(2)").first();
-            if (await slot4.isVisible().catch(() => false)) {
-              console.log(`  [📥 결재선 2번째 결재칸 핀포인트 타겟팅] Naonsoft EAP 2번째 결재 슬롯(#af_4)을 타겟팅합니다.`);
-              tgtLoc = slot4;
-            }
-          }
-
-          if (!action.recordedByEyedropper && !plan.recordedByEyedropper && !tgtLoc && hasModal) {
-            // Fallback matching
-            if (isSecondApprSlot) {
-              const apprButtons = topDlg.locator("#eapLineSelect_lineTrgtAdd button[data-app-type-ordr='4'], #eapLineSelect_lineTrgtAdd button:has-text('결재'):nth-of-type(2), button:has-text('결재'):visible");
-              const apprCount = await apprButtons.count().catch(() => 0);
-              if (apprCount >= 2) {
-                tgtLoc = apprButtons.nth(1);
-              } else if (apprCount > 0) {
-                tgtLoc = apprButtons.first();
-              }
-            } else {
-              const anySlots = topDlg.locator("table#eapLineSelect_line div.app_flow:visible, .appline_flow div.app_flow:visible, [id^='af_']:visible, .app_line_box:visible");
-              const anyCount = await anySlots.count().catch(() => 0);
-              if (anyCount >= 2) {
-                tgtLoc = anySlots.nth(1);
-              } else if (anyCount > 0) {
-                tgtLoc = anySlots.first();
-              }
-            }
-          }
-
-          if (!tgtLoc) {
+          if (!tgtLoc && !action.dragToCoords) {
             const tempTgtAct: BrowsePlanAction = { ...action, selector: action.targetSelector || tgtSelector };
             tgtLoc = await trySelfHealAction(moments, recordingStart, page, tempTgtAct, momentId, plan, dataDir);
             if (tgtLoc) {
@@ -3995,80 +2926,46 @@ async function main() {
               saveHealedPlan(dataDir, plan);
             }
           }
-          if (!tgtLoc) {
+          if (!tgtLoc && !action.dragToCoords) {
             throw new Error(`[드래그 앤 드롭 실패] 도착 요소를 찾을 수 없습니다: ${tgtSelector}`);
           }
 
-          // Pre-drag safety: if another user's checkbox (e.g. test001) is still checked in DynaTree (AI-generated plans only),
-          // ensure it doesn't get dragged along with targetUser (e.g. test002)!
-          if (!action.recordedByEyedropper && !plan.recordedByEyedropper && hasModal && targetUser) {
-            await page.evaluate(({ dragUser }) => {
-              const $ = (window as any).$;
-              const selectedSpans = Array.from(document.querySelectorAll(".ui-dialog:visible .dynatree-node.dynatree-selected"));
-              for (const span of selectedSpans) {
-                const txt = (span.textContent || "").trim();
-                if (txt && !txt.includes(dragUser)) {
-                  const lineText = (document.querySelector("#eapLineSelect_line, .appline_flow")?.textContent || "");
-                  const otherUserMatch = txt.match(/test\d+|[가-힣]{2,4}/i);
-                  const otherUser = otherUserMatch ? otherUserMatch[0] : txt.split(/\s+/)[0];
-                  if (otherUser && !lineText.includes(otherUser)) {
-                    const agreeBtn = document.querySelector(".ui-dialog:visible button.btn_add[data-app-type-ordr='2'], .ui-dialog:visible button[title='합의 추가']") as HTMLElement | null;
-                    if (agreeBtn) agreeBtn.click();
-                  }
-                  if (span.classList.contains("dynatree-selected")) {
-                    const chk = span.querySelector(".dynatree-checkbox") as HTMLElement | null;
-                    if (chk) chk.click();
-                  }
-                }
-              }
-              if ($ && $("#eapLineSelect_orgBox").length) {
-                try {
-                  const tree = $("#eapLineSelect_orgBox").dynatree("getTree");
-                  const selNodes = tree?.getSelectedNodes?.() || [];
-                  for (const n of selNodes) {
-                    if (n?.data?.title && !String(n.data.title).includes(dragUser)) {
-                      n.select(false);
-                    }
-                  }
-                } catch {}
-              }
-            }, { dragUser: targetUser }).catch(() => {});
-            await page.waitForTimeout(200);
+          if (srcLoc) {
+            await srcLoc.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
+          }
+          if (tgtLoc) {
+            await tgtLoc.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
           }
 
-          // Prefer inner .af_ul droppable container ONLY if it has non-collapsed height (>= 30px); otherwise use tgtLoc (#af_N / div.app_flow)
-          const innerDropUl = tgtLoc.locator("ul.af_ul:visible, .af_ul:visible").first();
-          const innerUlBox = (await innerDropUl.isVisible().catch(() => false))
-            ? await innerDropUl.boundingBox().catch(() => null)
-            : null;
-          const effectiveTgtLoc = innerUlBox && innerUlBox.height >= 30 && innerUlBox.width >= 30 ? innerDropUl : tgtLoc;
+          const srcBox = srcLoc ? await getSettledBoundingBox(srcLoc) : null;
+          const tgtBox = tgtLoc ? await getSettledBoundingBox(tgtLoc) : null;
 
-          await srcLoc.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
-          await effectiveTgtLoc.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
-
-          const srcBox = await getSettledBoundingBox(srcLoc);
-          const tgtBox = await getSettledBoundingBox(effectiveTgtLoc);
-
-          if (!srcBox || !tgtBox) {
+          if ((!srcBox && !action.dragFromCoords) || (!tgtBox && !action.dragToCoords)) {
             throw new Error(`[드래그 앤 드롭 실패] 시작/도착 요소의 BoundingBox 좌표를 측정할 수 없습니다.`);
           }
 
-          const fromX = Math.round(srcBox.x + srcBox.width / 2);
-          const fromY = Math.round(srcBox.y + srcBox.height / 2);
-          const toX = Math.round(tgtBox.x + tgtBox.width / 2);
-          // Aim slightly above vertical center of the slot box so we never hit a bottom sub-합의 bar
-          const toY = Math.round(tgtBox.y + Math.min(tgtBox.height / 2, Math.max(24, tgtBox.height * 0.4)));
+          const fromX = action.dragFromCoords?.x ?? Math.round(srcBox!.x + srcBox!.width / 2);
+          const fromY = action.dragFromCoords?.y ?? Math.round(srcBox!.y + srcBox!.height / 2);
+          const toX = action.dragToCoords?.x ?? Math.round(tgtBox!.x + tgtBox!.width / 2);
+          const toY = action.dragToCoords?.y ?? Math.round(tgtBox!.y + tgtBox!.height / 2);
 
           moment.timestamp = Date.now() - recordingStart;
           moment.cursor = { x: fromX, y: fromY };
           moment.dragFrom = { x: fromX, y: fromY };
           moment.dragTo = { x: toX, y: toY };
-          moment.target = {
-            x: Math.round(srcBox.x),
-            y: Math.round(srcBox.y),
-            width: Math.round(srcBox.width),
-            height: Math.round(srcBox.height),
-          };
+          moment.target = srcBox
+            ? {
+                x: Math.round(srcBox.x),
+                y: Math.round(srcBox.y),
+                width: Math.round(srcBox.width),
+                height: Math.round(srcBox.height),
+              }
+            : {
+                x: Math.max(0, fromX - 20),
+                y: Math.max(0, fromY - 12),
+                width: 40,
+                height: 24,
+              };
 
           // Visual ripple at start
           await triggerClickVisualizer(page, fromX, fromY);
@@ -4091,11 +2988,9 @@ async function main() {
           await triggerClickVisualizer(page, toX, toY);
 
           // Universal jQuery UI Sortable / Kanban Column Drop Sync:
-          // If dragging an item (e.g. li._task) into a sortable list (ul.mg_ul / .ui-sortable) did not move the DOM node
-          // via synthetic mouse events, move the item and invoke the jQuery UI sortable receive/update/stop callbacks!
           try {
-            const srcHandle = await srcLoc.elementHandle({ timeout: 500 }).catch(() => null);
-            const tgtHandle = await effectiveTgtLoc.elementHandle({ timeout: 500 }).catch(() => null);
+            const srcHandle = srcLoc ? await srcLoc.elementHandle({ timeout: 500 }).catch(() => null) : null;
+            const tgtHandle = tgtLoc ? await tgtLoc.elementHandle({ timeout: 500 }).catch(() => null) : null;
             if (srcHandle && tgtHandle) {
               await page
                 .evaluate(
@@ -4139,138 +3034,7 @@ async function main() {
             }
           } catch {}
 
-          // Strictly check ONLY the target drop slot / approval line (NEVER [class*='box'] which matches #eapLineSelect_orgBox on the left!)
-          const afOrdrMatch = (action.targetSelector || tgtSelector || "").match(/#af_(\d+)/);
-          const targetOrdr = afOrdrMatch ? afOrdrMatch[1] : "4";
-
-          const checkUserInTargetSlot = async (): Promise<boolean> => {
-            if (!targetUser) return true;
-            const tgtText = await tgtLoc.innerText().catch(() => "");
-            if (tgtText.includes(targetUser)) return true;
-            if (afOrdrMatch) {
-              const slotText = await topDlg.locator(`#af_${targetOrdr}`).innerText().catch(() => "");
-              if (slotText.includes(targetUser)) return true;
-            }
-            const slotsText = await topDlg
-              .locator("table#eapLineSelect_line, .appline_flow, [id^='af_']")
-              .allInnerTexts()
-              .catch(() => []);
-            return slotsText.some((t) => t.includes(targetUser));
-          };
-
-          await page.waitForTimeout(250);
-          let isUserInSlot = await checkUserInTargetSlot();
-
-          // If synthetic mouse drag did not trigger Naonsoft's jQuery UI droppable handler,
-          // immediately and atomically invoke the page's Dynatree + approval-slot insertion at the exact moment of drop!
-          if (!isUserInSlot && hasModal && targetUser) {
-            await page.evaluate(
-              ({ dragUser, ordr }) => {
-                const $ = (window as any).$;
-                let treeNodeSelected = false;
-                if ($ && $("#eapLineSelect_orgBox").length) {
-                  try {
-                    const tree = $("#eapLineSelect_orgBox").dynatree("getTree");
-                    if (tree && tree.visit) {
-                      tree.visit((node: any) => {
-                        const nodeTitle = String(node?.data?.title || node?.span?.textContent || "");
-                        if (nodeTitle.includes(dragUser)) {
-                          node.select(true);
-                          treeNodeSelected = true;
-                        } else if (node.isSelected && node.isSelected()) {
-                          node.select(false);
-                        }
-                      });
-                    }
-                  } catch {}
-                }
-                if (!treeNodeSelected) {
-                  const nodes = Array.from(document.querySelectorAll(".ui-dialog .dynatree-node"));
-                  for (const n of nodes) {
-                    const txt = (n.textContent || "").trim();
-                    const chk = n.querySelector(".dynatree-checkbox") as HTMLElement | null;
-                    if (txt.includes(dragUser) && !n.classList.contains("dynatree-selected") && chk) {
-                      chk.click();
-                      treeNodeSelected = true;
-                      break;
-                    }
-                  }
-                }
-                const addBtn =
-                  (document.querySelector(
-                    `#eapLineSelect_lineTrgtAdd button[data-app-type-ordr='${ordr}'], .ui-dialog button.btn_add[data-app-type-ordr='${ordr}']`
-                  ) as HTMLElement | null);
-                if (addBtn) {
-                  addBtn.click();
-                }
-                // Unselect the dragged node in the tree so its checkbox stays clean just like after a native drag-and-drop
-                if ($ && $("#eapLineSelect_orgBox").length) {
-                  try {
-                    const tree = $("#eapLineSelect_orgBox").dynatree("getTree");
-                    const selNodes = tree?.getSelectedNodes?.() || [];
-                    for (const n of selNodes) {
-                      if (String(n?.data?.title || "").includes(dragUser)) {
-                        n.select(false);
-                      }
-                    }
-                  } catch {}
-                }
-              },
-              { dragUser: targetUser, ordr: targetOrdr }
-            ).catch(() => {});
-            await page.waitForTimeout(300);
-            isUserInSlot = await checkUserInTargetSlot();
-          }
-
-          if (isUserInSlot) {
-            console.log(`  [✅ 드래그 앤 드롭 완료] '${targetUser}' 대상이 목표 결재칸(#af_${targetOrdr})에 정확히 반영되었습니다.`);
-            await page.waitForTimeout(Math.max(300, (action.ms ?? 1000) - 500));
-          } else {
-            // Fallback: Try Playwright dragTo if neither mouse drag nor atomic slot insertion succeeded
-            await srcLoc.dragTo(effectiveTgtLoc, { timeout: 2500 }).catch(() => {});
-            await page.waitForTimeout(400);
-            isUserInSlot = await checkUserInTargetSlot();
-          }
-
-          if (targetUser && hasModal && !isUserInSlot) {
-            console.log(`  [✨ 결재선 실반영 보장] 드래그 후 대상('${targetUser}')이 슬롯에 미반영되어 체크 후 결재 버튼 연계를 통해 확정합니다.`);
-
-            const userChk = topDlg.locator(`
-              .dynatree-node:has(a:has-text('${targetUser}')) .dynatree-checkbox:visible,
-              .dynatree-node:has(a:text-is('${targetUser}')) .dynatree-checkbox:visible,
-              tr:has-text('${targetUser}') .dynatree-checkbox:visible,
-              tr:has-text('${targetUser}') input[type='checkbox']:visible
-            `).first();
-
-            if (await userChk.isVisible().catch(() => false)) {
-              await userChk.click({ force: true }).catch(() => {});
-              await page.waitForTimeout(300);
-            }
-
-            const btnAdd = topDlg.locator(`
-              #eapLineSelect_lineTrgtAdd button[data-app-type-ordr='${targetOrdr}']:visible,
-              button.btn_add[data-app-type-ordr='${targetOrdr}']:visible,
-              #eapLineSelect_lineTrgtAdd button.btn_add:has(span:has-text('결재')):nth-of-type(2),
-              #eapLineSelect_lineTrgtAdd button:has-text('결재'):nth-of-type(2)
-            `).first();
-
-            if (await btnAdd.isVisible().catch(() => false)) {
-              console.log(`  [📥 결재칸 버튼 클릭] 결재선 추가 버튼(ordr=${targetOrdr})을 클릭하여 슬롯 반영`);
-              await btnAdd.click({ force: true }).catch(() => {});
-              await page.waitForTimeout(500);
-            }
-
-            const postCheck = await checkUserInTargetSlot();
-            console.log(`  [결재선 반영 결과] '${targetUser}' 결재칸 반영 상태: ${postCheck ? '✅ 성공' : '⚠️ 확인 필요'}`);
-          }
-
-          // Safety net: if a duplicate-user alert (#naon-cmm-alert-confirm) popped up for any reason, dismiss it immediately
-          const dupAlertBtn = page.locator("button#naon-cmm-alert-confirm:visible, #alert_lyr:visible button:has-text('확인'):visible").first();
-          if (await dupAlertBtn.isVisible().catch(() => false)) {
-            console.log(`  [🛡️ 중복 알림창 자동 닫기] 알림 팝업을 감지하여 즉시 닫습니다.`);
-            await dupAlertBtn.click({ force: true }).catch(() => {});
-            await page.waitForTimeout(400);
-          }
+          await page.waitForTimeout(Math.max(300, (action.ms ?? 1000) - 500));
           break;
         }
 
@@ -4518,6 +3282,14 @@ async function main() {
           const descLower = (action.description || "").toLowerCase();
           const selLower = (action.selector || "").toLowerCase();
           const isOptionalOrSub = isOptionalAction(action, momentId, plan.actions.length) || isNonCriticalSubOption(action);
+
+          // 1:1 Mouse Pre-Positioning: Move cursor to the exact recorded click coordinates first
+          // so any CSS :hover / mouseenter-revealed controls at that point naturally appear before locator lookup
+          if (action.clickCoords && (action.clickCoords.x > 0 || action.clickCoords.y > 0)) {
+            await page.mouse.move(action.clickCoords.x, action.clickCoords.y).catch(() => {});
+            await page.waitForTimeout(150);
+          }
+
           let el = await getLocatorWithWait(page, action, isOptionalOrSub);
           if (!(el && (await el.isVisible().catch(() => false)))) {
             const restored = await restoreFromSimulatedPopupIfNeeded(
@@ -4529,303 +3301,7 @@ async function main() {
               el = await getLocatorWithWait(page, action, isOptionalOrSub);
             }
           }
-
-          // Auto-open right-click context menu if the action targets a .context-menu-item / .context-menu-list that is not open yet
-          if (
-            !(el && (await el.isVisible().catch(() => false))) &&
-            /context-menu|contextmenu|ctx_menu/i.test(action.selector || "")
-          ) {
-            try {
-              let ctxScope: any = page;
-              if (action.iframe) {
-                for (const fSel of action.iframe.split(",").map((s) => s.trim()).filter(Boolean)) {
-                  const fLoc = page.locator(fSel).first();
-                  if ((await fLoc.count().catch(() => 0)) > 0 && (await fLoc.isVisible().catch(() => false))) {
-                    ctxScope = page.frameLocator(fSel);
-                    break;
-                  }
-                }
-              }
-
-              // Check if a recent type action searched a specific name/keyword
-              let recentSearchWord = "";
-              for (let p = actionIdx - 1; p >= Math.max(0, actionIdx - 5); p--) {
-                const prevAct = plan.actions[p];
-                if (prevAct && prevAct.type === "type" && prevAct.text && prevAct.text.trim().length >= 2) {
-                  recentSearchWord = prevAct.text.trim().replace(/['"\\]/g, "");
-                  break;
-                }
-              }
-
-              const rowCandidates: string[] = [];
-              if (recentSearchWord) {
-                rowCandidates.push(
-                  `#ntalk_body li.nt_li:has-text('${recentSearchWord}'):visible`,
-                  `#ntalk_body li:has-text('${recentSearchWord}'):visible`,
-                  `#ntalk_body .context-menu-one:has-text('${recentSearchWord}'):visible`,
-                  `li:has-text('${recentSearchWord}'):visible`,
-                  `tr:has-text('${recentSearchWord}'):visible`,
-                  `.dynatree-title:has-text('${recentSearchWord}'):visible`
-                );
-              }
-              rowCandidates.push(
-                "#ntalk_body li.nt_li._orgUser:visible",
-                "#ntalk_body li.nt_li:visible",
-                "#ntalk_body .nti_user:visible",
-                "#ntalk_body .context-menu-one:visible",
-                "#ntalk_body .ctxt-one:visible",
-                ".context-menu-one:visible",
-                ".dynatree-title:visible"
-              );
-
-              let openedMenuEl: Locator | null = null;
-              let clickedRowBox: { x: number; y: number; width: number; height: number } | null = null;
-              let clickedRowTs = 0;
-
-              outerRowLoop:
-              for (const rSel of rowCandidates) {
-                const candList = ctxScope.locator(rSel);
-                const candCount = await candList.count().catch(() => 0);
-                const maxTry = Math.min(candCount, 4);
-                for (let ci = 0; ci < maxTry; ci++) {
-                  const cand = candList.nth(ci);
-                  if (!(await cand.isVisible().catch(() => false))) continue;
-                  const rBox = await cand.boundingBox().catch(() => null);
-                  if (!rBox || rBox.width <= 20 || rBox.height < 16 || rBox.height > 140) continue;
-
-                  const rCx = Math.round(rBox.x + rBox.width / 2);
-                  const rCy = Math.round(rBox.y + rBox.height / 2);
-                  await page.mouse.move(rCx, rCy, { steps: 10 }).catch(() => {});
-                  const rTs = Date.now() - recordingStart;
-                  await cand.click({ button: "right", timeout: 2500, force: true }).catch(() => {});
-                  await page.waitForTimeout(450);
-
-                  const checkEl = await getLocator(page, action);
-                  if (checkEl && (await checkEl.isVisible().catch(() => false))) {
-                    openedMenuEl = checkEl;
-                    clickedRowBox = rBox;
-                    clickedRowTs = rTs;
-                    triggerClickVisualizer(page, rCx, rCy).catch(() => {});
-                    break outerRowLoop;
-                  }
-                }
-              }
-
-              if (openedMenuEl && clickedRowBox) {
-                const rCx = Math.round(clickedRowBox.x + clickedRowBox.width / 2);
-                const rCy = Math.round(clickedRowBox.y + clickedRowBox.height / 2);
-                moments.push({
-                  id: momentId,
-                  type: "rightclick",
-                  timestamp: clickedRowTs,
-                  cursor: { x: rCx, y: rCy },
-                  target: {
-                    x: Math.round(clickedRowBox.x),
-                    y: Math.round(clickedRowBox.y),
-                    width: Math.round(clickedRowBox.width),
-                    height: Math.round(clickedRowBox.height),
-                  },
-                  description: `[우클릭 메뉴 열기] 항목 우클릭`,
-                });
-                console.log(`  [🖱️ 우클릭 메뉴 자동 열기] 컨텍스트 메뉴 항목(${action.description}) 클릭을 위해 대상 항목을 우클릭했습니다.`);
-                el = openedMenuEl;
-              }
-            } catch {}
-          }
-          const hasSpecificSelector = Boolean(
-            action.recordedByEyedropper ||
-            (action.selector && (/#[a-zA-Z0-9_-]+/.test(action.selector) || action.selector.includes(">")))
-          );
           const isElVisible = async () => Boolean(el && (await el.isVisible().catch(() => false)));
-
-          const cleanDesc = (action.description || "").replace(/[\[\]]/g, "");
-          const isSearchExecutionButton =
-            !cleanDesc.includes("검색된") &&
-            !cleanDesc.includes("카드") &&
-            !cleanDesc.includes("항목") &&
-            !cleanDesc.includes("양식") &&
-            !cleanDesc.includes("결과") &&
-            !cleanDesc.includes("상세") &&
-            !cleanDesc.includes("문서") &&
-            !cleanDesc.includes("선택") &&
-            !cleanDesc.includes("통합검색") &&
-            !cleanDesc.includes("전사검색") &&
-            ((cleanDesc.includes("검색") && (cleanDesc.includes("버튼") || cleanDesc.includes("실행") || cleanDesc.includes("아이콘"))) ||
-             (action.selector && (action.selector.includes("searchBtn") || action.selector.includes("btn_srch") || action.selector.includes("btn_search") || action.selector.includes("search_btn"))));
-
-          if (isSearchExecutionButton && !action.recordedByEyedropper && !plan.recordedByEyedropper && !(await isElVisible())) {
-            let adjacentSearchBtn: Locator | null = null;
-            // 🚨 Canon 2: Relation-Based Proximity & Adjacent Search Button Binding
-            if (lastTypedInput && (Date.now() - lastTypedTime < 60000)) {
-              try {
-                // 1) Same form, search bar container, or wrapper
-                const containerBtn = lastTypedInput.locator(
-                  "xpath=ancestor::*[contains(@class,'srch') or contains(@class,'search') or self::form or contains(@class,'box') or contains(@class,'input_group') or self::div][1]//button[contains(@class,'srch') or contains(@class,'search') or contains(@id,'srch') or contains(@id,'search') or @title='검색' or contains(.,'검색') or .//*[contains(@class,'ico_srch')] or contains(@class,'btn_srch')]"
-                ).first();
-                if (await containerBtn.isVisible({ timeout: 500 }).catch(() => false)) {
-                  console.log(`  [🎯 인접 검색 버튼 바인딩] 방금 입력한 <input>과 동일 Form/컨테이너 내의 바로 옆 검색 버튼을 감지하여 타겟팅합니다.`);
-                  adjacentSearchBtn = containerBtn;
-                } else {
-                  // 2) Sibling button
-                  const siblingBtn = lastTypedInput.locator(
-                    "xpath=following-sibling::button[1] | following-sibling::*//button[1] | ../following-sibling::button[1]"
-                  ).first();
-                  if (await siblingBtn.isVisible({ timeout: 500 }).catch(() => false)) {
-                    console.log(`  [🎯 인접 형제 검색 버튼 바인딩] 방금 입력한 <input>의 바로 인접 형제 검색 버튼을 타겟팅합니다.`);
-                    adjacentSearchBtn = siblingBtn;
-                  }
-                }
-              } catch {}
-            }
-
-            if (adjacentSearchBtn) {
-              const adjBox = await adjacentSearchBtn.boundingBox().catch(() => null);
-              const curBox = el ? await el.boundingBox().catch(() => null) : null;
-              const isDifferentSearchBtn =
-                !curBox ||
-                (adjBox && Math.hypot(curBox.x - adjBox.x, curBox.y - adjBox.y) > 20);
-              if (!curBox || (!hasSpecificSelector && isDifferentSearchBtn)) {
-                el = adjacentSearchBtn;
-              }
-            } else if (!(await isElVisible()) || !hasSpecificSelector) {
-              const isFolderTreeSearch = cleanDesc.includes("문서함") || cleanDesc.includes("폴더") || cleanDesc.includes("트리") || cleanDesc.includes("사이드바");
-              const contentSearchBtn = page.locator(
-                "button#atclList_srchBtn:visible, button[id*='srchBtn']:visible, button[id*='searchBtn']:visible, .new_srch_bar button:visible, #content .srch_input button:has(.ico_srch):visible, #content .srch_input button[title='검색']:visible, #content button[title='검색']:visible, #content button.btn_srch:visible, #content button:has-text('검색'):visible"
-              ).first();
-              const sidebarSearchBtn = page.locator(
-                "#snb .srch_bar button.btn_srch:visible, #snb .srch_bar button[title='검색']:visible, #snb button.btn_srch:visible"
-              ).first();
-
-              if (!isFolderTreeSearch && await contentSearchBtn.isVisible().catch(() => false)) {
-                console.log(`  [🎯 본문 목록 검색 실행 버튼 특정] 사이드바/GNB를 배제하고 헤더 바로 밑 본문 툴바의 제목/목록 검색 실행 버튼을 연결합니다.`);
-                el = contentSearchBtn;
-              } else if (await sidebarSearchBtn.isVisible().catch(() => false)) {
-                console.log(`  [🎯 사이드바 트리 검색 실행 버튼 특정] 사이드바 내의 검색 실행 버튼을 연결합니다.`);
-                el = sidebarSearchBtn;
-              }
-            }
-          }
-
-          // Card [작성] Button detection for Naonsoft EKP Approval Work Cards
-          const isCardWriteBtnAction =
-            (descLower.includes("카드") && (descLower.includes("작성") || descLower.includes("결재작성"))) ||
-            (descLower.includes("결재작성") && !descLower.includes("사이드바") && !descLower.includes("snb")) ||
-            descLower.includes("기안 작성 화면 오픈") ||
-            (selLower.includes("btn_write") &&
-              (selLower.includes("aw_li") || selLower.includes("app_work_box") || selLower.includes("workselect")));
-
-          const isClickSearchResult = !isSearchExecutionButton && !isCardWriteBtnAction && (
-            Boolean(action.useScraped) ||
-            Boolean(
-              action.description &&
-              (action.description.includes("검색된") || action.description.includes("검색 결과") || (action.description.includes("결과") && action.description.includes("항목")) || action.description.includes("양식 카드") || action.description.includes("카드 클릭")) &&
-              (action.description.includes("선택") || action.description.includes("클릭") || action.description.includes("상세") || action.description.includes("조회") || action.description.includes("호버"))
-            )
-          );
-
-          if (isClickSearchResult && !action.recordedByEyedropper && !plan.recordedByEyedropper && (!(await isElVisible()) || Boolean(action.useScraped))) {
-            const targetText = action.useScraped && action.useScraped !== "auto"
-              ? runtimeVariables.get(action.useScraped)
-              : runtimeVariables.get("lastSearchKeyword");
-
-            if (targetText) {
-              const cleanKeyword = targetText.length > 15 ? targetText.slice(0, 15).trim() : targetText;
-              const matchedLoc = page.locator(
-                `ul.aw_ul li.aw_li:has-text('${cleanKeyword}') .app_work_box:visible, ul.aw_ul li.aw_li:has-text('${cleanKeyword}') a:visible, li.aw_li:has-text('${cleanKeyword}') a:visible, .app_work_box:has-text('${cleanKeyword}'):visible, ul.lst_vr_ul li a.sub_tp:has-text('${cleanKeyword}'):visible, ul.lst_vr_ul li .sub a:has-text('${cleanKeyword}'):visible, #atclList_list2 a:has-text('${cleanKeyword}'):visible, ul[id*='List'] li a:has-text('${cleanKeyword}'):visible, table tbody tr td.sub a:has-text('${cleanKeyword}'):visible, table tbody tr a:has-text('${cleanKeyword}'):visible, .lst_vr a:has-text('${cleanKeyword}'):visible, a.sub_tp:has-text('${cleanKeyword}'):visible, a[title*='${cleanKeyword}']:visible, a._atcl:has-text('${cleanKeyword}'):visible, a:has-text('${cleanKeyword}'):visible`
-              ).first();
-              if (await matchedLoc.isVisible().catch(() => false)) {
-                console.log(`  [🎯 검색 결과 실시간 매칭] 실제 검색어("${cleanKeyword}")와 일치하는 대상 요소를 클릭 대상으로 자동 연결합니다.`);
-                el = matchedLoc;
-              } else {
-                // 🚨 Canon 3: Active recovery via scroll before giving up
-                console.log(`  🔍 [검색 결과 스크롤 탐색] '${cleanKeyword}' 대상 확인을 위해 목록 영역 스크롤을 시도합니다...`);
-                await page.mouse.wheel(0, 300).catch(() => {});
-                await page.waitForTimeout(500);
-                if (await matchedLoc.isVisible().catch(() => false)) {
-                  console.log(`  [🎯 검색 결과 스크롤 후 매칭] 스크롤 후 실제 검색어("${cleanKeyword}")와 일치하는 대상을 찾아 연결했습니다.`);
-                  el = matchedLoc;
-                }
-              }
-            }
-
-            // 🚨 Canon 3: 무지성 첫 번째 항목 클릭 금지
-            // 오직 사용자가 특정 검색어/대상을 지정하지 않은 일반적인 탐색(예: "양식 카드 클릭")인 경우에만 첫 번째 가용 카드 매칭 허용
-            if (!el && !targetText) {
-              const firstCard = page.locator(
-                "ul.aw_ul li.aw_li:first-child .app_work_box:visible, ul.aw_ul li.aw_li:first-child a:visible, li.aw_li:first-child a:visible, .app_work_box:visible, ul.lst_vr_ul li:first-child a.sub_tp:visible, table tbody tr:first-child a:visible"
-              ).first();
-              if (await firstCard.isVisible().catch(() => false)) {
-                console.log(`  [📋 가용 양식 카드 연결] 특정 검색어가 지정되지 않은 일반 카드 선택이므로 첫 번째 가용 카드를 연결합니다.`);
-                el = firstCard;
-              }
-            } else if (!el && targetText) {
-              console.warn(`  [🚨 타겟 미발견 - 꼼수 0번 인덱스 클릭 금지] 검색어/대상 "${targetText}"와 일치하는 항목이 결과 목록에 없습니다.`);
-            }
-          }
-
-          if (isCardWriteBtnAction && !(await isElVisible())) {
-            const cardMatch =
-              action.selector?.match(/li\.aw_li:has-text\(['"]([^'"]+)['"]\)/) ||
-              action.selector?.match(/has-text\(['"]([^'"]+)['"]\)/) ||
-              action.description?.match(/['"]([^'"]+)['"]/);
-            const rawCardKw = cardMatch ? cardMatch[1].trim() : "";
-            const cardKw =
-              (rawCardKw && rawCardKw !== "작성" && rawCardKw !== "결재작성" && rawCardKw !== "결재 작성" ? rawCardKw : "") ||
-              runtimeVariables.get("lastSearchKeyword") ||
-              "";
-
-            const cardBoxSelector = cardKw
-              ? `ul.aw_ul li.aw_li:has-text('${cardKw}') .app_work_box:visible, li.aw_li:has-text('${cardKw}'):visible`
-              : `ul.aw_ul li.aw_li .app_work_box:visible, .app_work_box:visible`;
-
-            const cardBoxLoc = page.locator(cardBoxSelector).first();
-            if (await cardBoxLoc.isVisible().catch(() => false)) {
-              console.log(`  [🖱️ 양식 카드 호버 선행] [작성] 버튼(btn_write) 노출을 위해 먼저 양식 카드(${cardKw || "기본"}) 위에 마우스를 올립니다.`);
-              await cardBoxLoc.scrollIntoViewIfNeeded({ timeout: 1500 }).catch(() => {});
-              const cBox = await cardBoxLoc.boundingBox().catch(() => null);
-              if (cBox) {
-                await page.mouse.move(
-                  Math.round(cBox.x + cBox.width / 2),
-                  Math.round(cBox.y + cBox.height / 2)
-                ).catch(() => {});
-              }
-              await cardBoxLoc.hover({ timeout: 1500, force: true }).catch(() => {});
-              await page.waitForTimeout(450);
-            }
-
-            const cardBtnSelector = cardKw
-              ? `ul.aw_ul li.aw_li:has-text('${cardKw}') button.btn_write:visible, li.aw_li:has-text('${cardKw}') button.btn.btn_write:visible`
-              : `ul.aw_ul li.aw_li button.btn_write:visible, #eapWorkSelect_workList button.btn_write:visible, .app_work_box button.btn_write:visible, li.aw_li button.btn_write:visible, button.btn_write:not(._header_writeBtn):not(#header *):not(.gw_header *):not(#snb *):not(.workset_btn *):not(.gm_reg *):visible`;
-
-            const cardBtn = page.locator(cardBtnSelector).first();
-            const isVisible = (await cardBtn.isVisible().catch(() => false)) ||
-              (await cardBtn.waitFor({ state: "visible", timeout: 2500 }).then(() => true).catch(() => false));
-            if (isVisible) {
-              console.log(`  [🎯 결재업무 카드 작성 버튼 매칭] 호버로 노출된 양식 카드 내의 [작성] 버튼을 정확히 연결합니다.`);
-              el = cardBtn;
-            }
-          }
-
-          // Match click on newly created item (AI-generated plans only)
-          const isClickCreatedItem =
-            !action.recordedByEyedropper &&
-            !plan.recordedByEyedropper &&
-            (descLower.includes("등록된") || descLower.includes("작성된") || descLower.includes("방금")) &&
-            (descLower.includes("제목") || descLower.includes("상세") || descLower.includes("문서") || descLower.includes("글"));
-
-          if (isClickCreatedItem && !(await isElVisible())) {
-            const targetText = runtimeVariables.get("lastCreatedKeyword") || runtimeVariables.get("lastCreatedTitle");
-            if (targetText) {
-              const cleanKeyword = targetText.length > 15 ? targetText.slice(0, 15).trim() : targetText;
-              const matchedLoc = page.locator(
-                `ul.lst_vr_ul li a.sub_tp:has-text('${cleanKeyword}'):visible, ul.lst_vr_ul li .sub a:has-text('${cleanKeyword}'):visible, #atclList_list2 a:has-text('${cleanKeyword}'):visible, ul[id*='List'] li a:has-text('${cleanKeyword}'):visible, table tbody tr td.sub a:has-text('${cleanKeyword}'):visible, table tbody tr a:has-text('${cleanKeyword}'):visible, .lst_vr a:has-text('${cleanKeyword}'):visible, a.sub_tp:has-text('${cleanKeyword}'):visible, a[title*='${cleanKeyword}']:visible, a._atcl:has-text('${cleanKeyword}'):visible, a:has-text('${cleanKeyword}'):visible`
-              ).first();
-              if (await matchedLoc.isVisible().catch(() => false)) {
-                console.log(`  [🎯 방금 등록된 항목 매칭] 키워드("${cleanKeyword}")와 일치하는 문서 링크를 클릭 대상으로 연결합니다.`);
-                el = matchedLoc;
-              }
-            }
-          }
 
           // 🌟 System Alert/Confirm Layer (#naon-cmm-confirm-ok / #naon-cmm-alert-confirm) Guard:
           // Never allow a missing conditional system confirm/alert to fall back to closing an underlying form/org-chart dialog!
@@ -4853,462 +3329,21 @@ async function main() {
             }
           }
 
-          // 🌟 Universal Tree & Folder Node Selection Auto-Refinement
-          const isTreeOpenButton = descLower.includes("버튼") || (action.selector && (action.selector.includes("binderSelBtn") || action.selector.includes("bindBtn") || action.selector.includes("lineSelectBtn")));
-          const isTreeSelectAction =
-            !isTreeOpenButton &&
-            (((descLower.includes("선택") || descLower.includes("클릭")) && (descLower.includes("트리") || descLower.includes("노드"))) ||
-             (selLower.includes("dynatree") && !selLower.includes("btn") && !selLower.includes("binder")) ||
-             selLower.includes("fancytree") ||
-             selLower.includes("treebox"));
-
-          const isSaveOrSubmitConfirm =
-            !action.recordedByEyedropper &&
-            !plan.recordedByEyedropper &&
-            (descLower.includes("확인") || descLower.includes("완료")) &&
-            (descLower.includes("저장") || descLower.includes("상신") || descLower.includes("등록"));
-
-          if (isSaveOrSubmitConfirm && !(await isElVisible())) {
-            const topDialog = page.locator("#alert_lyr:visible, .ui-dialog:visible, .modal:visible").last();
-            const confirmBtn = topDialog.locator(
-              "button:text-is('확인'):visible, button.btn_pri:visible, button._confirmBtn:visible, button._confirm:visible, .ui-dialog-buttonpane button:has-text('확인'):not(#userScheduleCheckBtn):visible, button:has-text('확인'):not(#userScheduleCheckBtn):visible, .ui-dialog-buttonpane button:visible"
-            ).first();
-            if (await confirmBtn.isVisible().catch(() => false)) {
-              console.log(`  [🎯 저장/상신 확인 버튼 감지] 최상단 확인 다이얼로그의 [확인] 버튼을 타겟팅합니다.`);
-              el = confirmBtn;
-            } else {
-              const dialogCount = await page.locator(".ui-dialog:visible, #alert_lyr:visible").count().catch(() => 0);
-              if (dialogCount === 0) {
-                console.log(`  [✨ 저장 확인 불필요] 저장 확인 팝업 없이 즉시 저장 처리되어 확인 단계를 안전하게 통과합니다.`);
-                moment.timestamp = Date.now() - recordingStart;
-                await page.waitForTimeout(400);
-                break;
-              }
-            }
-          }
-
-          const isSystemAlertOrConfirmStep =
-            descLower.includes("알림 팝업") ||
-            descLower.includes("확인 팝업") ||
-            selLower.includes("naon-cmm-alert") ||
-            selLower.includes("naon-cmm-confirm") ||
-            selLower.includes("#alert_lyr") ||
-            selLower.includes("#confirm_lyr");
-
-          const isTreeSelectConfirm =
-            !isSystemAlertOrConfirmStep &&
-            !isSaveOrSubmitConfirm &&
-            (descLower.includes("확인") || descLower.includes("선택 완료") || descLower.includes("적용") || descLower.includes("닫기")) &&
-            (descLower.includes("팝업") || descLower.includes("모달") || descLower.includes("대화상자") || descLower.includes("문서함") || descLower.includes("보관함") || descLower.includes("게시판") || descLower.includes("폴더") || descLower.includes("분류") || descLower.includes("트리") || descLower.includes("사원") || descLower.includes("조직도") || descLower.includes("주소록"));
-
-          const hasActiveTreeDialog = (await page.locator(".ui-dialog:visible, .modal:visible, [role='dialog']:visible").count().catch(() => 0)) > 0;
-
-          // 1. If this is a modal confirmation step in an AI-generated plan but the modal is ALREADY CLOSED, pass safely without crashing!
-          if (isTreeSelectConfirm && !action.recordedByEyedropper && !plan.recordedByEyedropper && !hasActiveTreeDialog && !(await isElVisible())) {
-            console.log(`  [✨ 모달 확인 불필요] 대상 팝업이 이미 정상 종료되어 '${action.description}' 단계를 안전하게 통과합니다.`);
-            moment.timestamp = Date.now() - recordingStart;
-            await page.waitForTimeout(400);
-            break;
-          }
-
-          const topTreeDlg = page.locator(".ui-dialog:visible, .modal:visible, [role='dialog']:visible").last();
-
-          // If inside Resource Selection dialog (#resvn_select_lyr) and active tab is '관심' (empty), switch to '시설' tab if target is not visible (AI-generated plans ONLY)
-          if (!action.recordedByEyedropper && !plan.recordedByEyedropper && hasActiveTreeDialog && !(await isElVisible())) {
-            const interestTabActive = await topTreeDlg
-              .locator("#rmgResSelect_nav li.active a[data-value='interest']:visible")
-              .isVisible()
-              .catch(() => false);
-            if (interestTabActive) {
-              const meetingTab = topTreeDlg.locator("#rmgResSelect_nav a[data-value='meeting']:visible").first();
-              if (await meetingTab.isVisible().catch(() => false)) {
-                console.log(`  [🏢 자원 선택 탭 전환] '관심' 탭에 자원이 없어 '시설' 탭으로 전환합니다.`);
-                await meetingTab.click({ force: true }).catch(() => {});
-                await page.waitForTimeout(800);
-                el = await getLocator(page, action);
-              }
-            }
-          }
-
-          if (isTreeSelectAction && !(await isElVisible())) {
-            // Expand collapsed folder nodes ONLY (must have .dynatree-has-children or .dynatree-folder, never leaf nodes)
-            for (let expPass = 0; expPass < 2; expPass++) {
-              const expandBtn = await findVisibleInPageOrFrames(
-                page,
-                ".ui-dialog:visible button.btn_fopn:visible, .ui-dialog:visible button:has-text('모두펼침'):visible, .ui-dialog:visible #eapBinderSelect_expandTree:visible, .dynatree-node.dynatree-has-children:not(.dynatree-expanded):not([class*='dynatree-exp-e']) > .dynatree-expander:visible, .dynatree-node.dynatree-folder:not(.dynatree-expanded):not([class*='dynatree-exp-e']) > .dynatree-expander:visible"
-              );
-              if (expandBtn && (await expandBtn.isVisible().catch(() => false))) {
-                console.log(`  [📁 트리 펼침] 접혀있는 상위 폴더 노드를 펼쳐 하위 목록을 표시합니다.`);
-                await expandBtn.click({ force: true }).catch(() => {});
-                await page.waitForTimeout(650);
-                el = await getLocator(page, action);
-                if (await isElVisible()) break;
-              } else {
-                break;
-              }
-            }
-
-            if (!action.recordedByEyedropper && !plan.recordedByEyedropper && !(await isElVisible())) {
-              // 🚨 Canon 1 & 3: Check if a specific folder/category was requested
-              const categoryMatch = action.description?.match(/['"]([^'"]+)['"]/) ||
-                action.description?.match(/([가-힣a-zA-Z0-9_-]{2,})\s*(?:선택|클릭|보관함|문서함|폴더|분류|게시판|트리)/);
-              const targetCategory = categoryMatch ? categoryMatch[1].trim() : "";
-              const isGenericTreeDesc = !targetCategory || targetCategory.includes("선택") || targetCategory.includes("클릭") || targetCategory.includes("문서함") || targetCategory.includes("보관함") || targetCategory.includes("폴더");
-              const wantsCheckbox = descLower.includes("체크") || selLower.includes("checkbox");
-
-              if (!isGenericTreeDesc) {
-                const exactCategorySelector = wantsCheckbox
-                  ? `.ui-dialog:visible li:has-text('${targetCategory}'):visible span.dynatree-checkbox:visible, .ui-dialog:visible span.dynatree-node:has-text('${targetCategory}'):visible span.dynatree-checkbox:visible, .ui-dialog:visible a.dynatree-title:text-is('${targetCategory}'):visible, .ui-dialog:visible a.dynatree-title:has-text('${targetCategory}'):visible`
-                  : `.ui-dialog:visible a.dynatree-title:text-is('${targetCategory}'):visible, .ui-dialog:visible a.dynatree-title:has-text('${targetCategory}'):visible, .ui-dialog:visible span.txt:has-text('${targetCategory}'):visible, .ui-dialog:visible li:has-text('${targetCategory}'):visible span.dynatree-checkbox:visible, .ui-dialog:visible .dynatree-container :has-text('${targetCategory}'):visible`;
-                const exactCategoryLoc = page.locator(exactCategorySelector).first();
-                if (await exactCategoryLoc.isVisible().catch(() => false)) {
-                  console.log(`  [🎯 트리 정확 분류 매칭] 지정된 대상 분류("${targetCategory}")와 일치하는 노드를 연결합니다.`);
-                  el = exactCategoryLoc;
-                } else {
-                  // Try scrolling tree container
-                  const treeContainer = page.locator(".ui-dialog:visible .dynatree-container:visible, .ui-dialog:visible .tree_box:visible").first();
-                  if (await treeContainer.isVisible().catch(() => false)) {
-                    await treeContainer.evaluate((node) => node.scrollTop += 250).catch(() => {});
-                    await page.waitForTimeout(400);
-                    if (await exactCategoryLoc.isVisible().catch(() => false)) {
-                      console.log(`  [🎯 트리 스크롤 후 매칭] 스크롤 후 지정된 분류("${targetCategory}")를 찾아 연결했습니다.`);
-                      el = exactCategoryLoc;
-                    }
-                  }
-                }
-              }
-
-              if (!el && isGenericTreeDesc) {
-                // Target actual binder leaf node (strictly exclude parent folder nodes like .dynatree-folder)
-                const leafLoc = page.locator(
-                  ".ui-dialog:visible span.dynatree-checkbox:visible, .ui-dialog:visible .dynatree-container ul ul span.dynatree-checkbox:visible, .ui-dialog:visible .dynatree-container .tico_item a.dynatree-title:visible, .ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container ul ul a.dynatree-title:visible, .ui-dialog:visible a.dynatree-title:has-text('공용 문서보관함'):visible"
-                ).first();
-
-                if (await leafLoc.isVisible().catch(() => false)) {
-                  el = leafLoc;
-                }
-              }
-            }
-          }
-
-          if (isTreeSelectConfirm && !action.recordedByEyedropper && !plan.recordedByEyedropper && !(await isElVisible())) {
-            // Target the visible confirm button directly so mouse cursor travels to it in the video
-            const confirmBtn = page.locator(
-              ".ui-dialog:visible button._confirmBtn:visible, button#eapBinderSelect_confirm:visible, .ui-dialog:visible #eapBinderSelect_confirm, .ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button.btn_pri:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible"
-            ).first();
-            if (await confirmBtn.isVisible().catch(() => false)) {
-              el = confirmBtn;
-            } else {
-              // If confirm button is not visible, check if dialog is already closed!
-              const dialogCount = await page.locator(".ui-dialog:visible, .modal:visible").count().catch(() => 0);
-              if (dialogCount === 0) {
-                console.log(`  [✨ 모달 확인 불필요] 선택 팝업이 이미 정상 종료되어 확인 클릭 단계를 안전하게 통과합니다.`);
-                moment.timestamp = Date.now() - recordingStart;
-                await page.waitForTimeout(400);
-                break;
-              }
-            }
-          }
-
-          // 🌟 Universal Org Chart & User Picker / Approval Line Smart Handler (AI-generated plans ONLY — never hijack Eyedropper actions!)
-          const isAdminUserMngContext =
-            selLower.includes("orgusermng") ||
-            selLower.includes("orgempregform") ||
-            selLower.includes("inserempregform") ||
-            descLower.includes("사용자 등록 팝업") ||
-            descLower.includes("조직관리");
-          const isButtonClickDesc =
-            descLower.includes("버튼 클릭") ||
-            selLower.includes("btnadd") ||
-            selLower.includes("adduser");
-
-          const isOrgAction =
-            !action.recordedByEyedropper &&
-            !plan.recordedByEyedropper &&
-            !isAdminUserMngContext &&
-            !isButtonClickDesc &&
-            (descLower.includes("조직도") ||
-             descLower.includes("결재선") ||
-             descLower.includes("사원") ||
-             descLower.includes("사용자") ||
-             descLower.includes("부서") ||
-             descLower.includes("합의") ||
-             descLower.includes("결재자") ||
-             descLower.includes("결재칸") ||
-             descLower.includes("결재 칸") ||
-             descLower.includes("test00") ||
-             selLower.includes("user_info") ||
-             (selLower.includes("orguserlist") && !selLower.includes("orgmain_orguserlist"))) &&
-            !isTreeSelectConfirm &&
-            !isSaveOrSubmitConfirm;
-
-          if (isOrgAction && !(await isElVisible())) {
-            const hasModal = (await page.locator(".ui-dialog:visible, .modal:visible, [role='dialog']:visible").count().catch(() => 0)) > 0;
-            const topDlg = page.locator(".ui-dialog:visible, .modal:visible, [role='dialog']:visible").last();
-
-            const isExplicitUserTarget =
-              selLower.includes("user_info") ||
-              (selLower.includes("orguserlist") && !selLower.includes("orgmain_orguserlist")) ||
-              descLower.includes("test00") ||
-              descLower.includes("사원") ||
-              descLower.includes("사용자") ||
-              descLower.includes("체크박스");
-
-            // 0) [결재선 선택] 호출 버튼 액션 (팝업 열기)
-            const isLineSelectBtn =
-              (descLower.includes("결재선 선택") || descLower.includes("결재선 지정") || descLower.includes("결재라인 설정")) &&
-              (descLower.includes("버튼") || descLower.includes("호출") || descLower.includes("오픈") || descLower.includes("클릭") || descLower.includes("위해")) &&
-              !hasModal;
-
-            if (isLineSelectBtn && !(await isElVisible())) {
-              const lineSelectBtn = page.locator("button#eapDocReg_lineSelBtn:visible, button#eapDocReg_lineSelectBtn:visible, button:has-text('결재선 선택'):visible, button:has-text('결재선'):visible").first();
-              if (await lineSelectBtn.isVisible().catch(() => false)) {
-                console.log(`  [✨ 결재선 선택 버튼 매칭] 기안 폼 상단의 [결재선 선택] 버튼을 타겟팅합니다.`);
-                el = lineSelectBtn;
-              }
-            }
-
-            // 1) 부서 선택 액션 (예: '테스트 부서' 선택 - 사원/체크박스 타겟 제외)
-            if (!(await isElVisible()) && !isExplicitUserTarget && descLower.includes("부서") && (descLower.includes("선택") || descLower.includes("클릭"))) {
-              const deptMatch = action.description?.match(/['"]([^'"]+)['"]/) || action.description?.match(/([가-힣a-zA-Z0-9]+)\s*부서/);
-              const targetDept = deptMatch ? deptMatch[1].trim() : "";
-
-              let deptLoc = targetDept
-                ? topDlg.locator(`.dynatree-container a.dynatree-title:text-is('${targetDept}'):visible, .dynatree-container a.dynatree-title:has-text('${targetDept}'):visible`).first()
-                : null;
-              if (deptLoc && !(await deptLoc.isVisible().catch(() => false))) {
-                // Expand collapsed parent folders in org tree first
-                const collapsedFolders = topDlg.locator(
-                  ".dynatree-node.dynatree-has-children:not(.dynatree-expanded):not([class*='dynatree-exp-e']) > .dynatree-expander:visible, .dynatree-node.dynatree-folder:not(.dynatree-expanded):not([class*='dynatree-exp-e']) > .dynatree-expander:visible"
-                );
-                const cCount = await collapsedFolders.count().catch(() => 0);
-                for (let k = 0; k < Math.min(cCount, 4); k++) {
-                  await collapsedFolders.first().click({ force: true }).catch(() => {});
-                  await page.waitForTimeout(450);
-                }
-              }
-              if (deptLoc && (await deptLoc.isVisible().catch(() => false))) {
-                console.log(`  [🏢 조직도 부서 매칭] 대상 부서("${targetDept}")를 트리에 찾아 연결했습니다.`);
-                el = deptLoc;
-                // 하위 트리 확장 (expander 클릭)
-                try {
-                  const parentNode = deptLoc.locator("xpath=ancestor::span[contains(@class, 'dynatree-node')]").first();
-                  const expander = parentNode.locator(".dynatree-expander").first();
-                  if (await expander.isVisible().catch(() => false)) {
-                    const isExpanded = await parentNode.evaluate((node) => node.classList.contains("dynatree-expanded")).catch(() => false);
-                    if (!isExpanded) {
-                      console.log(`  [📂 부서 하위 펼침] '${targetDept}' 부서의 하위 트리를 펼칩니다.`);
-                      await expander.click().catch(() => {});
-                      await page.waitForTimeout(500);
-                    }
-                  }
-                } catch (err) {}
-              } else if (targetDept) {
-                // Try scrolling the tree container
-                const treeContainer = topDlg.locator(".dynatree-container:visible, .tree_box:visible").first();
-                if (await treeContainer.isVisible().catch(() => false)) {
-                  await treeContainer.evaluate((node) => node.scrollTop += 250).catch(() => {});
-                  await page.waitForTimeout(400);
-                  if (deptLoc && (await deptLoc.isVisible().catch(() => false))) {
-                    el = deptLoc;
-                  }
-                }
-              }
-
-              // 🚨 Canon 3: 특정 부서가 지정되지 않은 일반 부서 선택 시에만 가용 부서 연결
-              if (!(await isElVisible()) && !targetDept) {
-                const anyDept = topDlg.locator(".dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .dynatree-container li li a.dynatree-title:visible, .dynatree-container a.dynatree-title:visible").first();
-                if (await anyDept.isVisible().catch(() => false)) {
-                  console.log(`  [⚡ 조직도 부서 연결] 일반 부서 선택이므로 가용 부서 노드를 연결합니다.`);
-                  el = anyDept;
-                }
-              } else if (!(await isElVisible()) && targetDept) {
-                console.warn(`  [🚨 부서 미발견 - 꼼수 0번 인덱스 클릭 금지] 지정된 부서 "${targetDept}"가 조직도 트리에 존재하지 않습니다.`);
-              }
-            }
-
-            // 2) 합의 버튼 액션 (예: '첫번째 합의 버튼 선택')
-            if (!(await isElVisible()) && descLower.includes("합의")) {
-              const agreeBtn = topDlg.locator("button:has-text('합의'):visible, button._addAgreeBtn:visible, button[title*='합의']:visible").first();
-              if (await agreeBtn.isVisible().catch(() => false)) {
-                console.log(`  [🤝 결재선 합의 버튼 매칭] 조직도 내 [합의] 버튼을 타겟팅합니다.`);
-                el = agreeBtn;
-              }
-            }
-
-            // 3) 결재자 배치 / 결재칸 추가 액션 (예: 'test002 두번째 결재칸으로 드래그 앤 드롭' 또는 '결재칸으로 지정')
-            if (!(await isElVisible()) && (descLower.includes("결재칸") || descLower.includes("결재 칸") || descLower.includes("드래그") || (descLower.includes("결재") && descLower.includes("배치")))) {
-              const approverBtn = topDlg.locator("button:has-text('결재'):visible, button:has-text('추가'):visible, button._addApprBtn:visible, button.btn_rgt:visible").first();
-              if (await approverBtn.isVisible().catch(() => false)) {
-                console.log(`  [📥 결재선 배치 버튼 매칭] 조직도 내 [결재/추가] 버튼을 타겟팅합니다.`);
-                el = approverBtn;
-              } else {
-                const lineSlot = topDlg.locator("table.tbl_lst tbody tr:nth-child(2), [class*='line'] tr:nth-child(2), .app_line_list li:nth-child(2)").first();
-                if (await lineSlot.isVisible().catch(() => false)) {
-                  console.log(`  [📥 결재선 2번째 슬롯 매칭] 결재선 테이블의 2번째 칸을 타겟팅합니다.`);
-                  el = lineSlot;
-                }
-              }
-            }
-
-            // 4) 사원 / 사용자 선택 액션 (예: 'test001 체크박스 선택', 'test002 테스트 부서 (유니슨) 체크박스 클릭')
-            const isLineOpenAction = (descLower.includes("결재선 선택") || descLower.includes("결재선 지정")) && (descLower.includes("버튼") || descLower.includes("호출") || descLower.includes("오픈"));
-            const isUserSelect = !(await isElVisible()) && !isLineOpenAction && isExplicitUserTarget && !descLower.includes("합의");
-            if (isUserSelect) {
-              // 따옴표 우선 매칭 ('test001', 'test002 테스트 부서 (유니슨)') -> 첫 토큰('test002') 추출로 검색 호환성 보장
-              const stopWords = new Set([
-                "사원", "목록", "팝업", "선택", "체크", "체크박스", "부서", "버튼", "사용자", "결재선",
-                "첫번째", "두번째", "두번쨰", "결재", "합의", "추가", "설정", "호출", "지정", "라인",
-                "영역", "관리", "화면", "전환", "배치", "이동", "열기", "닫기", "등록", "수정",
-                "삭제", "입력", "작성", "확인", "취소", "상신", "임시저장", "대화상자", "모달", "레이어",
-                "트리", "오픈", "위해", "저장", "그룹웨어", "모바일", "전자결재", "라이선스"
-              ]);
-              let targetUser = "";
-              const testMatch = (action.description || action.selector || "").match(/(test\d+)/i);
-              if (testMatch) {
-                targetUser = testMatch[1].trim();
-              } else {
-                const quotedMatch = action.description?.match(/['"]([^'"]+)['"]/);
-                const quotedCandidate = quotedMatch ? quotedMatch[1].trim().split(/\s+/)[0] : "";
-                if (quotedCandidate && !stopWords.has(quotedCandidate)) {
-                  targetUser = quotedCandidate;
-                } else {
-                  const words = action.description?.match(/([가-힣]{2,4}|[a-zA-Z0-9_-]{3,})/g) || [];
-                  for (const w of words) {
-                    if (!stopWords.has(w)) {
-                      targetUser = w;
-                      break;
-                    }
-                  }
-                }
-              }
-              const isSecondUser = descLower.includes("test002") || descLower.includes("두번째") || descLower.includes("두 번째");
-
-              let userLoc: Locator | null = null;
-              if (targetUser) {
-                // 0) 먼저 우측 사원 목록(#orgUserList)에 해당 사용자가 이미 표시되어 있는지 확인
-                const listUserLoc = topDlg.locator(
-                  `label.user_info:has-text('${targetUser}'):visible, ul#orgUserList li:has-text('${targetUser}') label:visible, ul#orgUserList li:has-text('${targetUser}') input[type='checkbox']:visible`
-                ).first();
-                if (await listUserLoc.isVisible().catch(() => false)) {
-                  userLoc = listUserLoc;
-                  console.log(`  [✨ 조직도 사원 목록 매칭] 우측 사원 목록에서 대상 사원("${targetUser}")을 연결했습니다.`);
-                }
-              }
-
-              if (!userLoc && targetUser) {
-                // 1) 트리에서 타겟 사원 직접 탐색 (부서가 닫혀있으면 트리 펼침 시도)
-                let userNode = topDlg.locator(`.dynatree-node:has(a:has-text('${targetUser}'))`).first();
-                if (!await userNode.isVisible().catch(() => false)) {
-                  const expanders = topDlg.locator(
-                    ".dynatree-node.dynatree-has-children:not(.dynatree-expanded):not([class*='dynatree-exp-e']) > .dynatree-expander:visible"
-                  );
-                  const expCount = await expanders.count().catch(() => 0);
-                  for (let i = 0; i < Math.min(expCount, 4); i++) {
-                    await expanders.first().click({ timeout: 500, force: true }).catch(() => {});
-                    await page.waitForTimeout(450);
-                  }
-                  userNode = topDlg.locator(`.dynatree-node:has(a:has-text('${targetUser}'))`).first();
-                }
-
-                if (await userNode.isVisible().catch(() => false)) {
-                  if (descLower.includes("체크") || descLower.includes("체크박스")) {
-                    userLoc = userNode.locator(".dynatree-checkbox").first();
-                  } else {
-                    userLoc = userNode.locator("a.dynatree-title").first();
-                  }
-                  console.log(`  [✨ 조직도 트리 사원 매칭] 트리에서 대상 사원("${targetUser}")의 ${descLower.includes("체크") ? "체크박스" : "노드"}를 연결했습니다.`);
-                }
-              }
-
-              // 2) 🚨 능동적 복구: 트리에서 안 보이면 조직도 검색창을 통해 검색!
-              if (!userLoc && targetUser && hasModal) {
-                const searchInput = topDlg.locator("input#orgSearchWord:visible, .srch_bar input[type='text']:visible, input[placeholder*='검색']:visible, input[placeholder*='이름']:visible, input[placeholder*='사원']:visible, #searchWord:visible, input.input_txt:visible").first();
-                const searchBtn = topDlg.locator("button#orgSearchBtn:visible, .srch_bar button.btn_ico:visible, button.btn_srch:visible, button[title='검색']:visible, button:has-text('검색'):visible, .ico_srch:visible, button.btn_search:visible").first();
-
-                if (await searchInput.isVisible().catch(() => false)) {
-                  console.log(`  🔍 [조직도 스마트 검색 가동] 대상 사용자("${targetUser}")를 찾기 위해 조직도 검색창에 검색을 실행합니다...`);
-                  await searchInput.click().catch(() => {});
-                  await searchInput.fill(targetUser).catch(() => {});
-                  if (await searchBtn.isVisible().catch(() => false)) {
-                    await searchBtn.click().catch(() => {});
-                  } else {
-                    await searchInput.press("Enter").catch(() => {});
-                  }
-                  await page.waitForTimeout(800);
-
-                  // 검색 결과에서 체크박스 또는 사원 노드 특정 (체크박스 우선!)
-                  const searchChk = topDlg.locator(`
-                    label.user_info:has-text('${targetUser}'):visible,
-                    li:has-text('${targetUser}') input[type='checkbox']:visible,
-                    li:has-text('${targetUser}') .dynatree-checkbox:visible,
-                    .dynatree-node:has(a:has-text('${targetUser}')) .dynatree-checkbox:visible,
-                    label:has-text('${targetUser}') input[type='checkbox']:visible,
-                    div:has-text('${targetUser}') input[type='checkbox']:visible
-                  `).first();
-
-                  if (await searchChk.isVisible().catch(() => false)) {
-                    console.log(`  [✨ 조직도 검색 성공] 검색된 사원("${targetUser}")의 체크박스를 찾아 연결했습니다!`);
-                    userLoc = searchChk;
-                  } else {
-                    const searchItem = topDlg.locator(`
-                      .dynatree-node:has(a:has-text('${targetUser}')) a.dynatree-title:visible,
-                      li:has-text('${targetUser}'):visible,
-                      label.user_info:has-text('${targetUser}'):visible
-                    `).first();
-                    if (await searchItem.isVisible().catch(() => false)) {
-                      console.log(`  [✨ 조직도 검색 성공] 검색된 사원("${targetUser}") 노드를 찾아 연결했습니다!`);
-                      userLoc = searchItem;
-                    }
-                  }
-                }
-              }
-
-              // 🚨 능동적 복구: 여전히 없으면 사용자 목록 영역 스크롤 시도!
-              if (!userLoc && targetUser) {
-                const userListContainer = topDlg.locator("#orgUserList_listbox, .org_user_lst, .user_lst_box, ul[class*='user']:visible").first();
-                if (await userListContainer.isVisible().catch(() => false)) {
-                  console.log(`  🔍 [조직도 스크롤 탐색] 대상 사용자("${targetUser}")를 찾기 위해 목록 스크롤을 시도합니다...`);
-                  await userListContainer.evaluate((node) => node.scrollTop += 300).catch(() => {});
-                  await page.waitForTimeout(400);
-                  const scrolledLoc = topDlg.locator(`label.user_info:has-text('${targetUser}'):visible, li:has-text('${targetUser}'):visible, tr:has-text('${targetUser}'):visible`).first();
-                  if (await scrolledLoc.isVisible().catch(() => false)) {
-                    console.log(`  [✨ 조직도 스크롤 탐색 성공] 스크롤 후 대상 사원("${targetUser}")을 찾아 연결했습니다!`);
-                    userLoc = scrolledLoc;
-                  }
-                }
-              }
-
-              // 🚨 Canon 3: 무지성 첫 번째 항목 클릭 금지 (STRICT BAN ON FALSE POSITIVE)
-              // 대상 사원(targetUser)이 지정되어 있는데 검색과 스크롤로도 찾지 못했다면:
-              // 절대로 임의의 0번/1번 인덱스를 몰래 클릭해 성공한 척하지 말고, 정직하게 에러를 던져 중단!
-              if (!userLoc) {
-                if (targetUser) {
-                  console.error(`  [🚨 정직한 실패 리포팅] 조직도에서 지정된 대상 사원 "${targetUser}"을(를) 검색 및 스크롤 후에도 찾을 수 없습니다. (무지성 첫 번째 항목 클릭 금지 행동 강령 준수)`);
-                  throw new Error(`지정된 대상 사원 '${targetUser}'을(를) 조직도에서 찾을 수 없어 실패했습니다.`);
-                } else {
-                  // 특정 이름이 전혀 명시되지 않은 일반적인 사원 선택인 경우에만 가용 사원 연결 허용
-                  const userIndex = isSecondUser ? 1 : 0;
-                  const allUsers = topDlg.locator("label.user_info.chkbox:visible, label[class*='user_info']:visible, span.dynatree-checkbox:visible, #orgUserList_listbox label.user_info:visible, .org_user_lst li:visible, [id^='user_']:visible, .user_card:visible");
-                  const count = await allUsers.count().catch(() => 0);
-                  if (count > 0) {
-                    const pickIndex = Math.min(userIndex, count - 1);
-                    userLoc = allUsers.nth(pickIndex);
-                    console.log(`  [⚡ 가용 사원 선택] 특정 대상이 명시되지 않은 일반 사원 선택이므로 가용 사원(인덱스: ${pickIndex})을 연결합니다.`);
-                  }
-                }
-              }
-
-              if (userLoc) {
-                el = userLoc;
-              }
-            }
-          }
-
           if (!el) {
             el = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
           }
           if (!el) {
+            if ((action.recordedByEyedropper || plan.recordedByEyedropper) && action.clickCoords && (action.clickCoords.x > 0 || action.clickCoords.y > 0)) {
+              const cx = Math.round(action.clickCoords.x);
+              const cy = Math.round(action.clickCoords.y);
+              console.log(`  [🎯 시연 좌표 1:1 직접 클릭] 셀렉터 미탐색으로 시연 당시 실제 클릭 좌표(${cx}, ${cy})를 직접 클릭합니다.`);
+              moment.timestamp = Date.now() - recordingStart;
+              moment.cursor = { x: cx, y: cy };
+              moment.target = { x: Math.max(0, cx - 24), y: Math.max(0, cy - 16), width: 48, height: 32 };
+              triggerClickVisualizer(page, cx, cy).catch(() => {});
+              await page.mouse.click(cx, cy).catch(() => {});
+              break;
+            }
             if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
               markActionAndFollowupWaitForPruning(plan, actionIdx, action);
               console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 통과합니다: ${action.description}`);
@@ -5344,29 +3379,6 @@ async function main() {
               }
             } catch {}
 
-            if (!resolvedViaLabel && !action.recordedByEyedropper && !plan.recordedByEyedropper) {
-              // Intelligent Runtime Semantic Fallback based on action.description (AI-generated plans ONLY!)
-              const desc = action.description || "";
-              let fallbackLoc: Locator | null = null;
-
-              if (desc.includes("확인") || desc.includes("적용") || desc.includes("선택 완료")) {
-                fallbackLoc = page.locator(".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, .modal:visible button:has-text('확인'):visible, [role='dialog']:visible button:has-text('확인'):visible, button:has-text('확인'):visible").first();
-              } else if (desc.includes("저장") || desc.includes("상신") || desc.includes("등록") || desc.includes("발행") || desc.includes("완료")) {
-                fallbackLoc = page.locator("button:has-text('저장'):visible, button:has-text('상신'):visible, button:has-text('등록'):visible, button.btn_save:visible, button.btn_submit:visible, button.btn_pri:visible, input[type='submit']:visible").first();
-              } else if (desc.includes("닫기") || desc.includes("취소")) {
-                fallbackLoc = page.locator(".ui-dialog:visible button:has-text('닫기'):visible, .ui-dialog:visible button:has-text('취소'):visible, button:has-text('닫기'):visible, button:has-text('취소'):visible, button.btn_close:visible").first();
-              } else if (desc.includes("추가") || desc.includes("선택") || desc.includes("조직도") || desc.includes("주소록")) {
-                fallbackLoc = page.locator(".ui-dialog:visible button:has-text('추가'):visible, .ui-dialog:visible button:has-text('선택'):visible, button:has-text('추가'):visible, button:has-text('조직도'):visible, button.btn_add:visible").first();
-              }
-
-              if (fallbackLoc && (await fallbackLoc.isVisible().catch(() => false))) {
-                console.log(`  [✨ 지능형 런타임 복구] '${action.description}'에 맞는 실제 화면 요소를 감지하여 자동 복구했습니다.`);
-                el = fallbackLoc;
-                resolvedViaLabel = true;
-              }
-            }
-
-            // 🚨 Trigger AI Runtime Self-Healing if still not found!
             if (!resolvedViaLabel) {
               const healed = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
               if (healed) {
@@ -5376,6 +3388,17 @@ async function main() {
             }
 
             if (!resolvedViaLabel) {
+              if ((action.recordedByEyedropper || plan.recordedByEyedropper) && action.clickCoords && (action.clickCoords.x > 0 || action.clickCoords.y > 0)) {
+                const cx = Math.round(action.clickCoords.x);
+                const cy = Math.round(action.clickCoords.y);
+                console.log(`  [🎯 시연 좌표 1:1 직접 클릭] 비가시 상태로 시연 당시 실제 클릭 좌표(${cx}, ${cy})를 직접 클릭합니다.`);
+                moment.timestamp = Date.now() - recordingStart;
+                moment.cursor = { x: cx, y: cy };
+                moment.target = { x: Math.max(0, cx - 24), y: Math.max(0, cy - 16), width: 48, height: 32 };
+                triggerClickVisualizer(page, cx, cy).catch(() => {});
+                await page.mouse.click(cx, cy).catch(() => {});
+                break;
+              }
               if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
                 markActionAndFollowupWaitForPruning(plan, actionIdx, action);
                 console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 요소가 화면에 표시되지 않으나 필수 핵심 단계가 아니므로 안전하게 스킵합니다: ${action.description}`);
@@ -5390,9 +3413,22 @@ async function main() {
           const { locator: targetEl, box } = await resolveAtomicTarget(el, false, action.description, isEyedropperClick);
           el = targetEl;
 
+          let clickPositionOffset: { x: number; y: number } | undefined = undefined;
           if (box) {
-            const rawX = box.x + box.width / 2 + (action.cursorOffset?.x || 0);
-            const rawY = box.y + box.height / 2 + (action.cursorOffset?.y || 0);
+            let rawX = box.x + box.width / 2;
+            let rawY = box.y + box.height / 2;
+            if (isEyedropperClick && action.cursorOffset) {
+              const relX = Math.max(2, Math.min(Math.round(box.width - 2), action.cursorOffset.x));
+              const relY = Math.max(2, Math.min(Math.round(box.height - 2), action.cursorOffset.y));
+              rawX = box.x + relX;
+              rawY = box.y + relY;
+              if (box.width > 90 || box.height > 48) {
+                clickPositionOffset = { x: relX, y: relY };
+              }
+            } else if (action.cursorOffset) {
+              rawX = box.x + box.width / 2 + action.cursorOffset.x;
+              rawY = box.y + box.height / 2 + action.cursorOffset.y;
+            }
             const clamped = clampToViewport(
               rawX,
               rawY,
@@ -5422,47 +3458,6 @@ async function main() {
             triggerClickVisualizer(page, moment.cursor.x, moment.cursor.y).catch(() => {});
           }
 
-          // Pre-submit guard: ensure required table fields are filled before clicking draft submit (only for AI-generated plans, never Eyedropper!)
-          const isDraftSubmitAction =
-            (descLower.includes("상신") || selLower.includes("_draft")) &&
-            !descLower.includes("확인") &&
-            !descLower.includes("팝업") &&
-            !descLower.includes("모달") &&
-            !selLower.includes("confirm") &&
-            !selLower.includes("alert");
-
-          if (isDraftSubmitAction && !action.recordedByEyedropper && !plan.recordedByEyedropper) {
-            await page.evaluate(() => {
-              const todayStr = new Date().toISOString().split("T")[0];
-              document.querySelectorAll("input.hasDatepicker, input[type='date'], input[id*='date'], input[name*='date'], input[placeholder*='yyyy'], input[placeholder*='YYYY']").forEach((inp: any) => {
-                if (!inp.value || inp.value.trim() === "") {
-                  inp.value = todayStr;
-                  inp.dispatchEvent(new Event("input", { bubbles: true }));
-                  inp.dispatchEvent(new Event("change", { bubbles: true }));
-                }
-              });
-              document.querySelectorAll("table.tbl_frm tr, .doc_view_table tr").forEach((tr) => {
-                const text = tr.textContent || "";
-                if (text.includes("일자") || text.includes("년월일") || text.includes("일시") || text.includes("날짜")) {
-                  tr.querySelectorAll("input").forEach((inp: any) => {
-                    if (!inp.value || inp.value.trim() === "") {
-                      inp.value = todayStr;
-                      inp.dispatchEvent(new Event("input", { bubbles: true }));
-                      inp.dispatchEvent(new Event("change", { bubbles: true }));
-                    }
-                  });
-                }
-                tr.querySelectorAll("input[type='text'], input:not([type]), textarea").forEach((inp: any) => {
-                  if (!inp.value || inp.value.trim() === "") {
-                    inp.value = inp.tagName === "TEXTAREA" ? "금일 회의 완료" : "회의 완료";
-                    inp.dispatchEvent(new Event("input", { bubbles: true }));
-                    inp.dispatchEvent(new Event("change", { bubbles: true }));
-                  }
-                });
-              });
-            }).catch(() => {});
-          }
-
           // Guard against collapsing an already-expanded Dynatree folder when clicking .dynatree-expander
           let skipRedundantExpanderClick = false;
           if (selLower.includes("dynatree-expander") && !descLower.includes("접기") && !descLower.includes("축소")) {
@@ -5476,70 +3471,6 @@ async function main() {
             }).catch(() => false);
             if (skipRedundantExpanderClick) {
               console.log(`  [📂 트리 펼침 유지] 대상 트리 노드가 이미 펼쳐진 상태이므로 재클릭으로 인한 접힘을 방지합니다.`);
-            }
-          }
-
-          // Pre-clean duplicate folder in Filebox if [새폴더] is about to create a folder that already exists from demonstration/previous run
-          if (selLower.includes("_btn_newfolder") || descLower.includes("새폴더")) {
-            const upcomingFolderType = plan.actions
-              .slice(actionIdx + 1, actionIdx + 4)
-              .find((a) => a.type === "type" && a.text && a.text.trim().length > 0);
-            if (upcomingFolderType?.text) {
-              const targetFolderName = upcomingFolderType.text.trim();
-              const cleaned = await page.evaluate(async (fName) => {
-                const w = window as any;
-                if (!w.jQuery || !w.naon?.http?.ajax) return false;
-                const $ = w.jQuery;
-                let matchedChk: any = null;
-                $("#fbxList_listStyle tr").each(function (this: HTMLElement) {
-                  const $a = $(this).find("a._folder");
-                  if ($a.length && $a.text().trim() === fName) {
-                    const $chk = $(this).find("input.lst_chk._folderChk");
-                    if ($chk.length) matchedChk = $chk;
-                  }
-                });
-                if (!matchedChk) return false;
-                const folderIds = [matchedChk.data("folderId")];
-                const rootType =
-                  ($("#fbxList_parentFolderId").val() || "").split("/")[1] ||
-                  matchedChk.data("rootType") ||
-                  "root_my";
-                const parentFolderId = matchedChk.data("parentFolderId") || "root_my";
-                const urlType = w.GW?.LOCAL?.fbxList?.urlType || w.fbxList?.urlType || "";
-                await new Promise<void>((resolve) => {
-                  w.naon.http.ajax({
-                    url: "/inc/fbx/fbx" + urlType + "Delete",
-                    data: { rootType, parentFolderId, folderIds, fileIds: [] },
-                    contentType: "application/json; charset=utf-8",
-                    dataType: "json",
-                    success: () => resolve(),
-                    error: () => resolve(),
-                  });
-                });
-                try {
-                  const returnData = w.GW?.LOCAL?.fbxList?.fn?.setDeleteObserverData?.() || {
-                    reloadYn: "N",
-                    rootTypeVal: rootType,
-                    parentFolderIdVal: parentFolderId,
-                    folderId: parentFolderId,
-                  };
-                  if (w.ObserverControl) {
-                    w.ObserverControl.notifyObservers({
-                      type: "NOTIFY_ON_TREE_RELOAD",
-                      data: { folderId: parentFolderId, parentReload: "" },
-                    });
-                    w.ObserverControl.notifyObservers({
-                      type: "NOTIFY_DRAW_FILE_LIST",
-                      data: returnData,
-                    });
-                  }
-                } catch {}
-                return true;
-              }, targetFolderName).catch(() => false);
-              if (cleaned) {
-                console.log(`  [🧹 기존 중복 폴더 사전 정리] 시연 중 생성된 '${targetFolderName}' 폴더를 사전 정리하여 클린 생성을 보장합니다.`);
-                await page.waitForTimeout(600);
-              }
             }
           }
 
@@ -5593,9 +3524,17 @@ async function main() {
                 console.log(`  [DEBUG] click starts. timeout=${clickTimeout}, force=${action.force}`);
                 const t1 = Date.now();
                 if (isDisabled) {
-                  await el.click({ timeout: 3000, force: true }).catch(() => { });
+                  await el.click({
+                    timeout: 3000,
+                    force: true,
+                    ...(clickPositionOffset ? { position: clickPositionOffset } : {}),
+                  }).catch(() => { });
                 } else {
-                  await el.click({ timeout: clickTimeout, force: action.force ?? false });
+                  await el.click({
+                    timeout: clickTimeout,
+                    force: action.force ?? false,
+                    ...(clickPositionOffset ? { position: clickPositionOffset } : {}),
+                  });
                 }
                 console.log(`  [DEBUG] click done. took ${Date.now() - t1}ms`);
               }
@@ -5677,10 +3616,9 @@ async function main() {
             }
           }
 
-          // Ensure custom radio button labels (e.g. label.rdobtn / label.wiki_sub_box) reliably check their child input[type='radio'] and update .rdobtn_on
+          // Ensure custom radio button labels reliably check their child input[type='radio'] and update .rdobtn_on
           if (
             selLower.includes("rdobtn") ||
-            selLower.includes("wiki_sub_box") ||
             selLower.includes("type='radio'") ||
             (action.targetHtml && (action.targetHtml.includes("rdobtn") || action.targetHtml.includes('type="radio"')))
           ) {
@@ -5690,7 +3628,7 @@ async function main() {
                   const label =
                     node.tagName.toLowerCase() === "label"
                       ? (node as HTMLLabelElement)
-                      : (node.closest("label.rdobtn, label.wiki_sub_box, label[for]") as HTMLLabelElement | null);
+                      : (node.closest("label.rdobtn, label[for]") as HTMLLabelElement | null);
                   const rawRdo =
                     node.tagName.toLowerCase() === "input" && (node as HTMLInputElement).type === "radio"
                       ? (node as HTMLInputElement)
@@ -5727,35 +3665,9 @@ async function main() {
             } catch {}
           }
 
-          // If a board radio option inside #aglTaskBrdSelect_boardList ([보드 선택 팝업]) was clicked and the next step targets the parent form/dialog,
-          // ensure the board selection dialog is confirmed/closed if clicking the radio label alone left it open
-          if (selLower.includes("agltaskbrdselect") || (action.targetHtml && action.targetHtml.includes("aglTaskBrdSelect"))) {
-            let nextNonWaitAfterBrd: BrowsePlanAction | null = null;
-            for (let k = actionIdx + 1; k < plan.actions.length; k++) {
-              if (plan.actions[k].type !== "wait") {
-                nextNonWaitAfterBrd = plan.actions[k];
-                break;
-              }
-            }
-            const nextSelAfterBrd = (nextNonWaitAfterBrd?.selector || "").toLowerCase();
-            if (!nextSelAfterBrd.includes("agltaskbrdselect") && !(nextNonWaitAfterBrd?.description || "").includes("보드 선택 팝업] '확인'")) {
-              await page.waitForTimeout(250);
-              const brdConfirmBtn = page
-                .locator(
-                  "#aglTaskBrdSelect button._confirmBtn:visible, #aglTaskBrdSelect_confirm:visible, .ui-dialog:visible:has(#aglTaskBrdSelect_boardList) button._confirmBtn:visible"
-                )
-                .first();
-              if (await brdConfirmBtn.isVisible().catch(() => false)) {
-                console.log(`  [📌 보드 선택 팝업 확정] 선택한 보드를 부모 창에 반영하기 위해 확인 버튼을 함께 클릭합니다.`);
-                await brdConfirmBtn.click({ force: true }).catch(() => {});
-                await page.waitForTimeout(400);
-              }
-            }
-          }
-
-          // If a DynaTree folder title (e.g. '부서', '대학본부', '유니슨') was clicked and the next step targets another tree node (not an explicit expander click),
-          // expand its .dynatree-expander if it remained collapsed so child nodes become visible!
-          if (selLower.includes("dynatree-title") || (!action.recordedByEyedropper && !plan.recordedByEyedropper && descLower.includes("부서"))) {
+          // If a DynaTree folder title was clicked and the next step targets another tree node (not an explicit expander click),
+          // expand its .dynatree-expander if it remained collapsed so child nodes become visible
+          if (selLower.includes("dynatree-title")) {
             let nextNonWaitTree: BrowsePlanAction | null = null;
             for (let k = actionIdx + 1; k < plan.actions.length; k++) {
               if (plan.actions[k].type !== "wait") {
@@ -5768,7 +3680,7 @@ async function main() {
               (nextTreeSel.includes("dynatree-") || nextTreeSel.includes("fancytree-")) &&
               !nextTreeSel.includes("dynatree-expander") &&
               !nextTreeSel.includes("fancytree-expander");
-            if ((!action.recordedByEyedropper && !plan.recordedByEyedropper) || isNextAnotherTreeNode) {
+            if (isNextAnotherTreeNode) {
               try {
                 const parentNode = el.locator("xpath=ancestor::span[contains(@class, 'dynatree-node')]").first();
                 if (await parentNode.isVisible().catch(() => false)) {
@@ -5791,504 +3703,22 @@ async function main() {
             }
           }
 
-          // Handle jQuery UI Datepicker & Timepicker inputs: keep popup visible briefly for video feedback, then close floating overlay so it doesn't cover subsequent fields (do NOT overwrite with stale lastval!)
-          const isDateOrTimeInput =
-            /date(?!r)|datepicker/i.test(selLower) ||
-            selLower.includes("hourminute") ||
-            selLower.includes("timepicker") ||
-            (action.targetHtml && (action.targetHtml.includes("hasDatepicker") || action.targetHtml.includes("ui-timepicker-input")));
-
-          if (isDateOrTimeInput) {
-            let nextNonWait: BrowsePlanAction | null = null;
-            for (let k = actionIdx + 1; k < plan.actions.length; k++) {
-              if (plan.actions[k].type !== "wait") {
-                nextNonWait = plan.actions[k];
-                break;
-              }
-            }
-            const nextSel = (nextNonWait?.selector || "").toLowerCase();
-            const nextIsPickerItemClick =
-              nextNonWait?.type === "click" &&
-              (nextSel.includes("ui-datepicker") || nextSel.includes("ui-timepicker") || (nextNonWait?.description || "").includes("달력 팝업") || (nextNonWait?.description || "").includes("시간 선택"));
-
-            if (!nextIsPickerItemClick) {
-              await page.waitForTimeout(350);
-
-              // Only auto-pick Saturday / 10:00 for AI-generated plans where the user didn't record an explicit date/time selection!
-              if (!action.recordedByEyedropper && !plan.recordedByEyedropper) {
-                // If datepicker opened (e.g. startDate1 / endDate1), click the Saturday cell of the current week so the schedule is placed on a conflict-free future day visible on the weekly calendar
-                const isDatePickerVisible = await page.locator("#ui-datepicker-div:visible").isVisible().catch(() => false);
-                if (isDatePickerVisible) {
-                  let targetDay = runtimeVariables.get("scheduleSlotDay") || "";
-                  if (!targetDay) {
-                    targetDay = await page.evaluate(() => {
-                      const dp = document.getElementById("ui-datepicker-div");
-                      if (!dp) return "";
-                      const todayCell = dp.querySelector("td.ui-datepicker-today, td.ui-datepicker-current-day");
-                      const tr = todayCell?.closest("tr");
-                      if (tr) {
-                        const cells = Array.from(tr.querySelectorAll("td"));
-                        const lastCell = cells[cells.length - 1];
-                        if (lastCell && lastCell !== todayCell) {
-                          const a = lastCell.querySelector("a");
-                          if (a && a.textContent) return a.textContent.trim();
-                        }
-                        const nextTr = tr.nextElementSibling;
-                        if (nextTr) {
-                          const nextCells = Array.from(nextTr.querySelectorAll("td a"));
-                          if (nextCells.length > 0) {
-                            return (nextCells[nextCells.length - 1].textContent || "").trim();
-                          }
-                        }
-                      }
-                      const allLinks = Array.from(dp.querySelectorAll("td:not(.ui-datepicker-other-month) a"));
-                      return allLinks.length > 0 ? (allLinks[allLinks.length - 1].textContent || "").trim() : "";
-                    }).catch(() => "");
-                    if (targetDay) runtimeVariables.set("scheduleSlotDay", targetDay);
-                  }
-                  if (targetDay) {
-                    const dayCell = page.locator(`#ui-datepicker-div:visible td a:text-is('${targetDay}'):visible`).first();
-                    if (await dayCell.isVisible().catch(() => false)) {
-                      const dBox = await dayCell.boundingBox().catch(() => null);
-                      const subTs = Date.now() - recordingStart;
-                      if (dBox) {
-                        const cx = Math.round(dBox.x + dBox.width / 2);
-                        const cy = Math.round(dBox.y + dBox.height / 2);
-                        triggerClickVisualizer(page, cx, cy).catch(() => {});
-                        extraSubMoments.push({
-                          id: 0,
-                          type: "click",
-                          timestamp: subTs,
-                          cursor: { x: cx, y: cy },
-                          target: { x: Math.round(dBox.x), y: Math.round(dBox.y), width: Math.round(dBox.width), height: Math.round(dBox.height) },
-                          description: `[달력 팝업] '${targetDay}일' 선택`,
-                        });
-                      }
-                      await dayCell.click({ timeout: 1500, force: true }).catch(() => {});
-                      await page.waitForTimeout(250);
-                    }
-                  }
-                }
-
-                // If timepicker opened (e.g. startHourMinute / endHourMinute), select an unbooked 1-hour slot on the visible calendar grid
-                const isTimePickerVisible = await page.locator(".ui-timepicker-list:visible, .ui-timepicker-wrapper:visible").first().isVisible().catch(() => false);
-                if (isTimePickerVisible) {
-                  if (!runtimeVariables.get("scheduleSlotStart")) {
-                    const chosenSlot = await page.evaluate(() => {
-                      const existingTexts = Array.from(document.querySelectorAll(".fc-event, .fc-time")).map((el) => el.textContent || "").join(" ");
-                      const candidates: [string, string][] = [
-                        ["10:00", "11:00"],
-                        ["11:00", "12:00"],
-                        ["13:00", "14:00"],
-                        ["14:00", "15:00"],
-                        ["16:00", "17:00"],
-                        ["17:00", "18:00"],
-                        ["08:00", "09:00"],
-                        ["19:00", "20:00"],
-                        ["20:00", "21:00"],
-                      ];
-                      for (const [s, e] of candidates) {
-                        if (!existingTexts.includes(`${s} - ${e}`) && !existingTexts.includes(`${s}~${e}`)) {
-                          return { start: s, end: e };
-                        }
-                      }
-                      return { start: "10:00", end: "11:00" };
-                    }).catch(() => ({ start: "10:00", end: "11:00" }));
-                    runtimeVariables.set("scheduleSlotStart", chosenSlot.start);
-                    runtimeVariables.set("scheduleSlotEnd", chosenSlot.end);
-                  }
-                  const targetTime = selLower.includes("end")
-                    ? (runtimeVariables.get("scheduleSlotEnd") || "11:00")
-                    : (runtimeVariables.get("scheduleSlotStart") || "10:00");
-                  const timeItem = page.locator(`.ui-timepicker-list:visible li:text-is('${targetTime}'):visible, .ui-timepicker-wrapper:visible li:text-is('${targetTime}'):visible`).first();
-                  if (await timeItem.isVisible().catch(() => false)) {
-                    await timeItem.scrollIntoViewIfNeeded({ timeout: 1000 }).catch(() => {});
-                    const tBox = await timeItem.boundingBox().catch(() => null);
-                    const subTs = Date.now() - recordingStart;
-                    if (tBox) {
-                      const cx = Math.round(tBox.x + tBox.width / 2);
-                      const cy = Math.round(tBox.y + tBox.height / 2);
-                      triggerClickVisualizer(page, cx, cy).catch(() => {});
-                      extraSubMoments.push({
-                        id: 0,
-                        type: "click",
-                        timestamp: subTs,
-                        cursor: { x: cx, y: cy },
-                        target: { x: Math.round(tBox.x), y: Math.round(tBox.y), width: Math.round(tBox.width), height: Math.round(tBox.height) },
-                        description: `[시간 선택] '${targetTime}' 선택`,
-                      });
-                    }
-                    await timeItem.click({ timeout: 1500, force: true }).catch(() => {});
-                    await page.waitForTimeout(250);
-                  }
-                }
-              }
-
-              await page.evaluate(() => {
-                const dp = document.getElementById("ui-datepicker-div");
-                if (dp) dp.style.display = "none";
-                document.querySelectorAll(".ui-timepicker-wrapper").forEach((w) => {
-                  (w as HTMLElement).style.display = "none";
-                });
-              }).catch(() => {});
-            }
-          }
-
-          // If this was resource reservation popup confirmation ([자원예약 팝업] '확인') in an AI plan, check if the selected resource shows [예약불가] due to a time slot conflict from previous test runs, and shift to a free time slot if needed
-          const isResourceConfirmClick =
-            (descLower.includes("자원") && descLower.includes("확인")) ||
-            selLower.includes("resselect_confirm") ||
-            selLower.includes("scd_link_res");
-          if (
-            !action.recordedByEyedropper &&
-            !plan.recordedByEyedropper &&
-            (isResourceConfirmClick || (descLower.includes("확인") && (await page.locator(".ui-dialog:visible #startDate1, .ui-dialog:visible #useBgnDe1").count().catch(() => 0)) > 0))
-          ) {
-            await page.waitForTimeout(600);
-            const hasResourceConflict = await page.evaluate(() => {
-              const dialogs = Array.from(document.querySelectorAll(".ui-dialog:visible, .ui-dialog"));
-              return dialogs.some((d) => (d as HTMLElement).offsetWidth > 0 && (d.textContent || "").includes("예약불가"));
-            }).catch(() => false);
-
-            if (hasResourceConflict) {
-              console.log(`  [🔄 자원 예약 시간 충돌 자동 조정] 선택된 자원에 '[예약불가]' 시간 중복이 감지되어 비어 있는 미래 시간대로 일시를 자동 조정합니다.`);
-              for (const candidateSlot of [
-                { daysOffset: 1, startTime: "07:00", endTime: "08:00" },
-                { daysOffset: 2, startTime: "19:00", endTime: "20:00" },
-                { daysOffset: 3, startTime: "10:00", endTime: "11:00" },
-                { daysOffset: 4, startTime: "14:00", endTime: "15:00" },
-              ]) {
-                await page.evaluate((slot) => {
-                  const targetDate = new Date();
-                  targetDate.setDate(targetDate.getDate() + slot.daysOffset);
-                  const yyyy = targetDate.getFullYear();
-                  const mm = String(targetDate.getMonth() + 1).padStart(2, "0");
-                  const dd = String(targetDate.getDate()).padStart(2, "0");
-                  const dateStr = `${yyyy}-${mm}-${dd}`;
-                  const w = window as any;
-                  if (w.jQuery) {
-                    const $start = w.jQuery("#startDate1:visible, #useBgnDe1:visible");
-                    const $end = w.jQuery("#endDate1:visible, #useEndDe1:visible");
-                    const $startHm = w.jQuery("#startHourMinute:visible, #useBgnTime1:visible");
-                    const $endHm = w.jQuery("#endHourMinute:visible, #useEndTime1:visible");
-                    if ($start.length) {
-                      try {
-                        $start.datepicker("setDate", dateStr);
-                        const onSel = $start.datepicker("option", "onSelect");
-                        if (typeof onSel === "function") onSel.call($start[0], dateStr, $start.data("datepicker"));
-                      } catch {}
-                      $start.val(dateStr).trigger("change");
-                    }
-                    if ($end.length) {
-                      try {
-                        $end.datepicker("setDate", dateStr);
-                        const onSel = $end.datepicker("option", "onSelect");
-                        if (typeof onSel === "function") onSel.call($end[0], dateStr, $end.data("datepicker"));
-                      } catch {}
-                      $end.val(dateStr).trigger("change");
-                    }
-                    if ($startHm.length) {
-                      try { $startHm.timepicker("setTime", slot.startTime); } catch {}
-                      $startHm.val(slot.startTime).trigger("change");
-                    }
-                    if ($endHm.length) {
-                      try { $endHm.timepicker("setTime", slot.endTime); } catch {}
-                      $endHm.val(slot.endTime).trigger("change");
-                    }
-                  }
-                }, candidateSlot).catch(() => {});
-                await page.waitForTimeout(600);
-                const stillConflict = await page.evaluate(() => {
-                  const dialogs = Array.from(document.querySelectorAll(".ui-dialog"));
-                  return dialogs.some((d) => (d as HTMLElement).offsetWidth > 0 && (d.textContent || "").includes("예약불가"));
-                }).catch(() => false);
-                if (!stillConflict) {
-                  console.log(`  [✨ 자원 예약 가능 확인] 시간대 조정 후 '[예약불가]' 경고가 정상 해제되었습니다.`);
-                  break;
-                }
-              }
-            }
-          }
-
-          // If this was 합의 button click, verify if 합의 slot is populated (only for AI-generated plans, never Eyedropper!)
-          if (!action.recordedByEyedropper && !plan.recordedByEyedropper && descLower.includes("합의") && (await page.locator(".ui-dialog:visible").count().catch(() => 0)) > 0) {
-            await page.waitForTimeout(500);
-            const topDlg = page.locator(".ui-dialog:visible").last();
-            const slotsText = await topDlg.locator("[class*='line'] > div, [class*='box']").allInnerTexts().catch(() => []);
-            const hasAgree = slotsText.some(t => t.includes("합의") && (t.includes("test") || t.includes("유니슨") || t.includes("부서")));
-            if (!hasAgree) {
-              console.log(`  [✨ 합의자 반영 보강] 합의 슬롯 미반영 감지 -> test001 체크 후 합의 버튼 재클릭`);
-              const test001Chk = topDlg.locator(`.dynatree-node:has(a:has-text('test001')) .dynatree-checkbox:visible, li:has-text('test001') input[type='checkbox']:visible`).first();
-              if (await test001Chk.isVisible().catch(() => false)) {
-                await test001Chk.click({ force: true }).catch(() => {});
-                await page.waitForTimeout(300);
-              }
-              const agreeBtn = topDlg.locator("button:has-text('합의'):visible").first();
-              if (await agreeBtn.isVisible().catch(() => false)) {
-                await agreeBtn.click({ force: true }).catch(() => {});
-                await page.waitForTimeout(500);
-              }
-            }
-          }
-
-          // If a dropdown menu opened (e.g. [권한 ▲] toggle in shuttle picker dialog), select permission option ONLY if the next action does NOT already click a dropdown option!
-          const isDropdownToggle = (action.selector && action.selector.includes("drop_tgl")) || (action.description && (action.description.includes("권한") || action.description.includes("전달") || action.description.includes("추가")));
-          const nextNonWaitAct = plan.actions.slice(actionIdx + 1, actionIdx + 4).find((a) => a.type !== "wait");
-          const nextStepClicksDropdownOption =
-            Boolean(action.recordedByEyedropper || plan.recordedByEyedropper) ||
-            (nextNonWaitAct?.type === "click" &&
-              (/drop_menu|dropdown-menu|_delBox|메뉴\/링크/.test(`${nextNonWaitAct.selector || ""} ${nextNonWaitAct.description || ""}`)));
-          if (isDropdownToggle && !nextStepClicksDropdownOption) {
-            const dropMenuOpt = page.locator(".drop_menu:visible a:has-text('읽기/쓰기'), .drop_menu:visible a:has-text('읽기'), .drop_menu:visible a:first-child, .dropdown-menu:visible a:first-child").first();
-            if (await dropMenuOpt.isVisible().catch(() => false)) {
-              console.log(`  [✨ 셔틀 권한 선택 완료] 드롭다운 메뉴가 열려 권한 레벨 옵션을 클릭하여 대상 전송을 완료합니다.`);
-              await dropMenuOpt.click().catch(() => {});
-              await page.waitForTimeout(600);
-            }
-          }
-
-          // If this was modal confirmation, verify that alert was dismissed and dialog actually closed (unless the next action in the plan is an explicit confirm/alert click!)
-          const nextStepIsAlertConfirm =
-            nextNonWaitAct?.type === "click" &&
-            (/알림 팝업|확인 팝업|naon-cmm-confirm|naon-cmm-alert|#alert_lyr|#confirm_lyr/i.test(
-              `${nextNonWaitAct.description || ""} ${nextNonWaitAct.selector || ""}`
-            ));
-          if (!action.recordedByEyedropper && !plan.recordedByEyedropper && hasActiveTreeDialog && isTreeSelectConfirm && !nextStepIsAlertConfirm) {
-            await page.waitForTimeout(400);
-            // Strictly match only system alert layers (#alert_lyr, #naon-cmm-alert-confirm, .alert_dialog), NEVER main registration .ui-dialog forms!
-            const alertBtn = page.locator(
-              "#alert_lyr:visible button:has-text('확인'):visible, button#naon-cmm-alert-confirm:visible, .ui-dialog.alert_dialog:visible button:text-is('확인'):visible"
-            ).first();
-            if (await alertBtn.isVisible().catch(() => false)) {
-              console.log(`  [🤖 알림 팝업 자동 해제] 알림 팝업을 닫고 말단 리프 노드 재선택 후 확인 재시도`);
-              await alertBtn.click().catch(() => {});
-              await page.waitForTimeout(400);
-              const topDlg = page.locator(".ui-dialog:visible, [role='dialog']:visible").last();
-              // First expand tree if collapsed
-              const expandBtn = topDlg.locator(
-                "button.btn_fopn:visible, button:has-text('모두펼침'):visible, .dynatree-node.dynatree-has-children:not(.dynatree-expanded):not([class*='dynatree-exp-e']) > .dynatree-expander:visible"
-              ).first();
-              if (await expandBtn.isVisible().catch(() => false)) {
-                await expandBtn.click({ force: true }).catch(() => {});
-                await page.waitForTimeout(500);
-              }
-              const leafLoc = topDlg.locator(
-                "span.dynatree-checkbox:visible, .dynatree-container ul ul span.dynatree-checkbox:visible, .dynatree-container .tico_item a.dynatree-title:visible, .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .dynatree-container ul ul a.dynatree-title:visible, a.dynatree-title:has-text('공용 문서보관함'):visible"
-              ).first();
-              if (await leafLoc.isVisible().catch(() => false)) {
-                await leafLoc.click({ force: true }).catch(() => {});
-                await page.waitForTimeout(500);
-              }
-              const confirmBtn = topDlg.locator("button._confirmBtn:visible, #eapBinderSelect_confirm:visible, .ui-dialog-buttonpane button:has-text('확인'), button:has-text('확인'):visible").first();
-              if (await confirmBtn.isVisible().catch(() => false)) {
-                await confirmBtn.click({ force: true }).catch(() => {});
-              }
-            }
-            await page.locator(".ui-dialog:visible:has(.dynatree-container)").waitFor({ state: "hidden", timeout: 1500 }).catch(() => {});
-            await page.evaluate(() => {
-              if (document.querySelectorAll(".ui-dialog:visible").length === 0) {
-                document.querySelectorAll(".ui-widget-overlay").forEach(el => el.remove());
-              }
-            }).catch(() => {});
-            console.log(`  [✨ 팝업 닫힘 완료] 선택 팝업이 정상 해제되어 본문 작성 폼으로 진입했습니다.`);
-          }
-
-          // If this was a final Save / Register / Send button click (e.g. button#savebtn, button._save, button._notNoteReg_sendButton, button#orgEmpRegForm_addUser), handle post-save confirmation alerts
-          const isFinalSaveAction =
-            (descLower.includes("저장") ||
-             descLower.includes("보내기") ||
-             descLower.includes("발송") ||
-             selLower.includes("savebtn") ||
-             selLower.includes("_save") ||
-             selLower.includes("sendbutton") ||
-             selLower.includes("adduser") ||
-             descLower.includes("등록 완료")) &&
-            !isTreeSelectConfirm &&
-            !isDraftSubmitAction;
-
-          if (isFinalSaveAction) {
-            await page.waitForTimeout(800);
-            const hasExplicitUpcomingConfirmStep = plan.actions
-              .slice(actionIdx + 1, actionIdx + 4)
-              .some((nextAct) =>
-                nextAct.type === "click" &&
-                ((nextAct.description || "").includes("확인") ||
-                 (nextAct.selector || "").toLowerCase().includes("confirm") ||
-                 (nextAct.selector || "").toLowerCase().includes("alert"))
-              );
-
-            let handledDupModalClose = false;
-            if (!hasExplicitUpcomingConfirmStep) {
-              for (let alertPass = 0; alertPass < 3; alertPass++) {
-                const saveAlertBtn = await findVisibleInPageOrFrames(
-                  page,
-                  "#alert_lyr:visible button:has-text('확인'):visible, button#naon-cmm-alert-confirm:visible, .ui-dialog.alert_dialog:visible button:text-is('확인'):visible, #confirm_lyr:visible button:has-text('확인'):visible"
-                );
-                if (!saveAlertBtn || !(await saveAlertBtn.isVisible().catch(() => false))) {
-                  break;
-                }
-                const alertText = await saveAlertBtn.evaluate((btn) => {
-                  const dlg = btn.closest(".ui-dialog, #alert_lyr, #confirm_lyr, .system_msg_box, .lyr_alert") || btn.parentElement?.parentElement;
-                  return (dlg as HTMLElement)?.innerText || "";
-                }).catch(() => "");
-
-                const isValidationError =
-                  alertText.includes("게시기한") ||
-                  alertText.includes("선택해주세요") ||
-                  alertText.includes("입력해주세요") ||
-                  alertText.includes("입력하세요") ||
-                  alertText.includes("필수");
-                const isDuplicateNameError =
-                  alertText.includes("존재합니다") ||
-                  alertText.includes("중복") ||
-                  alertText.includes("이미 등록") ||
-                  alertText.includes("이미 존재") ||
-                  alertText.includes("같은 이름") ||
-                  alertText.includes("사용중") ||
-                  alertText.includes("사용 중") ||
-                  alertText.includes("아이디");
-                const isSuccessNotice =
-                  !isValidationError &&
-                  !isDuplicateNameError &&
-                  (alertText.includes("등록") || alertText.includes("저장") || alertText.includes("완료") || alertText.includes("처리") || alertText.includes("발송"));
-
-                console.log(`  [✨ 저장/발송 알림 확인] '${alertText.trim().replace(/\n/g, " ").slice(0, 35)}' 알림창의 [확인] 버튼을 클릭합니다.`);
-                const aBox = await saveAlertBtn.boundingBox().catch(() => null);
-                const subTs = Date.now() - recordingStart;
-                if (aBox) {
-                  const cx = Math.round(aBox.x + aBox.width / 2);
-                  const cy = Math.round(aBox.y + aBox.height / 2);
-                  triggerClickVisualizer(page, cx, cy).catch(() => {});
-                  extraSubMoments.push({
-                    id: 0,
-                    type: "click",
-                    timestamp: subTs,
-                    cursor: { x: cx, y: cy },
-                    target: { x: Math.round(aBox.x), y: Math.round(aBox.y), width: Math.round(aBox.width), height: Math.round(aBox.height) },
-                    description: `[시스템 알림] '확인' 버튼 클릭`,
-                  });
-                }
-                await saveAlertBtn.click({ force: true }).catch(() => {});
-                await page.waitForTimeout(800);
-
-                if (isDuplicateNameError) {
-                  const openDupDialogClose = await findVisibleInPageOrFrames(
-                    page,
-                    "button#orgEmpRegForm_close:visible, .ui-dialog:visible button:has-text('닫기'):visible, .ui-dialog:visible button:has-text('취소'):visible, .ui-dialog:visible .ui-dialog-titlebar-close:visible",
-                    true
-                  );
-                  if (openDupDialogClose && (await openDupDialogClose.isVisible().catch(() => false))) {
-                    console.log(`  [✨ 중복 항목 모달 닫기] 동일 이름/아이디 항목이 이미 존재하므로 생성 팝업을 닫고 기존 항목으로 시나리오를 이어갑니다.`);
-                    await openDupDialogClose.click({ force: true }).catch(() => {});
-                    await page.waitForTimeout(500);
-                    handledDupModalClose = true;
-                  }
-                  for (const ctx of [page, ...page.frames()]) {
-                    await ctx.evaluate(() => {
-                      if (document.querySelectorAll(".ui-dialog:visible").length === 0) {
-                        document.querySelectorAll(".ui-widget-overlay").forEach((ov) => ov.remove());
-                      }
-                    }).catch(() => {});
-                  }
-                  break;
-                }
-
-                if (isValidationError && !action.recordedByEyedropper && !plan.recordedByEyedropper) {
-                  // Auto-fill missing required expiration date (e.g. article.ntceEndDe) and re-click Save (AI plans ONLY)
-                  await page.evaluate(() => {
-                    const future = new Date(Date.now() + 30 * 86400000);
-                    const yyyy = future.getFullYear();
-                    const mm = String(future.getMonth() + 1).padStart(2, "0");
-                    const dd = String(future.getDate()).padStart(2, "0");
-                    const dateStr = `${yyyy}-${mm}-${dd}`;
-                    document.querySelectorAll("input.hasDatepicker, input._ntceEndDe, input[name*='EndDe']").forEach((inp: any) => {
-                      if (!inp.value || inp.value.trim() === "") {
-                        inp.value = dateStr;
-                        inp.dispatchEvent(new Event("input", { bubbles: true }));
-                        inp.dispatchEvent(new Event("change", { bubbles: true }));
-                      }
-                    });
-                  }).catch(() => {});
-                  await page.waitForTimeout(400);
-                  if (await el.isVisible().catch(() => false)) {
-                    console.log(`  [✨ 필수 기한 자동 보정 후 재저장] 누락된 날짜 필드 입력 후 저장 버튼을 다시 클릭합니다.`);
-                    await el.click({ force: true }).catch(() => {});
-                    await page.waitForTimeout(800);
-                    continue;
-                  }
-                }
-
-                // If the registration form dialog itself (e.g. Schedule registration dialog) remains open after "일정이 등록 되었습니다", close it so the calendar result is visible (AI plans ONLY)
-                if (isSuccessNotice && !action.recordedByEyedropper && !plan.recordedByEyedropper) {
-                  const openRegDialogClose = await findVisibleInPageOrFrames(
-                    page,
-                    ".ui-dialog:visible:has(#savebtn) .ui-dialog-titlebar-close:visible, .ui-dialog:visible:has(#savebtn) button:has-text('닫기'):visible"
-                  );
-                  if (openRegDialogClose && (await openRegDialogClose.isVisible().catch(() => false))) {
-                    console.log(`  [✨ 등록 폼 모달 닫기] 일정 등록 완료 후 캘린더 결과 화면 표시를 위해 등록 모달을 닫습니다.`);
-                    await openRegDialogClose.click({ force: true }).catch(() => {});
-                    await page.waitForTimeout(400);
-                  }
-                  await page.evaluate(() => {
-                    const w = window as any;
-                    try {
-                      if (w.ObserverControl && typeof w.ObserverControl.notifyObservers === "function") {
-                        w.ObserverControl.notifyObservers({ type: "INSERT_SHECEDULE_EVENT" });
-                        w.ObserverControl.notifyObservers({ type: "SCHEDULE_CONTENT_LOAD" });
-                      }
-                    } catch {}
-                    try {
-                      if (w.jQuery) {
-                        w.jQuery("#calendar, .fc").fullCalendar("refetchEvents");
-                      }
-                    } catch {}
-                  }).catch(() => {});
-                  await page.waitForTimeout(600);
-                }
-              }
-
-              // If native window.alert fired a duplicate notice or User Registration dialog remained open after clicking #orgEmpRegForm_addUser, close the modal cleanly
-              const hadRecentNativeDupAlert =
-                Date.now() - lastNativeDialogTime < 3500 &&
-                /존재|중복|사용\s*중|아이디|이미/.test(lastNativeDialogMessage);
-              if (!handledDupModalClose && (hadRecentNativeDupAlert || selLower.includes("orgempregform_adduser"))) {
-                const lingeringRegModalClose = await findVisibleInPageOrFrames(
-                  page,
-                  "button#orgEmpRegForm_close:visible, .ui-dialog:visible:has(#orgEmpRegForm_addUser) button:has-text('닫기'):visible, .ui-dialog:visible:has(#orgEmpRegForm_addUser) .ui-dialog-titlebar-close:visible",
-                  true
-                );
-                if (lingeringRegModalClose && (await lingeringRegModalClose.isVisible().catch(() => false))) {
-                  console.log(`  [✨ 사용자 등록 모달 닫기] 중복 계정 알림 확인 후 열려 있는 등록 팝업을 닫고 후속 단계를 진행합니다.`);
-                  await lingeringRegModalClose.click({ force: true }).catch(() => {});
-                  await page.waitForTimeout(500);
-                  for (const ctx of [page, ...page.frames()]) {
-                    await ctx.evaluate(() => {
-                      if (document.querySelectorAll(".ui-dialog:visible").length === 0) {
-                        document.querySelectorAll(".ui-widget-overlay").forEach((ov) => ov.remove());
-                      }
-                    }).catch(() => {});
-                  }
-                }
-              }
-            }
-
-            // If this final save/send happened inside a child popup window (e.g. emlMailRegPopup) and there are subsequent steps targeting the parent window
-            if (actionIdx < plan.actions.length - 1 && !hasExplicitUpcomingConfirmStep && pageStack.length > 1) {
-              // Wait briefly for completion view (e.g. #emlMailSendComplete_selfWindow) to render so the video captures the success state
-              await page
-                .locator("#emlMailSendComplete_selfWindow:visible, #emlMailSendComplete_resultMessage:visible, .system_msg_box:visible")
-                .first()
-                .waitFor({ state: "visible", timeout: 2500 })
-                .catch(() => {});
-              await page.waitForTimeout(1000);
-
-              if (!page.isClosed()) {
-                const nextNonWaitAct = plan.actions.slice(actionIdx + 1).find((a) => a.type !== "wait");
-                const nextElInPopup = nextNonWaitAct?.selector ? await getLocator(page, { ...nextNonWaitAct }) : null;
-                const isNextVisibleInPopup = Boolean(nextElInPopup && (await nextElInPopup.isVisible().catch(() => false)));
-                if (!isNextVisibleInPopup) {
-                  await restoreFromSimulatedPopupIfNeeded(page, "팝업 발송/저장 완료 후 부모 창 후속 시나리오 진행", nextNonWaitAct);
-                }
+          // If this click happened inside a child popup window (pageStack.length > 1) and there are subsequent steps targeting the parent window
+          const isFinalSaveOrSendAction =
+            descLower.includes("저장") ||
+            descLower.includes("보내기") ||
+            descLower.includes("발송") ||
+            selLower.includes("savebtn") ||
+            selLower.includes("_save") ||
+            selLower.includes("sendbutton");
+          if (isFinalSaveOrSendAction && actionIdx < plan.actions.length - 1 && pageStack.length > 1) {
+            await page.waitForTimeout(1000);
+            if (!page.isClosed()) {
+              const nextNonWaitAct = plan.actions.slice(actionIdx + 1).find((a) => a.type !== "wait");
+              const nextElInPopup = nextNonWaitAct?.selector ? await getLocator(page, { ...nextNonWaitAct }) : null;
+              const isNextVisibleInPopup = Boolean(nextElInPopup && (await nextElInPopup.isVisible().catch(() => false)));
+              if (!isNextVisibleInPopup) {
+                await restoreFromSimulatedPopupIfNeeded(page, "팝업 발송/저장 완료 후 부모 창 후속 시나리오 진행", nextNonWaitAct);
               }
             }
           }
@@ -6387,75 +3817,6 @@ async function main() {
             }
           }
 
-          // If this was draft submission (상신), check if a validation warning or confirmation dialog (.ui-dialog) appeared
-          if (isDraftSubmitAction) {
-            await page.waitForTimeout(1000);
-            let topDlg = page.locator(".ui-dialog:visible, #alert_lyr:visible").last();
-            if (await topDlg.isVisible().catch(() => false)) {
-              const dlgText = await topDlg.innerText().catch(() => "");
-              if (!action.recordedByEyedropper && !plan.recordedByEyedropper && (dlgText.includes("필수") || dlgText.includes("입력") || dlgText.includes("선택하세요"))) {
-                console.log(`  [⚠️ 상신 유효성 경고 감지] '${dlgText.trim().replace(/\n/g, ' ').slice(0, 35)}' 경고창 해제 후 폼 입력란 자동 채우기 및 상신 재시도`);
-                const alertConfirm = topDlg.locator("button:has-text('확인'), button._confirm, button.btn_pri").first();
-                if (await alertConfirm.isVisible().catch(() => false)) {
-                  await alertConfirm.click().catch(() => {});
-                  await page.waitForTimeout(600);
-                }
-                // Auto-fill all blank inputs/textareas in document view table
-                await page.evaluate(() => {
-                  const todayStr = new Date().toISOString().split("T")[0];
-                  document.querySelectorAll("table.tbl_frm tr, .doc_view_table tr").forEach((tr) => {
-                    const text = tr.textContent || "";
-                    if (text.includes("일자") || text.includes("년월일") || text.includes("일시") || text.includes("날짜")) {
-                      tr.querySelectorAll("input").forEach((inp: any) => {
-                        if (!inp.value || inp.value.trim() === "") {
-                          inp.value = todayStr;
-                          inp.dispatchEvent(new Event("input", { bubbles: true }));
-                          inp.dispatchEvent(new Event("change", { bubbles: true }));
-                        }
-                      });
-                    }
-                    tr.querySelectorAll("input[type='text'], input:not([type]), textarea").forEach((inp: any) => {
-                      if (!inp.value || inp.value.trim() === "") {
-                        inp.value = inp.tagName === "TEXTAREA" ? "금일 회의 완료" : "회의 완료";
-                        inp.dispatchEvent(new Event("input", { bubbles: true }));
-                        inp.dispatchEvent(new Event("change", { bubbles: true }));
-                      }
-                    });
-                  });
-                }).catch(() => {});
-                await page.waitForTimeout(500);
-
-                // Click 상신 again
-                const retryDraftBtn = page.locator("button._draftBtn:visible, button:has-text('결재상신'):visible, button:has-text('상신'):visible").first();
-                if (await retryDraftBtn.isVisible().catch(() => false)) {
-                  console.log(`  [✨ 상신 재시도] 필수값 자동 보정 후 [결재상신] 버튼 재클릭`);
-                  await retryDraftBtn.click({ force: true }).catch(() => {});
-                  await page.waitForTimeout(1000);
-                }
-              }
-
-              // Only auto-click the confirmation dialog if the plan does NOT already have an explicit upcoming [확인] click step!
-              const hasExplicitUpcomingConfirmStep = plan.actions
-                .slice(actionIdx + 1, actionIdx + 4)
-                .some((nextAct) =>
-                  nextAct.type === "click" &&
-                  ((nextAct.description || "").includes("확인") ||
-                   (nextAct.selector || "").toLowerCase().includes("confirm") ||
-                   (nextAct.selector || "").toLowerCase().includes("alert"))
-                );
-
-              if (!hasExplicitUpcomingConfirmStep) {
-                topDlg = page.locator(".ui-dialog:visible, #alert_lyr:visible").last();
-                const confirmBtn = topDlg.locator(".ui-dialog-buttonpane button:has-text('확인'):visible, button:has-text('확인'):visible, button._confirm:visible").first();
-                if (await confirmBtn.isVisible().catch(() => false)) {
-                  console.log(`  [✨ 상신 확인 팝업 감지] 최종 상신 대화상자의 [확인] 버튼을 클릭합니다.`);
-                  await confirmBtn.click().catch(() => {});
-                  await page.waitForTimeout(1500);
-                }
-              }
-            }
-          }
-
           await page.waitForTimeout(1000).catch(() => {});
           break;
         }
@@ -6474,37 +3835,6 @@ async function main() {
               el = await getLocatorWithWait(page, action, isOptionalOrSub);
             }
           }
-          const hasSpecificTypeSelector = Boolean(
-            action.recordedByEyedropper ||
-            (action.selector && (/#[a-zA-Z0-9_-]+/.test(action.selector) || action.selector.includes(">")))
-          );
-          const isTypeElVisible = Boolean(el && (await el.isVisible().catch(() => false)));
-
-          const cleanTypeDesc = (action.description || "").replace(/[\[\]]/g, "");
-          const isSearchInput =
-            (cleanTypeDesc.includes("검색") || Boolean(action.useScraped) || (action.selector && (action.selector.includes("search") || action.selector.includes("srch")))) &&
-            !cleanTypeDesc.includes("제목") &&
-            !cleanTypeDesc.includes("본문") &&
-            !cleanTypeDesc.includes("내용") &&
-            !cleanTypeDesc.includes("작성");
-
-          if (isSearchInput && !action.recordedByEyedropper && !plan.recordedByEyedropper && (!isTypeElVisible || !hasSpecificTypeSelector)) {
-            const isFolderTreeSearch = cleanTypeDesc.includes("문서함") || cleanTypeDesc.includes("폴더") || cleanTypeDesc.includes("트리") || cleanTypeDesc.includes("사이드바");
-            const contentSearchInput = page.locator(
-              "input#atclList_searchWord:visible, input[id*='searchWord']:visible, .new_srch_bar input:visible, #content .srch_input input:visible, #content input[id*='search']:visible, #content input[placeholder*='검색']:visible"
-            ).first();
-            const sidebarSearchInput = page.locator(
-              "#snb .srch_bar input:visible, #snb input[placeholder*='검색']:visible"
-            ).first();
-
-            if (!isFolderTreeSearch && await contentSearchInput.isVisible().catch(() => false)) {
-              console.log(`  [🎯 본문 목록 검색 입력창 특정] 사이드바/GNB를 배제하고 헤더 바로 밑 본문 툴바의 제목/키워드 검색창을 연결합니다.`);
-              el = contentSearchInput;
-            } else if (await sidebarSearchInput.isVisible().catch(() => false)) {
-              console.log(`  [🎯 사이드바 트리 검색 입력창 특정] 사이드바 내의 검색 입력창을 연결합니다.`);
-              el = sidebarSearchInput;
-            }
-          }
           if (!el) {
             el = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
           }
@@ -6521,87 +3851,10 @@ async function main() {
           try {
             await el.waitFor({ state: "visible", timeout: waitTimeout });
           } catch (waitErr) {
-            let resolved = false;
-            if (!action.recordedByEyedropper && !plan.recordedByEyedropper) {
-              const desc = action.description || "";
-              let fallbackInput: Locator | null = null;
-              if (desc.includes("제목") || desc.includes("subject")) {
-                const regBtn = page.locator("button#reg_shedule_lefttop:visible").first();
-                if (await regBtn.isVisible().catch(() => false)) {
-                  await regBtn.click({ force: true }).catch(() => {});
-                  await page.waitForTimeout(1500);
-                }
-                fallbackInput = page.locator("input#eapDocReg_docSubject:visible, input#docTitle:visible, input[name*='Subject']:visible, tr:has-text('제목') input:visible, #reg_schedule_form #subject, .ui-dialog:visible #subject, input#subject:visible, input[placeholder*='제목']").first();
-              } else if (desc.includes("내용") || desc.includes("본문") || desc.includes("회의입니다") || desc.includes("에디터")) {
-                fallbackInput = page.locator(`
-                  div.se-contents:visible,
-                  [role='textbox'].se-contents:visible,
-                  .doc_view_table textarea:not(.se-ime):visible,
-                  table.tbl_frm textarea:not(.se-ime):visible,
-                  #eapDocReg_contents textarea:not(.se-ime):visible,
-                  textarea:not(.se-ime):not(#eapDocReg_draftOpinCn):not([name*='opinion']):not([placeholder*='의견']):not(._addCmntInput):visible,
-                  div[contenteditable='true']:visible,
-                  .note-editable:visible,
-                  textarea[placeholder*='내용']:visible,
-                  #reg_schedule_form #cn,
-                  .ui-dialog:visible #cn,
-                  textarea:not(.se-ime):visible
-                `).first();
-
-                // Automatically populate blank required date/text inputs in the document table to prevent validation alert
-                try {
-                  await page.evaluate(() => {
-                    const todayStr = new Date().toISOString().split("T")[0];
-                    document.querySelectorAll("input.hasDatepicker, input[type='date'], input[id*='date'], input[name*='date'], input[placeholder*='yyyy'], input[placeholder*='YYYY']").forEach((inp: any) => {
-                      if (!inp.value || inp.value.trim() === "") {
-                        inp.value = todayStr;
-                        inp.dispatchEvent(new Event("input", { bubbles: true }));
-                        inp.dispatchEvent(new Event("change", { bubbles: true }));
-                      }
-                    });
-
-                    document.querySelectorAll("table.tbl_frm tr, .doc_view_table tr").forEach((tr) => {
-                      const text = tr.textContent || "";
-                      if (text.includes("일자") || text.includes("년월일") || text.includes("일시") || text.includes("날짜")) {
-                        tr.querySelectorAll("input").forEach((inp: any) => {
-                          if (!inp.value || inp.value.trim() === "") {
-                            inp.value = todayStr;
-                            inp.dispatchEvent(new Event("input", { bubbles: true }));
-                            inp.dispatchEvent(new Event("change", { bubbles: true }));
-                          }
-                        });
-                      }
-                      tr.querySelectorAll("input[type='text'], input:not([type]), textarea:not(.se-ime)").forEach((inp: any) => {
-                        if (!inp.value || inp.value.trim() === "") {
-                          inp.value = inp.tagName === "TEXTAREA" ? "금일 회의 완료" : "회의 완료";
-                          inp.dispatchEvent(new Event("input", { bubbles: true }));
-                          inp.dispatchEvent(new Event("change", { bubbles: true }));
-                        }
-                      });
-                    });
-                  });
-                } catch {}
-              } else if (desc.includes("의견") || desc.includes("opinion")) {
-                fallbackInput = page.locator("textarea#eapDocReg_draftOpinCn:visible, textarea#eapDocReg_opinCn:visible, textarea[name*='opinion']:visible, textarea[placeholder*='의견']:visible, textarea:not(.se-ime):visible").first();
-              }
-
-              if (fallbackInput && (await fallbackInput.isVisible().catch(() => false))) {
-                console.log(`  [✨ 지능형 런타임 복구] '${action.description}'에 맞는 입력 필드를 감지하여 자동 복구했습니다.`);
-                el = fallbackInput;
-                resolved = true;
-              }
-            }
-
-            // 🚨 Trigger AI Runtime Self-Healing if still not found!
-            if (!resolved) {
-              const healed = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
-              if (healed) {
-                el = healed;
-                resolved = true;
-              }
-            }
-
-            if (!resolved) {
+            const healed = await trySelfHealAction(moments, recordingStart, page, action, momentId, plan, dataDir);
+            if (healed) {
+              el = healed;
+            } else {
               if (canSafelySkipFailedAction(action, momentId, plan.actions.length, (action as any)._lastHealReason) || (action as any)._wasSkipped) {
                 markActionAndFollowupWaitForPruning(plan, actionIdx, action);
                 console.log(`  [⚠️ 비필수 부가 단계 자동 스킵] 입력 요소를 찾을 수 없으나 필수 핵심 단계가 아니므로 안전하게 스킵합니다: ${action.description}`);
@@ -6626,19 +3879,14 @@ async function main() {
 
           const desc = (action.description || "").toLowerCase();
           const sel = (action.selector || "").toLowerCase();
-          const isMentionyOrChatInput =
-            sel.includes("mentiony-content") ||
-            desc.includes("질문을 입력") ||
-            Boolean(action.targetHtml && /mentiony-content|data-placeholder=["'][^"']*질문/i.test(action.targetHtml));
           const isEditorAction =
-            !isMentionyOrChatInput &&
-            (desc.includes("내용") ||
-              desc.includes("본문") ||
-              desc.includes("에디터") ||
-              desc.includes("content") ||
-              sel.includes("cn") ||
-              sel.includes("editor") ||
-              sel.includes("se-contents"));
+            desc.includes("내용") ||
+            desc.includes("본문") ||
+            desc.includes("에디터") ||
+            desc.includes("content") ||
+            sel.includes("cn") ||
+            sel.includes("editor") ||
+            sel.includes("se-contents");
 
           // When typing content/body, ensure we are targeting the actual editable canvas, not an outer toolbar
           if (isEditorAction) {
@@ -6661,14 +3909,13 @@ async function main() {
               const tag = (htmlEl.tagName || "").toLowerCase();
               if (tag === "input" || tag === "textarea" || tag === "select") return false;
               const isCe = Boolean(htmlEl.isContentEditable || htmlEl.getAttribute?.("contenteditable") === "true");
-              if (!isCe || htmlEl.classList?.contains("se-contents")) return false;
-              const cls = htmlEl.className || "";
+              if (!isCe || htmlEl.classList?.contains("se-contents") || htmlEl.classList?.contains("ProseMirror") || htmlEl.classList?.contains("bn-editor") || htmlEl.classList?.contains("note-editable")) {
+                return false;
+              }
               const hasPh = Boolean(htmlEl.getAttribute?.("placeholder") || htmlEl.getAttribute?.("data-placeholder"));
-              return (
-                hasPh ||
-                /\b(?:sub|_chkNew|_chkItemName|mentiony-content)\b/.test(cls) ||
-                Boolean(htmlEl.closest?.("li.task_write, #aglTaskView_chkNew, .chk_write"))
-              );
+              if (hasPh) return true;
+              const r = htmlEl.getBoundingClientRect();
+              return Boolean(r && r.height > 0 && r.height <= 120);
             })
             .catch(() => false);
           const isInlineEnterCommitEditable = await el
@@ -6677,8 +3924,10 @@ async function main() {
               const tag = (htmlEl.tagName || "").toLowerCase();
               if (tag === "input" || tag === "textarea" || tag === "select") return false;
               const isCe = Boolean(htmlEl.isContentEditable || htmlEl.getAttribute?.("contenteditable") === "true");
-              if (!isCe || htmlEl.classList?.contains("se-contents")) return false;
-              if (htmlEl.id === "aglTaskReg_subject" || htmlEl.closest?.("#aglTaskReg")) return false;
+              if (!isCe || htmlEl.classList?.contains("se-contents") || htmlEl.classList?.contains("ProseMirror") || htmlEl.classList?.contains("bn-editor") || htmlEl.classList?.contains("note-editable")) {
+                return false;
+              }
+              if (htmlEl.id === "aglTaskReg_subject" || htmlEl.closest?.("#aglTaskReg, .ui-dialog")) return false;
               const cls = htmlEl.className || "";
               return (
                 /\b(?:_chkNew|_chkItemName)\b/.test(cls) ||
@@ -6967,105 +4216,7 @@ async function main() {
             await el.focus().catch(() => { });
           }
 
-          let text = (editorPlacement?.cleanedText ?? action.text ?? "").replace(/\s*↵\s*/g, "\n");
-          const isEyedropperAction = Boolean(action.recordedByEyedropper || plan.recordedByEyedropper);
-
-          // Method 2: Dynamic Live Data Linking (ONLY when explicitly requested via useScraped/dynamicFrom or when text is empty placeholder)
-          if (action.useScraped && action.useScraped !== "auto" && action.useScraped !== "true") {
-            const val = runtimeVariables.get(action.useScraped);
-            if (val) {
-              text = val;
-              console.log(`  [✨ 동적 데이터 연동] 변수 '${action.useScraped}'의 실제 텍스트("${text}")를 입력합니다.`);
-            }
-          } else if (action.dynamicFrom) {
-            const liveVal = await scrapeLiveText(page, { ...action, dynamicFrom: action.dynamicFrom });
-            if (liveVal) {
-              text = liveVal;
-              console.log(`  [✨ 동적 데이터 연동] '${action.dynamicFrom}'에서 추출한 실제 텍스트("${text}")를 입력합니다.`);
-              if (action.scrapeAs) runtimeVariables.set(action.scrapeAs, text);
-            }
-          } else {
-            // Respect any explicit text typed by the user (including "테스트", "홍길동", etc.)!
-            // Only treat literally empty text or generic placeholder "검색어" as missing text.
-            const isExplicitTextGiven = Boolean(
-              action.text &&
-              action.text.trim().length > 0 &&
-              action.text.trim() !== "검색어" &&
-              action.text.trim() !== "검색어를 입력하세요"
-            );
-            const isClearAction =
-              desc.includes("지우기") ||
-              desc.includes("백스페이스") ||
-              desc.includes("초기화");
-            const shouldPreScrapeSearch =
-              !isEyedropperAction &&
-              !isClearAction &&
-              (desc.includes("검색") ||
-               desc.includes("조회") ||
-               desc.includes("찾기") ||
-               action.useScraped === "auto" ||
-               action.useScraped === "true" ||
-               (action.selector && (action.selector.includes("search") || action.selector.includes("srch")))) &&
-              (!isExplicitTextGiven || action.useScraped === "true");
-
-            if (shouldPreScrapeSearch) {
-              const liveKeyword = await scrapeLiveText(page, action);
-              if (liveKeyword) {
-                console.log(`  [🔍 실시간 DB 연동 검색] 검색어가 비어있거나 동적 스크래핑이 지정되어 현재 화면 목록 데이터("${liveKeyword}")로 검색합니다.`);
-                text = liveKeyword;
-                if (action.scrapeAs) runtimeVariables.set(action.scrapeAs, text);
-              }
-            }
-
-            if (isSearchInput && text && text.trim().length > 0) {
-              runtimeVariables.set("lastSearchKeyword", text.trim());
-              currentRuntimeVariables.set("lastSearchKeyword", text.trim());
-            }
-          }
-
-          const lowerSel = (action.selector || "").toLowerCase();
-          const isTimeOrDate =
-            lowerSel.includes("hour") ||
-            lowerSel.includes("minute") ||
-            lowerSel.includes("time") ||
-            lowerSel.includes("date") ||
-            desc.includes("시간") ||
-            desc.includes("날짜") ||
-            desc.includes("일시") ||
-            /^\d{1,2}:\d{2}/.test(text.trim()) ||
-            /^\d{4}-\d{2}-\d{2}/.test(text.trim());
-
-          const isTitleField =
-            !isTimeOrDate &&
-            ((action.selector && (
-              lowerSel.includes("subject") ||
-              lowerSel.includes("title") ||
-              lowerSel.includes("name") ||
-              lowerSel.includes("doctitle")
-            )) ||
-            desc.includes("제목") ||
-            desc.includes("명칭") ||
-            desc.includes("과제") ||
-            desc.includes("문서명") ||
-            desc.includes("일정명") ||
-            desc.includes("기안명"));
-
-          if (isTitleField && text && text.trim().length >= 2) {
-            const cleanTitle = text.trim();
-            runtimeVariables.set("lastCreatedTitle", cleanTitle);
-            currentRuntimeVariables.set("lastCreatedTitle", cleanTitle);
-
-            const words = cleanTitle.split(/\s+/);
-            const keyword = words.length >= 2 ? `${words[0]} ${words[1]}` : words[0];
-            runtimeVariables.set("lastCreatedKeyword", keyword);
-            currentRuntimeVariables.set("lastCreatedKeyword", keyword);
-            console.log(`  [📌 신규 등록 엔티티 추적] 등록 항목 제목 감지: "${cleanTitle}" (키워드: "${keyword}")`);
-          }
-
-          if (action.scrapeAs && text) {
-            runtimeVariables.set(action.scrapeAs, text);
-            currentRuntimeVariables.set(action.scrapeAs, text);
-          }
+          const text = (editorPlacement?.cleanedText ?? action.text ?? "").replace(/\s*↵\s*/g, "\n");
 
           if (isSynapEditor || (isRichTextEditor && editorPlacement?.hasExistingText)) {
             if (!text) {
@@ -7202,196 +4353,45 @@ async function main() {
                   } catch {}
                 }).catch(() => {});
               } catch {}
-            }
 
-            // If typing into Admin User Registration ID field (#orgEmpRegForm_UserId) and the ID already exists (or is in 삭제자 'R' from a previous test),
-            // retire + permanently delete the pre-existing test account and re-run selectContainsUserIdWithMail so the new registration & subsequent login succeed natively!
-            if (lowerSel.includes("orgempregform_userid") && text.trim().length > 0) {
-              await page.waitForTimeout(450);
-              const wasDuplicateId = await el.evaluate(async (node, targetUserId) => {
-                const doc = node.ownerDocument;
-                const w = doc?.defaultView as any;
-                const chkEl = doc?.getElementById("orgEmpRegForm_UserIdCheck");
-                const isInvalid = Boolean(
-                  chkEl &&
-                  (chkEl.classList.contains("msg_invalid") ||
-                   (chkEl.textContent || "").includes("사용중") ||
-                   (chkEl.textContent || "").includes("아이디"))
-                );
-                if (!isInvalid) return false;
-
-                if (w?.naon?.http?.ajax) {
-                  try {
-                    const apiPrefix = w.frameworkProperties?.context === "/iam" ? "/api" : "/inc";
-                    const empListRes: any = await new Promise((resolve) => {
-                      w.naon.http.ajax({
-                        url: `${apiPrefix}/organization/emp/selectEmpListJSON`,
-                        data: {
-                          typeStatus: "ALL",
-                          searchWord: targetUserId,
-                          typeSearch: "ID",
-                          "paging.listBlock": 20,
-                          "paging.pageNo": 1,
-                          subDeptYn: "Y",
-                        },
-                        success: (res: any) => resolve(res),
-                        error: () => resolve(null),
-                      });
-                    });
-                    const empList = empListRes?.data?.empList || [];
-                    const existingEmp = empList.find(
-                      (item: any) =>
-                        (item.empBean?.userId || item.userId || "").toLowerCase() === targetUserId.toLowerCase()
-                    );
-                    if (existingEmp) {
-                      const empId = existingEmp.empBean?.empId || existingEmp.empId;
-                      const empStatus = existingEmp.empBean?.empStatus || existingEmp.empStatus;
-                      if (empId) {
-                        if (empStatus === "W" || empStatus === "I") {
-                          await new Promise((resolve) => {
-                            w.naon.http.ajax({
-                              contentType: "application/json",
-                              url: `${apiPrefix}/organization/emp/updateRetireEmployeeList`,
-                              data: {
-                                deleteEmpList: [
-                                  {
-                                    empId,
-                                    cmpId: existingEmp.empBean?.cmpId || w.loginUserInfo?.cmpId || "",
-                                    empBean: {
-                                      afftlsBassYn: existingEmp.empBean?.afftlsBassYn || "Y",
-                                      cloudAccount: existingEmp.empBean?.cloudAccount || null,
-                                    },
-                                    personBean: {
-                                      psnId: existingEmp.personBean?.psnId || existingEmp.empBean?.psnId || "",
-                                      userName: existingEmp.personBean?.userName || existingEmp.empBean?.userName || targetUserId,
-                                    },
-                                  },
-                                ],
-                              },
-                              success: (res: any) => resolve(res),
-                              error: () => resolve(null),
-                            });
-                          });
-                        }
-                        await new Promise((resolve) => {
-                          w.naon.http.ajax({
-                            url: `${apiPrefix}/organization/emp/updateDeleteEmployeeList`,
-                            data: [empId],
-                            contentType: "application/json",
-                            success: (res: any) => resolve(res),
-                            error: () => resolve(null),
-                          });
-                        });
-                      }
-                    }
-                    const regForm = w.OrgEmpRegForm || w.GW?.LOCAL?.OrgEmpRegForm;
-                    if (regForm?.fn?.selectContainsUserIdWithMail) {
-                      regForm.fn.selectContainsUserIdWithMail(targetUserId);
-                    }
-                  } catch {}
-                }
-
-                // Ensure validation badge visually shows 'ok!' immediately
-                (node as HTMLElement).className = "input_txt";
-                if (chkEl) {
-                  chkEl.className = "validation_msg msg_valid";
-                  chkEl.innerHTML = "ok!";
-                }
-                return true;
-              }, text.trim()).catch(() => false);
-
-              if (wasDuplicateId) {
-                await page.waitForTimeout(300);
-                console.log(`  [🧹 기존 중복 계정 자동 정리] 이전 테스트에서 생성된 '${text.trim()}' 중복 계정을 정리하여 신규 등록 및 후속 로그인을 클린하게 진행합니다.`);
-              }
             }
           }
-
-          // If this is a search input and the user submitted via Enter key (i.e. next non-wait action is NOT a search button click),
-          // automatically press Enter so the search list updates before the next hover/click step!
-          const isSearchField =
-            isSearchInput ||
-            lowerSel.includes("searchword") ||
-            lowerSel.includes("srchword") ||
-            (action.targetHtml && /searchWord|srchWord|placeholder=["'][^"']*검색/i.test(action.targetHtml));
 
           const hasExplicitEnter =
             Boolean(action.pressEnter) ||
             desc.includes("엔터") ||
             /\benter\b/i.test(desc);
 
-          if ((hasExplicitEnter || isSingleLineContentEditable || isSearchField) && !isRichTextEditor) {
-            let nextNonWait: BrowsePlanAction | null = null;
+          let nextIsExplicitInlineSaveBtn = false;
+          if (isInlineEnterCommitEditable && !hasExplicitEnter) {
             for (let k = actionIdx + 1; k < plan.actions.length; k++) {
               if (plan.actions[k].type !== "wait") {
-                nextNonWait = plan.actions[k];
+                const nAct = plan.actions[k];
+                const nDesc = (nAct.description || "").toLowerCase();
+                const nSel = (nAct.selector || "").toLowerCase();
+                if (
+                  nAct.type === "click" &&
+                  (nDesc.includes("저장") ||
+                    nDesc.includes("등록") ||
+                    nSel.includes("save") ||
+                    nSel.includes("confirm"))
+                ) {
+                  nextIsExplicitInlineSaveBtn = true;
+                }
                 break;
               }
             }
-            const nextDesc = (nextNonWait?.description || "").toLowerCase();
-            const nextDescClean = nextDesc.replace(/['"`]/g, "");
-            const nextSel = (nextNonWait?.selector || "").toLowerCase();
-            const nextHtml = (nextNonWait?.targetHtml || "").toLowerCase();
-            const isNextExplicitSearchBtn =
-              nextNonWait?.type === "click" &&
-              !nextDescClean.includes("카드") &&
-              !nextDescClean.includes("양식") &&
-              !nextDescClean.includes("항목") &&
-              !nextDescClean.includes("결과") &&
-              !nextDescClean.includes("상세") &&
-              (nextDescClean.includes("검색 버튼") ||
-               nextDescClean.includes("검색 실행") ||
-               nextDescClean.includes("검색 아이콘") ||
-               nextSel.includes("searchbtn") ||
-               nextSel.includes("btnsearch") ||
-               nextSel.includes("srchbtn") ||
-               nextSel.includes("btnsrch") ||
-               nextSel.includes("btn_srch") ||
-               nextSel.includes("ico_srch") ||
-               nextSel.includes("title='검색'") ||
-               nextHtml.includes("ico_srch"));
+          }
 
-            const isNextExplicitInlineSaveBtn =
-              nextNonWait?.type === "click" &&
-              (nextDescClean.includes("저장") ||
-               nextDescClean.includes("등록") ||
-               nextDescClean.includes("전송") ||
-               nextSel.includes("save") ||
-               nextSel.includes("confirm") ||
-               nextSel.includes("send"));
-
-            // For Eyedropper recordings, NEVER guess-press Enter before a click action unless pressEnter was explicitly recorded
-            // or it's an inline single-line contenteditable (e.g. Kanban card title div.sub or checklist item div._chkNew) that commits via Enter!
-            const isLegacyEyedropperCardHoverAfterSearch =
-              isEyedropperAction &&
-              isSearchField &&
-              nextNonWait?.type === "hover" &&
-              (nextSel.includes("aw_li") || nextSel.includes("app_work_box") || nextDescClean.includes("양식 카드"));
-
-            const shouldPressEnter =
-              hasExplicitEnter ||
-              (isInlineEnterCommitEditable && !isNextExplicitInlineSaveBtn) ||
-              (!isEyedropperAction && isSearchField && !isNextExplicitSearchBtn) ||
-              isLegacyEyedropperCardHoverAfterSearch;
-
-            if (shouldPressEnter && !isNextExplicitSearchBtn) {
-              console.log(
-                hasExplicitEnter || isInlineEnterCommitEditable
-                  ? `  [⏎ 엔터(Enter) 키 실행] 사용자가 입력 후 Enter 키를 눌렀으므로 Enter 키를 실행합니다.`
-                  : `  [⏎ 검색어 엔터 실행] 후속 검색 버튼 클릭 단계가 없으므로 입력창에서 Enter 키를 눌러 검색을 즉시 실행합니다.`
-              );
-              await el.press("Enter").catch(async () => {
-                await page.keyboard.press("Enter").catch(() => {});
-              });
-              await page.waitForTimeout(700);
-            }
+          if ((hasExplicitEnter || (isInlineEnterCommitEditable && !nextIsExplicitInlineSaveBtn)) && !isRichTextEditor) {
+            console.log(`  [⏎ 엔터(Enter) 키 실행] 사용자가 입력 후 Enter 키를 눌렀으므로 Enter 키를 실행합니다.`);
+            await el.press("Enter").catch(async () => {
+              await page.keyboard.press("Enter").catch(() => {});
+            });
+            await page.waitForTimeout(700);
           }
 
           moment.keys = text;
-          if (!isSearchField && !isRichTextEditor && text && text.trim().length >= 2 && text.trim().length <= 40 && !text.includes("\n")) {
-            runtimeCreatedTitles.add(text.trim());
-          }
-          // 🚨 Canon 2: Track last typed input and its box for adjacent search button binding
           lastTypedInput = el;
           lastTypedBox = box;
           lastTypedTime = Date.now();
@@ -7903,6 +4903,11 @@ async function main() {
     }
   } catch { }
 
+  // Capture site brand assets (logo, theme colors, hero screenshot) for the URL Master Brand Slide if not cached yet
+  try {
+    await captureSiteBrandFromLivePage(pageStack[0] || page, plan.url);
+  } catch {}
+
   // Finalize video safely on Windows (handles EPERM file locks from browser preview/Express)
   const mainRecordingPage = pageStack[0] || page;
   const video = mainRecordingPage.video();
@@ -8040,22 +5045,26 @@ async function main() {
   }
 
   const isCleanPass = process.argv.includes("--clean-pass");
-  const isNoCleanPass = process.argv.includes("--no-clean-pass");
+  const isAutoCleanPass = process.argv.includes("--auto-clean-pass");
 
-  if ((totalHealedCount > 0 || hasPrunedActions) && !isCleanPass && !isNoCleanPass) {
+  if (totalHealedCount > 0 || hasPrunedActions) {
     console.log(`\n========================================================================`);
-    console.log(`✨ [시나리오 최적화 완료] 자가 복구 ${totalHealedCount}건, 불필요 액션 프루닝 ${toPrune.length}건 반영 완료.`);
-    console.log(`🎬 [2-Pass 클린 마스터 재녹화 자동 가동] 10초 대기 공백을 제거하고 매끄러운 최종 마스터 영상을 생성하기 위해 클린 패스를 즉시 재녹화합니다!`);
-    console.log(`========================================================================\n`);
-
-    const isHeaded = process.argv.includes("--headed");
-    const loginFlag = process.argv.includes("--login") ? " --login" : "";
-    const cleanCmd = `npx tsx scripts/record.ts ${slug} ${isHeaded ? "--headed" : "--headless"}${loginFlag} --clean-pass`;
-    try {
-      execSync(cleanCmd, { stdio: "inherit" });
-      return;
-    } catch (cleanErr: any) {
-      console.warn(`[클린 재녹화 예외] 클린 패스 실행 중 오류 발생: ${cleanErr.message}. 1차 복구 녹화본을 기반으로 후가공을 진행합니다.`);
+    console.log(`✨ [시나리오 자가 복구 반영 완료] 자가 복구 ${totalHealedCount}건, 불필요 액션 프루닝 ${toPrune.length}건을 플랜에 영구 저장했습니다.`);
+    if (isAutoCleanPass && !isCleanPass) {
+      console.log(`🎬 [2-Pass 클린 마스터 재녹화 가동] --auto-clean-pass 옵션에 따라 클린 패스를 재녹화합니다!`);
+      console.log(`========================================================================\n`);
+      const isHeaded = process.argv.includes("--headed");
+      const loginFlag = process.argv.includes("--login") ? " --login" : "";
+      const cleanCmd = `npx tsx scripts/record.ts ${slug} ${isHeaded ? "--headed" : "--headless"}${loginFlag} --clean-pass`;
+      try {
+        execSync(cleanCmd, { stdio: "inherit" });
+        return;
+      } catch (cleanErr: any) {
+        console.warn(`[클린 재녹화 예외] 클린 패스 실행 중 오류 발생: ${cleanErr.message}. 1차 복구 녹화본을 기반으로 후가공을 진행합니다.`);
+      }
+    } else {
+      console.log(`⚡ [단일 패스 완료] 재녹화 없이 현재 녹화본으로 즉시 후가공을 진행합니다. (대기 구간은 대시보드 '✂️ 잘라내기'로 편집 가능)`);
+      console.log(`========================================================================\n`);
     }
   }
 
@@ -8077,18 +5086,56 @@ async function main() {
     moments,
   };
 
-const momentsPath = path.join(dataDir, "moments.json");
-fs.writeFileSync(momentsPath, JSON.stringify(momentsFile, null, 2));
-console.log(`Moments saved: ${momentsPath} (${moments.length} actions)`);
+  const momentsPath = path.join(dataDir, "moments.json");
+  fs.writeFileSync(momentsPath, JSON.stringify(momentsFile, null, 2));
+  try {
+    fs.copyFileSync(momentsPath, path.join(dataDir, "moments.body.json"));
+    if (fs.existsSync(destPath)) {
+      fs.copyFileSync(destPath, path.join(dataDir, "recording.body.mp4"));
+    }
+    // 새 녹화가 완료되면 과거 렌더링본(output/<slug>.mp4) 및 이전 컷 편집 백업을 정리하여 구버전 노출 방지
+    const staleRenderedMp4 = path.resolve(__dirname, "..", "output", `${slug}.mp4`);
+    if (fs.existsSync(staleRenderedMp4)) {
+      try { fs.unlinkSync(staleRenderedMp4); } catch {}
+    }
+    for (const staleName of [
+      "recording.orig.mp4",
+      "recording.undo.mp4",
+      "moments.orig.json",
+      "moments.undo.json",
+      "edit-plan.orig.json",
+      "edit-plan.undo.json",
+      "narration.orig.json",
+      "narration.undo.json",
+      "rendered.base.mp4",
+      "rendered.base.json",
+    ]) {
+      const p = path.join(dataDir, staleName);
+      if (fs.existsSync(p)) {
+        try { fs.unlinkSync(p); } catch {}
+      }
+    }
+  } catch {}
+  console.log(`Moments saved: ${momentsPath} (${moments.length} actions)`);
 
 // Auto-calibrate moments against video frames and generate edit plan
 try {
   console.log("\nCalibrating moments & building edit plan...");
   execSync(`python scripts/calibrate-moments.py ${slug} --force`, { stdio: "inherit" });
+  try {
+    fs.copyFileSync(momentsPath, path.join(dataDir, "moments.body.json"));
+  } catch {}
+  if (!process.argv.includes("--skip-narration")) {
+    console.log(
+      "\n🎙️ [AI 자동 후가공] 사이트 맞춤형 마스터 슬라이드·목차(Contents)·내레이션 대본 생성 및 음성·영상 합성을 진행합니다..."
+    );
+    await generateNarrationScript(slug, { synthesizeAudio: true });
+    console.log("✨ [AI 자동 후가공 완료] 오프닝 슬라이드 및 음성 합성이 녹화본(recording.mp4)에 반영되었습니다!");
+  }
   console.log(`Scenario ready in data/${slug}/`);
   process.exit(0);
 } catch (e) {
-  console.warn("Could not automatically run build-edit-plan.py:", e);
+  console.warn("Could not complete post-recording pipeline:", e);
   process.exit(0);
 }
 }

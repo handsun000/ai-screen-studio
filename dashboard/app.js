@@ -792,7 +792,13 @@ async function openAiUsageModal() {
 // 5. Scenarios List & Quick Search / Filter
 async function fetchScenarios() {
   try {
-    const res = await fetch("/api/scenarios");
+    const prevSelectedSummary = selectedScenario
+      ? allScenariosList.find((x) => x.slug === selectedScenario)
+      : null;
+    const prevLastMod = prevSelectedSummary?.lastModified || "";
+    const prevVideoSize = prevSelectedSummary?.videoSizeBytes || 0;
+
+    const res = await fetch(`/api/scenarios?t=${Date.now()}`, { cache: "no-store" });
     const data = await res.json();
     allScenariosList = data.scenarios || [];
 
@@ -816,9 +822,19 @@ async function fetchScenarios() {
 
     renderScenarioList();
 
-    // Auto-select most recent scenario
+    // Auto-select most recent scenario or refresh current scenario if its disk file was updated externally
     if (!selectedScenario && allScenariosList.length > 0) {
       selectScenario(allScenariosList[0].slug);
+    } else if (selectedScenario) {
+      const curSummary = allScenariosList.find((x) => x.slug === selectedScenario);
+      const diskChanged =
+        curSummary &&
+        ((prevLastMod && curSummary.lastModified && curSummary.lastModified !== prevLastMod) ||
+          (prevVideoSize && curSummary.videoSizeBytes && curSummary.videoSizeBytes !== prevVideoSize));
+      if (diskChanged && (!videoPlayer || videoPlayer.paused) && !autoTtsInFlight) {
+        delete scenarioDetailsCache[selectedScenario];
+        selectScenario(selectedScenario, currentVideoMode);
+      }
     }
   } catch (err) {
     console.error("fetchScenarios failed:", err);
@@ -890,13 +906,14 @@ function renderScenarioList() {
         : "";
 
     const queueIdx = videoMergeQueue.indexOf(s.slug);
-    const mergeBtnHtml = s.hasRenderedVideo
-      ? `<button type="button" class="btn-card-merge ${queueIdx >= 0 ? "in-queue" : ""}" title="${
-          queueIdx >= 0
-            ? `현재 합치기 목록 #${queueIdx + 1}번에 담겨 있습니다 (클릭 시 해제)`
-            : "이 최종 렌더링 영상을 합치기(병합) 목록에 추가합니다"
-        }">${queueIdx >= 0 ? `✓ 합치기 #${queueIdx + 1}` : "🔗 합치기+"}</button>`
-      : "";
+    const mergeBtnHtml =
+      s.hasRenderedVideo || s.hasVideo
+        ? `<button type="button" class="btn-card-merge ${queueIdx >= 0 ? "in-queue" : ""}" title="${
+            queueIdx >= 0
+              ? `현재 합치기 목록 #${queueIdx + 1}번에 담겨 있습니다 (클릭 시 해제)`
+              : "이 영상을 통합 목차(Master Contents) 슬라이드가 포함된 합치기 목록에 추가합니다"
+          }">${queueIdx >= 0 ? `✓ 합치기 #${queueIdx + 1}` : "🔗 합치기+"}</button>`
+        : "";
 
     item.innerHTML = `
       <div class="scenario-item-header">
@@ -1095,7 +1112,7 @@ function renderMergeQueueUI() {
   listEl.innerHTML = "";
 
   if (videoMergeQueue.length === 0) {
-    listEl.innerHTML = `<div class="merge-queue-empty">선택된 영상이 없습니다. 아래 [✨ 최종본] 카드에서 [🔗 합치기+]를 눌러 추가하세요.</div>`;
+    listEl.innerHTML = `<div class="merge-queue-empty">선택된 영상이 없습니다. 아래 시나리오 카드에서 [🔗 합치기+]를 눌러 추가하세요.<br/><span style="font-size:11px;opacity:0.8;">✨ 병합 시 제일 앞에 [전체 통합 목차 슬라이드 + 전체 오프닝 음성]이 자동 생성됩니다.</span></div>`;
     return;
   }
 
@@ -1128,7 +1145,7 @@ function renderMergeQueueUI() {
 
 async function handleExecuteVideoMerge() {
   if (videoMergeQueue.length < 2) {
-    alert("합칠 최종본 영상을 최소 2개 이상 선택해주세요.");
+    alert("합칠 시나리오 영상을 최소 2개 이상 선택해주세요.");
     return;
   }
 
@@ -1139,7 +1156,7 @@ async function handleExecuteVideoMerge() {
   const origBtnHtml = execBtn ? execBtn.innerHTML : "";
   if (execBtn) {
     execBtn.disabled = true;
-    execBtn.innerHTML = "⏳ 영상 병합 중...";
+    execBtn.innerHTML = "⏳ 전체 통합 목차 슬라이드·음성 생성 및 영상 병합 중...";
   }
 
   try {
@@ -1229,7 +1246,7 @@ async function selectScenario(slug, preferMode = null) {
   if (playerMeta) playerMeta.textContent = "상세 정보 불러오는 중...";
 
   try {
-    const res = await fetch(`/api/scenarios/${slug}`);
+    const res = await fetch(`/api/scenarios/${slug}?t=${Date.now()}`, { cache: "no-store" });
     const details = await res.json();
     scenarioDetailsCache[slug] = details;
 
@@ -1251,7 +1268,7 @@ async function selectScenario(slug, preferMode = null) {
     // Check Rendered Video Info
     let renderInfo = { exists: false };
     try {
-      const renderRes = await fetch(`/api/render/info/${slug}`);
+      const renderRes = await fetch(`/api/render/info/${slug}?t=${Date.now()}`, { cache: "no-store" });
       if (renderRes.ok) {
         renderInfo = await renderRes.json();
       }
@@ -1471,7 +1488,7 @@ function syncCompletedHoldRegionsForSeek(rawTimeSec, compTimeMs = null) {
   });
 }
 
-function computeTimeRegionsAndSyncCuesJS(cues, rawTotalMs, fps, momentsList = []) {
+function computeTimeRegionsAndSyncCuesJS(cues, rawTotalMs, fps, momentsList = [], bakedIntroDurationMs = 0) {
   const safeRawTotalMs = Math.max(1000, Math.round(rawTotalMs || 15000));
   const rawTotalFrames = Math.max(1, Math.round((safeRawTotalMs / 1000) * fps));
   if (!Array.isArray(cues) || cues.length === 0) {
@@ -1589,16 +1606,24 @@ function computeTimeRegionsAndSyncCuesJS(cues, rawTotalMs, fps, momentsList = []
     const speechPadMs = i === n - 1 ? 260 : speechPadBaseMs;
     const minSpeechWindowMs = audioDurMs > 0 ? audioDurMs + speechPadMs : 400;
 
-    const autoHoldMs = Math.max(0, minSpeechWindowMs - rawGapMs);
-    const extraHoldMs = Math.round(Number(c.extraHoldMs || 0));
+    // 이미 오프닝 슬라이드가 합성된 영상(bakedIntroDurationMs > 0)의 첫 번째 구간(i === 0 또는 앞단 통합 슬라이드)은
+    // 슬라이드 길이가 이미 음성 길이에 맞춰 생성되었으므로 절대로 추가 홀드(⏸ 구간 늘리기)를 발생시키지 않습니다.
+    const isBakedIntroCue =
+      (i === 0 || (Boolean(c.isIntro) && (c.videoStartMs || 0) < Math.max(1000, bakedIntroDurationMs - 200))) &&
+      (bakedIntroDurationMs > 0 || (Boolean(c.isIntro) && rawGapMs >= Math.max(3800, audioDurMs + 200)));
 
-    const baseWindowMs = Math.max(rawGapMs, minSpeechWindowMs);
-    const minAllowedWindowMs = Math.max(minSpeechWindowMs, Math.max(300, Math.round(rawGapMs * 0.25)));
-    const compGapMs = Math.max(minAllowedWindowMs, baseWindowMs + extraHoldMs);
+    const autoHoldMs = isBakedIntroCue ? 0 : Math.max(0, minSpeechWindowMs - rawGapMs);
+    const extraHoldMs = isBakedIntroCue ? 0 : Math.round(Number(c.extraHoldMs || 0));
+
+    const baseWindowMs = isBakedIntroCue ? rawGapMs : Math.max(rawGapMs, minSpeechWindowMs);
+    const minAllowedWindowMs = isBakedIntroCue
+      ? rawGapMs
+      : Math.max(minSpeechWindowMs, Math.max(300, Math.round(rawGapMs * 0.25)));
+    const compGapMs = isBakedIntroCue ? rawGapMs : Math.max(minAllowedWindowMs, baseWindowMs + extraHoldMs);
     const effectiveDeltaMs = compGapMs - rawGapMs;
 
     const rawFrames = Math.max(1, vEndF - vStartF);
-    const compFrames = Math.max(1, Math.round((compGapMs / 1000) * fps));
+    const compFrames = isBakedIntroCue ? rawFrames : Math.max(1, Math.round((compGapMs / 1000) * fps));
     const deltaFrames = compFrames - rawFrames;
 
     const cStartF = compCursorFrames;
@@ -1666,21 +1691,23 @@ function syncScenarioTimelineInMemory(details) {
 
   const fps = Number(editPlan?.fps || 60);
   const rawFrames = Number(editPlan?.rawDurationFrames || editPlan?.totalDurationFrames || 0);
-  const momentsDurMs = Number(details.moments?.totalDurationMs || 0);
+  const momentsDurMs = Number(details.moments?.metadata?.totalDurationMs || details.moments?.totalDurationMs || 0);
   const rawTotalMs =
-    rawFrames > 0
-      ? Math.round((rawFrames / fps) * 1000)
-      : momentsDurMs > 0
+    momentsDurMs > 0
       ? momentsDurMs
+      : rawFrames > 0
+      ? Math.round((rawFrames / fps) * 1000)
       : videoPlayer && videoPlayer.duration
       ? Math.round(videoPlayer.duration * 1000)
       : 15000;
 
+  const bakedIntroDurationMs = narration.introBakedIntoVideo ? Number(narration.bakedIntroDurationMs || 0) : 0;
   const synced = computeTimeRegionsAndSyncCuesJS(
     narration.cues,
     rawTotalMs,
     fps,
-    details.moments?.moments || []
+    details.moments?.moments || [],
+    bakedIntroDurationMs
   );
 
   narration.cues = synced.cues;
@@ -1825,13 +1852,42 @@ async function runAutoSynthesizeAndFitNow(targetRowIdx = null) {
       const data = await res.json();
       const details = scenarioDetailsCache[slug];
       if (details && data.narration) {
+        const prevBakedSig = details.narration?._bakedSlideSig;
         details.narration = data.narration;
+        if (data.moments) {
+          details.moments = data.moments;
+        }
         if (data.editPlan) {
           details.editPlan = data.editPlan;
         } else if (details.editPlan) {
           details.editPlan.narration = data.narration;
         }
         syncScenarioTimelineInMemory(details);
+        if (prevBakedSig && data.narration._bakedSlideSig && prevBakedSig !== data.narration._bakedSlideSig && currentVideoMode === "raw") {
+          const prevSec = videoPlayer && Number.isFinite(videoPlayer.currentTime) ? videoPlayer.currentTime : 0;
+          setVideoMode("raw", details);
+          if (videoPlayer && prevSec > 0.5) {
+            videoPlayer.addEventListener(
+              "loadedmetadata",
+              () => {
+                videoPlayer.currentTime = Math.min(prevSec, Math.max(0, (videoPlayer.duration || prevSec) - 0.2));
+              },
+              { once: true }
+            );
+          }
+        } else if (data.renderedVideoUpdated && currentVideoMode === "rendered") {
+          const prevSec = videoPlayer && Number.isFinite(videoPlayer.currentTime) ? videoPlayer.currentTime : 0;
+          setVideoMode("rendered", details);
+          if (videoPlayer && prevSec > 0.5) {
+            videoPlayer.addEventListener(
+              "loadedmetadata",
+              () => {
+                videoPlayer.currentTime = Math.min(prevSec, Math.max(0, (videoPlayer.duration || prevSec) - 0.2));
+              },
+              { once: true }
+            );
+          }
+        }
 
         // If user is currently typing in an input inside narration studio, update badges/times in-place without losing focus
         const activeEl = document.activeElement;
@@ -2483,10 +2539,17 @@ function updateVideoPlaybackSync() {
       }
     } else if (!videoPlayer.paused) {
       const rawCurFrame = rawCurSec * fps;
-      // Check if we entered an uncompleted hold region
+      const bakedIntroEndFrame = narration?.introBakedIntoVideo
+        ? ((Number(narration.bakedIntroDurationMs || 0) - 50) / 1000) * fps
+        : 0;
+      // Check if we entered an uncompleted hold region (never pause inside the baked opening slide!)
       let triggeredHold = false;
       for (let rIdx = 0; rIdx < regions.length; rIdx++) {
         const r = regions[rIdx];
+        if (bakedIntroEndFrame > 0 && (r.videoStartFrame || 0) < bakedIntroEndFrame) {
+          realtimeHoldState.completedRegions.add(rIdx);
+          continue;
+        }
         const vSpan = Math.max(0, (r.videoEndFrame || 0) - (r.videoStartFrame || 0));
         const cSpan = Math.max(0, (r.compEndFrame || 0) - (r.compStartFrame || 0));
         const extraHoldFrames = cSpan - vSpan;
@@ -2546,16 +2609,48 @@ function updateVideoPlaybackSync() {
     });
     const isPlayingOrHolding = !videoPlayer.paused || realtimeHoldState.active;
 
+    // 오프닝 슬라이드는 이미 recording.mp4 영상 자체에 직접 합성되어 있으므로
+    // 플레이어 위를 가리는 예전 HTML 오버레이(#live-intro-toc-overlay)는 항상 숨김 처리합니다.
+    const tocOverlayEl = document.getElementById("live-intro-toc-overlay");
+    if (tocOverlayEl) {
+      tocOverlayEl.classList.add("hidden");
+    }
+
+    const isMergedScenario =
+      Array.isArray(narration?.mergedFromSlugs) && narration.mergedFromSlugs.length > 0;
+
     if (subEl) {
-      if (narration?.showSubtitles !== false && speakingCue && speakingCue.text) {
+      if (
+        narration?.showSubtitles !== false &&
+        !isMergedScenario &&
+        speakingCue &&
+        speakingCue.text
+      ) {
         subEl.classList.remove("hidden");
         subEl.textContent = speakingCue.text;
+        subEl.style.left = "50%";
+        subEl.style.maxWidth = "69%";
       } else {
         subEl.classList.add("hidden");
       }
     }
 
-    if (isPlayingOrHolding && narration?.enabled !== false && speakingCue && speakingCue.audioFile) {
+    const isMergedAllAudioInVideo = isMergedScenario && !videoPlayer.muted;
+    const isBakedIntroAudioInVideo = Boolean(
+      isMergedAllAudioInVideo ||
+        (narration?.introBakedIntoVideo &&
+          speakingCue &&
+          (speakingCue.id === 1 || speakingCue.isIntro) &&
+          !videoPlayer.muted)
+    );
+
+    if (
+      isPlayingOrHolding &&
+      narration?.enabled !== false &&
+      speakingCue &&
+      speakingCue.audioFile &&
+      !isBakedIntroAudioInVideo
+    ) {
       if (
         !realtimeHoldState.playedCueIds.has(speakingCue.id) &&
         compCurMs < (speakingCue.endMs || 0) - 180
@@ -2581,6 +2676,8 @@ function updateVideoPlaybackSync() {
   } else {
     if (badgeEl) badgeEl.classList.add("hidden");
     if (subEl) subEl.classList.add("hidden");
+    const tocOverlayEl = document.getElementById("live-intro-toc-overlay");
+    if (tocOverlayEl) tocOverlayEl.classList.add("hidden");
   }
 
   const displayCurSec = compCurMs / 1000;
@@ -2691,8 +2788,528 @@ function buildCueSyncBadgeHtml(cue) {
   return `<span class="cue-sync-badge badge-normal" title="원본 영상 길이 안에서 정상 속도로 대본이 재생됩니다">1.0x 정속</span>`;
 }
 
+function extractSmartTitleFromOpening(openingText, fallbackSlug) {
+  const txt = String(openingText || "").trim();
+  const m = txt.match(
+    /(?:영상에서는|시간에는|매뉴얼에서는|지금부터는?)\s+(.+?)\s*(?:을|를)?\s*(?:단계별로\s*|순서대로\s*|차근차근\s*|함께\s*)?(?:안내|설명|소개|시연|알아보|살펴보|시작)/
+  );
+  if (m && m[1]) {
+    const cleaned = m[1]
+      .replace(/\s*(?:하는\s*방법|처리\s*절차|전체\s*과정|사용\s*방법|활용법|기능)(?:을|를)?$/, (sub) =>
+        sub.replace(/(?:을|를)$/, "")
+      )
+      .replace(/(?:을|를)$/, "")
+      .trim();
+    if (cleaned.length >= 3 && cleaned.length <= 36) {
+      return cleaned;
+    }
+  }
+  const m2 = txt.match(/^([가-힣A-Za-z0-9\s·/]{2,24}?)(?:은|는)\s+.+?(?:메뉴|기능|도구|시스템|모듈|공간|서비스)(?:입니다|이며)/);
+  if (m2 && m2[1]) {
+    const subject = m2[1].trim();
+    if (subject.length >= 2 && subject.length <= 24) {
+      return `${subject} 사용 및 관리 안내`;
+    }
+  }
+  const slugMap = {
+    taskboard: "태스크보드 업무 및 할 일 관리 안내",
+    smartwork: "스마트워크 업무함 활용 안내",
+    approval: "전자결재 기안 및 결재 처리 안내",
+    schedule: "일정관리 등록 및 공유 안내",
+    calendar: "일정관리 등록 및 공유 안내",
+    reservation: "자원예약 신청 및 관리 안내",
+    board: "게시판 게시글 작성 및 조회 안내",
+    mail: "전자우편 작성 및 수발신 안내",
+    memo: "사내쪽지 발송 및 확인 안내",
+    address: "주소록 연락처 등록 및 관리 안내",
+    doc: "문서관리 등록 및 분류 안내",
+    wiki: "위키 페이지 작성 및 협업 안내",
+  };
+  const lowerSlug = String(fallbackSlug || "").toLowerCase().trim();
+  for (const [k, v] of Object.entries(slugMap)) {
+    if (lowerSlug === k || lowerSlug.startsWith(`${k}-`) || lowerSlug.startsWith(`${k}_`)) {
+      return v;
+    }
+  }
+  const cleanSlug = String(fallbackSlug || "그룹웨어 업무 매뉴얼").replace(/[-_]+/g, " ").trim();
+  return /^live\s+demo\s+\d+$/i.test(cleanSlug) || /^[a-z0-9\s]+$/i.test(cleanSlug)
+    ? "그룹웨어 주요 기능 사용 매뉴얼"
+    : cleanSlug;
+}
+
+function extractSmartStepTitleFromCueText(cueText, idx) {
+  let clause = String(cueText || "").trim().replace(/\.$/, "");
+  if (!clause) return `단계 ${idx + 1}`;
+
+  const splitters = [
+    /기\s*위해\s+/,
+    /을\s*통해\s+/,
+    /를\s*통해\s+/,
+    /이동하여\s+/,
+    /접속하여\s+/,
+    /클릭하여\s+/,
+    /선택하여\s+/,
+    /입력하여\s+/,
+    /확인하며\s+/,
+    /접속한\s*후\s+/,
+    /이동한\s*후\s+/,
+    /클릭한\s*후\s+/,
+    /입력한\s*뒤\s+/,
+    /선택한\s*뒤\s+/,
+    /지정하고\s+/,
+    /입력하고\s+/,
+    /선택하고\s+/,
+    /클릭하고\s+/,
+    /,\s*/,
+  ];
+  for (const sp of splitters) {
+    const parts = clause.split(sp);
+    if (parts.length > 1 && parts[parts.length - 1].trim().length >= 5) {
+      clause = parts[parts.length - 1].trim();
+    }
+  }
+  clause = clause
+    .replace(/^.+?(?:입력하고|선택하고|클릭하고|지정하고|설정하고|추가하고|접속한\s*후|입력한\s*뒤)\s+/, "")
+    .replace(/내려\s*받으실\s*수\s*있습니다$/, "다운로드")
+    .replace(/내려\s*받습니다$/, "다운로드")
+    .replace(/(?:을|를)\s*([가-힣A-Za-z0-9\s]{1,12}?)(?:합니다|입니다|할\s*수\s*있습니다|하실\s*수\s*있습니다|드립니다|해\s*볼게요|보시겠습니다|주겠습니다)$/, " $1")
+    .replace(/(?:에|으로|로)\s*(로그인|이동|접속|진입|전환|저장|등록)(?:합니다|할\s*수\s*있습니다|하실\s*수\s*있습니다|해\s*볼게요|보시겠습니다)$/, " $1")
+    .replace(/(?:합니다|입니다|할\s*수\s*있습니다|하실\s*수\s*있습니다|드립니다|해\s*볼게요|보시겠습니다|주겠습니다)$/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (clause.length > 22) {
+    const words = clause.split(" ");
+    let acc = "";
+    for (const w of words) {
+      if ((acc ? `${acc} ${w}` : w).length <= 22) {
+        acc = acc ? `${acc} ${w}` : w;
+      } else {
+        break;
+      }
+    }
+    clause = (acc || clause.slice(0, 20)).replace(/\s+(?:및|와|과|의|을|를|에|에서|으로|로|후|뒤)$/, "").trim();
+  }
+  return clause.length >= 3 ? clause : `단계 ${idx + 1}`;
+}
+
+function toOverviewBulletTextJS(rawLine) {
+  const txt = String(rawLine || "")
+    .trim()
+    .replace(/\.$/, "")
+    .replace(/(?:안내|소개|설명)\s*방법을\s*(?:안내|소개|설명)합니다$/, "방법을 안내합니다");
+  if (!txt) return "";
+  if (/(?:소개합니다|안내합니다|설명합니다|살펴봅니다|알아봅니다)$/.test(txt)) {
+    return `${txt}.`;
+  }
+  let core = txt
+    .replace(/^.+?위해\s+/, "")
+    .replace(/(?:을|를)\s*(?:입력하고|선택하고|클릭하고)\s+/, " 및 ");
+
+  const endingRules = [
+    [/에\s*로그인합니다$/, " 로그인 방법을 소개합니다"],
+    [/내려\s*받으실\s*수\s*있습니다$/, " 다운로드 방법을 소개합니다"],
+    [/내려\s*받습니다$/, " 다운로드 방법을 소개합니다"],
+    [/이동할\s*수\s*있습니다$/, " 이동 및 메뉴 구성을 안내합니다"],
+    [/이동합니다$/, " 이동 방법을 안내합니다"],
+    [/확인합니다$/, " 확인 방법을 안내합니다"],
+    [/조회할\s*수\s*있습니다$/, " 조회 방법을 소개합니다"],
+    [/조회합니다$/, " 조회 방법을 소개합니다"],
+    [/(?:합니다|입니다|할\s*수\s*있습니다|하실\s*수\s*있습니다|드립니다|해\s*볼게요|보시겠습니다)$/, " 방법을 안내합니다"],
+  ];
+  for (const [pattern, replacement] of endingRules) {
+    if (pattern.test(core)) {
+      core = core.replace(pattern, replacement);
+      break;
+    }
+  }
+  return `${core.trim()}.`;
+}
+
+function stripVersionAndConversationalTextJS(raw) {
+  return String(raw || "")
+    .replace(/\b(?:ver\.?|v\.?)\s*\d+(?:\.\d+)*\b/gi, "")
+    .replace(/이번\s*(?:시간|영상|매뉴얼|과정)에서는\s+[^.?!]+[.?!]?/g, "")
+    .replace(/지금부터는?\s+[^.?!]+[.?!]?/g, "")
+    .replace(/(?:안내|소개|설명)\s*방법을\s*(?:안내|소개|설명)합니다/g, "방법을 안내합니다")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function formatLeftCoverHeadingJS(rawBadge) {
+  const clean = stripVersionAndConversationalTextJS(rawBadge || "그룹웨어 사용 매뉴얼");
+  if (!clean || clean === "그룹웨어 교육 가이드" || clean === "그룹웨어 사용 매뉴얼") {
+    return { line1: "그룹웨어", line2: "사용 매뉴얼" };
+  }
+  const words = clean.split(/\s+/);
+  if (words.length >= 2) {
+    return { line1: words[0], line2: words.slice(1).join(" ") };
+  }
+  return { line1: "그룹웨어", line2: clean };
+}
+
+function deriveDefaultIntroToc(narration) {
+  const cues = narration?.cues || [];
+  const openingText = (cues[0]?.text || "").trim();
+  const title = stripVersionAndConversationalTextJS(
+    extractSmartTitleFromOpening(openingText, narration?.slug || selectedScenario)
+  );
+  const items = cues.slice(1, 5).map((c, idx) => ({
+    title: stripVersionAndConversationalTextJS(extractSmartStepTitleFromCueText(c.text, idx)),
+    description: stripVersionAndConversationalTextJS(toOverviewBulletTextJS(c.text || "")),
+  }));
+  if (items.length === 0) {
+    items.push({
+      title: "주요 기능 안내",
+      description: `${title}의 주요 메뉴 구성과 활용 방법을 안내합니다.`,
+    });
+  }
+  const summary = `${title}의 주요 메뉴 구성과 활용 방법을 안내합니다.`;
+  return {
+    enabled: narration?.showIntroToc !== false,
+    badge: "그룹웨어 사용 매뉴얼",
+    title,
+    summary,
+    items,
+  };
+}
+
+function getEffectiveIntroToc(narration) {
+  const fallback = deriveDefaultIntroToc(narration);
+  const raw = narration?.introToc;
+  if (!raw || typeof raw !== "object") return fallback;
+  const rawTitle = stripVersionAndConversationalTextJS(raw.title || "");
+  const isGenericDemoSlug = /^live\s+demo\s+\d+$/i.test(rawTitle);
+  const items =
+    Array.isArray(raw.items) && raw.items.length > 0
+      ? raw.items.slice(0, 8).map((it, idx) => {
+          const cleanT = stripVersionAndConversationalTextJS(it?.title || "");
+          const cleanD = stripVersionAndConversationalTextJS(
+            it?.description || fallback.items[idx]?.description || ""
+          );
+          return {
+            title:
+              !cleanT || /^단계\s*\d+$|^주요\s*단계\s*\d*$/.test(cleanT)
+                ? extractSmartStepTitleFromCueText(cleanD, idx)
+                : cleanT,
+            description: cleanD,
+          };
+        })
+      : fallback.items;
+
+  const cleanBadge = stripVersionAndConversationalTextJS(raw.badge || fallback.badge || "그룹웨어 사용 매뉴얼");
+  const cleanSummary = stripVersionAndConversationalTextJS(raw.summary || "");
+
+  return {
+    enabled: raw.enabled !== undefined ? Boolean(raw.enabled) : fallback.enabled,
+    badge: cleanBadge === "그룹웨어 교육 가이드" ? "그룹웨어 사용 매뉴얼" : cleanBadge || "그룹웨어 사용 매뉴얼",
+    title: !rawTitle || isGenericDemoSlug ? fallback.title : rawTitle,
+    summary: cleanSummary || fallback.summary,
+    items,
+  };
+}
+
+function escapeHtmlAttr(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function renderLiveIntroTocOverlay(overlayEl, narration) {
+  if (!overlayEl) return;
+  const toc = getEffectiveIntroToc(narration);
+  const siteBrand = narration?.siteBrand || toc?.siteBrand || {};
+  const sig = JSON.stringify({ toc, siteBrand });
+  if (overlayEl.dataset.tocSig === sig) return;
+  overlayEl.dataset.tocSig = sig;
+
+  const primaryColor = siteBrand.primaryColor || "#0068ff";
+  const secondaryColor = siteBrand.secondaryColor || "#0047b3";
+  const accentColor = siteBrand.accentColor || "#0bb4fa";
+  const siteName = siteBrand.siteName || "그룹웨어";
+  const logoUrl = siteBrand.logoUrl || "";
+
+  const coverHeading = formatLeftCoverHeadingJS(toc.badge || siteBrand.manualBadge);
+  const cleanSubtitle = stripVersionAndConversationalTextJS(toc.summary);
+
+  const rowsHtml = (toc.items || [])
+    .slice(0, 8)
+    .map((it, idx) => {
+      const rawTitle = stripVersionAndConversationalTextJS(it.title || "");
+      const rawDesc = stripVersionAndConversationalTextJS(it.description || "");
+      const hasDistinctTitle =
+        Boolean(rawTitle) &&
+        Boolean(rawDesc) &&
+        rawTitle !== rawDesc &&
+        !/^(?:단계|주요\s*단계|핵심|주요\s*기능)\s*\d*$/.test(rawTitle);
+
+      return `
+      <div style="display:flex;align-items:center;gap:14px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;box-shadow:0 4px 14px rgba(15,41,66,0.05);">
+        <div style="min-width:32px;height:32px;border-radius:8px;background:${escapeHtmlAttr(
+          primaryColor
+        )}14;border:1px solid ${escapeHtmlAttr(
+        primaryColor
+      )}45;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:800;color:${escapeHtmlAttr(
+        primaryColor
+      )};flex-shrink:0;">${String(idx + 1).padStart(2, "0")}</div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;">
+          ${
+            hasDistinctTitle
+              ? `<span style="font-size:15.5px;font-weight:700;color:#0f2942;letter-spacing:-0.02em;line-height:1.28;word-break:keep-all;">${escapeHtmlAttr(
+                  rawTitle
+                )}</span>
+                 <span style="font-size:13px;font-weight:500;color:#475569;letter-spacing:-0.015em;line-height:1.38;word-break:keep-all;">${escapeHtmlAttr(
+                   rawDesc
+                 )}</span>`
+              : `<span style="font-size:14.5px;font-weight:600;color:#1e293b;letter-spacing:-0.02em;line-height:1.38;word-break:keep-all;">${escapeHtmlAttr(
+                  rawDesc || rawTitle
+                )}</span>`
+          }
+        </div>
+      </div>`;
+    })
+    .join("");
+
+  overlayEl.innerHTML = `
+    <div style="width:100%;height:100%;background:#f4f7fc;display:flex;flex-direction:column;justify-content:center;padding:28px 48px 28px 48px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,${escapeHtmlAttr(
+        primaryColor
+      )} 0%,${escapeHtmlAttr(accentColor)} 100%);"></div>
+      <button type="button" id="btn-close-live-toc-preview" title="플레이어 미리보기에서 오프닝 슬라이드를 닫습니다" style="position:absolute;top:10px;right:12px;pointer-events:auto;background:rgba(15,41,66,0.08);border:1px solid rgba(15,41,66,0.16);border-radius:999px;padding:3px 9px;font-size:11px;font-weight:600;color:#334155;cursor:pointer;z-index:5;">✕ 미리보기 닫기</button>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding-bottom:14px;border-bottom:1.5px solid #dce5f2;">
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="font-size:14.5px;font-weight:800;color:${escapeHtmlAttr(primaryColor)};letter-spacing:0.02em;text-transform:uppercase;">Contents</div>
+          <div style="font-size:24px;font-weight:800;color:#0f2942;letter-spacing:-0.03em;line-height:1.24;word-break:keep-all;">${escapeHtmlAttr(
+            toc.title
+          )}</div>
+          ${
+            cleanSubtitle
+              ? `<div style="font-size:13px;font-weight:500;color:#475569;letter-spacing:-0.01em;line-height:1.38;margin-top:2px;word-break:keep-all;">${escapeHtmlAttr(
+                  cleanSubtitle
+                )}</div>`
+              : ""
+          }
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+          ${
+            logoUrl
+              ? `<img src="${escapeHtmlAttr(
+                  logoUrl
+                )}" alt="Site Logo" style="height:22px;max-width:140px;object-fit:contain;" />`
+              : `<span style="font-size:13px;font-weight:800;color:${escapeHtmlAttr(primaryColor)};">${escapeHtmlAttr(
+                  siteName
+                )}</span>`
+          }
+          <span style="font-size:10px;font-weight:700;color:#475569;background:#e2e8f0;padding:2px 8px;border-radius:999px;">${escapeHtmlAttr(
+            toc.badge || siteBrand.manualBadge || "그룹웨어 사용 매뉴얼"
+          )}</span>
+        </div>
+      </div>
+      <div style="margin-top:18px;display:flex;flex-direction:column;gap:11px;overflow-y:auto;">
+        ${rowsHtml}
+      </div>
+    </div>
+  `;
+
+  const closeBtn = overlayEl.querySelector("#btn-close-live-toc-preview");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      window.__hideIntroTocPreview = true;
+      window.__forcePreviewIntroToc = false;
+      overlayEl.classList.add("hidden");
+    });
+  }
+}
+
+function renderIntroTocEditor(details, narration) {
+  const editorEl = document.getElementById("narration-intro-toc-editor");
+  if (!editorEl) return;
+
+  if (!narration || !Array.isArray(narration.cues) || narration.cues.length === 0) {
+    editorEl.classList.add("hidden");
+    editorEl.innerHTML = "";
+    return;
+  }
+
+  const showToc = narration.showIntroToc !== false && narration.introToc?.enabled !== false;
+  if (!showToc) {
+    editorEl.classList.add("hidden");
+    return;
+  }
+
+  editorEl.classList.remove("hidden");
+  const toc = getEffectiveIntroToc(narration);
+  narration.introToc = toc;
+  const isBaked = Boolean(narration.introBakedIntoVideo);
+  const bakedSec = ((narration.bakedIntroDurationMs || 0) / 1000).toFixed(1);
+  const brandName = narration.siteBrand?.siteName || "";
+
+  const itemsHtml = (toc.items || [])
+    .map(
+      (item, idx) => `
+      <div class="intro-toc-item-row" data-toc-idx="${idx}">
+        <span style="font-size:11.5px;font-weight:800;color:#0078ff;font-family:var(--font-mono);min-width:26px;text-align:center;">${String(
+          idx + 1
+        ).padStart(2, "0")}</span>
+        <input type="text" class="toc-item-title-input" value="${escapeHtmlAttr(
+          item.title || ""
+        )}" placeholder="소제목 (예: 웹·전용 앱 접속 및 로그인)" style="width:200px;padding:5px 8px;font-size:12px;font-weight:700;" />
+        <input type="text" class="toc-item-desc-input" value="${escapeHtmlAttr(
+          item.description || ""
+        )}" placeholder="목차 개요 (예: 웹 접속 방법과 PC·모바일 전용 앱의 설치 및 로그인 방법을 소개합니다.)" style="flex:1;min-width:220px;padding:5px 10px;font-size:12px;" />
+        <button type="button" class="btn btn-sm btn-outline btn-delete-toc-item" title="목차 항목 삭제" style="padding:3px 7px;font-size:11px;color:var(--fail);">✕</button>
+      </div>`
+    )
+    .join("");
+
+  editorEl.innerHTML = `
+    <div class="intro-toc-editor-header">
+      <div class="intro-toc-editor-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span>📑 사이트 맞춤형 마스터 오프닝 목차(Contents) 슬라이드 편집</span>
+        ${
+          isBaked
+            ? `<span class="status-tag status-tag-rendered" style="font-size:10.5px;padding:2px 7px;">✅ 녹화본 앞단 영상 합성 완료 (${bakedSec}s${
+                brandName ? ` · ${escapeHtmlAttr(brandName)}` : ""
+              })</span>`
+            : `<span class="status-tag status-tag-raw" style="font-size:10.5px;padding:2px 7px;">💡 [🎬 슬라이드 영상에 반영] 클릭 시 녹화본 앞단에 즉시 합성</span>`
+        }
+      </div>
+      <div style="display:inline-flex;align-items:center;gap:6px;">
+        <button type="button" class="btn btn-sm btn-outline" id="btn-bake-intro-toc" title="수정한 목차 슬라이드와 오프닝 음성을 녹화본(recording.mp4) 앞단에 1~2초 만에 즉시 재합성합니다" style="padding:3px 9px;font-size:11px;border-color:var(--accent);color:var(--accent);font-weight:700;">🎬 슬라이드 영상에 반영</button>
+        <button type="button" class="btn btn-sm btn-outline" id="btn-preview-intro-toc" title="비디오를 오프닝 시점(0.1초)으로 이동하여 목차 슬라이드를 확인합니다" style="padding:3px 8px;font-size:11px;">👁️ 오프닝 구간 이동</button>
+        <button type="button" class="btn btn-sm btn-outline" id="btn-add-intro-toc-item" title="Contents 목차 항목을 추가합니다" style="padding:3px 8px;font-size:11px;">➕ 목차 항목 추가</button>
+      </div>
+    </div>
+    <div class="intro-toc-meta-row">
+      <input type="text" id="toc-badge-input" value="${escapeHtmlAttr(
+        toc.badge
+      )}" placeholder="좌측 표지 타이틀 (예: 그룹웨어 사용 매뉴얼)" title="슬라이드 좌측 표지 타이틀" style="width:170px;padding:5px 8px;font-size:12px;" />
+      <input type="text" id="toc-title-input" value="${escapeHtmlAttr(
+        toc.title
+      )}" placeholder="교육 제목 (예: 그룹웨어 접속 및 기본 화면 안내)" title="Contents 슬라이드 메인 제목" style="width:280px;padding:5px 8px;font-size:12px;font-weight:700;" />
+      <input type="text" id="toc-summary-input" value="${escapeHtmlAttr(
+        toc.summary
+      )}" placeholder="1줄 부제 (예: 그룹웨어 접속 및 기본 화면을 안내합니다.)" title="슬라이드 제목 하단 1줄 부제 (구어체 대본 금지)" style="flex:1;min-width:220px;padding:5px 8px;font-size:12px;" />
+    </div>
+    <div class="intro-toc-items-list" id="intro-toc-items-list">
+      ${itemsHtml}
+    </div>
+  `;
+
+  const syncTocEdits = () => {
+    const updated = collectNarrationFromUI({ sortByStartTime: false });
+    if (scenarioDetailsCache[selectedScenario]) {
+      scenarioDetailsCache[selectedScenario].narration = updated;
+      if (scenarioDetailsCache[selectedScenario].editPlan) {
+        scenarioDetailsCache[selectedScenario].editPlan.narration = updated;
+      }
+    }
+    const overlayEl = document.getElementById("live-intro-toc-overlay");
+    if (overlayEl) {
+      delete overlayEl.dataset.tocSig;
+    }
+    updateVideoProgressUI();
+    updateJsonViewer("narration");
+    saveNarrationTimingQuick();
+  };
+
+  editorEl
+    .querySelectorAll("#toc-badge-input, #toc-title-input, #toc-summary-input, .toc-item-title-input, .toc-item-desc-input")
+    .forEach((inp) => {
+      inp.addEventListener("input", syncTocEdits);
+      inp.addEventListener("change", syncTocEdits);
+    });
+
+  editorEl.querySelectorAll(".btn-delete-toc-item").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const row = btn.closest(".intro-toc-item-row");
+      if (row) row.remove();
+      syncTocEdits();
+      renderIntroTocEditor(scenarioDetailsCache[selectedScenario], scenarioDetailsCache[selectedScenario]?.narration);
+    });
+  });
+
+  const addBtn = editorEl.querySelector("#btn-add-intro-toc-item");
+  if (addBtn) {
+    addBtn.addEventListener("click", () => {
+      const updated = collectNarrationFromUI({ sortByStartTime: false });
+      if (!updated.introToc) updated.introToc = getEffectiveIntroToc(updated);
+      updated.introToc.items.push({
+        title: `주요 기능 ${updated.introToc.items.length + 1}`,
+        description: "해당 기능의 주요 구성과 사용 방법을 안내합니다.",
+      });
+      if (scenarioDetailsCache[selectedScenario]) {
+        scenarioDetailsCache[selectedScenario].narration = updated;
+      }
+      renderIntroTocEditor(scenarioDetailsCache[selectedScenario], updated);
+      syncTocEdits();
+    });
+  }
+
+  const bakeBtn = editorEl.querySelector("#btn-bake-intro-toc");
+  if (bakeBtn) {
+    bakeBtn.addEventListener("click", async () => {
+      if (!selectedScenario) return;
+      const slug = selectedScenario;
+      const origTxt = bakeBtn.textContent;
+      bakeBtn.disabled = true;
+      bakeBtn.textContent = "⏳ 슬라이드 영상 합성 중...";
+      stopRealtimeHoldAndAudio();
+      if (typeof releaseVideoFileLock === "function") {
+        await releaseVideoFileLock();
+      }
+      try {
+        const updated = collectNarrationFromUI({ sortByStartTime: false });
+        const res = await fetch(`/api/narration/${slug}/bake-slide`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ narration: updated }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "슬라이드 합성 실패");
+        const details = scenarioDetailsCache[slug];
+        if (details) {
+          if (data.narration) details.narration = data.narration;
+          if (data.editPlan) details.editPlan = data.editPlan;
+          if (data.moments) details.moments = data.moments;
+          syncScenarioTimelineInMemory(details);
+        }
+        window.__forcePreviewIntroToc = false;
+        setVideoMode("raw", details);
+        renderNarrationStudio(details);
+        renderTimelineVisual(details);
+        renderMomentsStepList(details);
+        updateJsonViewer("narration");
+      } catch (err) {
+        alert(`슬라이드 영상 합성 오류: ${err.message}`);
+      } finally {
+        bakeBtn.disabled = false;
+        bakeBtn.textContent = origTxt || "🎬 슬라이드 영상에 반영";
+      }
+    });
+  }
+
+  const previewBtn = editorEl.querySelector("#btn-preview-intro-toc");
+  if (previewBtn) {
+    previewBtn.addEventListener("click", () => {
+      if (videoPlayer) {
+        stopRealtimeHoldAndAudio();
+        videoPlayer.pause();
+        window.__hideIntroTocPreview = false;
+        window.__forcePreviewIntroToc = !narration.introBakedIntoVideo;
+        videoPlayer.currentTime = 0.1;
+        updateVideoProgressUI();
+      }
+    });
+  }
+}
+
 function renderNarrationStudio(details, focusIndex = null) {
   const container = document.getElementById("narration-cues-container");
+  const tocEditorEl = document.getElementById("narration-intro-toc-editor");
   const statusBadge = document.getElementById("narration-status-badge");
   const styleSelect = document.getElementById("narration-style-select");
   const voiceSelect = document.getElementById("narration-voice-select");
@@ -2700,6 +3317,7 @@ function renderNarrationStudio(details, focusIndex = null) {
   const rateSelect = document.getElementById("narration-rate-select");
   const enabledToggle = document.getElementById("narration-enabled-toggle");
   const subtitleToggle = document.getElementById("narration-subtitle-toggle");
+  const tocToggle = document.getElementById("narration-toc-toggle");
 
   if (!container) return;
 
@@ -2707,6 +3325,10 @@ function renderNarrationStudio(details, focusIndex = null) {
 
   const narration = details?.narration || details?.editPlan?.narration || null;
   if (!narration || !Array.isArray(narration.cues) || narration.cues.length === 0) {
+    if (tocEditorEl) {
+      tocEditorEl.classList.add("hidden");
+      tocEditorEl.innerHTML = "";
+    }
     if (statusBadge) {
       statusBadge.textContent = "대본 없음";
       statusBadge.style.background = "var(--neutral-soft)";
@@ -2714,7 +3336,7 @@ function renderNarrationStudio(details, focusIndex = null) {
     }
     container.innerHTML = `
       <div class="studio-empty-box">
-        상단에서 <strong>말투(문체)</strong>와 <strong>음성/억양 톤</strong>을 선택한 뒤 <strong>[✨ AI 대본(오프닝 포함) 생성 &amp; 음성 합성]</strong>을 누르면, 영상 시작 시 어떤 매뉴얼인지 소개하는 오프닝 멘트와 단계별 나레이션이 자동 생성됩니다.
+        상단에서 <strong>말투(문체)</strong>와 <strong>음성/억양 톤</strong>을 선택한 뒤 <strong>[✨ AI 대본(오프닝 포함) 생성 &amp; 음성 합성]</strong>을 누르면, 영상 시작 시 매뉴얼 구성 목차와 단계별 나레이션이 자동 생성됩니다.
       </div>
     `;
     return;
@@ -2726,6 +3348,11 @@ function renderNarrationStudio(details, focusIndex = null) {
   if (rateSelect && narration.rate) rateSelect.value = narration.rate;
   if (enabledToggle) enabledToggle.checked = narration.enabled !== false;
   if (subtitleToggle) subtitleToggle.checked = narration.showSubtitles !== false;
+  if (tocToggle) {
+    tocToggle.checked = narration.showIntroToc !== false && narration.introToc?.enabled !== false;
+  }
+
+  renderIntroTocEditor(details, narration);
 
   const styleLabels = {
     manual: "📘 정석 매뉴얼",
@@ -2969,6 +3596,7 @@ function collectNarrationFromUI(options = {}) {
   const rateSelect = document.getElementById("narration-rate-select");
   const enabledToggle = document.getElementById("narration-enabled-toggle");
   const subtitleToggle = document.getElementById("narration-subtitle-toggle");
+  const tocToggle = document.getElementById("narration-toc-toggle");
   const rows = document.querySelectorAll("#narration-cues-container .narration-cue-row");
 
   const rawCues = [];
@@ -3004,6 +3632,32 @@ function collectNarrationFromUI(options = {}) {
     id: i + 1,
   }));
 
+  const showIntroToc = tocToggle ? tocToggle.checked : existing.showIntroToc ?? true;
+  const tocEditorEl = document.getElementById("narration-intro-toc-editor");
+  let introToc = existing.introToc ? { ...existing.introToc, enabled: showIntroToc } : undefined;
+  if (tocEditorEl && !tocEditorEl.classList.contains("hidden") && tocEditorEl.querySelector("#toc-title-input")) {
+    const badgeVal = (tocEditorEl.querySelector("#toc-badge-input")?.value || "").trim();
+    const titleVal = (tocEditorEl.querySelector("#toc-title-input")?.value || "").trim();
+    const summaryVal = (tocEditorEl.querySelector("#toc-summary-input")?.value || "").trim();
+    const itemRows = tocEditorEl.querySelectorAll(".intro-toc-item-row");
+    const items = [];
+    itemRows.forEach((r) => {
+      const t = (r.querySelector(".toc-item-title-input")?.value || "").trim();
+      const d = (r.querySelector(".toc-item-desc-input")?.value || "").trim();
+      if (t || d) {
+        items.push({ title: t || "주요 단계", description: d || "" });
+      }
+    });
+    const fallbackToc = deriveDefaultIntroToc({ ...existing, cues });
+    introToc = {
+      enabled: showIntroToc,
+      badge: badgeVal || fallbackToc.badge,
+      title: titleVal || fallbackToc.title,
+      summary: summaryVal || fallbackToc.summary,
+      items: items.length > 0 ? items : fallbackToc.items,
+    };
+  }
+
   return {
     slug: selectedScenario,
     style: styleSelect ? styleSelect.value : existing.style || "manual",
@@ -3012,6 +3666,13 @@ function collectNarrationFromUI(options = {}) {
     rate: rateSelect ? rateSelect.value : existing.rate || "+5%",
     enabled: enabledToggle ? enabledToggle.checked : true,
     showSubtitles: subtitleToggle ? subtitleToggle.checked : true,
+    showIntroToc,
+    ...(introToc ? { introToc } : {}),
+    ...(existing.siteBrand ? { siteBrand: existing.siteBrand } : {}),
+    ...(existing.introBakedIntoVideo !== undefined ? { introBakedIntoVideo: existing.introBakedIntoVideo } : {}),
+    ...(existing.bakedIntroDurationMs !== undefined ? { bakedIntroDurationMs: existing.bakedIntroDurationMs } : {}),
+    ...(existing._bakedSlideSig ? { _bakedSlideSig: existing._bakedSlideSig } : {}),
+    ...(Array.isArray(existing.mergedFromSlugs) ? { mergedFromSlugs: existing.mergedFromSlugs } : {}),
     updatedAt: new Date().toISOString(),
     cues,
   };
@@ -3029,22 +3690,30 @@ async function handleGenerateNarration() {
   const rate = document.getElementById("narration-rate-select")?.value || "+5%";
   const enabled = document.getElementById("narration-enabled-toggle")?.checked ?? true;
   const showSubtitles = document.getElementById("narration-subtitle-toggle")?.checked ?? true;
+  const showIntroToc = document.getElementById("narration-toc-toggle")?.checked ?? true;
 
   if (btn) {
     btn.disabled = true;
-    btn.textContent = "⏳ AI 대본(오프닝+스타일) 생성 & 음성 합성 중...";
+    btn.textContent = "⏳ AI 대본·목차 생성 & 음성·슬라이드 영상 합성 중...";
+  }
+  stopRealtimeHoldAndAudio();
+  if (typeof releaseVideoFileLock === "function") {
+    await releaseVideoFileLock();
   }
   try {
     const res = await fetch(`/api/narration/${selectedScenario}/generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ style, voice, pitch, rate, enabled, showSubtitles }),
+      body: JSON.stringify({ style, voice, pitch, rate, enabled, showSubtitles, showIntroToc }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "생성 실패");
 
     if (scenarioDetailsCache[selectedScenario]) {
       scenarioDetailsCache[selectedScenario].narration = data.narration;
+      if (data.moments) {
+        scenarioDetailsCache[selectedScenario].moments = data.moments;
+      }
       if (data.editPlan) {
         scenarioDetailsCache[selectedScenario].editPlan = data.editPlan;
       } else if (scenarioDetailsCache[selectedScenario].editPlan) {
@@ -3052,6 +3721,8 @@ async function handleGenerateNarration() {
       }
       syncScenarioTimelineInMemory(scenarioDetailsCache[selectedScenario]);
     }
+    window.__forcePreviewIntroToc = false;
+    setVideoMode("raw", scenarioDetailsCache[selectedScenario]);
     renderNarrationStudio(scenarioDetailsCache[selectedScenario]);
     renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
     renderMomentsStepList(scenarioDetailsCache[selectedScenario]);
@@ -3213,13 +3884,33 @@ async function handleSaveNarration() {
     if (!res.ok) throw new Error(data.error || "저장 실패");
 
     if (scenarioDetailsCache[selectedScenario]) {
+      const prevSig = scenarioDetailsCache[selectedScenario].narration?._bakedSlideSig;
       scenarioDetailsCache[selectedScenario].narration = data.narration;
+      if (data.moments) {
+        scenarioDetailsCache[selectedScenario].moments = data.moments;
+      }
       if (data.editPlan) {
         scenarioDetailsCache[selectedScenario].editPlan = data.editPlan;
       } else if (scenarioDetailsCache[selectedScenario].editPlan) {
         scenarioDetailsCache[selectedScenario].editPlan.narration = data.narration;
       }
       syncScenarioTimelineInMemory(scenarioDetailsCache[selectedScenario]);
+      if (
+        (data.narration?._bakedSlideSig && data.narration._bakedSlideSig !== prevSig) ||
+        data.renderedVideoUpdated
+      ) {
+        const prevSec = videoPlayer && Number.isFinite(videoPlayer.currentTime) ? videoPlayer.currentTime : 0;
+        setVideoMode(currentVideoMode, scenarioDetailsCache[selectedScenario]);
+        if (videoPlayer && prevSec > 0.5) {
+          videoPlayer.addEventListener(
+            "loadedmetadata",
+            () => {
+              videoPlayer.currentTime = Math.min(prevSec, Math.max(0, (videoPlayer.duration || prevSec) - 0.2));
+            },
+            { once: true }
+          );
+        }
+      }
     }
     renderNarrationStudio(scenarioDetailsCache[selectedScenario]);
     renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
@@ -4612,10 +5303,16 @@ function initSSE() {
             if (data.task.status === "completed") {
               terminalStatusText.textContent = "녹화 완료";
               if (terminalLoginBanner) terminalLoginBanner.style.display = "none";
+              if (data.task.slug) {
+                delete scenarioDetailsCache[data.task.slug];
+              }
               fetchScenarios();
               fetchStatus();
               setTimeout(() => {
-                selectScenario(data.task.slug, null);
+                if (data.task.slug) {
+                  delete scenarioDetailsCache[data.task.slug];
+                }
+                selectScenario(data.task.slug, "raw");
                 switchTab("tab-scenarios");
               }, 1500);
             } else if (data.task.status === "failed") {
@@ -5279,6 +5976,26 @@ function bindEvents() {
         }
       });
 
+      const narrationEnabledToggle = document.getElementById("narration-enabled-toggle");
+      const narrationSubtitleToggle = document.getElementById("narration-subtitle-toggle");
+      const narrationTocToggle = document.getElementById("narration-toc-toggle");
+      [narrationEnabledToggle, narrationSubtitleToggle, narrationTocToggle].forEach((chk) => {
+        if (chk) {
+          chk.addEventListener("change", () => {
+            if (!selectedScenario || !scenarioDetailsCache[selectedScenario]) return;
+            const updated = collectNarrationFromUI({ sortByStartTime: false });
+            scenarioDetailsCache[selectedScenario].narration = updated;
+            if (scenarioDetailsCache[selectedScenario].editPlan) {
+              scenarioDetailsCache[selectedScenario].editPlan.narration = updated;
+            }
+            renderIntroTocEditor(scenarioDetailsCache[selectedScenario], updated);
+            updateVideoProgressUI();
+            updateJsonViewer("narration");
+            saveNarrationTimingQuick();
+          });
+        }
+      });
+
       const btnGenerateNarration = document.getElementById("btn-generate-narration");
       if (btnGenerateNarration) {
         btnGenerateNarration.addEventListener("click", handleGenerateNarration);
@@ -5396,5 +6113,10 @@ function bindEvents() {
             }
           }
         }
+      });
+
+      // Auto-refresh scenario list & active scenario when browser window regains focus (e.g. after CLI recording)
+      window.addEventListener("focus", () => {
+        fetchScenarios();
       });
     }

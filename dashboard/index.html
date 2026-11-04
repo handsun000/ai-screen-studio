@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261030_ai_mode_cli1">
+  <link rel="stylesheet" href="style.css?v=20261031_v3">
 </head>
 <body>
   <div class="app-container">
@@ -319,6 +319,7 @@
                 <video id="demo-video-player" controls preload="metadata">
                   <p>브라우저가 HTML5 비디오를 지원하지 않습니다.</p>
                 </video>
+                <div class="live-intro-toc-overlay hidden" id="live-intro-toc-overlay"></div>
                 <div class="live-timewarp-badge hidden" id="live-timewarp-badge"></div>
                 <div class="live-subtitle-overlay hidden" id="live-subtitle-overlay"></div>
                 <div class="video-empty-state" id="video-empty">
@@ -434,6 +435,10 @@
                           <input type="checkbox" id="narration-subtitle-toggle" checked>
                           <span>💬 자막</span>
                         </label>
+                        <label class="narration-check-pill" title="오프닝 내레이션 구간 동안 매뉴얼 제목·특징·단계별 목차(표제 | 내용) 화면을 표시합니다">
+                          <input type="checkbox" id="narration-toc-toggle" checked>
+                          <span>📑 목차</span>
+                        </label>
                       </div>
                       <div class="narration-toolbar-actions">
                         <div class="ai-mode-seg-toggle" id="narration-ai-mode-toggle" title="AI 대본 생성 시 사용할 실행 모드 전환 (API 모드 vs 로컬 CLI 모드)">
@@ -446,7 +451,7 @@
                         <button type="button" class="btn btn-sm btn-secondary" id="btn-add-narration-cue" title="현재 비디오 재생 위치(일시정지 시점)에 맞춰 새 대본 구간을 끼워 넣습니다">
                           ➕ 현재 시점 추가
                         </button>
-                        <button type="button" class="btn btn-sm btn-primary btn-glow" id="btn-generate-narration" title="선택한 말투 스타일과 시나리오 주제 오프닝을 포함하여 AI 대본 및 음성을 자동 생성합니다">
+                        <button type="button" class="btn btn-sm btn-primary btn-glow" id="btn-generate-narration" title="선택한 말투 스타일과 시나리오 주제 오프닝·매뉴얼 목차를 포함하여 AI 대본 및 음성을 자동 생성합니다">
                           ✨ AI 대본 생성 &amp; 음성 합성
                         </button>
                         <button type="button" class="btn btn-sm btn-success" id="btn-save-narration">
@@ -455,6 +460,8 @@
                       </div>
                     </div>
                   </div>
+
+                  <div id="narration-intro-toc-editor" class="narration-intro-toc-editor hidden"></div>
 
                   <div id="narration-cues-container" class="narration-cues-list">
                     <div class="studio-empty-box">
@@ -627,6 +634,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=20261030_ai_mode_cli1"></script>
+  <script src="app.js?v=20261031_v3"></script>
 </body>
 </html>

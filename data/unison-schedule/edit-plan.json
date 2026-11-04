@@ -1,0 +1,299 @@
+{
+  "totalDurationFrames": 2470,
+  "rawDurationFrames": 2112,
+  "fps": 60,
+  "defaultZoom": 1,
+  "segments": [
+    {
+      "momentId": 2,
+      "startFrame": 1009,
+      "endFrame": 1293,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 811,
+        "y": 108
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (811, 82) + Click at (811, 135)"
+    },
+    {
+      "momentId": 6,
+      "startFrame": 1417,
+      "endFrame": 1620,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1762,
+        "y": 197
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1786, 197) + Click at (1739, 197)"
+    },
+    {
+      "momentId": 10,
+      "startFrame": 1719,
+      "endFrame": 1953,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 458,
+        "y": 140
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (424, 140) + Click at (493, 140)"
+    }
+  ],
+  "timeRegions": [
+    {
+      "videoStartFrame": 0,
+      "videoEndFrame": 12,
+      "compStartFrame": 0,
+      "compEndFrame": 12,
+      "speed": 1
+    },
+    {
+      "videoStartFrame": 12,
+      "videoEndFrame": 1006,
+      "compStartFrame": 12,
+      "compEndFrame": 1006,
+      "speed": 1,
+      "cueId": 1
+    },
+    {
+      "videoStartFrame": 1006,
+      "videoEndFrame": 1411,
+      "compStartFrame": 1006,
+      "compEndFrame": 1411,
+      "speed": 1,
+      "cueId": 2
+    },
+    {
+      "videoStartFrame": 1411,
+      "videoEndFrame": 1685,
+      "compStartFrame": 1411,
+      "compEndFrame": 1685,
+      "speed": 1,
+      "cueId": 3
+    },
+    {
+      "videoStartFrame": 1685,
+      "videoEndFrame": 1690,
+      "compStartFrame": 1685,
+      "compEndFrame": 1847,
+      "speed": 0.03086,
+      "cueId": 3
+    },
+    {
+      "videoStartFrame": 1690,
+      "videoEndFrame": 1717,
+      "compStartFrame": 1847,
+      "compEndFrame": 1874,
+      "speed": 1,
+      "cueId": 3
+    },
+    {
+      "videoStartFrame": 1717,
+      "videoEndFrame": 1838,
+      "compStartFrame": 1874,
+      "compEndFrame": 1995,
+      "speed": 1,
+      "cueId": 4
+    },
+    {
+      "videoStartFrame": 1838,
+      "videoEndFrame": 1843,
+      "compStartFrame": 1995,
+      "compEndFrame": 2137,
+      "speed": 0.03521,
+      "cueId": 4
+    },
+    {
+      "videoStartFrame": 1843,
+      "videoEndFrame": 1870,
+      "compStartFrame": 2137,
+      "compEndFrame": 2164,
+      "speed": 1,
+      "cueId": 4
+    },
+    {
+      "videoStartFrame": 1870,
+      "videoEndFrame": 2080,
+      "compStartFrame": 2164,
+      "compEndFrame": 2374,
+      "speed": 1,
+      "cueId": 5
+    },
+    {
+      "videoStartFrame": 2080,
+      "videoEndFrame": 2085,
+      "compStartFrame": 2374,
+      "compEndFrame": 2443,
+      "speed": 0.07246,
+      "cueId": 5
+    },
+    {
+      "videoStartFrame": 2085,
+      "videoEndFrame": 2112,
+      "compStartFrame": 2443,
+      "compEndFrame": 2470,
+      "speed": 1,
+      "cueId": 5
+    }
+  ],
+  "narration": {
+    "slug": "unison-schedule",
+    "voice": "ko-KR-SunHiNeural",
+    "rate": "+5%",
+    "pitch": "+0Hz",
+    "style": "manual",
+    "enabled": true,
+    "showSubtitles": true,
+    "showIntroToc": true,
+    "introToc": {
+      "enabled": true,
+      "badge": "일정관리 사용 매뉴얼",
+      "title": "일정관리 기본 화면 및 조회 가이드",
+      "summary": "개인·부서 일정과 할일, 기념일을 조회하는 방법을 안내합니다.",
+      "items": [
+        {
+          "title": "일정관리 메뉴 진입 및 메인 화면",
+          "description": "일정관리 모듈로 이동하여 전체 캘린더 현황을 확인하는 방법을 안내합니다."
+        },
+        {
+          "title": "주간·일간 캘린더 보기 전환",
+          "description": "업무 목적에 따라 주간 및 일간 시간대별로 일정을 상세 조회하는 기능을 소개합니다."
+        },
+        {
+          "title": "할일 및 기념일 통합 조회",
+          "description": "캘린더와 연동된 개인 할일 목록과 주요 기념일을 확인하는 방법을 안내합니다."
+        }
+      ],
+      "siteBrand": {
+        "hostKey": "gwdev.unison.co.kr",
+        "originUrl": "https://gwdev.unison.co.kr",
+        "siteName": "유니슨 그룹",
+        "manualBadge": "그룹웨어 사용 매뉴얼",
+        "tagline": "",
+        "primaryColor": "#218CF3",
+        "secondaryColor": "#1C6AB9",
+        "accentColor": "#35B5FF",
+        "logoUrl": "/assets/sites/gwdev.unison.co.kr/logo.png",
+        "heroThumbUrl": "/assets/sites/gwdev.unison.co.kr/hero.png",
+        "createdAt": "2026-10-31T15:31:25.841Z"
+      }
+    },
+    "siteBrand": {
+      "hostKey": "gwdev.unison.co.kr",
+      "originUrl": "https://gwdev.unison.co.kr",
+      "siteName": "유니슨 그룹",
+      "manualBadge": "그룹웨어 사용 매뉴얼",
+      "tagline": "",
+      "primaryColor": "#218CF3",
+      "secondaryColor": "#1C6AB9",
+      "accentColor": "#35B5FF",
+      "logoUrl": "/assets/sites/gwdev.unison.co.kr/logo.png",
+      "heroThumbUrl": "/assets/sites/gwdev.unison.co.kr/hero.png",
+      "createdAt": "2026-10-31T15:31:25.841Z"
+    },
+    "introBakedIntoVideo": true,
+    "bakedIntroDurationMs": 14472,
+    "updatedAt": "2026-11-03T08:52:47.483Z",
+    "cues": [
+      {
+        "id": 1,
+        "startMs": 200,
+        "endMs": 14072,
+        "videoStartMs": 200,
+        "videoEndMs": 16772,
+        "extraHoldMs": 0,
+        "isIntro": true,
+        "text": "일정관리는 개인과 부서의 주요 업무 일정과 할일, 기념일을 캘린더 형태로 통합 관리하는 기능입니다. 일정관리 기본 화면 구성과 기간별 조회, 세부 메뉴 확인 방법을 살펴보겠습니다.",
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|일정관리는 개인과 부서의 주요 업무 일정과 할일, 기념일을 캘린더 형태로 통합 관리하는 기능입니다. 일정관리 기본 화면 구성과 기간별 조회, 세부 메뉴 확인 방법을 살펴보겠습니다.",
+        "audioDurationMs": 13872,
+        "audioFile": "narration/unison-schedule/cue-01.mp3",
+        "compStartMs": 200,
+        "compEndMs": 14072
+      },
+      {
+        "id": 2,
+        "startMs": 16767,
+        "endMs": 22695,
+        "videoStartMs": 16772,
+        "videoEndMs": 23515,
+        "extraHoldMs": 0,
+        "isIntro": false,
+        "text": "개인과 공유 일정을 체계적으로 관리하는 일정관리의 일정 메뉴로 이동합니다.",
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|개인과 공유 일정을 체계적으로 관리하는 일정관리의 일정 메뉴로 이동합니다.",
+        "audioDurationMs": 5928,
+        "audioFile": "narration/unison-schedule/cue-02.mp3",
+        "compStartMs": 16767,
+        "compEndMs": 22695
+      },
+      {
+        "id": 3,
+        "startMs": 23517,
+        "endMs": 31053,
+        "videoStartMs": 23515,
+        "videoEndMs": 28615,
+        "extraHoldMs": 0,
+        "isIntro": false,
+        "text": "한 주의 흐름을 파악하는 주간 보기와 시간대별 세부 일정을 확인하는 일간 보기로 화면을 전환해 조회합니다.",
+        "autoHoldMs": 2616,
+        "effectiveDeltaMs": 2616,
+        "playbackRate": 1,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|한 주의 흐름을 파악하는 주간 보기와 시간대별 세부 일정을 확인하는 일간 보기로 화면을 전환해 조회합니다.",
+        "audioDurationMs": 7536,
+        "audioFile": "narration/unison-schedule/cue-03.mp3",
+        "compStartMs": 23517,
+        "compEndMs": 31053
+      },
+      {
+        "id": 4,
+        "startMs": 31233,
+        "endMs": 35889,
+        "videoStartMs": 28615,
+        "videoEndMs": 31165,
+        "extraHoldMs": 0,
+        "isIntro": false,
+        "text": "기한별 처리 업무를 점검하는 할일 목록 화면으로 이동합니다.",
+        "autoHoldMs": 2286,
+        "effectiveDeltaMs": 2286,
+        "playbackRate": 1,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|기한별 처리 업무를 점검하는 할일 목록 화면으로 이동합니다.",
+        "audioDurationMs": 4656,
+        "audioFile": "narration/unison-schedule/cue-04.mp3",
+        "compStartMs": 31233,
+        "compEndMs": 35889
+      },
+      {
+        "id": 5,
+        "startMs": 36067,
+        "endMs": 40915,
+        "videoStartMs": 31165,
+        "videoEndMs": 35205,
+        "extraHoldMs": 0,
+        "isIntro": false,
+        "text": "사내 행사나 주요 기념일을 관리하는 기념일 메뉴를 확인합니다.",
+        "autoHoldMs": 1068,
+        "effectiveDeltaMs": 1068,
+        "playbackRate": 1,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|사내 행사나 주요 기념일을 관리하는 기념일 메뉴를 확인합니다.",
+        "audioDurationMs": 4848,
+        "audioFile": "narration/unison-schedule/cue-05.mp3",
+        "compStartMs": 36067,
+        "compEndMs": 40915
+      }
+    ],
+    "_bakedSlideSig": "{\"layoutVersion\":\"contents-only-v2\",\"badge\":\"일정관리 사용 매뉴얼\",\"title\":\"일정관리 기본 화면 및 조회 가이드\",\"summary\":\"개인·부서 일정과 할일, 기념일을 조회하는 방법을 안내합니다.\",\"items\":[{\"title\":\"일정관리 메뉴 진입 및 메인 화면\",\"description\":\"일정관리 모듈로 이동하여 전체 캘린더 현황을 확인하는 방법을 안내합니다.\"},{\"title\":\"주간·일간 캘린더 보기 전환\",\"description\":\"업무 목적에 따라 주간 및 일간 시간대별로 일정을 상세 조회하는 기능을 소개합니다.\"},{\"title\":\"할일 및 기념일 통합 조회\",\"description\":\"캘린더와 연동된 개인 할일 목록과 주요 기념일을 확인하는 방법을 안내합니다.\"}],\"hostKey\":\"gwdev.unison.co.kr\",\"primaryColor\":\"#218CF3\",\"cue0Text\":\"일정관리는 개인과 부서의 주요 업무 일정과 할일, 기념일을 캘린더 형태로 통합 관리하는 기능입니다. 일정관리 기본 화면 구성과 기간별 조회, 세부 메뉴 확인 방법을 살펴보겠습니다.\",\"cue0Sig\":\"ko-KR-SunHiNeural|+5%|+0Hz|일정관리는 개인과 부서의 주요 업무 일정과 할일, 기념일을 캘린더 형태로 통합 관리하는 기능입니다. 일정관리 기본 화면 구성과 기간별 조회, 세부 메뉴 확인 방법을 살펴보겠습니다.\",\"introDurationMs\":14472}"
+  }
+}

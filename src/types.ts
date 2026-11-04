@@ -17,6 +17,9 @@ export interface BrowsePlanAction {
   js?: string;
   description: string;
   cursorOffset?: { x: number; y: number };
+  clickCoords?: { x: number; y: number };
+  dragFromCoords?: { x: number; y: number };
+  dragToCoords?: { x: number; y: number };
 
   // Method 2: Dynamic Live Data Scraping & Variable Linking
   scrapeAs?: string;           // Variable name to store scraped text (e.g. "docTitle", "userName")
@@ -125,6 +128,34 @@ export interface EditSegment {
 
 export type NarrationStyle = "manual" | "friendly" | "presentation" | "compact";
 
+export interface SiteBrandProfile {
+  hostKey: string;
+  originUrl: string;
+  siteName: string;
+  manualBadge: string;
+  tagline: string;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  logoUrl?: string;
+  heroThumbUrl?: string;
+  createdAt: string;
+}
+
+export interface IntroTocItem {
+  title: string;
+  description: string;
+}
+
+export interface IntroTocConfig {
+  enabled?: boolean;
+  badge?: string;
+  title: string;
+  summary: string;
+  items: IntroTocItem[];
+  siteBrand?: SiteBrandProfile;
+}
+
 export interface NarrationCue {
   id: number;
   startMs: number;
@@ -136,6 +167,8 @@ export interface NarrationCue {
   playbackRate?: number;
   videoStartMs?: number;
   videoEndMs?: number;
+  compStartMs?: number;
+  compEndMs?: number;
   autoHoldMs?: number;
   extraHoldMs?: number;
   effectiveDeltaMs?: number;
@@ -149,6 +182,11 @@ export interface NarrationFile {
   style?: NarrationStyle;
   enabled: boolean;
   showSubtitles: boolean;
+  showIntroToc?: boolean;
+  introToc?: IntroTocConfig;
+  siteBrand?: SiteBrandProfile;
+  introBakedIntoVideo?: boolean;
+  bakedIntroDurationMs?: number;
   updatedAt: string;
   cues: NarrationCue[];
 }

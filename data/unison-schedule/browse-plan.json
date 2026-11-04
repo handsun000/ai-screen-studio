@@ -1,0 +1,148 @@
+{
+  "url": "https://gwdev.unison.co.kr/ekp/main/home/homGwMain",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "windowBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 1920,
+    "height": 1080,
+    "windowState": "normal"
+  },
+  "requiresLogin": true,
+  "recordedByEyedropper": true,
+  "actions": [
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기"
+    },
+    {
+      "type": "click",
+      "selector": "div#main_menu a[title='일정관리'][onclick*='/ekp/scr/schedule/main/getMainView']:visible, div#main_menu a[title='일정관리']:visible, div#main_menu a[onclick*='/ekp/scr/schedule/main/getMainView']:visible, a[onclick*='/ekp/scr/schedule/main/getMainView']:visible, div#main_menu a.nta[title='일정관리']:visible, li.nt.nt_4 a.nta.nta_drop:has-text('일정관리'):visible, a.nta[title='일정관리']:visible, a[title='일정관리']:visible, div#main_menu a.nta.nta_drop:has-text('일정관리'):visible, div#main_menu a.nta.nta_drop[title='일정관리']:visible",
+      "cursorOffset": {
+        "x": 56,
+        "y": 27
+      },
+      "clickCoords": {
+        "x": 811,
+        "y": 82
+      },
+      "description": "'일정관리' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" title=\"일정관리\" class=\"nta nta_drop\" onclick=\"GwMainMenu.fn.openDropMenu(this, 'MNU9341424385435367603', 'https://gwdev.unison.co.kr/ekp/scr/schedule/main/getMainView','G', 'L', '0', '0');return false;\"> <i class=\"nti nti_cal\"></i>일정관리 </a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'일정관리' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "type": "click",
+      "selector": "a[onclick*='/ekp/scr/schedule/main/getMainView?sendPage=MOVE_TO_SCHEDULE_LAYER']:visible, a:text-is('일정'):visible, ul.svc_lst > li.nt.nt_4:nth-of-type(4) > div.nt_sub.sub_h3 > ul > li:nth-of-type(1) > a:visible",
+      "cursorOffset": {
+        "x": 70,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 811,
+        "y": 135
+      },
+      "description": "'일정' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" onclick=\"GwMainMenu.fn.goPage('MNU93414243854403665178', 'https://gwdev.unison.co.kr/ekp/scr/schedule/main/getMainView?sendPage=MOVE_TO_SCHEDULE_LAYER','G', 'L', '0', '0');return false;\">일정</a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'일정' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "type": "click",
+      "selector": "div#calendar button.fc-agendaWeek-button[title='주간']:visible, div#calendar button[title='주간']:visible, div.fc-button-group button.fc-agendaWeek-button.fc-button.fc-state-default:text-is('주간'):visible, button.fc-agendaWeek-button[title='주간']:visible, button[title='주간']:visible, div#calendar button.fc-agendaWeek-button.fc-button.fc-state-default:has-text('주간'):visible, div#calendar button.fc-agendaWeek-button.fc-button[title='주간']:visible, div#calendar button.fc-agendaWeek-button.fc-button:has-text('주간'):visible, div#calendar button.fc-agendaWeek-button:visible",
+      "cursorOffset": {
+        "x": 23,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 1786,
+        "y": 197
+      },
+      "description": "'주간' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"fc-agendaWeek-button fc-button fc-state-default fc-state-active\" title=\"주간\">주간</button>"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'주간' 버튼 반응 대기"
+    },
+    {
+      "type": "click",
+      "selector": "div#calendar button.fc-agendaDay-button[title='일간']:visible, div#calendar button[title='일간']:visible, div.fc-button-group button.fc-agendaDay-button.fc-button.fc-state-default:text-is('일간'):visible, button.fc-agendaDay-button[title='일간']:visible, button[title='일간']:visible, div#calendar button.fc-agendaDay-button.fc-button.fc-state-default:has-text('일간'):visible, div#calendar button.fc-agendaDay-button.fc-button[title='일간']:visible, div#calendar button.fc-agendaDay-button.fc-button:has-text('일간'):visible, div#calendar button.fc-agendaDay-button:visible",
+      "cursorOffset": {
+        "x": 23,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 1739,
+        "y": 197
+      },
+      "description": "'일간' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"fc-agendaDay-button fc-button fc-state-default fc-state-hover\" title=\"일간\">일간</button>"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'일간' 버튼 반응 대기"
+    },
+    {
+      "type": "click",
+      "selector": "button#todoLayerBtn:visible, #todoLayerBtn:visible, div.btn_group.active_inv button.btn:text-is('할일'):visible, div#scdGetMainView_menu button.btn:has-text('할일'):visible",
+      "cursorOffset": {
+        "x": 35,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 424,
+        "y": 140
+      },
+      "description": "'할일' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"todoLayerBtn\" type=\"button\" class=\"btn\">할일</button>"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'할일' 버튼 반응 대기"
+    },
+    {
+      "type": "click",
+      "selector": "button#anniversaryBtn:visible, #anniversaryBtn:visible, div.btn_group.active_inv button.btn:has-text('기념일'):visible, div#scdGetMainView_menu button.btn:has-text('기념일'):visible",
+      "cursorOffset": {
+        "x": 35,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 493,
+        "y": 140
+      },
+      "description": "'기념일' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"anniversaryBtn\" type=\"button\" class=\"btn\">기념일</button>"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'기념일' 버튼 반응 대기"
+    },
+    {
+      "type": "wait",
+      "ms": 2000,
+      "description": "최종 시연 결과 화면 클로즈업 확인 대기"
+    }
+  ]
+}

@@ -1,11 +1,12 @@
 import React from "react";
-import { AbsoluteFill, OffthreadVideo, Sequence, staticFile } from "remotion";
+import { AbsoluteFill, OffthreadVideo, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { Background } from "./backgrounds/Background";
 import { FloatingWindow, getFloatingWindowDimensions } from "./components/FloatingWindow";
 import { SyntheticCursor } from "./components/SyntheticCursor";
 import { CameraTransform } from "./components/CameraTransform";
 import { SoundEffects } from "./components/SoundEffects";
 import { NarrationTrack } from "./components/NarrationTrack";
+import { IntroTocOverlay } from "./components/IntroTocOverlay";
 import { mergeContiguousTimeRegions } from "./components/FrameMapper";
 import type { EditPlan, MomentsFile } from "./types";
 
@@ -27,6 +28,13 @@ export const ScreenDemo: React.FC<ScreenDemoProps> = ({
   showCursor = true,
   showSfx = true,
 }) => {
+  const frame = useCurrentFrame();
+  const compTimeMs = (frame / Math.max(1, editPlan.fps || 30)) * 1000;
+  const isDuringBakedIntro =
+    Boolean(editPlan.narration?.introBakedIntoVideo) &&
+    Number(editPlan.narration?.bakedIntroDurationMs || 0) > 0 &&
+    compTimeMs < Number(editPlan.narration?.bakedIntroDurationMs || 0) - 40;
+
   const videoSrc = staticFile(videoFileName);
   const mergedRegions = mergeContiguousTimeRegions(editPlan.timeRegions);
   const hasTimeWarp = mergedRegions.some((r) => Math.abs(r.speed - 1.0) > 0.001);
@@ -34,6 +42,8 @@ export const ScreenDemo: React.FC<ScreenDemoProps> = ({
     moments.metadata.viewportWidth,
     moments.metadata.viewportHeight
   );
+  const effectiveWindowWidth = isDuringBakedIntro ? WIDTH : windowWidth;
+  const effectiveWindowHeight = isDuringBakedIntro ? HEIGHT : windowHeight;
 
   return (
     <AbsoluteFill>
@@ -47,7 +57,13 @@ export const ScreenDemo: React.FC<ScreenDemoProps> = ({
         viewportWidth={moments.metadata.viewportWidth}
         viewportHeight={moments.metadata.viewportHeight}
       >
-        <FloatingWindow width={WIDTH} height={HEIGHT} windowWidth={windowWidth} windowHeight={windowHeight}>
+        <FloatingWindow
+          width={WIDTH}
+          height={HEIGHT}
+          windowWidth={windowWidth}
+          windowHeight={windowHeight}
+          fullBleed={isDuringBakedIntro}
+        >
           {hasTimeWarp ? (
             mergedRegions.map((region, idx) => (
               <Sequence
@@ -62,8 +78,8 @@ export const ScreenDemo: React.FC<ScreenDemoProps> = ({
                   playbackRate={Math.max(0.0005, region.speed)}
                   muted
                   style={{
-                    width: windowWidth,
-                    height: windowHeight,
+                    width: effectiveWindowWidth,
+                    height: effectiveWindowHeight,
                     objectFit: "fill",
                   }}
                 />
@@ -76,8 +92,8 @@ export const ScreenDemo: React.FC<ScreenDemoProps> = ({
               playbackRate={1}
               muted
               style={{
-                width: windowWidth,
-                height: windowHeight,
+                width: effectiveWindowWidth,
+                height: effectiveWindowHeight,
                 objectFit: "fill",
               }}
             />
@@ -95,6 +111,8 @@ export const ScreenDemo: React.FC<ScreenDemoProps> = ({
           )}
         </FloatingWindow>
       </CameraTransform>
+
+      <IntroTocOverlay editPlan={editPlan} />
 
       <NarrationTrack editPlan={editPlan} />
 

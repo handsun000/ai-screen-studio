@@ -1,0 +1,156 @@
+{
+  "metadata": {
+    "url": "https://gwdev.unison.co.kr/ekp/main/home/homGwMain",
+    "viewportWidth": 1920,
+    "viewportHeight": 1080,
+    "totalDurationMs": 35205,
+    "recordingStart": "2026-10-31T15:39:51.257Z",
+    "calibratedToVideoDurationMs": 35205
+  },
+  "moments": [
+    {
+      "id": 1,
+      "type": "wait",
+      "timestamp": 14898,
+      "description": "초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기"
+    },
+    {
+      "id": 2,
+      "type": "click",
+      "timestamp": 16822,
+      "description": "'일정관리' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 811,
+        "y": 82
+      },
+      "target": {
+        "x": 755,
+        "y": 55,
+        "width": 113,
+        "height": 55
+      }
+    },
+    {
+      "id": 3,
+      "type": "wait",
+      "timestamp": 18620,
+      "description": "'일정관리' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 4,
+      "type": "click",
+      "timestamp": 20602,
+      "description": "'일정' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 811,
+        "y": 135
+      },
+      "target": {
+        "x": 741,
+        "y": 119,
+        "width": 140,
+        "height": 32
+      }
+    },
+    {
+      "id": 5,
+      "type": "wait",
+      "timestamp": 21669,
+      "description": "'일정' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 6,
+      "type": "click",
+      "timestamp": 23615,
+      "description": "'주간' 버튼 클릭",
+      "cursor": {
+        "x": 1786,
+        "y": 197
+      },
+      "target": {
+        "x": 1763,
+        "y": 179,
+        "width": 48,
+        "height": 36
+      }
+    },
+    {
+      "id": 7,
+      "type": "wait",
+      "timestamp": 24704,
+      "description": "'주간' 버튼 반응 대기"
+    },
+    {
+      "id": 8,
+      "type": "click",
+      "timestamp": 26053,
+      "description": "'일간' 버튼 클릭",
+      "cursor": {
+        "x": 1739,
+        "y": 197
+      },
+      "target": {
+        "x": 1716,
+        "y": 179,
+        "width": 48,
+        "height": 36
+      }
+    },
+    {
+      "id": 9,
+      "type": "wait",
+      "timestamp": 27162,
+      "description": "'일간' 버튼 반응 대기"
+    },
+    {
+      "id": 10,
+      "type": "click",
+      "timestamp": 28649,
+      "description": "'할일' 버튼 클릭",
+      "cursor": {
+        "x": 424,
+        "y": 140
+      },
+      "target": {
+        "x": 389,
+        "y": 124,
+        "width": 70,
+        "height": 32
+      }
+    },
+    {
+      "id": 11,
+      "type": "wait",
+      "timestamp": 29610,
+      "description": "'할일' 버튼 반응 대기"
+    },
+    {
+      "id": 12,
+      "type": "click",
+      "timestamp": 31100,
+      "description": "'기념일' 버튼 클릭",
+      "cursor": {
+        "x": 493,
+        "y": 140
+      },
+      "target": {
+        "x": 458,
+        "y": 124,
+        "width": 70,
+        "height": 32
+      }
+    },
+    {
+      "id": 13,
+      "type": "wait",
+      "timestamp": 32052,
+      "description": "'기념일' 버튼 반응 대기"
+    },
+    {
+      "id": 14,
+      "type": "wait",
+      "timestamp": 33064,
+      "description": "최종 시연 결과 화면 클로즈업 확인 대기"
+    }
+  ]
+}

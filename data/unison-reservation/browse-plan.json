@@ -1,0 +1,148 @@
+{
+  "url": "https://gwdev.unison.co.kr/ekp/main/home/homGwMain",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "windowBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 1920,
+    "height": 1080,
+    "windowState": "normal"
+  },
+  "requiresLogin": true,
+  "recordedByEyedropper": true,
+  "actions": [
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기"
+    },
+    {
+      "type": "click",
+      "selector": "a[title='자원예약관리'][onclick*='/ekp/scr/reservation/resMain']:visible, a[title='자원예약관리']:visible, a[onclick*='/ekp/scr/reservation/resMain']:visible, a.nta[title='자원예약관리']:visible, li.nt.nt_5 a.nta:has-text('자원예약관리'):visible, a.nta:has-text('자원예약관리'):visible",
+      "cursorOffset": {
+        "x": 72,
+        "y": 27
+      },
+      "clickCoords": {
+        "x": 943,
+        "y": 82
+      },
+      "description": "'자원예약관리' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" title=\"자원예약관리\" class=\"nta\" onclick=\"GwMainMenu.fn.goPage('MNU9341446851565364371', 'https://gwdev.unison.co.kr/ekp/scr/reservation/resMain','G', 'L', '0', '0');return false;\"> <i class=\"nti nti_equ\"></i>자원예약관리 </a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'자원예약관리' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "type": "click",
+      "selector": ".dynatree-title:text-is('사천본사 회의실'):visible, .dynatree-title:has-text('사천본사 회의실'):visible, a.dynatree-title[title='사천본사 회의실']:has-text('사천본사 회의실'):visible, span.dynatree-node.dynatree-lazy a.dynatree-title:has-text('사천본사 회의실'):visible, a.dynatree-title:has-text('사천본사 회의실'):visible, a.dynatree-title[title='사천본사 회의실']:visible",
+      "cursorOffset": {
+        "x": 50,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 100,
+        "y": 381
+      },
+      "description": "트리 '사천본사 회의실' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"dynatree-title\" title=\"사천본사 회의실\">사천본사 회의실</a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "트리 '사천본사 회의실' 항목 반응 대기"
+    },
+    {
+      "type": "click",
+      "selector": ".dynatree-title:text-is('서울사무소 회의실'):visible, .dynatree-title:has-text('서울사무소 회의실'):visible, a.dynatree-title[title='서울사무소 회의실']:has-text('서울사무소 회의실'):visible, span.dynatree-node.dynatree-lazy a.dynatree-title:has-text('서울사무소 회의실'):visible, a.dynatree-title:has-text('서울사무소 회의실'):visible, a.dynatree-title[title='서울사무소 회의실']:visible",
+      "cursorOffset": {
+        "x": 56,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 106,
+        "y": 415
+      },
+      "description": "트리 '서울사무소 회의실' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"dynatree-title\" title=\"서울사무소 회의실\">서울사무소 회의실</a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "트리 '서울사무소 회의실' 항목 반응 대기"
+    },
+    {
+      "type": "click",
+      "selector": ".dynatree-title:text-is('풍력연구소 회의실'):visible, .dynatree-title:has-text('풍력연구소 회의실'):visible, a.dynatree-title[title='풍력연구소 회의실']:has-text('풍력연구소 회의실'):visible, span.dynatree-node.dynatree-lazy a.dynatree-title:has-text('풍력연구소 회의실'):visible, a.dynatree-title:has-text('풍력연구소 회의실'):visible, a.dynatree-title[title='풍력연구소 회의실']:visible",
+      "cursorOffset": {
+        "x": 56,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 106,
+        "y": 449
+      },
+      "description": "트리 '풍력연구소 회의실' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"dynatree-title\" title=\"풍력연구소 회의실\">풍력연구소 회의실</a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "트리 '풍력연구소 회의실' 항목 반응 대기"
+    },
+    {
+      "type": "click",
+      "selector": "a#rmgResSideBar_myList:visible, #rmgResSideBar_myList:visible, a.mn[title='내 예약']:visible, a[title='내 예약']:visible",
+      "cursorOffset": {
+        "x": 28,
+        "y": 24
+      },
+      "clickCoords": {
+        "x": 211,
+        "y": 209
+      },
+      "description": "'내 예약' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a id=\"rmgResSideBar_myList\" href=\"#\" title=\"내 예약\" class=\"mn ico_3\"><span>내 예약</span></a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'내 예약' 메뉴/링크 반응 대기"
+    },
+    {
+      "type": "click",
+      "selector": "div.mn a.item:has-text('예약승인관리'):visible, li#resAppMenu a.item:has-text('예약승인관리'):visible, a.item:has-text('예약승인관리'):visible, li#resAppMenu > div.mn > a.item:visible",
+      "cursorOffset": {
+        "x": 38,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 92,
+        "y": 641
+      },
+      "description": "'예약승인관리' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0)\" class=\"item\">예약승인관리</a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'예약승인관리' 메뉴/링크 반응 대기"
+    },
+    {
+      "type": "wait",
+      "ms": 2000,
+      "description": "최종 시연 결과 화면 클로즈업 확인 대기"
+    }
+  ]
+}

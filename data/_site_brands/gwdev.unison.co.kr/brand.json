@@ -1,0 +1,13 @@
+{
+  "hostKey": "gwdev.unison.co.kr",
+  "originUrl": "https://gwdev.unison.co.kr",
+  "siteName": "유니슨 그룹",
+  "manualBadge": "그룹웨어 사용 매뉴얼",
+  "tagline": "",
+  "primaryColor": "#218CF3",
+  "secondaryColor": "#1C6AB9",
+  "accentColor": "#35B5FF",
+  "logoUrl": "/assets/sites/gwdev.unison.co.kr/logo.png",
+  "heroThumbUrl": "/assets/sites/gwdev.unison.co.kr/hero.png",
+  "createdAt": "2026-10-31T15:31:25.841Z"
+}

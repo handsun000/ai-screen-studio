@@ -1,0 +1,150 @@
+{
+  "url": "https://gwdev.unison.co.kr/ekp/main/home/homGwMain",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "windowBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 1920,
+    "height": 1080,
+    "windowState": "normal"
+  },
+  "requiresLogin": true,
+  "recordedByEyedropper": true,
+  "actions": [
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기"
+    },
+    {
+      "type": "click",
+      "selector": "a[title='주소록'][onclick*='/ekp/scr/addr/main']:visible, a[title='주소록']:visible, a[onclick*='/ekp/scr/addr/main']:visible, a.nta[title='주소록']:visible, li.nt.nt_7 a.nta:has-text('주소록'):visible, a.nta:has-text('주소록'):visible",
+      "cursorOffset": {
+        "x": 48,
+        "y": 27
+      },
+      "clickCoords": {
+        "x": 1184,
+        "y": 82
+      },
+      "description": "'주소록' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" title=\"주소록\" class=\"nta\" onclick=\"GwMainMenu.fn.goPage('MNU93414777969133795268', 'https://gwdev.unison.co.kr/ekp/scr/addr/main','G', 'L', '0', '0');return false;\"> <i class=\"nti nti_ads\"></i>주소록 </a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'주소록' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "type": "click",
+      "selector": "a#T_O:visible, #T_O:visible, a[data-addr-grpname='조직도']:visible, a[data-addr-grpkind='T_O']:visible, div.mn a.item:has-text('조직도'):visible, a.item[data-addr-grpname='조직도']:visible",
+      "cursorOffset": {
+        "x": 19,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 73,
+        "y": 280
+      },
+      "description": "'조직도' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"item\" id=\"T_O\" data-addr-grpid=\"T_O\" data-addr-grpkind=\"T_O\" data-addr-grpname=\"조직도\">조직도</a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'조직도' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "type": "click",
+      "selector": "a#T_A:visible, #T_A:visible, a[data-addr-grpname='주소록']:visible, a[data-addr-grpkind='T_A']:visible, div.mn a.item:has-text('주소록'):visible, a.item[data-addr-grpname='주소록']:visible",
+      "cursorOffset": {
+        "x": 19,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 73,
+        "y": 314
+      },
+      "description": "'주소록' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"item\" id=\"T_A\" data-addr-grpid=\"T_A\" data-addr-grpkind=\"T_A\" data-addr-grpname=\"주소록\">주소록</a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'주소록' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "type": "click",
+      "selector": "a[data-addr-grpname='미분류']:visible, a[data-addr-grpkind='P']:visible, div.mn a.item:has-text('미분류'):visible, a.item[data-addr-grpname='미분류']:visible",
+      "cursorOffset": {
+        "x": 19,
+        "y": 9
+      },
+      "clickCoords": {
+        "x": 73,
+        "y": 420
+      },
+      "description": "'미분류' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" id=\"ADR32188955128005569872\" data-addr-grpid=\"ADR32188955128005569872\" data-addr-grpkind=\"P\" data-addr-grpname=\"미분류\" data-addr-sysgrpyn=\"Y\" class=\"item\">미분류</a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'미분류' 메뉴/링크 반응 대기"
+    },
+    {
+      "type": "click",
+      "selector": "a#personAll:visible, #personAll:visible, a[data-addr-grpname='전체']:visible, a[data-addr-grpkind='P']:visible, div.mn.mn_all a.item:text-is('전체'):visible",
+      "cursorOffset": {
+        "x": 12,
+        "y": 9
+      },
+      "clickCoords": {
+        "x": 66,
+        "y": 386
+      },
+      "description": "'전체' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"item\" id=\"personAll\" data-addr-grpid=\"personAll\" data-addr-grpkind=\"P\" data-addr-grpname=\"전체\">전체</a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'전체' 메뉴/링크 반응 대기"
+    },
+    {
+      "type": "type",
+      "selector": "div#addrMain_new_srch_bar input[name='addrSearchBar_searchWord']:visible, div#addrMain_new_srch_bar input._addrSrchWord:visible, div#addrMain_new_srch_bar > div.srch_input._addrSrchCrtl:nth-of-type(1) > input._addrSrchWord.input_txt:visible, input[name='addrSearchBar_searchWord']:visible, input._addrSrchWord:visible",
+      "text": "관리자",
+      "pressEnter": true,
+      "cursorOffset": {
+        "x": 75,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 1732,
+        "y": 140
+      },
+      "description": "'검색어' 입력창에 '관리자' 입력 후 엔터(Enter)",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input name=\"addrSearchBar_searchWord\" type=\"text\" placeholder=\"검색어\" autocomplete=\"off\" class=\"input_txt _addrSrchWord\">"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "type": "wait",
+      "ms": 2000,
+      "description": "최종 시연 결과 화면 클로즈업 확인 대기"
+    }
+  ]
+}

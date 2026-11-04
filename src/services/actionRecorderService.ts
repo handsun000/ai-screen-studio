@@ -29,6 +29,9 @@ export interface RecordedRawEvent {
   editorParaIndex?: number;
   editorInsertNewline?: boolean;
   cursorOffset?: { x: number; y: number };
+  clickCoords?: { x: number; y: number };
+  dragFromCoords?: { x: number; y: number };
+  dragToCoords?: { x: number; y: number };
   pageUrl: string;
   inModal: boolean;
   windowMetrics?: {
@@ -114,6 +117,8 @@ class ActionRecorderService {
         last.sourceSelector = raw.sourceSelector;
         last.targetSelector = raw.targetSelector;
         last.targetHtml = raw.targetHtml;
+        last.dragFromCoords = raw.dragFromCoords;
+        last.dragToCoords = raw.dragToCoords;
         last.label = raw.label;
         last.timestamp = now;
         this.statusMessage = `✊ 드래그앤드롭 #${last.seq}: ${raw.label}`;
@@ -133,10 +138,21 @@ class ActionRecorderService {
       // upgrade the preceding click into the type event so we don't have redundant click + type
       const lastPrimarySel = (last.selector || "").split(",")[0].trim();
       const rawPrimarySel = (raw.selector || "").split(",")[0].trim();
+      const isPrecedingWrapperOfInput =
+        last.kind === "click" &&
+        raw.kind === "type" &&
+        raw.tagName === "input" &&
+        Boolean(
+          last.targetHtml &&
+            last.targetHtml.includes("<input") &&
+            ((raw.selector && raw.selector.includes("select2-input") && last.targetHtml.includes("select2-input")) ||
+              (raw.targetHtml && last.targetHtml.includes(raw.targetHtml.slice(0, 40))))
+        );
       const isSameField =
         last.selector === raw.selector ||
         (lastPrimarySel && lastPrimarySel === rawPrimarySel) ||
-        (last.label && last.label === raw.label);
+        (last.label && last.label === raw.label) ||
+        isPrecedingWrapperOfInput;
 
       if (
         raw.kind === "type" &&
@@ -145,16 +161,19 @@ class ActionRecorderService {
         (last.tagName === "input" ||
           last.tagName === "textarea" ||
           last.tagName === "body" ||
+          isPrecedingWrapperOfInput ||
           last.selector.includes("se-contents") ||
           last.selector.includes("contenteditable"))
       ) {
         last.kind = "type";
+        last.tagName = raw.tagName;
         last.selector = raw.selector;
         last.text = raw.text;
         last.pressEnter = raw.pressEnter;
         last.editorParaIndex = raw.editorParaIndex;
         last.editorInsertNewline = raw.editorInsertNewline;
         last.cursorOffset = raw.cursorOffset ?? last.cursorOffset;
+        last.clickCoords = raw.clickCoords ?? last.clickCoords;
         last.targetHtml = raw.targetHtml || last.targetHtml;
         last.label = raw.label;
         last.timestamp = now;
@@ -164,21 +183,28 @@ class ActionRecorderService {
         return;
       }
 
-      // If multiple type events on the same selector & paragraph happen consecutively (and the previous one was NOT already submitted via Enter), update with the latest final text
+      // If multiple type events on the same selector & paragraph happen consecutively:
+      // - if the previous one was already submitted via Enter with the exact same text (e.g. blur/flush firing after Enter), ignore the duplicate
+      // - otherwise update with the latest final text
       const isSameEditorPara = (last.editorParaIndex ?? -1) === (raw.editorParaIndex ?? -1);
-      if (raw.kind === "type" && last.kind === "type" && isSameField && isSameEditorPara && !last.pressEnter) {
-        last.selector = raw.selector;
-        last.text = raw.text;
-        last.pressEnter = raw.pressEnter;
-        last.editorParaIndex = raw.editorParaIndex;
-        last.editorInsertNewline = raw.editorInsertNewline;
-        last.cursorOffset = raw.cursorOffset ?? last.cursorOffset;
-        last.label = raw.label;
-        last.timestamp = now;
-        const previewTxt = raw.text ? `"${raw.text.replace(/\n/g, "↵")}"` : "⌫ 내용 지우기";
-        this.statusMessage = `⌨️ 입력 갱신: ${previewTxt}${raw.pressEnter ? " + ⏎엔터" : ""} (${raw.label})`;
-        this.notifyListeners();
-        return;
+      if (raw.kind === "type" && last.kind === "type" && isSameField && isSameEditorPara) {
+        if (last.pressEnter && (raw.text || "") === (last.text || "") && now - last.timestamp < 3000) {
+          return;
+        }
+        if (!last.pressEnter) {
+          last.selector = raw.selector;
+          last.text = raw.text;
+          last.pressEnter = raw.pressEnter;
+          last.editorParaIndex = raw.editorParaIndex;
+          last.editorInsertNewline = raw.editorInsertNewline;
+          last.cursorOffset = raw.cursorOffset ?? last.cursorOffset;
+          last.label = raw.label;
+          last.timestamp = now;
+          const previewTxt = raw.text ? `"${raw.text.replace(/\n/g, "↵")}"` : "⌫ 내용 지우기";
+          this.statusMessage = `⌨️ 입력 갱신: ${previewTxt}${raw.pressEnter ? " + ⏎엔터" : ""} (${raw.label})`;
+          this.notifyListeners();
+          return;
+        }
       }
 
       // If multiple hover events happen consecutively (e.g. moving across cards or dwell hover followed by click-triggered hover on same card),
@@ -869,7 +895,7 @@ export function getInjectedEyedropperScript(): string {
     }
   }
 
-  // Find nearest interactive element (button, a, input, textarea, select, label, tree node, work card, custom dropdown, rich editor, etc.)
+  // Find nearest interactive element using universal DOM semantics (without widget-specific class hardcoding)
   function resolveInteractiveElement(target) {
     if (!target || !target.closest) return target;
     const editorSurface = target.closest(
@@ -881,8 +907,7 @@ export function getInjectedEyedropperScript(): string {
       const seCanvas = seRoot.querySelector && seRoot.querySelector("div.se-contents, [role='textbox'].se-contents");
       if (seCanvas) return seCanvas;
     }
-    // 0. If target is inside a jQuery FileUpload / custom file button wrapper (.fileinput-button, .btn_file),
-    // resolve to the visible wrapper button rather than the transparent <input type="file" style="opacity:0"> overlay!
+    // 0. If target is inside a file button wrapper or is a transparent <input type="file">, resolve to the visible button/label wrapper
     const fileBtnWrapper = target.closest(".fileinput-button, .btn_file, label.file_btn, label.btn_file");
     if (fileBtnWrapper) return fileBtnWrapper;
     if (
@@ -894,16 +919,39 @@ export function getInjectedEyedropperScript(): string {
       if (btnParent) return btnParent;
     }
 
-    // 1. True atomic interactive controls (prioritized BEFORE table cells th/td so custom widgets inside cells are never swallowed!)
+    // 0b. Universal composite text-input box detection: if user clicks an empty area of a compact wrapper (height <= 80)
+    // that contains a single visible text <input> (and user did not click an <a>, <button>, or <label>), resolve to that <input>
+    if (!target.closest("a, button, label, input, textarea, select")) {
+      let box = target;
+      for (let d = 0; d < 2 && box && box !== document.body; d++) {
+        try {
+          const r = box.getBoundingClientRect ? box.getBoundingClientRect() : null;
+          if (r && r.width > 0 && r.height > 0 && r.height <= 80 && box.querySelectorAll) {
+            const innerInputs = Array.from(
+              box.querySelectorAll("input[type='text'], input:not([type]), input[type='search']")
+            ).filter(function(inp) {
+              const ir = inp.getBoundingClientRect ? inp.getBoundingClientRect() : null;
+              return ir && ir.width > 0 && ir.height > 0;
+            });
+            if (innerInputs.length === 1) {
+              return innerInputs[0];
+            }
+          }
+        } catch (e) {}
+        box = box.parentElement;
+      }
+    }
+
+    // 1. Standard atomic interactive controls
     const primaryInteractive = target.closest(
-      "button, a, input, textarea, select, label, .dynatree-title, .dynatree-checkbox, .dynatree-expander, .fancytree-title, .fancytree-checkbox, .fancytree-expander, [role='button'], [role='tab'], [role='menuitem'], [role='option'], [onclick], .Selected, .select_Value, .sp-replacer, .app_work_box, li.aw_li, li.card_item, li.nt_li"
+      "button, a, input, textarea, select, label, .dynatree-title, .dynatree-checkbox, .dynatree-expander, .fancytree-title, .fancytree-checkbox, .fancytree-expander, [role='button'], [role='tab'], [role='menuitem'], [role='option'], [role='slider'], [onclick]"
     );
     if (primaryInteractive) return primaryInteractive;
 
-    // 2. Check if target or a compact ancestor (within 3 levels, stopping before tr/td/table/body) is a clickable custom widget (cursor: pointer or _hook class)
+    // 2. Compact ancestor (within 4 levels, stopping before tr/td/table/body) with cursor:pointer or compact <li> item
     let cur = target;
     let depth = 0;
-    while (cur && cur !== document.body && depth < 3) {
+    while (cur && cur !== document.body && depth < 4) {
       const cTag = (cur.tagName || "").toLowerCase();
       if (cTag === "tr" || cTag === "td" || cTag === "th" || cTag === "table" || cTag === "tbody") break;
       const hasHookCls =
@@ -914,9 +962,12 @@ export function getInjectedEyedropperScript(): string {
       if (hasHookCls) return cur;
       try {
         const rect = cur.getBoundingClientRect ? cur.getBoundingClientRect() : null;
-        if (rect && rect.width > 0 && rect.width <= 320 && rect.height > 0 && rect.height <= 120) {
+        if (rect && rect.width > 0 && rect.height > 0 && rect.height <= 120) {
           const style = window.getComputedStyle ? window.getComputedStyle(cur) : null;
           if (style && style.cursor === "pointer") {
+            return cur;
+          }
+          if (cTag === "li" && rect.height <= 90) {
             return cur;
           }
         }
@@ -925,8 +976,14 @@ export function getInjectedEyedropperScript(): string {
       depth++;
     }
 
-    const fallbackCell = target.closest("tr.lst_tr, th, td");
-    return fallbackCell || target;
+    // 3. Table cell fallback when clicking directly on a table cell
+    const rawTag = (target.tagName || "").toLowerCase();
+    if (rawTag === "td" || rawTag === "th") return target;
+    if (rawTag === "span" || rawTag === "strong" || rawTag === "em" || rawTag === "b" || rawTag === "i") {
+      const parentCell = target.parentElement && (target.parentElement.tagName === "TD" || target.parentElement.tagName === "TH") ? target.parentElement : null;
+      if (parentCell) return parentCell;
+    }
+    return target;
   }
 
   // Extract concise HTML snippet of the target element (opening tag + child input/cover/id + text + closing tag)
@@ -979,8 +1036,8 @@ export function getInjectedEyedropperScript(): string {
       return (
         c &&
         /^[a-zA-Z_-][a-zA-Z0-9_-]*$/.test(c) &&
-        !/^(active|selected|on|hover|focus|open|opened|closed|collapsed|expanded|disabled|checked|chkbox_on|rdobtn_on|ico_chk_on|_punchHandle|_search_option_hide|_blind|_hide|_hidden)$/i.test(c) &&
-        !/^(ui-state-|ui-corner-|ui-widget|ui-draggable|ui-droppable|ui-sortable|select2-(focused|active|dropdown-open|container-active|drop-above)|dynatree-(focused|active|selected|expanded|has-children|folder|lastsib|partsel|loading|statusnode|exp-|ico-)|fancytree-(focused|active|selected|expanded|has-children|folder|lastsib|partsel|loading|statusnode|exp-|ico-))/i.test(c)
+        !/^(active|selected|on|hover|focus|open|opened|closed|collapsed|expanded|disabled|checked|chkbox_on|rdobtn_on|ico_chk_on|ac_over|_punchHandle|_search_option_hide|_blind|_hide|_hidden)$/i.test(c) &&
+        !/^(ui-state-|ui-corner-|ui-widget|ui-draggable|ui-droppable|ui-sortable|select2-(focused|active|dropdown-open|container-active|drop-above|highlighted|results-dept-\d+)|dynatree-(focused|active|selected|expanded|has-children|folder|lastsib|partsel|loading|statusnode|exp-|ico-)|fancytree-(focused|active|selected|expanded|has-children|folder|lastsib|partsel|loading|statusnode|exp-|ico-))/i.test(c)
       );
     });
     // Keep semantic component classes (e.g. dynatree-title, user_info, chkbox, sub) and action hook classes ahead of generic layout/button classes (btn, btn_ico, etc.)
@@ -1053,21 +1110,20 @@ export function getInjectedEyedropperScript(): string {
         }
       }
 
-      // Disambiguate among same-tag siblings (and always scope dynatree-node / aw_li by title text even when filtered to 1 sibling)
+      // Disambiguate among same-tag siblings
       const parent = cur.parentElement;
       if (parent) {
         const sameTagSiblings = Array.from(parent.children).filter(function(ch) {
           return ch.tagName === cur.tagName;
         });
         const isDynatreeNode = cur.classList && cur.classList.contains("dynatree-node");
-        const isWorkCardItem = cur.classList && cur.classList.contains("aw_li");
         const titleNode = isDynatreeNode
           ? cur.querySelector(".dynatree-title")
-          : isWorkCardItem
-            ? cur.querySelector(".tit_box strong.tit, strong.tit") || cur.querySelector(".tit")
+          : curTag === "li"
+            ? cur.querySelector("strong.tit, .tit, .name")
             : null;
         const nodeTxt = titleNode ? getCleanText(titleNode).slice(0, 20).replace(/'/g, "") : "";
-        if ((isDynatreeNode || isWorkCardItem) && nodeTxt) {
+        if ((isDynatreeNode || (curTag === "li" && sameTagSiblings.length > 1)) && nodeTxt) {
           step += ":has-text('" + nodeTxt + "')";
         } else if (sameTagSiblings.length > 1) {
           const nth = sameTagSiblings.indexOf(cur) + 1;
@@ -1469,46 +1525,7 @@ export function getInjectedEyedropperScript(): string {
       : getVisibleDomText(el);
 
     const modalEl = el.closest(".ui-dialog, .modal, .layer_pop, [role='dialog']");
-    const datepickerEl = el.closest(".ui-datepicker, #ui-datepicker-div");
-    const workCardEl = el.closest("li.aw_li, .app_work_box");
-    const workCardTitEl =
-      workCardEl && workCardEl.querySelector
-        ? workCardEl.querySelector(".tit_box strong.tit, strong.tit") || workCardEl.querySelector(".tit, a._his")
-        : null;
-    const workCardTit = workCardTitEl ? getCleanText(workCardTitEl).slice(0, 20).replace(/'/g, "") : "";
-    const allSvcEl = el.closest("#all_svc_inner");
-    const svcLstEl = el.closest("#svc_lst");
-    const snbEl = el.closest("#snb, .snb, .workset_btn, .snb_btn_box");
-    const rawHeaderEl = el.closest("#header, #gnb");
-    const headerEl =
-      rawHeaderEl && rawHeaderEl.getBoundingClientRect && rawHeaderEl.getBoundingClientRect().height <= 120
-        ? rawHeaderEl
-        : null;
-
-    let scopePrefix = "";
-    if (modalEl) {
-      scopePrefix = ".ui-dialog:visible ";
-    } else if (datepickerEl) {
-      scopePrefix = ".ui-datepicker:visible ";
-    } else if (allSvcEl) {
-      scopePrefix = "div#all_svc_inner ";
-    } else if (svcLstEl) {
-      scopePrefix = "#svc_lst ";
-    } else if (workCardEl) {
-      scopePrefix = workCardTit ? "li.aw_li:has-text('" + workCardTit + "') " : ".app_work_box ";
-    } else if (snbEl) {
-      const snbContainer = el.closest("#snb, .snb") || snbEl;
-      const snbId = snbContainer && snbContainer.getAttribute ? snbContainer.getAttribute("id") || "" : "";
-      if (snbId && isStableId(snbId)) {
-        scopePrefix = "#" + snbId + " ";
-      } else if (el.closest("#snb")) {
-        scopePrefix = "#snb ";
-      } else if (el.closest(".snb")) {
-        scopePrefix = ".snb ";
-      }
-    } else if (headerEl) {
-      scopePrefix = "#header ";
-    }
+    const scopePrefix = modalEl ? ".ui-dialog:visible " : "";
 
     const candidates = [];
 
@@ -1590,13 +1607,6 @@ export function getInjectedEyedropperScript(): string {
             candidates.unshift((modalEl ? ".ui-dialog:visible " : "") + baseCls + ":has([" + cAttrs[ci] + "='" + cVal + "']):visible");
             break;
           }
-        }
-      }
-      const childFcTitle = el.classList && el.classList.contains("fc-event") ? el.querySelector(".fc-title") : null;
-      if (childFcTitle) {
-        const fcTxt = (childFcTitle.textContent || "").replace(/'/g, "").replace(/\s+/g, " ").trim();
-        if (fcTxt && fcTxt.length >= 2 && fcTxt.length <= 35) {
-          candidates.push(scopePrefix + "a.fc-event:has-text('" + fcTxt + "'):visible");
         }
       }
       const childDistinguishingEl = el.querySelector("[class*='scvr'], [class*='plt_'], [class*='_ai']");
@@ -1751,14 +1761,6 @@ export function getInjectedEyedropperScript(): string {
 
     // ContentEditable element specific selectors (placed AFTER id/data-* and WITHOUT :has-text of typed content!)
     if (el.isContentEditable && tag !== "input" && tag !== "textarea") {
-      if (el.classList && el.classList.contains("mentiony-content")) {
-        if (placeholder) {
-          candidates.unshift(
-            scopePrefix + "div.mentiony-content[contenteditable='true'][data-placeholder*='" + placeholder.slice(0, 15).replace(/'/g, "") + "']:visible"
-          );
-        }
-        candidates.unshift(scopePrefix + "div.mentiony-content[contenteditable='true']:visible");
-      }
       if (placeholder) {
         const phAttr = hasDataPlaceholder ? "data-placeholder" : "placeholder";
         candidates.push(
@@ -1780,7 +1782,7 @@ export function getInjectedEyedropperScript(): string {
       const strippedDateText = safeText.replace(/\\s+\\d{4}[-.]\\d{2}[-.]\\d{2}(?:\\s+.*)?$/, "").trim();
       const primaryToken = safeText.split(/\\s+/)[0];
       if (!isDuplicateTextInContainer && strippedDateText && strippedDateText.length >= 2 && strippedDateText !== safeText) {
-        if (nearestIdContainerPrefix && !workCardTit) {
+        if (nearestIdContainerPrefix) {
           candidates.push(nearestIdContainerPrefix + tag + "." + cls + ":has-text('" + strippedDateText + "'):visible");
         }
         if (!isDuplicateTextInScope) {
@@ -1790,13 +1792,13 @@ export function getInjectedEyedropperScript(): string {
       if (rowThText && !isDuplicateTextInRow) {
         candidates.push(rowScopePrefix + tag + "." + cls + ":has-text('" + safeText + "'):visible");
       }
-      if (nearestIdContainerPrefix && !workCardTit && !isDuplicateTextInContainer) {
+      if (nearestIdContainerPrefix && !isDuplicateTextInContainer) {
         candidates.push(nearestIdContainerPrefix + tag + "." + cls + ":has-text('" + safeText + "'):visible");
         if (el.children && el.children.length > 0 && primaryToken && primaryToken.length >= 2 && primaryToken !== safeText) {
           candidates.push(nearestIdContainerPrefix + tag + "." + cls + ":has-text('" + primaryToken + "'):visible");
         }
       }
-      if ((!isDuplicateTextInScope || (nearestIdContainerPrefix && !isDuplicateTextInContainer) || workCardTit) && !isDuplicateTextInContainer) {
+      if ((!isDuplicateTextInScope || (nearestIdContainerPrefix && !isDuplicateTextInContainer)) && !isDuplicateTextInContainer) {
         candidates.push(scopePrefix + tag + "." + cls + ":has-text('" + safeText + "'):visible");
         if (el.children && el.children.length > 0 && primaryToken && primaryToken.length >= 2 && primaryToken !== safeText) {
           candidates.push(scopePrefix + tag + "." + cls + ":has-text('" + primaryToken + "'):visible");
@@ -1809,7 +1811,7 @@ export function getInjectedEyedropperScript(): string {
       candidates.push(domPathSel);
     }
 
-    // 6. Special Structural Cases (Dynatree Checkboxes & Template Card Write Buttons)
+    // 6. Tree Node Checkboxes & Expanders
     if (
       el.classList &&
       (el.classList.contains("dynatree-checkbox") ||
@@ -1828,16 +1830,6 @@ export function getInjectedEyedropperScript(): string {
       }
     }
 
-    if (workCardEl && (tag === "button" || tag === "a")) {
-      if (el.classList && el.classList.contains("btn_write")) {
-        if (workCardTit) {
-          candidates.unshift("ul.aw_ul li.aw_li:has-text('" + workCardTit + "') button.btn_write:visible");
-        } else {
-          candidates.push("ul.aw_ul li.aw_li button.btn_write:visible");
-        }
-      }
-    }
-
     // 7. Input / Textarea specific attributes
     if (tag === "input" || tag === "textarea" || tag === "select") {
       if (typeAttr === "checkbox" || typeAttr === "radio") {
@@ -1853,9 +1845,6 @@ export function getInjectedEyedropperScript(): string {
       if (placeholder) candidates.push(scopePrefix + tag + "[placeholder*='" + placeholder.slice(0, 15).replace(/'/g, "") + "']:visible");
       if (title && typeAttr !== "checkbox" && typeAttr !== "radio") {
         candidates.push(scopePrefix + tag + "[title*='" + title.slice(0, 15).replace(/'/g, "") + "']:visible");
-      }
-      if (tag === "textarea" && !id) {
-        candidates.push("textarea:not(#eapDocReg_draftOpinCn):visible");
       }
     }
 
@@ -2011,13 +2000,6 @@ export function getInjectedEyedropperScript(): string {
 
     if (el.classList && el.classList.contains("dynatree-title")) {
       return prefix + "트리 '" + (text || id) + "' 항목";
-    }
-
-    const workCardEl = el.closest("li.aw_li, .app_work_box");
-    if (workCardEl && el.classList && el.classList.contains("btn_write")) {
-      const cardTitEl = workCardEl.querySelector("strong.tit, .tit, a._his");
-      const cardTit = cardTitEl ? getCleanText(cardTitEl).slice(0, 15) : "";
-      return cardTit ? "'" + cardTit + "' 양식 카드 [작성] 버튼" : "양식 카드 [작성] 버튼";
     }
 
     if (text) {
@@ -2267,31 +2249,25 @@ export function getInjectedEyedropperScript(): string {
     return rawStr.replace(/\\u200B/g, "").replace(/\\r\\n/g, "\\n").replace(/^[ \\t\\r\\n]+|[ \\t\\r\\n]+$/g, "");
   }
 
-  // Detect single-line/prompt contenteditable inputs (e.g. AI Chat mentiony-content, Wiki title subject, inline task card/checklist creators)
-  // which are NOT multi-paragraph document body editors and often clear or submit their DOM immediately upon Enter/Send submission!
+  // Universally detect compact single-line/prompt contenteditable inputs vs full-page rich document editors
   function isPromptOrSingleLineEditable(el) {
     if (!el || !el.tagName) return false;
     const cls = el.classList;
     if (
       cls &&
-      (cls.contains("mentiony-content") ||
-        cls.contains("chat_input") ||
-        cls.contains("title") ||
-        cls.contains("sub") ||
-        cls.contains("_chkNew") ||
-        cls.contains("_chkItemName"))
+      (cls.contains("se-contents") ||
+        cls.contains("ProseMirror") ||
+        cls.contains("bn-editor") ||
+        cls.contains("note-editable") ||
+        cls.contains("ck-editor__editable"))
     ) {
-      return true;
+      return false;
     }
-    const id = (el.getAttribute && el.getAttribute("id")) || "";
-    if (/^(?:mentiony-content|.*(?:subject|title|search|prompt|chat).*)$/i.test(id)) return true;
     if (el.getAttribute && (el.getAttribute("data-placeholder") || el.getAttribute("placeholder"))) return true;
-    if (
-      el.closest &&
-      el.closest(".mentiony-container, #cmmAiChat_content, #cmmAiChatMain_content, .ai_chat, .chat_write, .msg_input, li.task_write, #aglTaskView_chkNew")
-    ) {
-      return true;
-    }
+    try {
+      const r = el.getBoundingClientRect();
+      if (r && r.height > 0 && r.height <= 120) return true;
+    } catch (e) {}
     return false;
   }
 
@@ -2697,15 +2673,17 @@ export function getInjectedEyedropperScript(): string {
   let suppressClickUntil = 0;
   let lastCommitDragTime = 0;
 
-  // Check if an element is a floating drag helper or our own HUD overlay
+  // Check if an element is a floating drag helper, modal dimmer/backdrop overlay, or our own HUD overlay
   function isDragHelperOrOverlay(el) {
     if (!el || !el.closest) return true;
     if (
       el.id === "__sd_eyedropper_box" ||
       el.id === "__sd_eyedropper_badge" ||
+      (el.id && /_blind$/i.test(el.id)) ||
+      (el.classList && (el.classList.contains("blind") || el.classList.contains("ui-widget-overlay") || el.classList.contains("modal-backdrop") || el.classList.contains("dimmed"))) ||
       el.closest("#__sd_recorder_hud") ||
       el.closest(
-        ".ui-draggable-dragging, .ui-sortable-helper, .dynatree-drag-helper, .fancytree-drag-helper, .jstree-dnd, ._orgTreeItem, .lyr_count_move, .lyr_count_notmove"
+        ".ui-draggable-dragging, .ui-sortable-helper, .dynatree-drag-helper, .fancytree-drag-helper, .jstree-dnd, ._orgTreeItem, .lyr_count_move, .lyr_count_notmove, .blind, .ui-widget-overlay, .modal-backdrop"
       )
     ) {
       return true;
@@ -2717,38 +2695,31 @@ export function getInjectedEyedropperScript(): string {
   function resolveDragSourceElement(rawTarget) {
     if (!rawTarget || !rawTarget.closest) return rawTarget;
     const src = rawTarget.closest(
-      "a.dynatree-title, .fancytree-title, label.user_info, .usr_item, .ui-draggable, [draggable='true'], li.aw_li, tr, li, a, label, button"
+      "[role='slider'], [draggable='true'], .ui-draggable, a.dynatree-title, .fancytree-title, a, label, button, li, tr"
     );
     return src || resolveInteractiveElement(rawTarget);
   }
 
-  // Check if candidate is the same element, ancestor/descendant, or inside the same non-droppable tree node/container as sourceEl
+  // Check if candidate is the same element, a child inside sourceEl, or the same tree node as sourceEl
+  // (Never reject candidate.contains(sourceEl), so dragging a handle inside a track/container naturally resolves to the parent track/container!)
   function isSameOrSelfDropTarget(sourceEl, candidate) {
     if (!sourceEl || !candidate) return true;
-    if (candidate === sourceEl || sourceEl.contains(candidate) || candidate.contains(sourceEl)) return true;
+    if (candidate === sourceEl || sourceEl.contains(candidate)) return true;
     if (sourceEl.closest && candidate.closest) {
       const sNode = sourceEl.closest(".dynatree-node, .fancytree-node");
       const tNode = candidate.closest(".dynatree-node, .fancytree-node");
       if (sNode && tNode && sNode === tNode) return true;
       const sTree = sourceEl.closest(".dynatree-container, .fancytree-container");
       const tTree = candidate.closest(".dynatree-container, .fancytree-container");
-      if (sTree && tTree && sTree === tTree && !candidate.closest(".ui-droppable, ._drag_hover, .drop_zone")) {
+      if (sTree && tTree && sTree === tTree && !candidate.closest(".ui-droppable, [droppable='true']")) {
         return true;
       }
     }
     return false;
   }
 
-  // Find the actual drop target underneath the cursor (piercing through floating drag clones)
+  // Find the actual drop target underneath the cursor at (x, y) using standard hit-testing
   function resolveDropTargetAtPoint(x, y, sourceEl) {
-    // 0. Check if Naonsoft Groupware / jQuery UI has already marked a drop container as hovered!
-    const activeHoverSlot = document.querySelector(
-      ".app_flow.hover, ._drag_hover, .ui-droppable-hover, .af_ul._drag_hover"
-    );
-    if (activeHoverSlot && !isSameOrSelfDropTarget(sourceEl, activeHoverSlot)) {
-      return activeHoverSlot.closest("[id^='af_'], div.app_flow") || activeHoverSlot;
-    }
-
     if (typeof document.elementsFromPoint !== "function") return null;
     if (typeof x !== "number" || typeof y !== "number" || (x === 0 && y === 0)) return null;
 
@@ -2759,107 +2730,22 @@ export function getInjectedEyedropperScript(): string {
       if (isDragHelperOrOverlay(candidate)) continue;
       if (isSameOrSelfDropTarget(sourceEl, candidate)) continue;
 
-      // Priority 1: Known approval-line / groupware drop slots
-      const slot = candidate.closest(
-        "[id^='af_'], div.app_flow, ul.af_ul, li.fb_ul, .ui-droppable, .ui-sortable, [data-app-type-ordr], .appline_flow td, .app_line_box, .drop_zone"
-      );
-      if (slot && !isSameOrSelfDropTarget(sourceEl, slot)) {
-        return slot.closest("[id^='af_'], div.app_flow") || slot;
-      }
-
-      // Priority 2: Table cell, list container, or interactive target
-      const container = candidate.closest("td, li, ul, .box_cont, [role='region']");
-      if (container && !isSameOrSelfDropTarget(sourceEl, container)) {
-        return container;
-      }
-
       const resolved = resolveInteractiveElement(candidate);
-      if (resolved && !isSameOrSelfDropTarget(sourceEl, resolved)) {
+      if (resolved && !isSameOrSelfDropTarget(sourceEl, resolved) && !isDragHelperOrOverlay(resolved)) {
         return resolved;
       }
+      return candidate;
     }
     return null;
   }
 
-  // Build a specialized selector for a drop target slot (e.g. #af_4, 2nd approval box, droppable container)
   function buildDropTargetSelector(dropEl) {
     if (!dropEl || !dropEl.tagName) return "";
-    const modalEl = dropEl.closest && dropEl.closest(".ui-dialog, .modal, .layer_pop, [role='dialog']");
-    const modalPrefix = modalEl ? ".ui-dialog:visible " : "";
-    const candidates = [];
-
-    // 1. Check if dropEl or a parent/child has an #af_N ID (Naonsoft approval flow slot)
-    const afNode =
-      (dropEl.id && /^af_\\d+$/.test(dropEl.id) ? dropEl : null) ||
-      (dropEl.closest && dropEl.closest("[id^='af_']")) ||
-      (dropEl.querySelector && dropEl.querySelector("[id^='af_']"));
-    if (afNode && afNode.id) {
-      candidates.push("#" + afNode.id);
-      candidates.push(modalPrefix + "#" + afNode.id + ":visible");
-    }
-
-    // 2. Check if inside an approval flow table cell (td:nth-child(N) div.app_flow)
-    const td = dropEl.closest && dropEl.closest("td");
-    if (td && td.parentElement) {
-      const tds = Array.from(td.parentElement.children).filter(c => c.tagName === "TD" || c.tagName === "TH");
-      const tdIdx = tds.indexOf(td) + 1;
-      if (tdIdx > 0) {
-        const table = td.closest("table");
-        const tableSel = table && isStableId(table.id) ? "table#" + table.id : ".appline_flow table";
-        if (dropEl.classList.contains("app_flow") || (dropEl.querySelector && dropEl.querySelector(".app_flow"))) {
-          candidates.push(tableSel + " td:nth-child(" + tdIdx + ") div.app_flow");
-        }
-        candidates.push(tableSel + " td:nth-child(" + tdIdx + ")");
-      }
-    }
-
-    // 3. Check if dropEl has header text (like '결재', '합의', '협조') and nth-of-type
-    const flowBox =
-      (dropEl.classList && dropEl.classList.contains("app_flow") ? dropEl : null) ||
-      (dropEl.closest && dropEl.closest("div.app_flow"));
-    if (flowBox) {
-      const strong = flowBox.querySelector("strong, .tit, .hd");
-      const roleTxt = strong ? getCleanText(strong).slice(0, 10).replace(/'/g, "") : "";
-      if (roleTxt) {
-        const allFlows = Array.from((modalEl || document).querySelectorAll("div.app_flow")).filter(f =>
-          getCleanText(f).includes(roleTxt)
-        );
-        const flowIdx = allFlows.indexOf(flowBox) + 1;
-        if (flowIdx > 0) {
-          candidates.push(modalPrefix + "div.app_flow:has(strong:has-text('" + roleTxt + "')):nth-of-type(" + flowIdx + ")");
-        }
-        candidates.push(modalPrefix + "div.app_flow:has-text('" + roleTxt + "')");
-      }
-    }
-
-    // 4. Add standard robust selector fallback
-    const baseSel = buildRobustSelector(dropEl);
-    if (baseSel) candidates.push(baseSel);
-
-    return Array.from(new Set(candidates)).slice(0, 3).join(", ");
+    return buildRobustSelector(dropEl);
   }
 
   function buildDropTargetLabel(dropEl) {
     if (!dropEl) return "드롭 영역";
-    const afNode =
-      (dropEl.id && /^af_\\d+$/.test(dropEl.id) ? dropEl : null) ||
-      (dropEl.closest && dropEl.closest("[id^='af_']"));
-    const td = dropEl.closest && dropEl.closest("td");
-    let ordText = "";
-    if (td && td.parentElement) {
-      const tds = Array.from(td.parentElement.children).filter(c => c.tagName === "TD");
-      const idx = tds.indexOf(td);
-      if (idx >= 1) ordText = idx + "번째 ";
-    }
-    const flowBox = (dropEl.closest && dropEl.closest("div.app_flow")) || dropEl;
-    const strong = flowBox.querySelector && flowBox.querySelector("strong, .tit, th");
-    const roleTxt = strong ? getCleanText(strong).slice(0, 12) : "";
-    if (roleTxt) {
-      return ordText + "'" + roleTxt + "' 결재칸" + (afNode && afNode.id ? " (#" + afNode.id + ")" : "");
-    }
-    if (afNode && afNode.id) {
-      return ordText + "결재선 슬롯 (#" + afNode.id + ")";
-    }
     return buildHumanLabel(dropEl);
   }
 
@@ -2916,21 +2802,23 @@ export function getInjectedEyedropperScript(): string {
         tagName: (srcInfo.el.tagName || "div").toLowerCase(),
         label: fullLabel,
         pageUrl: location.href,
-        inModal: Boolean(targetEl.closest && targetEl.closest(".ui-dialog, .modal"))
+        inModal: Boolean(targetEl.closest && targetEl.closest(".ui-dialog, .modal")),
+        dragFromCoords: { x: Math.round(srcInfo.startX), y: Math.round(srcInfo.startY) },
+        dragToCoords: { x: Math.round(useX), y: Math.round(useY) },
+        windowMetrics: getTopWindowMetrics()
       });
     }
     return true;
   }
 
-  // Hook jQuery UI droppable 'drop' & 'sortreceive' events directly if jQuery is present on page
+  // Hook jQuery UI droppable 'drop' events directly if jQuery is present on page
   function ensureJqueryDropHook() {
     const $ = window.jQuery || window.$;
     if (!$ || window.__sdJqueryDropHooked) return;
     try {
       window.__sdJqueryDropHooked = true;
-      $(document).on("drop", ".ui-droppable, .af_ul, .app_flow, [id^='af_']", function(event, ui) {
-        const dropZone =
-          (this.closest && this.closest("[id^='af_'], div.app_flow")) || this;
+      $(document).on("drop", ".ui-droppable, [droppable='true']", function(event, ui) {
+        const dropZone = this;
         if (!dragSourceInfo && ui && ui.helper) {
           const dtNode = ui.helper.data && ui.helper.data("dtSourceNode");
           const srcSpan = dtNode && dtNode.span ? dtNode.span.querySelector("a.dynatree-title") || dtNode.span : (ui.draggable && ui.draggable[0]);
@@ -3043,59 +2931,6 @@ export function getInjectedEyedropperScript(): string {
     const badgeLeft = Math.min(window.innerWidth - 260, Math.max(4, rect.left));
     badge.style.top = badgeTop + "px";
     badge.style.left = badgeLeft + "px";
-
-    // Live dwell-hover detection on hover-activated card containers (.app_work_box, li.aw_li)
-    const hoverCard = rawTarget.closest && rawTarget.closest(".app_work_box, li.aw_li");
-    if (hoverCard && hoverCard !== window.__sdLastHoveredCard) {
-      window.__sdLastHoveredCard = hoverCard;
-      if (window.__sdHoverTimer) clearTimeout(window.__sdHoverTimer);
-      window.__sdHoverTimer = setTimeout(function() {
-        if (window.__sdLastHoveredCard !== hoverCard) return;
-        const cardTitEl = hoverCard.querySelector && (hoverCard.querySelector(".tit_box strong.tit, strong.tit") || hoverCard.querySelector(".tit, a._his"));
-        const cardTit = cardTitEl ? getCleanText(cardTitEl).slice(0, 20).replace(/'/g, "") : "";
-        const hoverDomPath = buildExactDomPathSelector(hoverCard, hoverCard.closest && hoverCard.closest(".ui-dialog, .modal, .layer_pop"));
-        const hoverCandidates = [];
-        if (cardTit) {
-          hoverCandidates.push("ul.aw_ul li.aw_li:has-text('" + cardTit + "') .app_work_box:visible");
-          hoverCandidates.push("li.aw_li:has-text('" + cardTit + "'):visible");
-        }
-        if (hoverDomPath) hoverCandidates.push(hoverDomPath);
-        if (!cardTit) {
-          hoverCandidates.push("ul.aw_ul li.aw_li .app_work_box:visible");
-        }
-        const hoverSelector = Array.from(new Set(hoverCandidates)).slice(0, 3).join(", ");
-        const hoverLabel = (cardTit ? "'" + cardTit + "' 양식 카드" : "양식 카드") + "에 마우스 호버 (하위 [작성] 버튼 표시)";
-
-        try {
-          const topDoc = window.top.document;
-          const hudStep = topDoc.getElementById("__sd_hud_last_step");
-          if (hudStep) {
-            hudStep.textContent = "최근 감지: 🖱️ " + hoverLabel;
-          }
-        } catch (err) {}
-
-        if (typeof window.__screenDemoRecordAction === "function") {
-          window.__sdLastRecordedHoverCard = hoverCard;
-          window.__sdLastRecordedHoverTime = Date.now();
-          window.__screenDemoRecordAction({
-            kind: "hover",
-            selector: hoverSelector,
-            targetHtml: extractTargetHtml(hoverCard),
-            iframe: getCurrentIframeSelector(),
-            tagName: (hoverCard.tagName || "div").toLowerCase(),
-            label: hoverLabel,
-            pageUrl: location.href,
-            inModal: Boolean(hoverCard.closest && hoverCard.closest(".ui-dialog, .modal, .layer_pop"))
-          });
-        }
-      }, 400);
-    } else if (!hoverCard && window.__sdLastHoveredCard) {
-      window.__sdLastHoveredCard = null;
-      if (window.__sdHoverTimer) {
-        clearTimeout(window.__sdHoverTimer);
-        window.__sdHoverTimer = null;
-      }
-    }
   }, true);
 
   // Capture typing on input / textarea / contenteditable / Synap Editor (.se-contents & .se-ime)
@@ -3346,51 +3181,73 @@ export function getInjectedEyedropperScript(): string {
     flushAllFrames();
   }, true);
 
-  // 1) Mouse & Pointer Drag & Drop (jQuery UI draggable / sortable / Dynatree / custom mouse drag)
+  let pendingMouseDown = null;
+
+  function computeClickOffsets(el, clientX, clientY) {
+    const clickCoords =
+      typeof clientX === "number" && typeof clientY === "number" && (clientX !== 0 || clientY !== 0)
+        ? { x: Math.round(clientX), y: Math.round(clientY) }
+        : undefined;
+    let cursorOffset = undefined;
+    try {
+      const r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+      if (r && r.width > 0 && r.height > 0 && clickCoords) {
+        cursorOffset = {
+          x: Math.max(2, Math.min(Math.round(r.width - 2), Math.round(clientX - r.left))),
+          y: Math.max(2, Math.min(Math.round(r.height - 2), Math.round(clientY - r.top)))
+        };
+      }
+    } catch (e) {}
+    return { clickCoords: clickCoords, cursorOffset: cursorOffset };
+  }
+
+  // 1) Mouse & Pointer Drag & Drop + Universal Mousedown Snapshot (captures popups/dropdowns like Select2/Datepicker/Autocomplete that close on mousedown/mouseup before click)
   window.addEventListener("mousedown", function(e) {
     if (e.button !== 0) return;
     ensureJqueryDropHook();
     const rawTarget = e.target;
     if (!rawTarget || isDragHelperOrOverlay(rawTarget)) return;
 
-    // If user was typing into an element and clicks outside it (e.g. clicking a Send/Search button whose mousedown/click handler immediately clears the input),
-    // flush the pending typed text right on mousedown BEFORE the page handler clears the DOM!
+    const downEl = resolveInteractiveElement(rawTarget);
+
+    // If user was typing into an element and clicks outside it (e.g. clicking a Send/Search button or autocomplete item whose mousedown/mouseup handler immediately mutates the DOM),
+    // flush the pending typed text right on mousedown BEFORE the page handler mutates the DOM!
     if (
       lastTypedElement &&
       !(rawTarget.closest && rawTarget.closest("#__sd_recorder_hud")) &&
-      !(lastTypedElement === rawTarget || (lastTypedElement.contains && lastTypedElement.contains(rawTarget)))
+      !(lastTypedElement === rawTarget || (lastTypedElement.contains && lastTypedElement.contains(rawTarget)) || lastTypedElement === downEl)
     ) {
-      flushAllFrames(resolveInteractiveElement(rawTarget));
+      flushAllFrames(downEl);
     }
 
-    // Capture jQuery UI Datepicker / Timepicker selection on mousedown (since their popups close on mousedown before click fires)
-    const pickerCell =
-      rawTarget.closest &&
-      rawTarget.closest("#ui-datepicker-div td a, .ui-datepicker td a, .ui-timepicker-list li, .ui-timepicker-wrapper li");
-    if (pickerCell && e.isTrusted !== false && typeof window.__screenDemoRecordAction === "function") {
-      const cellTxt = getCleanText(pickerCell).replace(/'/g, "").trim();
-      if (cellTxt) {
-        const isDateCell = Boolean(pickerCell.closest("#ui-datepicker-div, .ui-datepicker"));
-        const pickerSel = isDateCell
-          ? "#ui-datepicker-div:visible td a:text-is('" + cellTxt + "'):visible, .ui-datepicker:visible td a:text-is('" + cellTxt + "'):visible, #ui-datepicker-div:visible td a:has-text('" + cellTxt + "'):visible"
-          : ".ui-timepicker-list:visible li:text-is('" + cellTxt + "'):visible, .ui-timepicker-wrapper:visible li:has-text('" + cellTxt + "'):visible";
-        const pickerLabel = isDateCell
-          ? "[달력 팝업] '" + cellTxt + "일' 날짜 클릭"
-          : "[시간 선택] '" + cellTxt + "' 시간 클릭";
-        suppressClickUntil = Date.now() + 250;
-        window.__screenDemoRecordAction({
-          kind: "click",
-          selector: pickerSel,
-          targetHtml: extractTargetHtml(pickerCell),
-          iframe: getCurrentIframeSelector(),
-          tagName: (pickerCell.tagName || "a").toLowerCase(),
-          label: pickerLabel,
-          text: cellTxt,
-          pageUrl: location.href,
-          inModal: true
-        });
-        return;
-      }
+    // Universal Mousedown Snapshot: record the exact element, selector, HTML, and coordinates while the element is still guaranteed visible in the DOM
+    if (downEl && downEl.tagName && e.isTrusted !== false) {
+      const downTag = downEl.tagName.toLowerCase();
+      const downRect = downEl.getBoundingClientRect ? downEl.getBoundingClientRect() : { width: 0, height: 0, left: 0, top: 0 };
+      const offsets = computeClickOffsets(downEl, e.clientX, e.clientY);
+      pendingMouseDown = {
+        rawTarget: rawTarget,
+        el: downEl,
+        tagName: downTag,
+        selector: buildRobustSelector(downEl),
+        label: buildHumanLabel(downEl),
+        targetHtml: extractTargetHtml(downEl),
+        text: getCleanText(downEl).slice(0, 40),
+        iframe: getCurrentIframeSelector(),
+        inModal: Boolean(
+          (downEl.closest && downEl.closest(".ui-dialog, .modal, .layer_pop, .select2-drop, .ui-autocomplete")) ||
+          (rawTarget.closest && rawTarget.closest(".ui-dialog, .modal, .layer_pop, .select2-drop, .ui-autocomplete"))
+        ),
+        clientX: e.clientX,
+        clientY: e.clientY,
+        clickCoords: offsets.clickCoords,
+        cursorOffset: offsets.cursorOffset,
+        rect: { width: downRect.width, height: downRect.height },
+        time: Date.now(),
+        committed: false
+      };
+    } else {
+      pendingMouseDown = null;
     }
 
     const tag = (rawTarget.tagName || "").toLowerCase();
@@ -3443,8 +3300,63 @@ export function getInjectedEyedropperScript(): string {
   }, true);
 
   window.addEventListener("mouseup", function(e) {
-    if (!dragSourceInfo) return;
-    commitDragAndDrop(e.clientX, e.clientY, null);
+    if (dragSourceInfo && commitDragAndDrop(e.clientX, e.clientY, null)) {
+      pendingMouseDown = null;
+      return;
+    }
+    // If a widget (e.g. Select2, custom dropdown, autocomplete, popover) handled selection on mousedown/mouseup
+    // and detached/hidden the element so the browser never dispatches a 'click' event, commit the mousedown snapshot!
+    const snap = pendingMouseDown;
+    if (snap && !snap.committed && Date.now() >= suppressClickUntil) {
+      const moveDist = Math.hypot((e.clientX || snap.clientX) - snap.clientX, (e.clientY || snap.clientY) - snap.clientY);
+      if (moveDist < 24) {
+        setTimeout(function() {
+          if (!snap.committed && Date.now() >= suppressClickUntil && Date.now() - lastCommitDragTime >= 400) {
+            const sTag = snap.tagName;
+            if (sTag === "html" || (sTag === "body" && !(snap.el && snap.el.isContentEditable))) return;
+            if (sTag === "select" || sTag === "textarea") return;
+            if (sTag === "input") {
+              const inpType = ((snap.el && snap.el.getAttribute && snap.el.getAttribute("type")) || "text").toLowerCase();
+              if (inpType !== "button" && inpType !== "submit" && inpType !== "reset" && inpType !== "checkbox" && inpType !== "radio") {
+                return;
+              }
+            }
+            const isFullPageContainer =
+              (sTag === "div" || sTag === "section" || sTag === "main" || sTag === "form") &&
+              snap.rect.width > window.innerWidth * 0.85 &&
+              snap.rect.height > window.innerHeight * 0.45 &&
+              !(snap.el && snap.el.getAttribute && (snap.el.getAttribute("onclick") || snap.el.getAttribute("role")));
+            if (isFullPageContainer) return;
+
+            snap.committed = true;
+            try {
+              const topDoc = window.top.document;
+              const hudStep = topDoc.getElementById("__sd_hud_last_step");
+              if (hudStep) {
+                hudStep.textContent = "최근 감지: " + snap.label;
+              }
+            } catch (err) {}
+
+            if (typeof window.__screenDemoRecordAction === "function") {
+              window.__screenDemoRecordAction({
+                kind: "click",
+                selector: snap.selector,
+                targetHtml: snap.targetHtml,
+                iframe: snap.iframe,
+                tagName: snap.tagName,
+                label: snap.label,
+                text: snap.text || undefined,
+                pageUrl: location.href,
+                inModal: snap.inModal,
+                clickCoords: snap.clickCoords,
+                cursorOffset: snap.cursorOffset,
+                windowMetrics: getTopWindowMetrics()
+              });
+            }
+          }
+        }, 65);
+      }
+    }
   }, true);
 
   // 2) HTML5 Drag & Drop (draggable="true" or <a href="#"> link drags firing dragstart / dragover / drop / dragend)
@@ -3531,29 +3443,36 @@ export function getInjectedEyedropperScript(): string {
     const rawTarget = e.target;
     if (!rawTarget || (rawTarget.closest && rawTarget.closest("#__sd_recorder_hud"))) return;
 
+    const snap =
+      pendingMouseDown && Date.now() - pendingMouseDown.time < 800 ? pendingMouseDown : null;
+    if (snap && snap.committed) {
+      return;
+    }
+    if (snap) {
+      snap.committed = true;
+    }
+
     // If user was typing into a DIFFERENT element (including in another iframe), flush the typed text first!
-    const el = resolveInteractiveElement(rawTarget);
+    let el = resolveInteractiveElement(rawTarget);
     flushAllFrames(el);
 
     if (!el || !el.tagName) return;
-    const tag = el.tagName.toLowerCase();
 
-    // Suppress accidental double-click on drawer/navigation links (#cmmAiChatSideMenu_navi a, #all_svc_inner a, #svc_box a)
-    // where the 1st click already selects the item and closes the slide-over drawer
-    if (
-      tag === "a" &&
-      el.closest &&
-      el.closest("#cmmAiChatSideMenu_navi, #all_svc_inner, #svc_box")
-    ) {
-      if (
-        (e.detail && e.detail >= 2) ||
-        (lastClickedDrawerLinkEl === el && Date.now() - lastClickedDrawerLinkTime < 1500)
-      ) {
-        return;
-      }
-      lastClickedDrawerLinkEl = el;
-      lastClickedDrawerLinkTime = Date.now();
+    const rect = el.getBoundingClientRect ? el.getBoundingClientRect() : { width: 0, height: 0 };
+    // If the mousedown target was detached/hidden on mouseup (rect 0x0 or disconnected) or the click bubbled to a container after child removal,
+    // restore the exact snapshot captured at mousedown!
+    const useSnap = Boolean(
+      snap &&
+      snap.el &&
+      (!el.isConnected ||
+        (rect.width === 0 && rect.height === 0 && snap.rect.width > 0) ||
+        (snap.el !== el && (!snap.el.isConnected || el.contains(snap.el))))
+    );
+    if (useSnap) {
+      el = snap.el;
     }
+
+    const tag = (useSnap ? snap.tagName : el.tagName).toLowerCase();
 
     // Suppress the browser's automatic <label> -> <input type="checkbox"|"radio"> synthetic second click event (both nested <label><input></label> and sibling <input id="x"><label for="x">)
     if (
@@ -3574,81 +3493,31 @@ export function getInjectedEyedropperScript(): string {
       return;
     }
 
-    // Ignore clicks on pure layout wrappers or hidden search option containers (body/html/wide layout divs/articles without onclick, role, hook class, or pointer cursor)
+    // Only ignore clicks on html/body or full-viewport background layout containers (never reject dropdown items, list items, or wide controls!)
     if (tag === "html") return;
     if (tag === "body" && !el.isContentEditable) return;
-    if (el.id === "eapHeader_option" || (el.classList && el.classList.contains("_search_option_hide"))) return;
-    const rect = el.getBoundingClientRect ? el.getBoundingClientRect() : { width: 0, height: 0 };
-    const isClickableCustomDiv =
-      tag === "div" &&
-      ((el.classList &&
-        Array.from(el.classList).some(function(c) {
-          return /^_[a-zA-Z0-9_-]+$/.test(c) || /^(Selected|select_Value|sp-replacer|btn|ico|tab|swatch|plt_|scvr|app_work_box)/i.test(c);
-        })) ||
-        (rect.width > 0 &&
-          rect.width <= 320 &&
-          rect.height > 0 &&
-          rect.height <= 120 &&
-          window.getComputedStyle &&
-          window.getComputedStyle(el).cursor === "pointer"));
+    const effRect = useSnap ? snap.rect : rect;
     if (
-      !isClickableCustomDiv &&
-      (tag === "div" || tag === "section" || tag === "article" || tag === "main" || tag === "aside" || tag === "form" || tag === "header" || tag === "ul" || tag === "nav") &&
-      (rect.width > 240 || (rect.width === 0 && rect.height === 0)) &&
+      (tag === "div" || tag === "section" || tag === "article" || tag === "main" || tag === "aside" || tag === "form" || tag === "header" || tag === "nav") &&
+      effRect.width > window.innerWidth * 0.85 &&
+      effRect.height > window.innerHeight * 0.45 &&
       !el.getAttribute("onclick") &&
       !el.getAttribute("role")
     ) {
       return;
     }
 
-    const selector = buildRobustSelector(el);
-    const label = buildHumanLabel(el);
-    const targetHtml = extractTargetHtml(el);
-    const iframe = getCurrentIframeSelector();
-    const inModal = Boolean(el.closest && el.closest(".ui-dialog, .modal, .layer_pop"));
-
-    // Detect if the clicked element is a hover-revealed button inside a card/row (e.g. li.aw_li > div.app_work_box > div.write > button.btn_write)
-    const hoverCardEl =
-      (el.classList && el.classList.contains("btn_write") && el.closest && el.closest(".app_work_box, li.aw_li")) ||
-      (el.closest && el.closest(".write.btn_group, .hover_btn, .card_hover") && el.closest(".app_work_box, li.aw_li, .card_item, .card_box, li, tr"));
-
-    const alreadyRecordedHoverForCard =
-      hoverCardEl &&
-      window.__sdLastRecordedHoverCard &&
-      (window.__sdLastRecordedHoverCard === hoverCardEl ||
-        (window.__sdLastRecordedHoverCard.contains && window.__sdLastRecordedHoverCard.contains(hoverCardEl)) ||
-        (hoverCardEl.contains && hoverCardEl.contains(window.__sdLastRecordedHoverCard))) &&
-      Date.now() - (window.__sdLastRecordedHoverTime || 0) < 15000;
-
-    if (hoverCardEl && !alreadyRecordedHoverForCard && typeof window.__screenDemoRecordAction === "function") {
-      const cardTitEl = hoverCardEl.querySelector && (hoverCardEl.querySelector(".tit_box strong.tit, strong.tit") || hoverCardEl.querySelector(".tit, a._his"));
-      const cardTit = cardTitEl ? getCleanText(cardTitEl).slice(0, 20).replace(/'/g, "") : "";
-      const hoverDomPath = buildExactDomPathSelector(hoverCardEl, el.closest && el.closest(".ui-dialog, .modal, .layer_pop"));
-      const hoverCandidates = [];
-      if (cardTit) {
-        hoverCandidates.push("ul.aw_ul li.aw_li:has-text('" + cardTit + "') .app_work_box:visible");
-        hoverCandidates.push("li.aw_li:has-text('" + cardTit + "'):visible");
-      }
-      if (hoverDomPath) hoverCandidates.push(hoverDomPath);
-      if (!cardTit) {
-        hoverCandidates.push("ul.aw_ul li.aw_li .app_work_box:visible");
-      }
-      const hoverSelector = Array.from(new Set(hoverCandidates)).slice(0, 3).join(", ");
-      const hoverLabel = (cardTit ? "'" + cardTit + "' 양식 카드" : "양식 카드") + "에 마우스 호버 (하위 [작성] 버튼 표시)";
-
-      window.__sdLastRecordedHoverCard = hoverCardEl;
-      window.__sdLastRecordedHoverTime = Date.now();
-      window.__screenDemoRecordAction({
-        kind: "hover",
-        selector: hoverSelector,
-        targetHtml: extractTargetHtml(hoverCardEl),
-        iframe,
-        tagName: (hoverCardEl.tagName || "div").toLowerCase(),
-        label: hoverLabel,
-        pageUrl: location.href,
-        inModal
-      });
-    }
+    const selector = useSnap && snap.selector ? snap.selector : buildRobustSelector(el);
+    const label = useSnap && snap.label ? snap.label : buildHumanLabel(el);
+    const targetHtml = useSnap && snap.targetHtml ? snap.targetHtml : extractTargetHtml(el);
+    const iframe = useSnap && snap.iframe !== undefined ? snap.iframe : getCurrentIframeSelector();
+    const inModal = useSnap
+      ? snap.inModal
+      : Boolean(el.closest && el.closest(".ui-dialog, .modal, .layer_pop"));
+    const offsets =
+      useSnap && snap.clickCoords
+        ? { clickCoords: snap.clickCoords, cursorOffset: snap.cursorOffset }
+        : computeClickOffsets(el, e.clientX, e.clientY);
 
     // Update HUD text if in top window
     try {
@@ -3669,6 +3538,8 @@ export function getInjectedEyedropperScript(): string {
         label,
         pageUrl: location.href,
         inModal,
+        clickCoords: offsets.clickCoords,
+        cursorOffset: offsets.cursorOffset,
         windowMetrics: getTopWindowMetrics()
       });
     }
@@ -3691,6 +3562,7 @@ export function getInjectedEyedropperScript(): string {
     const targetHtml = extractTargetHtml(el);
     const iframe = getCurrentIframeSelector();
     const inModal = Boolean(el.closest && el.closest(".ui-dialog, .modal, .layer_pop"));
+    const offsets = computeClickOffsets(el, e.clientX, e.clientY);
 
     if (typeof window.__screenDemoRecordAction === "function") {
       window.__screenDemoRecordAction({
@@ -3702,6 +3574,8 @@ export function getInjectedEyedropperScript(): string {
         label: label.replace(/\s*클릭$/, "") + " 더블클릭",
         pageUrl: location.href,
         inModal,
+        clickCoords: offsets.clickCoords,
+        cursorOffset: offsets.cursorOffset,
         windowMetrics: getTopWindowMetrics()
       });
     }
@@ -3737,6 +3611,7 @@ export function getInjectedEyedropperScript(): string {
     const targetHtml = extractTargetHtml(el);
     const iframe = getCurrentIframeSelector();
     const inModal = Boolean(el.closest && el.closest(".ui-dialog, .modal, .layer_pop"));
+    const offsets = computeClickOffsets(el, e.clientX, e.clientY);
 
     try {
       const topDoc = window.top.document;
@@ -3756,6 +3631,8 @@ export function getInjectedEyedropperScript(): string {
         label: label + " 우클릭",
         pageUrl: location.href,
         inModal,
+        clickCoords: offsets.clickCoords,
+        cursorOffset: offsets.cursorOffset,
         windowMetrics: getTopWindowMetrics()
       });
     }
@@ -3911,6 +3788,8 @@ async function refineRecordedEventsIntoPlan(
         sourceSelector: ev.sourceSelector,
         targetSelector: ev.targetSelector,
         iframe: ev.iframe,
+        ...(ev.dragFromCoords ? { dragFromCoords: ev.dragFromCoords } : {}),
+        ...(ev.dragToCoords ? { dragToCoords: ev.dragToCoords } : {}),
         description: desc,
         recordedByEyedropper: true,
         targetHtml: ev.targetHtml,
@@ -3936,6 +3815,7 @@ async function refineRecordedEventsIntoPlan(
         ...(ev.editorParaIndex !== undefined ? { editorParaIndex: ev.editorParaIndex } : {}),
         ...(ev.editorInsertNewline ? { editorInsertNewline: true } : {}),
         ...(ev.cursorOffset ? { cursorOffset: ev.cursorOffset } : {}),
+        ...(ev.clickCoords ? { clickCoords: ev.clickCoords } : {}),
         description: desc,
         recordedByEyedropper: true,
         targetHtml: ev.targetHtml,
@@ -3971,6 +3851,8 @@ async function refineRecordedEventsIntoPlan(
         type: "rightclick",
         selector: ev.selector,
         iframe: ev.iframe,
+        ...(ev.cursorOffset ? { cursorOffset: ev.cursorOffset } : {}),
+        ...(ev.clickCoords ? { clickCoords: ev.clickCoords } : {}),
         description: desc,
         recordedByEyedropper: true,
         targetHtml: ev.targetHtml,
@@ -3987,6 +3869,8 @@ async function refineRecordedEventsIntoPlan(
         type: "dblclick",
         selector: ev.selector,
         iframe: ev.iframe,
+        ...(ev.cursorOffset ? { cursorOffset: ev.cursorOffset } : {}),
+        ...(ev.clickCoords ? { clickCoords: ev.clickCoords } : {}),
         description: desc,
         recordedByEyedropper: true,
         targetHtml: ev.targetHtml,
@@ -4003,36 +3887,6 @@ async function refineRecordedEventsIntoPlan(
         continue;
       }
 
-      // Safety net: if a click targets a hover-revealed card button (ONLY inside .app_work_box / li.aw_li, never generic btn_write!)
-      // and the preceding event was not already a hover, automatically insert the hover + wait steps before the click!
-      const prevEv = i > 0 ? events[i - 1] : null;
-      const isHoverRevealedClick =
-        ((ev.selector.includes("btn_write") || ev.selector.includes("button")) &&
-          (ev.selector.includes(".app_work_box") || ev.selector.includes("aw_li"))) ||
-        (ev.label.includes("양식 카드") && ev.label.includes("작성"));
-
-      if (isHoverRevealedClick && (!prevEv || prevEv.kind !== "hover")) {
-        const cardTitleMatch = ev.selector.match(/has-text\(['"]([^'"]+)['"]\)/) || ev.label.match(/['"]([^'"]+)['"]/);
-        const cardTitle = cardTitleMatch ? cardTitleMatch[1].trim() : "";
-        const hoverSel = cardTitle && cardTitle !== "작성"
-          ? `ul.aw_ul li.aw_li:has-text('${cardTitle}') .app_work_box:visible, li.aw_li:has-text('${cardTitle}'):visible, ul.aw_ul li.aw_li .app_work_box:visible`
-          : `ul.aw_ul li.aw_li .app_work_box:visible, .app_work_box:visible`;
-        const hoverDesc = `${cardTitle && cardTitle !== "작성" ? `'${cardTitle}' ` : ""}양식 카드에 마우스 호버 (하위 [작성] 버튼 표시)`;
-        promptSteps.push(hoverDesc);
-        actions.push({
-          type: "hover",
-          selector: hoverSel,
-          iframe: ev.iframe,
-          description: hoverDesc,
-          recordedByEyedropper: true,
-        });
-        actions.push({
-          type: "wait",
-          ms: scaleMs(600),
-          description: "마우스 호버 후 [작성] 버튼 표시 대기",
-        });
-      }
-
       const desc = ev.label.endsWith("선택") ? ev.label : `${ev.label} 클릭`;
       promptSteps.push(desc);
       actions.push({
@@ -4040,6 +3894,8 @@ async function refineRecordedEventsIntoPlan(
         selector: ev.selector,
         iframe: ev.iframe,
         ...(ev.text ? { text: ev.text } : {}),
+        ...(ev.cursorOffset ? { cursorOffset: ev.cursorOffset } : {}),
+        ...(ev.clickCoords ? { clickCoords: ev.clickCoords } : {}),
         description: desc,
         recordedByEyedropper: true,
         targetHtml: ev.targetHtml,

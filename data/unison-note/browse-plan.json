@@ -1,0 +1,169 @@
+{
+  "url": "https://gwdev.unison.co.kr/ekp/main/home/homGwMain",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "windowBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 1920,
+    "height": 1080,
+    "windowState": "normal"
+  },
+  "requiresLogin": true,
+  "recordedByEyedropper": true,
+  "actions": [
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기"
+    },
+    {
+      "type": "click",
+      "selector": "div#main_menu a[title='사내쪽지'][onclick*='/ekp/scr/not/notMain']:visible, div#main_menu a[title='사내쪽지']:visible, div#main_menu a[onclick*='/ekp/scr/not/notMain']:visible, a[onclick*='/ekp/scr/not/notMain']:visible, div#main_menu a.nta[title='사내쪽지']:visible, li.nt.nt_6 a.nta.nta_drop:has-text('사내쪽지'):visible, a.nta[title='사내쪽지']:visible, a[title='사내쪽지']:visible, div#main_menu a.nta.nta_drop:has-text('사내쪽지'):visible, div#main_menu a.nta.nta_drop[title='사내쪽지']:visible",
+      "cursorOffset": {
+        "x": 56,
+        "y": 27
+      },
+      "clickCoords": {
+        "x": 1075,
+        "y": 82
+      },
+      "description": "'사내쪽지' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" title=\"사내쪽지\" class=\"nta nta_drop\" onclick=\"GwMainMenu.fn.openDropMenu(this, 'MNU9341446861202292171', 'https://gwdev.unison.co.kr/ekp/scr/not/notMain','G', 'L', '0', '0');return false;\"> <i class=\"nti nti_msg\"></i>사내쪽지 </a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'사내쪽지' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "type": "click",
+      "selector": "a[onclick*='/ekp/scr/not/notMain?mode=recv_list']:visible, a:has-text('받은쪽지'):visible, ul.svc_lst > li.nt.nt_6:nth-of-type(6) > div.nt_sub.sub_h3 > ul > li:nth-of-type(1) > a:visible",
+      "cursorOffset": {
+        "x": 70,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 1075,
+        "y": 135
+      },
+      "description": "'받은쪽지' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" onclick=\"GwMainMenu.fn.goPage('MNU93414468612042929963', 'https://gwdev.unison.co.kr/ekp/scr/not/notMain?mode=recv_list','G', 'L', '0', '0');return false;\">받은쪽지</a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'받은쪽지' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "type": "click",
+      "selector": "div.mn a.item:has-text('보낸 쪽지'):visible, li#notSubMenu_sendList a.item:has-text('보낸 쪽지'):visible, a.item:has-text('보낸 쪽지'):visible, li#notSubMenu_sendList > div.mn > a.item:visible",
+      "cursorOffset": {
+        "x": 27,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 81,
+        "y": 270
+      },
+      "description": "'보낸 쪽지' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"item\">보낸 쪽지</a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'보낸 쪽지' 메뉴/링크 반응 대기"
+    },
+    {
+      "type": "click",
+      "selector": "div.mn a.item:has-text('중요 쪽지'):visible, li#notSubMenu_starList a.item:has-text('중요 쪽지'):visible, a.item:has-text('중요 쪽지'):visible, li#notSubMenu_starList > div.mn > a.item:visible",
+      "cursorOffset": {
+        "x": 27,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 81,
+        "y": 304
+      },
+      "description": "'중요 쪽지' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"item\">중요 쪽지</a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'중요 쪽지' 메뉴/링크 반응 대기"
+    },
+    {
+      "type": "click",
+      "selector": "div.mn a.item:has-text('전체 쪽지'):visible, li#notSubMenu_allList a.item:has-text('전체 쪽지'):visible, a.item:has-text('전체 쪽지'):visible, li#notSubMenu_allList > div.mn > a.item:nth-of-type(1):visible",
+      "cursorOffset": {
+        "x": 27,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 81,
+        "y": 202
+      },
+      "description": "'전체 쪽지' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"item\">전체 쪽지</a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'전체 쪽지' 메뉴/링크 반응 대기"
+    },
+    {
+      "type": "type",
+      "selector": "input#noteHeader_searchWord:visible, #noteHeader_searchWord:visible, input[placeholder*='검색어']:visible, input[title*='검색어']:visible",
+      "text": "안내",
+      "cursorOffset": {
+        "x": 75,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 1685,
+        "y": 140
+      },
+      "description": "'검색어' 입력창에 '안내' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input id=\"noteHeader_searchWord\" autocomplete=\"off\" type=\"text\" title=\"검색어\" placeholder=\"검색어\" class=\"input_txt\">"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "type": "click",
+      "selector": "button#noteHeader_btnSearch:visible, #noteHeader_btnSearch:visible, button.btn[title='검색']:visible, button[title='검색']:visible",
+      "cursorOffset": {
+        "x": 14,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 1774,
+        "y": 140
+      },
+      "description": "'검색' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"noteHeader_btnSearch\" type=\"button\" title=\"검색\" class=\"btn btn_ico\"><i class=\"ico ico_srch\"><span>검색</span></i></button>"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'검색' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "type": "wait",
+      "ms": 2000,
+      "description": "최종 시연 결과 화면 클로즈업 확인 대기"
+    }
+  ]
+}

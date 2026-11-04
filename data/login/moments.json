@@ -1,0 +1,598 @@
+{
+  "metadata": {
+    "url": "https://gw.bc.ac.kr/ekp/main/home/homGwMain",
+    "viewportWidth": 1920,
+    "viewportHeight": 944,
+    "totalDurationMs": 111451,
+    "recordingStart": "2026-11-02T00:55:50.786Z",
+    "calibratedToVideoDurationMs": 111451
+  },
+  "moments": [
+    {
+      "id": 1,
+      "type": "wait",
+      "timestamp": 16510,
+      "description": "초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기"
+    },
+    {
+      "id": 2,
+      "type": "type",
+      "timestamp": 18269,
+      "description": "'ID' 입력창에 'test_prof_two' 입력",
+      "cursor": {
+        "x": 875,
+        "y": 128
+      },
+      "target": {
+        "x": 836,
+        "y": 77,
+        "width": 250,
+        "height": 40
+      },
+      "keys": "test_prof_two"
+    },
+    {
+      "id": 3,
+      "type": "wait",
+      "timestamp": 19519,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 4,
+      "type": "type",
+      "timestamp": 20741,
+      "description": "'PASSWORD' 입력창에 'tkancjDkagh01@)' 입력",
+      "cursor": {
+        "x": 868,
+        "y": 149
+      },
+      "target": {
+        "x": 836,
+        "y": 122,
+        "width": 250,
+        "height": 40
+      },
+      "keys": "tkancjDkagh01@)"
+    },
+    {
+      "id": 5,
+      "type": "wait",
+      "timestamp": 22091,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 6,
+      "type": "click",
+      "timestamp": 23435,
+      "description": "'Login' 버튼 클릭",
+      "cursor": {
+        "x": 1017,
+        "y": 206
+      },
+      "target": {
+        "x": 795,
+        "y": 175,
+        "width": 330,
+        "height": 52
+      }
+    },
+    {
+      "id": 7,
+      "type": "wait",
+      "timestamp": 26082,
+      "description": "'Login' 버튼 반응 대기"
+    },
+    {
+      "id": 8,
+      "type": "click",
+      "timestamp": 27549,
+      "description": "'설치프로그램' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1559,
+        "y": 19
+      },
+      "target": {
+        "x": 1548,
+        "y": 17,
+        "width": 72,
+        "height": 19
+      }
+    },
+    {
+      "id": 9,
+      "type": "wait",
+      "timestamp": 28638,
+      "description": "'설치프로그램' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 10,
+      "type": "click",
+      "timestamp": 29992,
+      "description": "[설치프로그램 팝업] 'Windows' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1065,
+        "y": 470
+      },
+      "target": {
+        "x": 1023,
+        "y": 458,
+        "width": 53,
+        "height": 19
+      }
+    },
+    {
+      "id": 11,
+      "type": "wait",
+      "timestamp": 32157,
+      "description": "[설치프로그램 팝업] 'Windows' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 12,
+      "type": "click",
+      "timestamp": 33544,
+      "description": "[설치프로그램 팝업] button 요소 클릭",
+      "cursor": {
+        "x": 1133,
+        "y": 408
+      },
+      "target": {
+        "x": 1124,
+        "y": 403,
+        "width": 17,
+        "height": 17
+      }
+    },
+    {
+      "id": 13,
+      "type": "wait",
+      "timestamp": 34643,
+      "description": "[설치프로그램 팝업] button 요소 반응 대기"
+    },
+    {
+      "id": 14,
+      "type": "click",
+      "timestamp": 36017,
+      "description": "'결재' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 500,
+        "y": 74
+      },
+      "target": {
+        "x": 436,
+        "y": 55,
+        "width": 81,
+        "height": 55
+      }
+    },
+    {
+      "id": 15,
+      "type": "wait",
+      "timestamp": 37110,
+      "description": "'결재' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 16,
+      "type": "click",
+      "timestamp": 39088,
+      "description": "'전자우편' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 708,
+        "y": 84
+      },
+      "target": {
+        "x": 638,
+        "y": 55,
+        "width": 113,
+        "height": 55
+      }
+    },
+    {
+      "id": 17,
+      "type": "wait",
+      "timestamp": 40180,
+      "description": "'전자우편' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 18,
+      "type": "click",
+      "timestamp": 42168,
+      "description": "'2026년도 디지털미디어디자인학과 제47' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 538,
+        "y": 274
+      },
+      "target": {
+        "x": 375,
+        "y": 261,
+        "width": 424,
+        "height": 20
+      }
+    },
+    {
+      "id": 19,
+      "type": "wait",
+      "timestamp": 43256,
+      "description": "'2026년도 디지털미디어디자인학과 제47' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 20,
+      "type": "click",
+      "timestamp": 44759,
+      "description": "'공지사항' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 772,
+        "y": 87
+      },
+      "target": {
+        "x": 754,
+        "y": 55,
+        "width": 113,
+        "height": 55
+      }
+    },
+    {
+      "id": 21,
+      "type": "wait",
+      "timestamp": 45800,
+      "description": "'공지사항' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 22,
+      "type": "click",
+      "timestamp": 52730,
+      "description": "'기록물철' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 923,
+        "y": 97
+      },
+      "target": {
+        "x": 871,
+        "y": 55,
+        "width": 113,
+        "height": 55
+      }
+    },
+    {
+      "id": 23,
+      "type": "wait",
+      "timestamp": 54008,
+      "description": "'기록물철' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 24,
+      "type": "click",
+      "timestamp": 62154,
+      "description": "'일정관리' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1059,
+        "y": 81
+      },
+      "target": {
+        "x": 987,
+        "y": 55,
+        "width": 113,
+        "height": 55
+      }
+    },
+    {
+      "id": 25,
+      "type": "wait",
+      "timestamp": 64440,
+      "description": "'일정관리' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 26,
+      "type": "click",
+      "timestamp": 66389,
+      "description": "'위키' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1139,
+        "y": 86
+      },
+      "target": {
+        "x": 1104,
+        "y": 55,
+        "width": 81,
+        "height": 55
+      }
+    },
+    {
+      "id": 27,
+      "type": "wait",
+      "timestamp": 67517,
+      "description": "'위키' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 28,
+      "type": "click",
+      "timestamp": 69509,
+      "description": "'포탈 전체메뉴' 버튼 클릭",
+      "cursor": {
+        "x": 1364,
+        "y": 79
+      },
+      "target": {
+        "x": 1339,
+        "y": 60,
+        "width": 45,
+        "height": 45
+      }
+    },
+    {
+      "id": 29,
+      "type": "wait",
+      "timestamp": 70584,
+      "description": "'포탈 전체메뉴' 버튼 반응 대기"
+    },
+    {
+      "id": 30,
+      "type": "click",
+      "timestamp": 71994,
+      "description": "'스마트워크' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1120,
+        "y": 326
+      },
+      "target": {
+        "x": 1069,
+        "y": 317,
+        "width": 177,
+        "height": 30
+      }
+    },
+    {
+      "id": 31,
+      "type": "wait",
+      "timestamp": 73111,
+      "description": "'스마트워크' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 32,
+      "type": "click",
+      "timestamp": 75040,
+      "description": "'포탈 전체메뉴' 버튼 클릭",
+      "cursor": {
+        "x": 1379,
+        "y": 89
+      },
+      "target": {
+        "x": 1339,
+        "y": 60,
+        "width": 45,
+        "height": 45
+      }
+    },
+    {
+      "id": 33,
+      "type": "wait",
+      "timestamp": 76159,
+      "description": "'포탈 전체메뉴' 버튼 반응 대기"
+    },
+    {
+      "id": 34,
+      "type": "click",
+      "timestamp": 77521,
+      "description": "'태스크보드' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 962,
+        "y": 336
+      },
+      "target": {
+        "x": 873,
+        "y": 317,
+        "width": 177,
+        "height": 30
+      }
+    },
+    {
+      "id": 35,
+      "type": "wait",
+      "timestamp": 78651,
+      "description": "'태스크보드' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 36,
+      "type": "click",
+      "timestamp": 80606,
+      "description": "'포탈 전체메뉴' 버튼 클릭",
+      "cursor": {
+        "x": 1370,
+        "y": 100
+      },
+      "target": {
+        "x": 1339,
+        "y": 60,
+        "width": 45,
+        "height": 45
+      }
+    },
+    {
+      "id": 37,
+      "type": "wait",
+      "timestamp": 81712,
+      "description": "'포탈 전체메뉴' 버튼 반응 대기"
+    },
+    {
+      "id": 38,
+      "type": "click",
+      "timestamp": 83094,
+      "description": "'문서관리' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 543,
+        "y": 402
+      },
+      "target": {
+        "x": 481,
+        "y": 392,
+        "width": 177,
+        "height": 30
+      }
+    },
+    {
+      "id": 39,
+      "type": "wait",
+      "timestamp": 84181,
+      "description": "'문서관리' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 40,
+      "type": "click",
+      "timestamp": 87693,
+      "description": "'사용자매뉴얼.20.모바일.pptx' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 583,
+        "y": 287
+      },
+      "target": {
+        "x": 497,
+        "y": 273,
+        "width": 171,
+        "height": 20
+      }
+    },
+    {
+      "id": 41,
+      "type": "wait",
+      "timestamp": 88748,
+      "description": "'사용자매뉴얼.20.모바일.pptx' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 42,
+      "type": "click",
+      "timestamp": 92422,
+      "description": "'포탈 전체메뉴' 버튼 클릭",
+      "cursor": {
+        "x": 1363,
+        "y": 83
+      },
+      "target": {
+        "x": 1339,
+        "y": 60,
+        "width": 45,
+        "height": 45
+      }
+    },
+    {
+      "id": 43,
+      "type": "wait",
+      "timestamp": 93545,
+      "description": "'포탈 전체메뉴' 버튼 반응 대기"
+    },
+    {
+      "id": 44,
+      "type": "click",
+      "timestamp": 94942,
+      "description": "'AI Chat' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 717,
+        "y": 560
+      },
+      "target": {
+        "x": 677,
+        "y": 542,
+        "width": 177,
+        "height": 30
+      }
+    },
+    {
+      "id": 45,
+      "type": "wait",
+      "timestamp": 96122,
+      "description": "'AI Chat' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 46,
+      "type": "click",
+      "timestamp": 98342,
+      "description": "'AI Chat' 버튼 클릭",
+      "cursor": {
+        "x": 1686,
+        "y": 81
+      },
+      "target": {
+        "x": 1645,
+        "y": 60,
+        "width": 45,
+        "height": 45
+      }
+    },
+    {
+      "id": 47,
+      "type": "wait",
+      "timestamp": 99315,
+      "description": "'AI Chat' 버튼 반응 대기"
+    },
+    {
+      "id": 48,
+      "type": "click",
+      "timestamp": 100888,
+      "description": "'닫기' 버튼 클릭",
+      "cursor": {
+        "x": 1896,
+        "y": 132
+      },
+      "target": {
+        "x": 1882,
+        "y": 122,
+        "width": 23,
+        "height": 23
+      }
+    },
+    {
+      "id": 49,
+      "type": "wait",
+      "timestamp": 101912,
+      "description": "'닫기' 버튼 반응 대기"
+    },
+    {
+      "id": 50,
+      "type": "click",
+      "timestamp": 103396,
+      "description": "'3' 버튼 클릭",
+      "cursor": {
+        "x": 1704,
+        "y": 89
+      },
+      "target": {
+        "x": 1690,
+        "y": 60,
+        "width": 45,
+        "height": 45
+      }
+    },
+    {
+      "id": 51,
+      "type": "wait",
+      "timestamp": 104393,
+      "description": "'3' 버튼 반응 대기"
+    },
+    {
+      "id": 52,
+      "type": "click",
+      "timestamp": 106345,
+      "description": "'조회' 버튼 클릭",
+      "cursor": {
+        "x": 1563,
+        "y": 550
+      },
+      "target": {
+        "x": 1376,
+        "y": 544,
+        "width": 305,
+        "height": 32
+      }
+    },
+    {
+      "id": 53,
+      "type": "wait",
+      "timestamp": 107427,
+      "description": "'조회' 버튼 반응 대기"
+    },
+    {
+      "id": 54,
+      "type": "wait",
+      "timestamp": 108436,
+      "description": "최종 시연 결과 화면 클로즈업 확인 대기"
+    }
+  ]
+}

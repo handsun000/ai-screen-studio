@@ -52,12 +52,41 @@ def get_audio_duration_ms(mp3_path: Path) -> int:
     return 2000
 
 
+def copy_file_safe_windows(src: Path, dst: Path):
+    try:
+        shutil.copy2(src, dst)
+        return
+    except OSError:
+        try:
+            old_dst = dst.with_suffix(dst.suffix + ".old")
+            if old_dst.exists():
+                try:
+                    old_dst.unlink()
+                except OSError:
+                    pass
+            if dst.exists():
+                dst.rename(old_dst)
+            shutil.copy2(src, dst)
+            try:
+                old_dst.unlink()
+            except OSError:
+                pass
+        except OSError:
+            pass
+
+
 async def synthesize_single_cue(text: str, voice: str, rate: str, pitch: str, out_path: Path):
+    tmp_path = out_path.with_suffix(".tmp.mp3")
     communicate = edge_tts.Communicate(text=text, voice=voice, rate=rate, pitch=pitch)
-    await communicate.save(str(out_path))
+    await communicate.save(str(tmp_path))
+    copy_file_safe_windows(tmp_path, out_path)
+    try:
+        tmp_path.unlink()
+    except OSError:
+        pass
 
 
-def compute_time_regions_and_sync_cues(cues: list[dict], raw_total_ms: int, fps: int = 60) -> tuple[list[dict], int, int]:
+def compute_time_regions_and_sync_cues(cues: list[dict], raw_total_ms: int, fps: int = 60, intro_baked_ms: int = 0) -> tuple[list[dict], int, int]:
     raw_total_ms = max(1000, int(round(raw_total_ms)))
     raw_total_frames = max(1, int(round((raw_total_ms / 1000.0) * fps)))
 
@@ -120,12 +149,24 @@ def compute_time_regions_and_sync_cues(cues: list[dict], raw_total_ms: int, fps:
         speech_pad_ms = 260 if (i == n_cues - 1) else 180
         min_speech_window_ms = (audio_dur_ms + speech_pad_ms) if audio_dur_ms > 0 else 400
 
-        auto_hold_ms = max(0, min_speech_window_ms - raw_gap_ms)
-        extra_hold_ms = int(round(cue.get("extraHoldMs") or 0))
+        is_baked_intro_cue = (
+            (i == 0 or (bool(cue.get("isIntro")) and v_start_ms < max(1000, intro_baked_ms - 200)))
+            and (
+                intro_baked_ms > 0
+                or (bool(cue.get("isIntro")) and raw_gap_ms >= max(3800, audio_dur_ms + 200))
+            )
+        )
 
-        base_window_ms = max(raw_gap_ms, min_speech_window_ms)
-        min_allowed_window_ms = max(min_speech_window_ms, max(300, int(round(raw_gap_ms * 0.25))))
-        comp_gap_ms = max(min_allowed_window_ms, base_window_ms + extra_hold_ms)
+        auto_hold_ms = 0 if is_baked_intro_cue else max(0, min_speech_window_ms - raw_gap_ms)
+        extra_hold_ms = 0 if is_baked_intro_cue else int(round(cue.get("extraHoldMs") or 0))
+
+        base_window_ms = raw_gap_ms if is_baked_intro_cue else max(raw_gap_ms, min_speech_window_ms)
+        min_allowed_window_ms = (
+            raw_gap_ms
+            if is_baked_intro_cue
+            else max(min_speech_window_ms, max(300, int(round(raw_gap_ms * 0.25))))
+        )
+        comp_gap_ms = raw_gap_ms if is_baked_intro_cue else max(min_allowed_window_ms, base_window_ms + extra_hold_ms)
         effective_delta_ms = comp_gap_ms - raw_gap_ms
 
         cue["autoHoldMs"] = auto_hold_ms
@@ -139,12 +180,14 @@ def compute_time_regions_and_sync_cues(cues: list[dict], raw_total_ms: int, fps:
             v_end_f = min(raw_total_frames, v_start_f + 1)
 
         raw_frames = max(1, v_end_f - v_start_f)
-        comp_frames = max(1, int(round((comp_gap_ms / 1000.0) * fps)))
+        comp_frames = raw_frames if is_baked_intro_cue else max(1, int(round((comp_gap_ms / 1000.0) * fps)))
         delta_frames = comp_frames - raw_frames
 
         cue["startMs"] = int(round((comp_cursor_f / float(fps)) * 1000.0))
         cue_dur_for_sub = audio_dur_ms if audio_dur_ms > 0 else min(comp_gap_ms, 2500)
         cue["endMs"] = cue["startMs"] + cue_dur_for_sub
+        cue["compStartMs"] = cue["startMs"]
+        cue["compEndMs"] = cue["endMs"]
 
         if abs(delta_frames) <= 1:
             speed = round(float(raw_frames) / float(comp_frames), 5)
@@ -306,7 +349,7 @@ async def process_narration(
         rel_public = f"narration/{slug}/{mp3_path.name}"
         pub_target = public_audio_dir / mp3_path.name
         if was_synthesized or not pub_target.exists():
-            shutil.copy2(mp3_path, pub_target)
+            copy_file_safe_windows(mp3_path, pub_target)
         cue["audioFile"] = rel_public
 
     # Determine raw video duration from moments.json or edit-plan.json
@@ -337,8 +380,9 @@ async def process_narration(
         except Exception:
             pass
 
+    intro_baked_ms = int(narration.get("bakedIntroDurationMs") or 0) if narration.get("introBakedIntoVideo") else 0
     time_regions, total_comp_frames, raw_total_frames = compute_time_regions_and_sync_cues(
-        cues, raw_total_ms, fps
+        cues, raw_total_ms, fps, intro_baked_ms
     )
 
     with open(narration_path, "w", encoding="utf-8") as f:

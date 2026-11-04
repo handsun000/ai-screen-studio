@@ -2,34 +2,35 @@
   "url": "https://gw.bc.ac.kr/ekp/main/home/homGwMain",
   "viewport": {
     "width": 1920,
-    "height": 1080
+    "height": 944
+  },
+  "windowBounds": {
+    "left": 1528,
+    "top": -8,
+    "width": 1936,
+    "height": 1048,
+    "windowState": "maximized"
   },
   "requiresLogin": true,
   "recordedByEyedropper": true,
   "actions": [
     {
       "type": "wait",
-      "ms": 3100,
+      "ms": 1500,
       "description": "초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기",
       "_lastHumanTarget": ""
     },
     {
       "type": "click",
-      "selector": "[title='닫기']:visible, button:has-text('닫기'):visible, a:has-text('닫기'):visible, :text-is('닫기'):visible",
-      "description": "'닫기' 클릭",
-      "force": false,
-      "_lastHumanTarget": "닫기"
-    },
-    {
-      "type": "wait",
-      "description": "팝업 닫기 반응 대기",
-      "force": false,
-      "_lastHumanTarget": "",
-      "ms": 2000
-    },
-    {
-      "type": "click",
       "selector": "div#main_menu button[onclick*='GwMainMenu.fn.showAllMenuBox()']:visible, div#main_menu button.btn_svc_open[title='포탈 전체메뉴']:visible, div#main_menu button[title='포탈 전체메뉴']:visible, div#main_menu button[onclick*='GwMainMenu.fn.showAllMenuBox']:visible, div#main_menu > div.optn_btns > button.btn_svc_open:visible, div#main_menu button.btn_svc_open:has-text('포탈 전체메뉴'):visible, div#main_menu button.btn_svc_open:visible, button[onclick*='GwMainMenu.fn.showAllMenuBox()']:visible, button.btn_svc_open[title='포탈 전체메뉴']:visible, button[title='포탈 전체메뉴']:visible, button[onclick*='GwMainMenu.fn.showAllMenuBox']:visible",
+      "cursorOffset": {
+        "x": 28,
+        "y": 23
+      },
+      "clickCoords": {
+        "x": 1367,
+        "y": 83
+      },
       "description": "'포탈 전체메뉴' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"포탈 전체메뉴\" onclick=\"GwMainMenu.fn.showAllMenuBox();return false;\" class=\"btn_svc_open\"><span>포탈 전체메뉴</span></button>",
@@ -43,7 +44,15 @@
     },
     {
       "type": "click",
-      "selector": "div#all_svc_inner a[title='태스크보드'][onclick*='/ekp/scr/agl/aglMain']:visible, div#all_svc_inner a[title='태스크보드']:visible, div#all_svc_inner a[onclick*='/ekp/scr/agl/aglMain']:visible, a[onclick*='/ekp/scr/agl/aglMain']:visible, div#all_svc_inner div.svc_tit a:has-text('태스크보드'):visible",
+      "selector": "div#all_svc_inner a[title='태스크보드'][onclick*='/ekp/scr/agl/aglMain']:visible, div#all_svc_inner a[title='태스크보드']:visible, div#all_svc_inner a[onclick*='/ekp/scr/agl/aglMain']:visible, a[onclick*='/ekp/scr/agl/aglMain']:visible, div.svc_tit a:has-text('태스크보드'):visible, a[title='태스크보드']:visible",
+      "cursorOffset": {
+        "x": 94,
+        "y": 14
+      },
+      "clickCoords": {
+        "x": 967,
+        "y": 331
+      },
       "description": "'태스크보드' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" onclick=\"if(GwMainMenu.fn.checkedEditMode()){GwMainMenu.fn.goPage('MNU12040924383733611546','https://gw.bc.ac.kr/ekp/scr/agl/aglMain','G','L','null','null');}return false;\" title=\"태스크보드\"><i class=\"nti nti_agl _punchHandle\"></i>태스크보드</a>",
@@ -58,6 +67,14 @@
     {
       "type": "click",
       "selector": "div.location a._toBrd:has-text('태양 할일 > 할일'):visible, a._toBrd:has-text('태양 할일 > 할일'):visible, li._task > div.task_card.task_limit > div.task_info > div.task_inner:nth-of-type(2) > div.location:nth-of-type(1) > a._toBrd:visible",
+      "cursorOffset": {
+        "x": 27,
+        "y": 8
+      },
+      "clickCoords": {
+        "x": 332,
+        "y": 301
+      },
       "description": "'태양 할일 > 할일' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" class=\"_toBrd\">태양 할일 &gt; 할일</a>",
@@ -71,7 +88,15 @@
     },
     {
       "type": "click",
-      "selector": "#snb div.mn.aglTreeUtil-node a.item:has-text('모든 보드'):visible, div#aglSnb_fldTree a.item:has-text('모든 보드'):visible, #snb a.item:has-text('모든 보드'):visible, div#aglSnb_fldTree > ul.mn_lst > li:nth-of-type(2) > div.mn.aglTreeUtil-node.aglTreeUtil-exp-c > a.item:visible",
+      "selector": "div.mn.aglTreeUtil-node a.item:has-text('모든 보드'):visible, div#aglSnb_fldTree a.item:has-text('모든 보드'):visible, a.item:has-text('모든 보드'):visible, div#aglSnb_fldTree > ul.mn_lst > li:nth-of-type(2) > div.mn.aglTreeUtil-node.aglTreeUtil-exp-c > a.item:visible",
+      "cursorOffset": {
+        "x": 23,
+        "y": 14
+      },
+      "clickCoords": {
+        "x": 77,
+        "y": 238
+      },
       "description": "'모든 보드' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" class=\"item\">모든 보드</a>",
@@ -86,6 +111,14 @@
     {
       "type": "click",
       "selector": "ul#aglTaskBrdList_brdList a.card_info:has-text('태양 할일'):visible, a.card_info:has-text('태양 할일'):visible, ul#aglTaskBrdList_brdList a.card_info:has-text('태양 할일 임시계정(전임) 전임교원(정보보안센터)'):visible",
+      "cursorOffset": {
+        "x": 166,
+        "y": 98
+      },
+      "clickCoords": {
+        "x": 781,
+        "y": 346
+      },
       "description": "'태양 할일 임시계정(전임) 전임교원(정보' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" class=\"card_info\">태양 할일 임시계정(전임) 전임교원(정보보안센터) 50% 1/2</a>",
@@ -99,7 +132,15 @@
     },
     {
       "type": "click",
-      "selector": "#snb div.mn.aglTreeUtil-node a.item:has-text('나의 보드'):visible, div#aglSnb_fldTree a.item:has-text('나의 보드'):visible, #snb a.item:has-text('나의 보드'):visible, div#aglSnb_fldTree > ul.mn_lst > li:nth-of-type(3) > div.mn.aglTreeUtil-node.aglTreeUtil-exp-c > a.item:visible",
+      "selector": "div.mn.aglTreeUtil-node a.item:has-text('나의 보드'):visible, div#aglSnb_fldTree a.item:has-text('나의 보드'):visible, a.item:has-text('나의 보드'):visible, div#aglSnb_fldTree > ul.mn_lst > li:nth-of-type(3) > div.mn.aglTreeUtil-node.aglTreeUtil-exp-c > a.item:visible",
+      "cursorOffset": {
+        "x": 36,
+        "y": 10
+      },
+      "clickCoords": {
+        "x": 90,
+        "y": 268
+      },
       "description": "'나의 보드' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" class=\"item\">나의 보드</a>",
@@ -114,6 +155,14 @@
     {
       "type": "click",
       "selector": "div.board_card a.card_info:has-text('태양 할일 50% 1/2'):visible, ul#aglTaskBrdList_brdList a.card_info:has-text('태양 할일'):visible, a.card_info:has-text('태양 할일'):visible, ul#aglTaskBrdList_brdList a.card_info:has-text('태양 할일 50% 1/2'):visible",
+      "cursorOffset": {
+        "x": 146,
+        "y": 70
+      },
+      "clickCoords": {
+        "x": 436,
+        "y": 318
+      },
       "description": "'태양 할일 50% 1/2' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" class=\"card_info\">태양 할일 50% 1/2</a>",
@@ -127,7 +176,15 @@
     },
     {
       "type": "click",
-      "selector": "#snb div.mn.aglTreeUtil-node a.item:has-text('공유 보드'):visible, div#aglSnb_fldTree a.item:has-text('공유 보드'):visible, #snb a.item:has-text('공유 보드'):visible, div#aglSnb_fldTree > ul.mn_lst > li:nth-of-type(4) > div.mn.aglTreeUtil-node.aglTreeUtil-exp-c > a.item:visible",
+      "selector": "div.mn.aglTreeUtil-node a.item:has-text('공유 보드'):visible, div#aglSnb_fldTree a.item:has-text('공유 보드'):visible, a.item:has-text('공유 보드'):visible, div#aglSnb_fldTree > ul.mn_lst > li:nth-of-type(4) > div.mn.aglTreeUtil-node.aglTreeUtil-exp-c > a.item:visible",
+      "cursorOffset": {
+        "x": 32,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 86,
+        "y": 305
+      },
       "description": "'공유 보드' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" class=\"item\">공유 보드</a>",
@@ -141,7 +198,37 @@
     },
     {
       "type": "click",
-      "selector": "#snb div.mn.aglTreeUtil-node a.item:has-text('스페이스'):visible, div#aglSnb_fldTree a.item:has-text('스페이스'):visible, #snb a.item:has-text('스페이스'):visible, div#aglSnb_fldTree > ul.mn_lst > li:nth-of-type(6) > div.mn.aglTreeUtil-node.aglTreeUtil-folder > a.item:visible",
+      "selector": "div.mn.aglTreeUtil-node a.item:text-is('대학'):visible, div#aglSnb_fldTree a.item:has-text('대학'):visible, a.item:has-text('대학'):visible, div#aglSnb_fldTree > ul.mn_lst > li:nth-of-type(5) > div.mn.aglTreeUtil-node.aglTreeUtil-folder > a.item:visible",
+      "cursorOffset": {
+        "x": 7,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 61,
+        "y": 344
+      },
+      "description": "'대학' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"item\">대학</a>",
+      "_lastHumanTarget": "대학"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'대학' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "대학"
+    },
+    {
+      "type": "click",
+      "selector": "div.mn.aglTreeUtil-node a.item:has-text('스페이스'):visible, div#aglSnb_fldTree a.item:has-text('스페이스'):visible, a.item:has-text('스페이스'):visible, div#aglSnb_fldTree > ul.mn_lst > li:nth-of-type(6) > div.mn.aglTreeUtil-node.aglTreeUtil-folder > a.item:visible",
+      "cursorOffset": {
+        "x": 40,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 94,
+        "y": 407
+      },
       "description": "'스페이스' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" class=\"item\">스페이스</a>",
@@ -155,21 +242,15 @@
     },
     {
       "type": "click",
-      "selector": "#snb div.mn.aglTreeUtil-node a.item:has-text('삭제함'):visible, div#aglSnb_fldTree a.item:has-text('삭제함'):visible, #snb a.item:has-text('삭제함'):visible, div#aglSnb_fldTree > ul.mn_lst > li.aglTreeUtil-lastsib:nth-of-type(7) > div.mn.aglTreeUtil-node.aglTreeUtil-lastsib > a.item:visible",
-      "description": "'삭제함' 메뉴/링크 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<a href=\"#\" class=\"item\">삭제함</a>",
-      "_lastHumanTarget": "삭제함"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "'삭제함' 메뉴/링크 반응 대기",
-      "_lastHumanTarget": "삭제함"
-    },
-    {
-      "type": "click",
-      "selector": "#snb div.mn.aglTreeUtil-node a.item:has-text('나의 보드'):visible, div#aglSnb_fldTree a.item:has-text('나의 보드'):visible, #snb a.item:has-text('나의 보드'):visible, div#aglSnb_fldTree > ul.mn_lst > li:nth-of-type(3) > div.mn.aglTreeUtil-node.aglTreeUtil-exp-c > a.item:visible",
+      "selector": "div.mn.aglTreeUtil-node a.item:has-text('나의 보드'):visible, div#aglSnb_fldTree a.item:has-text('나의 보드'):visible, a.item:has-text('나의 보드'):visible, div#aglSnb_fldTree > ul.mn_lst > li:nth-of-type(3) > div.mn.aglTreeUtil-node.aglTreeUtil-exp-c > a.item:visible",
+      "cursorOffset": {
+        "x": 39,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 93,
+        "y": 271
+      },
       "description": "'나의 보드' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" class=\"item\">나의 보드</a>",
@@ -184,6 +265,14 @@
     {
       "type": "click",
       "selector": "button#aglTaskBrdList_brdRegBtn:visible, #aglTaskBrdList_brdRegBtn:visible, div.btn_toolbar button.btn.btn_pri:has-text('보드 추가'):visible, div#aglTaskBrdList_toolbar button.btn.btn_pri:has-text('보드 추가'):visible",
+      "cursorOffset": {
+        "x": 53,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 407,
+        "y": 197
+      },
       "description": "'보드 추가' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"aglTaskBrdList_brdRegBtn\" type=\"button\" class=\"btn btn_pri\" style=\"\"><i class=\"ico ico_plus\"></i> 보드 추가</button>",
@@ -199,6 +288,14 @@
       "type": "type",
       "selector": ".ui-dialog:visible input#aglTaskBrdReg_taskBrdName:visible, .ui-dialog:visible input[name='aglTaskBrdReg_taskBrdName']:visible, input#aglTaskBrdReg_taskBrdName:visible, .ui-dialog:visible input[placeholder*='보드 타이틀을 입력하세요.']:visible",
       "text": "공동업무 보드",
+      "cursorOffset": {
+        "x": 114,
+        "y": 5
+      },
+      "clickCoords": {
+        "x": 929,
+        "y": 90
+      },
       "description": "[보드 추가 팝업] '보드 타이틀을 입력하세요.' 입력창에 '공동업무 보드' 입력",
       "recordedByEyedropper": true,
       "targetHtml": "<input name=\"aglTaskBrdReg_taskBrdName\" id=\"aglTaskBrdReg_taskBrdName\" type=\"text\" title=\"보드 타이틀\" placeholder=\"보드 타이틀을 입력하세요.\" value=\"\" class=\"input_txt\" maxlength=\"30\">",
@@ -214,6 +311,14 @@
       "type": "type",
       "selector": ".ui-dialog:visible input#aglTaskBrdReg_taskBrdDesc:visible, .ui-dialog:visible input[name='aglTaskBrdReg_taskBrdDesc']:visible, input#aglTaskBrdReg_taskBrdDesc:visible, .ui-dialog:visible input[placeholder*='보드 설명을 입력하세요.']:visible",
       "text": "부서원 간 협조 업무의 진행 상태를 실시간으로 공유하는 보드입니다.",
+      "cursorOffset": {
+        "x": 114,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 929,
+        "y": 135
+      },
       "description": "[보드 추가 팝업] '보드 설명을 입력하세요.' 입력창에 '부서원 간 협조 업무의 진행 상태를 실시간으로 공유하는 보드입니다.' 입력",
       "recordedByEyedropper": true,
       "targetHtml": "<input name=\"aglTaskBrdReg_taskBrdDesc\" id=\"aglTaskBrdReg_taskBrdDesc\" type=\"text\" title=\"보드 설명\" placeholder=\"보드 설명을 입력하세요.\" value=\"\" maxlength=\"100\" class=\"input_txt\" spellcheck=\"false\">",
@@ -228,6 +333,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible ul.nav.nav_tabs a:has-text('디자인'):visible, .ui-dialog:visible a:has-text('디자인'):visible, div#aglTaskReg_taskBoard > div.tabbable.tab_lar:nth-of-type(2) > ul.nav.nav_tabs.mgb > li:nth-of-type(2) > a:visible",
+      "cursorOffset": {
+        "x": 99,
+        "y": 23
+      },
+      "clickCoords": {
+        "x": 987,
+        "y": 189
+      },
       "description": "[보드 추가 팝업] '디자인' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" data-toggle=\"tab\">디자인</a>",
@@ -241,7 +354,15 @@
     },
     {
       "type": "click",
-      "selector": ".ui-dialog:visible ul#aglTaskBrdReg_taskBrdSkinList label.rdobtn:has(input[name='aglTaskBrdReg_taskBrdSkin'][value='tbd_skin9']):visible, .ui-dialog:visible ul#aglTaskBrdReg_taskBrdSkinList label.rdobtn:has(input[value='tbd_skin9']):visible, .ui-dialog:visible label.rdobtn:has(input[value='tbd_skin9']):visible, .ui-dialog:visible label.rdobtn:has(input[name='aglTaskBrdReg_taskBrdSkin'][value='tbd_skin9']):visible, ul#aglTaskBrdReg_taskBrdSkinList > li:nth-of-type(9) > label.tb_skin9.rdobtn:visible",
+      "selector": ".ui-dialog:visible label.rdobtn:has(input[name='aglTaskBrdReg_taskBrdSkin'][value='tbd_skin9']):visible, .ui-dialog:visible label.rdobtn:has(input[value='tbd_skin9']):visible, .ui-dialog:visible dd > div.tbd_skin > div.skin_lst > ul > li:nth-of-type(9) > label.tb_skin9.rdobtn:visible, .ui-dialog:visible label.tb_skin9.rdobtn:visible",
+      "cursorOffset": {
+        "x": 43,
+        "y": 37
+      },
+      "clickCoords": {
+        "x": 940,
+        "y": 376
+      },
       "description": "[보드 추가 팝업] 'SKIN9' 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<label class=\"tb_skin9 rdobtn\"><input name=\"aglTaskBrdReg_taskBrdSkin\" type=\"radio\" value=\"tbd_skin9\" class=\"input_rdo\"><span class=\"thmb\"></span><span class=\"txt\">SKIN9</span></label>",
@@ -256,6 +377,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible ul#aglTaskBrdReg_taskBrdBgList label.rdobtn:has(input[name='aglTaskBrdReg_taskBrdBg'][value='tbd_bg5']):visible, .ui-dialog:visible ul#aglTaskBrdReg_taskBrdBgList label.rdobtn:has(input[value='tbd_bg5']):visible, .ui-dialog:visible label.rdobtn:has(input[value='tbd_bg5']):visible, .ui-dialog:visible label.rdobtn:has(input[name='aglTaskBrdReg_taskBrdBg'][value='tbd_bg5']):visible, ul#aglTaskBrdReg_taskBrdBgList > li:nth-of-type(5) > label.tb_bg5.rdobtn:visible",
+      "cursorOffset": {
+        "x": 5,
+        "y": 36
+      },
+      "clickCoords": {
+        "x": 1038,
+        "y": 522
+      },
       "description": "[보드 추가 팝업] 'BG5' 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<label class=\"tb_bg5 rdobtn\"><input name=\"aglTaskBrdReg_taskBrdBg\" type=\"radio\" value=\"tbd_bg5\" class=\"input_rdo\"><span class=\"thmb\"></span><span class=\"txt\">BG5</span></label>",
@@ -270,6 +399,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible ul.nav.nav_tabs a:text-is('설정'):visible, div#aglTaskReg_taskBoard > div.tabbable.tab_lar:nth-of-type(2) > ul.nav.nav_tabs.mgb > li:nth-of-type(3) > a:visible, .ui-dialog:visible a:text-is('설정'):visible",
+      "cursorOffset": {
+        "x": 56,
+        "y": 19
+      },
+      "clickCoords": {
+        "x": 1087,
+        "y": 185
+      },
       "description": "[보드 추가 팝업] '설정' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" data-toggle=\"tab\">설정</a>",
@@ -284,6 +421,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible ul.nav.nav_tabs a:text-is('멤버'):visible, .ui-dialog:visible a:text-is('멤버'):visible, div#aglTaskReg_taskBoard > div.tabbable.tab_lar:nth-of-type(2) > ul.nav.nav_tabs.mgb > li:nth-of-type(1) > a:visible",
+      "cursorOffset": {
+        "x": 63,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 808,
+        "y": 179
+      },
       "description": "[보드 추가 팝업] '멤버' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" data-toggle=\"tab\">멤버</a>",
@@ -298,6 +443,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible button#aglTaskBrdReg_shareAddBtn:visible, button#aglTaskBrdReg_shareAddBtn:visible, .ui-dialog:visible div.fl button.btn.btn_sml:text-is('추가'):visible",
+      "cursorOffset": {
+        "x": 21,
+        "y": 8
+      },
+      "clickCoords": {
+        "x": 777,
+        "y": 621
+      },
       "description": "[보드 추가 팝업] '추가' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"aglTaskBrdReg_shareAddBtn\" type=\"button\" class=\"btn btn_sml\"><i class=\"ico ico_plus\"></i> 추가</button>",
@@ -311,21 +464,37 @@
     },
     {
       "type": "click",
-      "selector": ".ui-dialog:visible .dynatree-title:text-is('부서'):visible, .ui-dialog:visible .dynatree-title:has-text('부서'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서']:has-text('부서'):visible, .ui-dialog:visible span.dynatree-node.dynatree-lazy a.dynatree-title:text-is('부서'):visible, .ui-dialog:visible a.dynatree-title:has-text('부서'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서']:visible",
-      "description": "[공유자 설정 팝업] 트리 '부서' 항목 클릭",
+      "selector": ".dynatree-title:text-is('부서'):visible, .dynatree-title:has-text('부서'):visible, div#org_tree_box > ul.dynatree-container > li > ul > li:nth-of-type(5):visible",
+      "cursorOffset": {
+        "x": 99,
+        "y": 2
+      },
+      "clickCoords": {
+        "x": 611,
+        "y": 321
+      },
+      "description": "[공유자 설정 팝업] '부서' 요소 클릭",
       "recordedByEyedropper": true,
-      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"dynatree-title\" title=\"부천대학교 &gt; 부서\"> 부서 </a>",
+      "targetHtml": "<li class=\"\"><span class=\"dynatree-node dynatree-folder dynatree-has-children dynatree-lazy dynatree-exp-cd dynatree-ico-cf\"><span class=\"dynatree-expander\"></span><span class=\"dynatree-checkbox\"></span><span class=\"dynatree-icon\"></span> <a href=\"#\" onclick=\"return false;\" class=\"dynatree-title\" title=\"부천대학교 &gt; 부서\"> 부서 </a> </span></li>",
       "_lastHumanTarget": "부서"
     },
     {
       "type": "wait",
       "ms": 1000,
-      "description": "[공유자 설정 팝업] 트리 '부서' 항목 반응 대기",
+      "description": "[공유자 설정 팝업] '부서' 요소 반응 대기",
       "_lastHumanTarget": "부서"
     },
     {
       "type": "click",
       "selector": ".ui-dialog:visible .dynatree-title:text-is('대학본부'):visible, .ui-dialog:visible .dynatree-title:has-text('대학본부'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서 > 대학본부']:has-text('대학본부'):visible, .ui-dialog:visible span.dynatree-node.dynatree-lazy a.dynatree-title:has-text('대학본부'):visible, .ui-dialog:visible a.dynatree-title:has-text('대학본부'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서 > 대학본부']:visible",
+      "cursorOffset": {
+        "x": 30,
+        "y": 8
+      },
+      "clickCoords": {
+        "x": 635,
+        "y": 366
+      },
       "description": "[공유자 설정 팝업] 트리 '대학본부' 항목 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"dynatree-title\" title=\"부천대학교 &gt; 부서 &gt; 대학본부\"> 대학본부 </a>",
@@ -340,6 +509,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible .dynatree-title:text-is('사무처'):visible, .ui-dialog:visible .dynatree-title:has-text('사무처'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서 > 대학본부 > 사무처']:has-text('사무처'):visible, .ui-dialog:visible span.dynatree-node.dynatree-lazy a.dynatree-title:has-text('사무처'):visible, .ui-dialog:visible a.dynatree-title:has-text('사무처'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서 > 대학본부 > 사무처']:visible",
+      "cursorOffset": {
+        "x": 21,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 634,
+        "y": 442
+      },
       "description": "[공유자 설정 팝업] 트리 '사무처' 항목 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"dynatree-title\" title=\"부천대학교 &gt; 부서 &gt; 대학본부 &gt; 사무처\"> 사무처 </a>",
@@ -353,7 +530,15 @@
     },
     {
       "type": "click",
-      "selector": ".ui-dialog:visible ul#orgUserList label.chkbox:has([data-emp-id='M574690975']):visible, .ui-dialog:visible ul#orgUserList label.user_info.chkbox:has-text('김병훈 담당 사무처'):visible, .ui-dialog:visible ul#orgUserList label.user_info.chkbox:has-text('김병훈'):visible, .ui-dialog:visible label.user_info.chkbox:has-text('김병훈 담당 사무처'):visible, .ui-dialog:visible label.user_info.chkbox:has-text('김병훈'):visible, .ui-dialog:visible label.chkbox:has([data-emp-id='M574690975']):visible, ul#orgUserList > li:nth-of-type(17) > label.user_info.chkbox:visible",
+      "selector": ".ui-dialog:visible ul#orgUserList label.chkbox:has([data-emp-id='M574690975']):visible, .ui-dialog:visible ul#orgUserList label.user_info.chkbox:has-text('김병훈 담당 사무처'):visible, .ui-dialog:visible label.user_info.chkbox:has-text('김병훈 담당 사무처'):visible, ul#orgUserList > li:has-text('김병훈') > label.user_info.chkbox:visible",
+      "cursorOffset": {
+        "x": 29,
+        "y": 46
+      },
+      "clickCoords": {
+        "x": 810,
+        "y": 311
+      },
       "description": "[공유자 설정 팝업] '김병훈 담당 사무처' 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<label class=\"user_info chkbox\"><input type=\"checkbox\" value=\"\" title=\"선택\" class=\"input_chk lst_chk _chk\"><a name=\"userLyr\" href=\"#\" onclick=\"return false;\" title=\"사용자 정보\" class=\"ico ico_info\" data-emp-id=\"M574690975\">김병훈 담당 사무처</label>",
@@ -368,6 +553,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible div.btn_area button._confirm.btn.btn_med:text-is('확인'):visible, .ui-dialog:visible div#btnArea button._confirm:visible, .ui-dialog:visible button._confirm:visible, .ui-dialog:visible div#btnArea button._confirm.btn.btn_med:has-text('확인'):visible, .ui-dialog:visible div#btnArea button._confirm:has-text('확인'):visible",
+      "cursorOffset": {
+        "x": 28,
+        "y": 27
+      },
+      "clickCoords": {
+        "x": 926,
+        "y": 552
+      },
       "description": "[공유자 설정 팝업] '확인' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" class=\"btn btn_med btn_pri _confirm\"><strong>확인</strong></button>",
@@ -382,6 +575,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible div#aglTaskGrpReg_btmBtns div.btn_area button._saveBtn.btn.btn_pri:text-is('저장'):visible, .ui-dialog:visible div#aglTaskGrpReg_btmBtns button._saveBtn:visible, div#aglTaskGrpReg_btmBtns > button._saveBtn.btn.btn_pri:nth-of-type(1):visible, .ui-dialog:visible div#aglTaskGrpReg_btmBtns button._saveBtn:has-text('저장'):visible, .ui-dialog:visible div.btn_area button._saveBtn.btn.btn_pri:text-is('저장'):visible, .ui-dialog:visible button._saveBtn:visible",
+      "cursorOffset": {
+        "x": 23,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 937,
+        "y": 684
+      },
       "description": "[보드 추가 팝업] '저장' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" class=\"btn btn_pri _saveBtn\"><strong>저장</strong></button>",
@@ -396,6 +597,14 @@
     {
       "type": "click",
       "selector": "div.board_card a.card_info:has-text('공동업무 보드 0% 0/0'):visible, ul#aglTaskBrdList_brdList a.card_info:has-text('공동업무 보드'):visible, a.card_info:has-text('공동업무 보드'):visible, ul#aglTaskBrdList_brdList a.card_info:has-text('공동업무 보드 0% 0/0'):visible",
+      "cursorOffset": {
+        "x": 101,
+        "y": 42
+      },
+      "clickCoords": {
+        "x": 391,
+        "y": 290
+      },
       "description": "'공동업무 보드 0% 0/0' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" class=\"card_info\">공동업무 보드 0% 0/0</a>",
@@ -410,6 +619,14 @@
     {
       "type": "click",
       "selector": "div#task_board > div.task_group.color_7:nth-of-type(4) > div.group_tit:nth-of-type(1) > div.optn:nth-of-type(2) > button._taskGrpSetup.btn.btn_ico:nth-of-type(2):visible, div#task_board button._taskGrpSetup:has-text('설정'):visible, div#task_board button._taskGrpSetup:visible, div#task_board button._taskGrpSetup[title='설정']:visible, div#task_board button[title='설정']:visible",
+      "cursorOffset": {
+        "x": 3,
+        "y": 14
+      },
+      "clickCoords": {
+        "x": 1431,
+        "y": 205
+      },
       "description": "'설정' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"설정\" class=\"btn btn_ico _taskGrpSetup\"><i class=\"ico ico_setup\"><span>설정</span></i></button>",
@@ -424,6 +641,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible div#aglTaskGrpReg_btmBtns button.btn_del._delBtn.btn:has-text('삭제'):visible, div#aglTaskGrpReg_btmBtns > button.btn_del._delBtn.btn:nth-of-type(2):visible, .ui-dialog:visible div#aglTaskGrpReg_btmBtns button.btn_del._delBtn:has-text('삭제'):visible, .ui-dialog:visible div.btn_area button.btn_del._delBtn.btn:text-is('삭제'):visible, .ui-dialog:visible button.btn_del._delBtn.btn:has-text('삭제'):visible",
+      "cursorOffset": {
+        "x": 31,
+        "y": 26
+      },
+      "clickCoords": {
+        "x": 961,
+        "y": 675
+      },
       "description": "[할일그룹 설정 팝업] '삭제' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" class=\"btn btn_del _delBtn\" style=\"\">삭제</button>",
@@ -438,6 +663,14 @@
     {
       "type": "click",
       "selector": "div#task_board > div.task_group.color_11:nth-of-type(4) > div.group_tit:nth-of-type(1) > div.optn:nth-of-type(2) > button._taskGrpSetup.btn.btn_ico:nth-of-type(2):visible, div#task_board button._taskGrpSetup:has-text('설정'):visible, div#task_board button._taskGrpSetup:visible, div#task_board button._taskGrpSetup[title='설정']:visible, div#task_board button[title='설정']:visible",
+      "cursorOffset": {
+        "x": 2,
+        "y": 14
+      },
+      "clickCoords": {
+        "x": 1429,
+        "y": 205
+      },
       "description": "'설정' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"설정\" class=\"btn btn_ico _taskGrpSetup\"><i class=\"ico ico_setup\"><span>설정</span></i></button>",
@@ -453,6 +686,14 @@
       "type": "type",
       "selector": ".ui-dialog:visible input#aglTaskGrpReg_taskGrpName:visible, input#aglTaskGrpReg_taskGrpName:visible, .ui-dialog:visible input[placeholder*='그룹명']:visible, .ui-dialog:visible input[title*='그룹명']:visible",
       "text": "이슈",
+      "cursorOffset": {
+        "x": 38,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 878,
+        "y": 308
+      },
       "description": "[할일그룹 설정 팝업] '그룹명' 입력창에 '이슈' 입력",
       "recordedByEyedropper": true,
       "targetHtml": "<input id=\"aglTaskGrpReg_taskGrpName\" type=\"text\" title=\"그룹명\" placeholder=\"그룹명\" class=\"input_txt\" maxlength=\"30\">",
@@ -467,6 +708,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible div#aglTaskGrpReg_pallette label.rdobtn:has(input[name='plt2'][value='color_8']):visible, .ui-dialog:visible div#aglTaskGrpReg_pallette label.rdobtn:has(input[value='color_8']):visible, .ui-dialog:visible label.rdobtn:has(input[value='color_8']):visible, .ui-dialog:visible label.rdobtn:has(input[name='plt2'][value='color_8']):visible, div#aglTaskGrpReg_pallette > ul.plt_ul > li:nth-of-type(8) > label.color_8.rdobtn:visible",
+      "cursorOffset": {
+        "x": 15,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 900,
+        "y": 402
+      },
       "description": "[할일그룹 설정 팝업] '#ca4f58' 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<label class=\"color_8 rdobtn\"><input name=\"plt2\" type=\"radio\" value=\"color_8\" class=\"input_rdo\"><span>#ca4f58</span></label>",
@@ -474,13 +723,21 @@
     },
     {
       "type": "wait",
-      "ms": 1000,
+      "ms": 600,
       "description": "[할일그룹 설정 팝업] '#ca4f58' 요소 반응 대기",
       "_lastHumanTarget": "#ca4f58"
     },
     {
       "type": "click",
       "selector": ".ui-dialog:visible div#aglTaskGrpReg_iconBox label.rdobtn:has(input[name='icon'][value='ticon_18']):visible, .ui-dialog:visible div#aglTaskGrpReg_iconBox label.rdobtn:has(input[value='ticon_18']):visible, .ui-dialog:visible label.rdobtn:has(input[value='ticon_18']):visible, .ui-dialog:visible label.rdobtn:has(input[name='icon'][value='ticon_18']):visible, div#aglTaskGrpReg_iconBox > ul.icon_ul > li:nth-of-type(18) > label.ticon_18.rdobtn:visible",
+      "cursorOffset": {
+        "x": 24,
+        "y": 8
+      },
+      "clickCoords": {
+        "x": 1068,
+        "y": 521
+      },
       "description": "[할일그룹 설정 팝업] 'ICON18' 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<label class=\"ticon_18 rdobtn\"><input name=\"icon\" type=\"radio\" value=\"ticon_18\" class=\"input_rdo\"><i class=\"icon\"><span>ICON18</span></i></label>",
@@ -488,13 +745,21 @@
     },
     {
       "type": "wait",
-      "ms": 1000,
+      "ms": 600,
       "description": "[할일그룹 설정 팝업] 'ICON18' 요소 반응 대기",
       "_lastHumanTarget": "ICON18"
     },
     {
       "type": "click",
       "selector": ".ui-dialog:visible div.btn_area button._saveBtn.btn.btn_pri:text-is('저장'):visible, .ui-dialog:visible div#aglTaskGrpReg_btmBtns button._saveBtn:visible, .ui-dialog:visible button._saveBtn:visible, .ui-dialog:visible div#aglTaskGrpReg_btmBtns button._saveBtn.btn.btn_pri:has-text('저장'):visible, .ui-dialog:visible div#aglTaskGrpReg_btmBtns button._saveBtn:has-text('저장'):visible",
+      "cursorOffset": {
+        "x": 41,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 907,
+        "y": 665
+      },
       "description": "[할일그룹 설정 팝업] '저장' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" class=\"btn btn_pri _saveBtn\"><strong>저장</strong></button>",
@@ -502,13 +767,21 @@
     },
     {
       "type": "wait",
-      "ms": 1600,
+      "ms": 1100,
       "description": "[할일그룹 설정 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기",
       "_lastHumanTarget": "저장"
     },
     {
       "type": "click",
       "selector": "div#aglTaskList_taskGrpReg > button.group_add._taskGrpReg:visible, div#aglTaskList_taskGrpReg div.task_group_add button.group_add._taskGrpReg:visible, div#aglTaskList_taskGrpReg button.group_add._taskGrpReg:visible, div#aglTaskList_taskGrpReg button.group_add._taskGrpReg:has-text('그룹 추가'):visible, div#aglTaskList_taskGrpReg button._taskGrpReg:visible, div.task_group_add button.group_add._taskGrpReg:visible, button.group_add._taskGrpReg:visible",
+      "cursorOffset": {
+        "x": 5,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 1476,
+        "y": 209
+      },
       "description": "'그룹 추가' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" class=\"group_add _taskGrpReg\"><i class=\"ico ico_plus\"></i><span class=\"txt\">그룹 추가</span></button>",
@@ -524,6 +797,14 @@
       "type": "type",
       "selector": ".ui-dialog:visible input#aglTaskGrpReg_taskGrpName:visible, input#aglTaskGrpReg_taskGrpName:visible, .ui-dialog:visible input[placeholder*='그룹명']:visible, .ui-dialog:visible input[title*='그룹명']:visible",
       "text": "취소",
+      "cursorOffset": {
+        "x": 113,
+        "y": 6
+      },
+      "clickCoords": {
+        "x": 953,
+        "y": 298
+      },
       "description": "[할일그룹 추가 팝업] '그룹명' 입력창에 '취소' 입력",
       "recordedByEyedropper": true,
       "targetHtml": "<input id=\"aglTaskGrpReg_taskGrpName\" type=\"text\" title=\"그룹명\" placeholder=\"그룹명\" class=\"input_txt\" maxlength=\"30\">",
@@ -538,6 +819,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible div#aglTaskGrpReg_pallette label.rdobtn:has(input[name='plt2'][value='color_11']):visible, .ui-dialog:visible div#aglTaskGrpReg_pallette label.rdobtn:has(input[value='color_11']):visible, .ui-dialog:visible label.rdobtn:has(input[value='color_11']):visible, .ui-dialog:visible label.rdobtn:has(input[name='plt2'][value='color_11']):visible, div#aglTaskGrpReg_pallette > ul.plt_ul > li:nth-of-type(11) > label.color_11.rdobtn:visible",
+      "cursorOffset": {
+        "x": 18,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 1023,
+        "y": 401
+      },
       "description": "[할일그룹 추가 팝업] '#8889e2' 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<label class=\"color_11 rdobtn\"><input name=\"plt2\" type=\"radio\" value=\"color_11\" class=\"input_rdo\"><span>#8889e2</span></label>",
@@ -545,13 +834,21 @@
     },
     {
       "type": "wait",
-      "ms": 1000,
+      "ms": 600,
       "description": "[할일그룹 추가 팝업] '#8889e2' 요소 반응 대기",
       "_lastHumanTarget": "#8889e2"
     },
     {
       "type": "click",
       "selector": ".ui-dialog:visible div.btn_area button._saveBtn.btn.btn_pri:text-is('저장'):visible, .ui-dialog:visible div#aglTaskGrpReg_btmBtns button._saveBtn:visible, .ui-dialog:visible button._saveBtn:visible, .ui-dialog:visible div#aglTaskGrpReg_btmBtns button._saveBtn.btn.btn_pri:has-text('저장'):visible, .ui-dialog:visible div#aglTaskGrpReg_btmBtns button._saveBtn:has-text('저장'):visible",
+      "cursorOffset": {
+        "x": 38,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 936,
+        "y": 665
+      },
       "description": "[할일그룹 추가 팝업] '저장' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" class=\"btn btn_pri _saveBtn\"><strong>저장</strong></button>",
@@ -559,13 +856,21 @@
     },
     {
       "type": "wait",
-      "ms": 1600,
+      "ms": 1100,
       "description": "[할일그룹 추가 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기",
       "_lastHumanTarget": "저장"
     },
     {
       "type": "click",
-      "selector": "div#task_board > div.task_group.color_10:nth-of-type(1) > div.group_tit:nth-of-type(1) > div.optn:nth-of-type(2) > button._taskAdd.btn.btn_ico:nth-of-type(1):visible, div#task_board button._taskAdd:has-text('할일 추가'):visible, div#task_board button._taskAdd:visible, div#task_board button._taskAdd[title='할일 추가']:visible, div#task_board button[title='할일 추가']:visible, button._taskAdd[title='할일 추가']:visible, button[title='할일 추가']:visible",
+      "selector": "div#task_board > div.task_group.color_10:nth-of-type(1) > div.group_tit:nth-of-type(1) > div.optn:nth-of-type(2) > button._taskAdd.btn.btn_ico:nth-of-type(1):visible, div#task_board div.optn button._taskAdd.btn.btn_ico:visible, div#task_board button._taskAdd:has-text('할일 추가'):visible, div#task_board button._taskAdd:visible, div#task_board button._taskAdd[title='할일 추가']:visible, div#task_board button[title='할일 추가']:visible, div.optn button._taskAdd.btn.btn_ico:visible, button._taskAdd[title='할일 추가']:visible, button[title='할일 추가']:visible",
+      "cursorOffset": {
+        "x": 10,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 512,
+        "y": 203
+      },
       "description": "'할일 추가' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"할일 추가\" class=\"btn btn_ico _taskAdd\"><i class=\"ico ico_plus\"><span>할일 추가</span></i></button>",
@@ -581,6 +886,14 @@
       "type": "type",
       "selector": "div[contenteditable='true'][placeholder*='제목을 입력하세요.']:visible, div.sub[contenteditable='true']:visible, ul.mg_ul > li.task_write.animated.faster > div.task_card > div.task_info > div.task_inner > div.sub:visible, div[contenteditable='true']:visible",
       "text": "교과목 시간표 최종 점검",
+      "cursorOffset": {
+        "x": 79,
+        "y": 2
+      },
+      "clickCoords": {
+        "x": 374,
+        "y": 237
+      },
       "description": "'제목을 입력하세요.' 입력창에 '교과목 시간표 최종 점검' 입력",
       "recordedByEyedropper": true,
       "targetHtml": "<div class=\"sub\" placeholder=\"제목을 입력하세요.\" contenteditable=\"true\">교과목 시간표 최종 점검</div>",
@@ -594,10 +907,40 @@
     },
     {
       "type": "click",
-      "selector": "div.group_lst:nth-of-type(2) > ul.mg_ul > li._task > div.task_card > div.task_info._taskInfo:nth-of-type(2) > div.task_inner:visible",
+      "selector": "div.group_lst ul.mg_ul:has-text('교과목 시간표 최종 점검'):visible, div#task_board ul.mg_ul:has-text('교과목 시간표 최종 점검'):visible, ul.mg_ul:has-text('교과목 시간표 최종 점검'):visible",
+      "cursorOffset": {
+        "x": 196,
+        "y": 163
+      },
+      "clickCoords": {
+        "x": 476,
+        "y": 385
+      },
       "description": "'교과목 시간표 최종 점검' 요소 클릭",
       "recordedByEyedropper": true,
-      "targetHtml": "<div class=\"task_inner\"> <div class=\"sub\">교과목 시간표 최종 점검</div> <div class=\"desc\"></div> <div class=\"info\"> <div class=\"count\"> </div> <div class=\"date\"><em>등록일:</em> 2026-10-29</div> <div class=\"user\"> </div> </div> </div>",
+      "targetHtml": "<ul class=\"mg_ul ui-sortable\"><i class=\"ico ico_user\">교과목 시간표 최종 점검</ul>",
+      "_lastHumanTarget": "교과목 시간표 최종 점검"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'교과목 시간표 최종 점검' 요소 반응 대기",
+      "_lastHumanTarget": "교과목 시간표 최종 점검"
+    },
+    {
+      "type": "click",
+      "selector": "div.group_lst:nth-of-type(2) > ul.mg_ul > li._task > div.task_card > div.task_info._taskInfo:nth-of-type(2) > div.task_inner:visible",
+      "cursorOffset": {
+        "x": 146,
+        "y": 43
+      },
+      "clickCoords": {
+        "x": 426,
+        "y": 265
+      },
+      "description": "'교과목 시간표 최종 점검' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<div class=\"task_inner\"> <div class=\"sub\">교과목 시간표 최종 점검</div> <div class=\"desc\"></div> <div class=\"info\"> <div class=\"count\"> </div> <div class=\"date\"><em>등록일:</em> 2026-11-02</div> <div class=\"user\"> </div> </div> </div>",
       "_lastHumanTarget": "교과목 시간표 최종 점검"
     },
     {
@@ -609,6 +952,14 @@
     {
       "type": "click",
       "selector": "tr#aglTaskView_workerBox > td > div.assign_div > button._setWorker.btn.btn_ico:visible, div.assign_div button._setWorker.btn.btn_ico:visible, button._setWorker.btn.btn_ico:visible, tr:has(th:has-text('담당자')) button._setWorker.btn.btn_ico:visible, tr#aglTaskView_workerBox button._setWorker[title='선택']:visible, tr#aglTaskView_workerBox button._setWorker:has-text('선택'):visible, tr#aglTaskView_workerBox button._setWorker:visible",
+      "cursorOffset": {
+        "x": 13,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 733,
+        "y": 223
+      },
       "description": "[담당자] '선택' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"선택\" class=\"btn btn_ico _setWorker\"><i class=\"ico ico_plus\"><span>선택</span></i></button>",
@@ -623,6 +974,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible ul#aglMemberSelect_memberList label:has(input[name='aglMemberSelect_mbrUser'][value='199078885']):visible, .ui-dialog:visible ul#aglMemberSelect_memberList label:has(input[value='199078885']):visible, .ui-dialog:visible label:has(input[value='199078885']):visible, .ui-dialog:visible ul.user_lst.user_chk_lst label:has-text('임 임시계정(전임) 전임교원(정보보안센터)'):visible, .ui-dialog:visible label:has(input[name='aglMemberSelect_mbrUser'][value='199078885']):visible, ul#aglMemberSelect_memberList > li:nth-of-type(2) > label:visible",
+      "cursorOffset": {
+        "x": 140,
+        "y": 24
+      },
+      "clickCoords": {
+        "x": 941,
+        "y": 381
+      },
       "description": "[할일 배정 팝업] '임 임시계정(전임) 전임교원(정보보안센터' 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<label><input name=\"aglMemberSelect_mbrUser\" type=\"checkbox\" value=\"199078885\" class=\"input_chk lst_chk\">임 임시계정(전임) 전임교원(정보보안센터)</label>",
@@ -637,6 +996,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible div.btn_area button._confirmBtn.btn.btn_pri:text-is('확인'):visible, .ui-dialog:visible div#aglMemberSelect_btmBtns button._confirmBtn:visible, .ui-dialog:visible button._confirmBtn:visible, .ui-dialog:visible div#aglMemberSelect_btmBtns button._confirmBtn.btn.btn_pri:has-text('확인'):visible, .ui-dialog:visible div#aglMemberSelect_btmBtns button._confirmBtn:has-text('확인'):visible",
+      "cursorOffset": {
+        "x": 28,
+        "y": 19
+      },
+      "clickCoords": {
+        "x": 926,
+        "y": 678
+      },
       "description": "[할일 배정 팝업] '확인' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" class=\"btn btn_pri _confirmBtn\"><strong>확인</strong></button>",
@@ -651,6 +1018,14 @@
     {
       "type": "click",
       "selector": "button#aglTaskView_periodSetupBtn:visible, #aglTaskView_periodSetupBtn:visible",
+      "cursorOffset": {
+        "x": 7,
+        "y": 11
+      },
+      "clickCoords": {
+        "x": 727,
+        "y": 257
+      },
       "description": "[기한] #aglTaskView_periodSetupBtn (button) 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"aglTaskView_periodSetupBtn\" type=\"button\" data-toggle=\"dropdown\" class=\"btn btn_limit\"><i class=\"ico ico_date\"></i></button>",
@@ -664,22 +1039,37 @@
     },
     {
       "type": "click",
-      "selector": "#ui-datepicker-div:visible td a:text-is('30'):visible, .ui-datepicker:visible td a:text-is('30'):visible, #ui-datepicker-div:visible td a:has-text('30'):visible, a.ui-state-default:has-text('30'):visible, a.ui-state-default.ui-state-hover:has-text('30'):visible",
-      "text": "30",
-      "description": "[달력 팝업] '30일' 날짜 클릭 클릭",
+      "selector": "div.ui-datepicker-inline.ui-datepicker.ui-helper-clearfix > table.ui-datepicker-calendar > tbody > tr:nth-of-type(1) > td[data-handler='selectDay']:nth-of-type(3) > a:visible, a.ui-state-default:has-text('3'):visible, a.ui-state-default.ui-state-hover:has-text('3'):visible",
+      "cursorOffset": {
+        "x": 5,
+        "y": 11
+      },
+      "clickCoords": {
+        "x": 787,
+        "y": 358
+      },
+      "description": "'3' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
-      "targetHtml": "<a class=\"ui-state-default ui-state-hover\" href=\"#\">30</a>",
-      "_lastHumanTarget": "30"
+      "targetHtml": "<a class=\"ui-state-default ui-state-hover\" href=\"#\">3</a>",
+      "_lastHumanTarget": "3"
     },
     {
       "type": "wait",
       "ms": 1000,
-      "description": "[달력 팝업] '30일' 날짜 클릭 반응 대기",
-      "_lastHumanTarget": "30일"
+      "description": "'3' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "3"
     },
     {
       "type": "click",
       "selector": "div.limit_btn button._confirmBtn.btn.btn_pri:text-is('확인'):visible, div#aglTaskView_deadlineBtns button._confirmBtn:visible, button._confirmBtn:visible, div#aglTaskView_deadlineBtns button._confirmBtn.btn.btn_pri:has-text('확인'):visible, div#aglTaskView_deadlineBtns button._confirmBtn:has-text('확인'):visible",
+      "cursorOffset": {
+        "x": 38,
+        "y": 28
+      },
+      "clickCoords": {
+        "x": 826,
+        "y": 577
+      },
       "description": "[기한] '확인' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" class=\"btn btn_pri _confirmBtn\">확인</button>",
@@ -694,6 +1084,14 @@
     {
       "type": "click",
       "selector": "button#aglTaskView_edit_task:visible, #aglTaskView_edit_task:visible, div.editor_tool button.btn:has-text('내용 편집'):visible, div#aglTaskView_task_view button.btn:has-text('내용 편집'):visible",
+      "cursorOffset": {
+        "x": 38,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 678,
+        "y": 310
+      },
       "description": "'내용 편집' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"aglTaskView_edit_task\" type=\"button\" class=\"btn\">내용 편집</button>",
@@ -708,15 +1106,19 @@
     {
       "type": "type",
       "selector": "div[data-document-fixed-width='false']:visible, div[data-document-padding-top='18']:visible, div[data-document-padding-bottom='18']:visible, div[data-document-padding-left='23']:visible, div[data-document-padding-right='23']:visible, [role='textbox'].se-contents:visible",
-      "text": "교과목 시간표 최종 점검 하겠습니다.",
+      "text": "교과목 시간표 최종 점검하겠습니다.",
       "editorParaIndex": 0,
       "cursorOffset": {
-        "x": 169,
-        "y": 27
+        "x": 137,
+        "y": 79
       },
-      "description": "'에디터 본문' 입력 영역에 '교과목 시간표 최종 점검 하겠습니다.' 입력",
+      "clickCoords": {
+        "x": 776,
+        "y": 483
+      },
+      "description": "'에디터 본문' 입력 영역에 '교과목 시간표 최종 점검하겠습니다.' 입력",
       "recordedByEyedropper": true,
-      "targetHtml": "<div class=\"se-contents\" role=\"textbox\" data-document-fixed-width=\"false\" data-document-padding-top=\"18\" data-document-padding-bottom=\"18\" data-document-padding-left=\"23\" data-document-padding-right=\"23\"><p id=\"se_3d25d61e-518c-4782-87a8-31f3240e89d3\" style=\"margin: 0px; display: block; overflow-wrap: break-word;\">교과목 시간표 최종 점검 하겠습니다.</div>",
+      "targetHtml": "<div class=\"se-contents\" role=\"textbox\" data-document-fixed-width=\"false\" data-document-padding-top=\"18\" data-document-padding-bottom=\"18\" data-document-padding-left=\"23\" data-document-padding-right=\"23\"><p id=\"se_28afd267-7acb-47ee-a496-14a1b35b75d1\" style=\"margin: 0px; display: block; overflow-wrap: break-word;\">교과목 시간표 최종 점검하겠습니다.</div>",
       "_lastHumanTarget": "에디터 본문"
     },
     {
@@ -728,6 +1130,14 @@
     {
       "type": "click",
       "selector": "button#aglTaskView_taskCn_update:visible, #aglTaskView_taskCn_update:visible, div.btn_area button.btn.btn_pri:text-is('저장'):visible, div#aglTaskView_task_edit button.btn.btn_pri:has-text('저장'):visible",
+      "cursorOffset": {
+        "x": 28,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 1171,
+        "y": 701
+      },
       "description": "'저장' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" id=\"aglTaskView_taskCn_update\" class=\"btn btn_pri\"><strong>저장</strong></button>",
@@ -741,7 +1151,15 @@
     },
     {
       "type": "click",
-      "selector": "div#aglTaskView_labelBox > div.box_cont:nth-of-type(2) > div.label_bar > div.optn:nth-of-type(2) > button._addLabel.btn.btn_ico:visible, div#aglTaskView_labelBox button._addLabel:has-text('라벨 추가'):visible, div#aglTaskView_labelBox button._addLabel:visible, div#aglTaskView_labelBox button._addLabel[title='라벨 추가']:visible, div#aglTaskView_labelBox button[title='라벨 추가']:visible, button._addLabel[title='라벨 추가']:visible, button[title='라벨 추가']:visible",
+      "selector": "div#aglTaskView_labelBox > div.box_cont:nth-of-type(2) > div.label_bar > div.optn:nth-of-type(2) > button._addLabel.btn.btn_ico:visible, div#aglTaskView_labelBox div.optn button._addLabel.btn.btn_ico:visible, div#aglTaskView_labelBox button._addLabel:has-text('라벨 추가'):visible, div#aglTaskView_labelBox button._addLabel:visible, div#aglTaskView_labelBox button._addLabel[title='라벨 추가']:visible, div#aglTaskView_labelBox button[title='라벨 추가']:visible, div.optn button._addLabel.btn.btn_ico:visible, button._addLabel[title='라벨 추가']:visible, button[title='라벨 추가']:visible",
+      "cursorOffset": {
+        "x": 15,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 1243,
+        "y": 400
+      },
       "description": "'라벨 추가' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"라벨 추가\" class=\"btn btn_ico _addLabel\"><i class=\"ico ico_label\"><span>라벨 추가</span></i></button>",
@@ -755,21 +1173,192 @@
     },
     {
       "type": "click",
-      "selector": ".ui-dialog:visible li#TA01m60seypssx5nwz772e74p3hp label:has(input[value='TA01m60seypssx5nwz772e74p3hp']):visible, .ui-dialog:visible label:has(input[value='TA01m60seypssx5nwz772e74p3hp']):visible, .ui-dialog:visible li:has-text('점검') label:has(input[value='TA01m60seypssx5nwz772e74p3hp']):visible, .ui-dialog:visible li:has-text('점검') > label:visible, .ui-dialog:visible li._label label:text-is('점검'):visible, li#TA01m60seypssx5nwz772e74p3hp > label:visible, .ui-dialog:visible label:text-is('점검'):visible",
+      "selector": "ul#aglLabelSelect_labelList button.btn_edit:has-text('수정'):visible, ul#aglLabelSelect_labelList button.btn_edit:visible, ul#aglLabelSelect_labelList button.btn_edit[title='수정']:visible, ul#aglLabelSelect_labelList button[title='수정']:visible, ul#aglLabelSelect_labelList > li._label:nth-of-type(3) > button.btn_edit:visible",
+      "cursorOffset": {
+        "x": 11,
+        "y": 8
+      },
+      "clickCoords": {
+        "x": 1077,
+        "y": 277
+      },
+      "description": "[라벨 선택 팝업] '수정' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" title=\"수정\" class=\"btn_edit\"><i class=\"ico ico_write\"><span>수정</span></i></button>",
+      "_lastHumanTarget": "수정"
+    },
+    {
+      "type": "wait",
+      "ms": 600,
+      "description": "[라벨 선택 팝업] '수정' 버튼 반응 대기",
+      "_lastHumanTarget": "수정"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#aglLabelReg_delBtn:visible, .ui-dialog:visible div#aglLabelReg_btns button.btn_del._delBtn.btn:has-text('삭제'):visible, .ui-dialog:visible div.btn_area button.btn_del._delBtn.btn:text-is('삭제'):visible, .ui-dialog:visible button.btn_del._delBtn.btn:has-text('삭제'):visible",
+      "cursorOffset": {
+        "x": 43,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 973,
+        "y": 548
+      },
+      "description": "[라벨 정보 팝업] '삭제' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" id=\"aglLabelReg_delBtn\" class=\"btn btn_del _delBtn\" style=\"\">삭제</button>",
+      "_lastHumanTarget": "삭제"
+    },
+    {
+      "type": "wait",
+      "ms": 600,
+      "description": "[라벨 정보 팝업] '삭제' 버튼 반응 대기",
+      "_lastHumanTarget": "삭제"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#naon-cmm-confirm-ok:visible",
+      "cursorOffset": {
+        "x": 63,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 916,
+        "y": 133
+      },
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"naon-cmm-confirm-ok\" type=\"button\" class=\"abtn abtn_dan\"><i class=\"ico ico_check\"></i> 확인</button>",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "wait",
+      "ms": 600,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#aglLabelSelect_lblRegBtn:visible, .ui-dialog:visible div.label_add button.btn_link.btn:has-text('라벨 추가'):visible, .ui-dialog:visible div#aglLabelSelect button.btn_link.btn:has-text('라벨 추가'):visible",
+      "cursorOffset": {
+        "x": 52,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 882,
+        "y": 277
+      },
+      "description": "[라벨 선택 팝업] '라벨 추가' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" id=\"aglLabelSelect_lblRegBtn\" class=\"btn btn_link\"><i class=\"ico ico_plus\"></i> 라벨 추가</button>",
+      "_lastHumanTarget": "라벨 추가"
+    },
+    {
+      "type": "wait",
+      "ms": 600,
+      "description": "[라벨 선택 팝업] '라벨 추가' 버튼 반응 대기",
+      "_lastHumanTarget": "라벨 추가"
+    },
+    {
+      "type": "type",
+      "selector": ".ui-dialog:visible input#aglLabelReg_lblName:visible, input#aglLabelReg_lblName:visible, .ui-dialog:visible input[placeholder*='라벨 이름']:visible, .ui-dialog:visible input[title*='라벨 이름']:visible",
+      "text": "점검",
+      "cursorOffset": {
+        "x": 97,
+        "y": 23
+      },
+      "clickCoords": {
+        "x": 927,
+        "y": 420
+      },
+      "description": "[라벨 정보 팝업] '라벨 이름' 입력창에 '점검' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input id=\"aglLabelReg_lblName\" type=\"text\" title=\"라벨 이름\" placeholder=\"라벨 이름\" class=\"input_txt\" maxlength=\"30\">",
+      "_lastHumanTarget": "라벨 이름"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible ul#aglLabelReg_colorList label.rdobtn:has(input[name='aglLabelReg_lblColor'][value='red']):visible, .ui-dialog:visible ul#aglLabelReg_colorList label.rdobtn:has(input[value='red']):visible, .ui-dialog:visible label.rdobtn:has(input[value='red']):visible, .ui-dialog:visible label.rdobtn:has(input[name='aglLabelReg_lblColor'][value='red']):visible, ul#aglLabelReg_colorList > li:nth-of-type(4) > label.rdobtn:visible",
+      "cursorOffset": {
+        "x": 15,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 967,
+        "y": 462
+      },
+      "description": "[라벨 정보 팝업] '빨강' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<label class=\"rdobtn\"> <input name=\"aglLabelReg_lblColor\" type=\"radio\" value=\"red\" class=\"input_rdo\"> <span class=\"label lb_red\"><span class=\"label_txt\">빨강</span></span> </label>",
+      "_lastHumanTarget": "red"
+    },
+    {
+      "type": "wait",
+      "ms": 600,
+      "description": "[라벨 정보 팝업] '빨강' 요소 반응 대기",
+      "_lastHumanTarget": "빨강"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible div.btn_area button._saveBtn.btn.btn_pri:text-is('저장'):visible, .ui-dialog:visible div#aglLabelReg_btns button._saveBtn:visible, .ui-dialog:visible button._saveBtn:visible, .ui-dialog:visible div#aglLabelReg_btns button._saveBtn.btn.btn_pri:has-text('저장'):visible, .ui-dialog:visible div#aglLabelReg_btns button._saveBtn:has-text('저장'):visible",
+      "cursorOffset": {
+        "x": 33,
+        "y": 21
+      },
+      "clickCoords": {
+        "x": 931,
+        "y": 554
+      },
+      "description": "[라벨 정보 팝업] '저장' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"btn btn_pri _saveBtn\"><strong>저장</strong></button>",
+      "_lastHumanTarget": "저장"
+    },
+    {
+      "type": "wait",
+      "ms": 1100,
+      "description": "[라벨 정보 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "저장"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible ul#aglLabelSelect_labelList label:has(input[value='TA01m6daz02wt53m065pzvp61h9b']):visible, .ui-dialog:visible label:has(input[value='TA01m6daz02wt53m065pzvp61h9b']):visible, .ui-dialog:visible li._label label:text-is('점검'):visible, .ui-dialog:visible label:text-is('점검'):visible, ul#aglLabelSelect_labelList > li._label:nth-of-type(3) > label:visible",
+      "cursorOffset": {
+        "x": 89,
+        "y": 8
+      },
+      "clickCoords": {
+        "x": 919,
+        "y": 273
+      },
       "description": "[라벨 선택 팝업] '점검' 요소 클릭",
       "recordedByEyedropper": true,
-      "targetHtml": "<label> <input type=\"checkbox\" value=\"TA01m60seypssx5nwz772e74p3hp\" class=\"input_chk\"> <span title=\"점검\" class=\"label lb_red\"><span class=\"label_txt\">점검</span></span> </label>",
+      "targetHtml": "<label> <input type=\"checkbox\" value=\"TA01m6daz02wt53m065pzvp61h9b\" class=\"input_chk\"> <span title=\"점검\" class=\"label lb_red\"><span class=\"label_txt\">점검</span></span> </label>",
       "_lastHumanTarget": "점검"
     },
     {
       "type": "wait",
-      "ms": 1000,
+      "ms": 600,
       "description": "[라벨 선택 팝업] '점검' 요소 반응 대기",
       "_lastHumanTarget": "점검"
     },
     {
       "type": "click",
       "selector": ".ui-dialog:visible div.btn_area button._confirmBtn.btn.btn_pri:text-is('확인'):visible, .ui-dialog:visible div#aglLabelSelect_btns button._confirmBtn:visible, .ui-dialog:visible button._confirmBtn:visible, .ui-dialog:visible div#aglLabelSelect_btns button._confirmBtn.btn.btn_pri:has-text('확인'):visible, .ui-dialog:visible div#aglLabelSelect_btns button._confirmBtn:has-text('확인'):visible",
+      "cursorOffset": {
+        "x": 23,
+        "y": 25
+      },
+      "clickCoords": {
+        "x": 921,
+        "y": 370
+      },
       "description": "[라벨 선택 팝업] '확인' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" class=\"btn btn_pri _confirmBtn\"><strong>확인</strong></button>",
@@ -777,13 +1366,21 @@
     },
     {
       "type": "wait",
-      "ms": 1600,
+      "ms": 1100,
       "description": "[라벨 선택 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
       "_lastHumanTarget": "확인"
     },
     {
       "type": "click",
       "selector": "div#aglTaskView_labelBox > div.box_cont:nth-of-type(2) > div.label_bar > div.optn:nth-of-type(2) > div.btn_drop > button.drop_tgl.btn.btn_ico:visible, div#aglTaskView_labelBox button.drop_tgl:has-text('부가 기능'):visible, div#aglTaskView_labelBox button.drop_tgl:visible, div#aglTaskView_labelBox button.drop_tgl[title='부가 기능']:visible, div#aglTaskView_labelBox button[title='부가 기능']:visible, button.drop_tgl[title='부가 기능']:visible, button[title='부가 기능']:visible",
+      "cursorOffset": {
+        "x": 16,
+        "y": 10
+      },
+      "clickCoords": {
+        "x": 1272,
+        "y": 391
+      },
       "description": "'부가 기능' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"부가 기능\" data-toggle=\"dropdown\" class=\"btn btn_ico drop_tgl\"><i class=\"ico ico_plus\"><span>부가 기능</span></i></button>",
@@ -798,6 +1395,14 @@
     {
       "type": "click",
       "selector": "ul.drop_menu.pull_right a._addChkList:has-text('체크 리스트 추가'):visible, a._addChkList:has-text('체크 리스트 추가'):visible, div.label_bar > div.optn:nth-of-type(2) > div.btn_drop > ul.drop_menu.pull_right > li:nth-of-type(1) > a._addChkList:visible",
+      "cursorOffset": {
+        "x": 88,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 1247,
+        "y": 429
+      },
       "description": "'체크 리스트 추가' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" class=\"_addChkList\">체크 리스트 추가</a>",
@@ -814,6 +1419,14 @@
       "selector": "div#aglTaskView_chkNew div[contenteditable='true'][placeholder*='체크 리스트를 입력하세요.']:visible, div#aglTaskView_chkNew div.txt._chkNew._chkItemName[contenteditable='true']:visible, div#aglTaskView_chkNew > div.txt._chkNew._chkItemName:visible, div[contenteditable='true'][placeholder*='체크 리스트를 입력하세요.']:visible, div.txt._chkNew._chkItemName[contenteditable='true']:visible",
       "text": "항목 1번",
       "pressEnter": true,
+      "cursorOffset": {
+        "x": 477,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 1142,
+        "y": 483
+      },
       "description": "'체크 리스트를 입력하세요.' 입력창에 '항목 1번' 입력 후 엔터(Enter)",
       "recordedByEyedropper": true,
       "targetHtml": "<div contenteditable=\"true\" placeholder=\"체크 리스트를 입력하세요.\" class=\"txt _chkNew _chkItemName\">항목 1번</div>",
@@ -859,6 +1472,14 @@
     {
       "type": "click",
       "selector": "div#aglTaskView_labelBox > div.box_cont:nth-of-type(2) > div.label_bar > div.optn:nth-of-type(2) > div.btn_drop > button.drop_tgl.btn.btn_ico:visible, div#aglTaskView_labelBox button.drop_tgl:has-text('부가 기능'):visible, div#aglTaskView_labelBox button.drop_tgl:visible, div#aglTaskView_labelBox button.drop_tgl[title='부가 기능']:visible, div#aglTaskView_labelBox button[title='부가 기능']:visible, button.drop_tgl[title='부가 기능']:visible, button[title='부가 기능']:visible",
+      "cursorOffset": {
+        "x": 13,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 1269,
+        "y": 396
+      },
       "description": "'부가 기능' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"부가 기능\" data-toggle=\"dropdown\" class=\"btn btn_ico drop_tgl\"><i class=\"ico ico_plus\"><span>부가 기능</span></i></button>",
@@ -873,6 +1494,14 @@
     {
       "type": "click",
       "selector": "ul.drop_menu.pull_right a._addFile:has-text('첨부파일 추가'):visible, a._addFile:has-text('첨부파일 추가'):visible, div.label_bar > div.optn:nth-of-type(2) > div.btn_drop > ul.drop_menu.pull_right > li:nth-of-type(2) > a._addFile:visible",
+      "cursorOffset": {
+        "x": 54,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 1213,
+        "y": 460
+      },
       "description": "'첨부파일 추가' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" class=\"_addFile\">첨부파일 추가</a>",
@@ -887,22 +1516,30 @@
     {
       "type": "upload",
       "selector": ".ui-dialog:visible div#uploadComponentTarget_aglTaskView_upload div.fileupload-buttonbar div.fileinput-button.btn:has-text('내 PC'):visible, .ui-dialog:visible div#uploadComponentTarget_aglTaskView_upload div.fileinput-button.btn:has-text('내 PC'):visible, div#uploadComponentTarget_aglTaskView_upload > div.fileupload-buttonbar:nth-of-type(1) > div.fileinput-button.btn:visible, .ui-dialog:visible div#uploadComponentTarget_aglTaskView_upload input[type='file'][name='files[]'], .ui-dialog:visible div.fileupload-buttonbar div.fileinput-button.btn:has-text('내 PC'):visible, .ui-dialog:visible div.fileinput-button.btn:has-text('내 PC'):visible, input[type='file'][name='files[]']",
-      "filePath": "data/taskboard/uploads/할일.pdf",
-      "text": "할일.pdf",
-      "description": "[파일 첨부 팝업] '내 PC' 버튼에 '할일.pdf' 첨부",
+      "filePath": "data/taskboard/uploads/자료.pdf",
+      "text": "자료.pdf",
+      "description": "[파일 첨부 팝업] '내 PC' 버튼에 '자료.pdf' 첨부",
       "recordedByEyedropper": true,
       "targetHtml": "<div class=\"btn fileinput-button\"> <i class=\"ico ico_atch\"></i> <span>내 PC</span> <input type=\"file\" title=\"내 PC\" name=\"files[]\" multiple=\"\"> </div>",
       "_lastHumanTarget": "내 PC"
     },
     {
       "type": "wait",
-      "ms": 1400,
+      "ms": 1100,
       "description": "첨부 파일 업로드 및 목록 반영 대기",
       "_lastHumanTarget": ""
     },
     {
       "type": "click",
       "selector": ".ui-dialog:visible button#naonUploadLayer_aglTaskView_upload_submitBtn:visible, .ui-dialog:visible div.btn_area button.btn.btn_med.btn_pri:text-is('저장'):visible, .ui-dialog:visible div#naonUploadLayer_aglTaskView_upload button.btn.btn_med.btn_pri:has-text('저장'):visible, .ui-dialog:visible button.btn.btn_med.btn_pri:has-text('저장'):visible",
+      "cursorOffset": {
+        "x": 22,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 924,
+        "y": 618
+      },
       "description": "[파일 첨부 팝업] '저장' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"naonUploadLayer_aglTaskView_upload_submitBtn\" type=\"submit\" class=\"btn btn_med btn_pri\"><strong>저장</strong></button>",
@@ -910,13 +1547,43 @@
     },
     {
       "type": "wait",
-      "ms": 1600,
+      "ms": 2600,
       "description": "[파일 첨부 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기",
       "_lastHumanTarget": "저장"
     },
     {
       "type": "click",
+      "selector": "ul.nav.nav_tabs a:has-text('활동 내역'):visible, li#aglTaskView_activityTab > a:visible, a:has-text('활동 내역'):visible",
+      "cursorOffset": {
+        "x": 87,
+        "y": 23
+      },
+      "clickCoords": {
+        "x": 846,
+        "y": 705
+      },
+      "description": "'활동 내역' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#tab_2\" data-toggle=\"tab\">활동 내역</a>",
+      "_lastHumanTarget": "활동 내역"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'활동 내역' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "활동 내역"
+    },
+    {
+      "type": "click",
       "selector": "button#aglTaskView_closeBtn:visible, #aglTaskView_closeBtn:visible, button.btn_close[title='닫기']:visible, button[title='닫기']:visible",
+      "cursorOffset": {
+        "x": 22,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 1287,
+        "y": 75
+      },
       "description": "'닫기' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"aglTaskView_closeBtn\" type=\"button\" title=\"닫기\" class=\"btn_close\"><i class=\"icon\"><span>닫기</span></i></button>",
@@ -930,7 +1597,15 @@
     },
     {
       "type": "click",
-      "selector": "button#aglSnb_taskReg:visible, #aglSnb_taskReg:visible, #snb div.workset_btn button.btn.btn_block:has-text('할일 등록'):visible, div#workset_btn button.btn.btn_block:has-text('할일 등록'):visible",
+      "selector": "button#aglSnb_taskReg:visible, #aglSnb_taskReg:visible, div.workset_btn button.btn.btn_block:has-text('할일 등록'):visible, div#workset_btn button.btn.btn_block:has-text('할일 등록'):visible",
+      "cursorOffset": {
+        "x": 113,
+        "y": 22
+      },
+      "clickCoords": {
+        "x": 133,
+        "y": 146
+      },
       "description": "'할일 등록' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"aglSnb_taskReg\" type=\"button\" class=\"btn btn_block\">할일 등록</button>",
@@ -946,6 +1621,14 @@
       "type": "type",
       "selector": "div#aglTaskReg_taskSubject:visible, #aglTaskReg_taskSubject:visible, div[contenteditable='true'][placeholder*='제목을 입력하세요.']:visible, div#aglTaskReg_dialogContent div.sub[contenteditable='true']:visible",
       "text": "복무 규정 개정안 안내문 배포",
+      "cursorOffset": {
+        "x": 78,
+        "y": 14
+      },
+      "clickCoords": {
+        "x": 708,
+        "y": 99
+      },
       "description": "'제목을 입력하세요.' 입력창에 '복무 규정 개정안 안내문 배포' 입력",
       "recordedByEyedropper": true,
       "targetHtml": "<div id=\"aglTaskReg_taskSubject\" placeholder=\"제목을 입력하세요.\" contenteditable=\"true\" class=\"sub\">복무 규정 개정안 안내문 배포</div>",
@@ -960,6 +1643,14 @@
     {
       "type": "click",
       "selector": "button#aglTaskReg_selBrdBtn:visible, #aglTaskReg_selBrdBtn:visible, tr:has(th:has-text('보드')) button.btn.btn_ico:visible",
+      "cursorOffset": {
+        "x": 7,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 1252,
+        "y": 159
+      },
       "description": "[보드] '선택' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"aglTaskReg_selBrdBtn\" type=\"button\" title=\"선택\" class=\"btn btn_ico\"><i class=\"ico ico_fldr\"><span>선택</span></i></button>",
@@ -973,10 +1664,18 @@
     },
     {
       "type": "click",
-      "selector": ".ui-dialog:visible li._brd label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible",
+      "selector": ".ui-dialog:visible li._brd label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m6dawmherke3n52a1hgs5m9m']):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[value='TB01m6dawmherke3n52a1hgs5m9m']):visible, .ui-dialog:visible label.rdobtn:has(input[value='TB01m6dawmherke3n52a1hgs5m9m']):visible, .ui-dialog:visible label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m6dawmherke3n52a1hgs5m9m']):visible",
+      "cursorOffset": {
+        "x": 116,
+        "y": 19
+      },
+      "clickCoords": {
+        "x": 887,
+        "y": 332
+      },
       "description": "[보드 선택 팝업] '공동업무 보드' 요소 클릭",
       "recordedByEyedropper": true,
-      "targetHtml": "<label class=\"rdobtn\"><input name=\"aglTaskBrdSelect_taskBrdId\" type=\"radio\" value=\"TB01m62jjtekjvv9gb1sa392k3yq\" class=\"input_rdo lst_rdo\"> 공동업무 보드</label>",
+      "targetHtml": "<label class=\"rdobtn\"><input name=\"aglTaskBrdSelect_taskBrdId\" type=\"radio\" value=\"TB01m6dawmherke3n52a1hgs5m9m\" class=\"input_rdo lst_rdo\"> 공동업무 보드</label>",
       "_lastHumanTarget": "공동업무 보드"
     },
     {
@@ -989,6 +1688,14 @@
       "type": "click",
       "selector": "select#aglTaskReg_taskGrpList:visible, #aglTaskReg_taskGrpList:visible, tr:has(th:has-text('그룹')) select.frm_select:visible",
       "text": "진행",
+      "cursorOffset": {
+        "x": 487,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 1217,
+        "y": 204
+      },
       "description": "[그룹] '- 그룹 선택 - 할일 진행 해결 이슈 ' 요소에서 '진행' 선택",
       "recordedByEyedropper": true,
       "targetHtml": "<select id=\"aglTaskReg_taskGrpList\" class=\"frm_select\" style=\"width:100%;\">- 그룹 선택 - 할일 진행 해결 이슈 취소</select>",
@@ -1003,6 +1710,14 @@
     {
       "type": "click",
       "selector": "button#aglTaskReg_setWorker:visible, #aglTaskReg_setWorker:visible, tr:has(th:has-text('담당자')) button.btn.btn_ico:visible",
+      "cursorOffset": {
+        "x": 5,
+        "y": 9
+      },
+      "clickCoords": {
+        "x": 735,
+        "y": 242
+      },
       "description": "[담당자] '선택' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"aglTaskReg_setWorker\" type=\"button\" title=\"선택\" class=\"btn btn_ico\"><i class=\"ico ico_plus\"><span>선택</span></i></button>",
@@ -1017,6 +1732,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible ul#aglMemberSelect_memberList label:has(input[name='aglMemberSelect_mbrUser'][value='975287882']):visible, .ui-dialog:visible ul#aglMemberSelect_memberList label:has(input[value='975287882']):visible, .ui-dialog:visible label:has(input[value='975287882']):visible, .ui-dialog:visible ul.user_lst.user_chk_lst label:has-text('김 김병훈 담당(사무처)'):visible, .ui-dialog:visible label:has(input[name='aglMemberSelect_mbrUser'][value='975287882']):visible, ul#aglMemberSelect_memberList > li:nth-of-type(1) > label:visible",
+      "cursorOffset": {
+        "x": 69,
+        "y": 27
+      },
+      "clickCoords": {
+        "x": 870,
+        "y": 343
+      },
       "description": "[할일 배정 팝업] '김 김병훈 담당(사무처)' 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<label><input name=\"aglMemberSelect_mbrUser\" type=\"checkbox\" value=\"975287882\" class=\"input_chk lst_chk\">김 김병훈 담당(사무처)</label>",
@@ -1031,6 +1754,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible div.btn_area button._confirmBtn.btn.btn_pri:text-is('확인'):visible, .ui-dialog:visible div#aglMemberSelect_btmBtns button._confirmBtn:visible, .ui-dialog:visible button._confirmBtn:visible, .ui-dialog:visible div#aglMemberSelect_btmBtns button._confirmBtn.btn.btn_pri:has-text('확인'):visible, .ui-dialog:visible div#aglMemberSelect_btmBtns button._confirmBtn:has-text('확인'):visible",
+      "cursorOffset": {
+        "x": 23,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 921,
+        "y": 677
+      },
       "description": "[할일 배정 팝업] '확인' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" class=\"btn btn_pri _confirmBtn\"><strong>확인</strong></button>",
@@ -1045,6 +1776,14 @@
     {
       "type": "click",
       "selector": "button#aglTaskReg_periodSetupBtn:visible, #aglTaskReg_periodSetupBtn:visible",
+      "cursorOffset": {
+        "x": 10,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 740,
+        "y": 287
+      },
       "description": "[기한] #aglTaskReg_periodSetupBtn (button) 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"aglTaskReg_periodSetupBtn\" type=\"button\" data-toggle=\"dropdown\" class=\"btn btn_limit\"><i class=\"ico ico_date\"></i></button>",
@@ -1058,22 +1797,37 @@
     },
     {
       "type": "click",
-      "selector": "#ui-datepicker-div:visible td a:text-is('30'):visible, .ui-datepicker:visible td a:text-is('30'):visible, #ui-datepicker-div:visible td a:has-text('30'):visible, a.ui-state-default:has-text('30'):visible, a.ui-state-default.ui-state-hover:has-text('30'):visible",
-      "text": "30",
-      "description": "[달력 팝업] '30일' 날짜 클릭 클릭",
+      "selector": "div.ui-datepicker-inline.ui-datepicker.ui-helper-clearfix > table.ui-datepicker-calendar > tbody > tr:nth-of-type(1) > td[data-handler='selectDay']:nth-of-type(3) > a:visible, a.ui-state-default:has-text('3'):visible, a.ui-state-default.ui-state-hover:has-text('3'):visible",
+      "cursorOffset": {
+        "x": 20,
+        "y": 10
+      },
+      "clickCoords": {
+        "x": 812,
+        "y": 382
+      },
+      "description": "'3' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
-      "targetHtml": "<a class=\"ui-state-default ui-state-hover\" href=\"#\">30</a>",
-      "_lastHumanTarget": "30"
+      "targetHtml": "<a class=\"ui-state-default ui-state-hover\" href=\"#\">3</a>",
+      "_lastHumanTarget": "3"
     },
     {
       "type": "wait",
-      "ms": 1000,
-      "description": "[달력 팝업] '30일' 날짜 클릭 반응 대기",
-      "_lastHumanTarget": "30일"
+      "ms": 600,
+      "description": "'3' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "3"
     },
     {
       "type": "click",
       "selector": "label.chkbox:has(#aglTaskReg_deadlineAllDay):visible, label:has(#aglTaskReg_deadlineAllDay):visible, div.limit_time label.chkbox:text-is('종일'):visible, div#aglTaskReg_periodSetupBox label.chkbox:has-text('종일'):visible, label.chkbox:has-text('종일'):visible",
+      "cursorOffset": {
+        "x": 8,
+        "y": 11
+      },
+      "clickCoords": {
+        "x": 751,
+        "y": 530
+      },
       "description": "[기한] '종일' 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<label class=\"chkbox chkbox_on\"><input id=\"aglTaskReg_deadlineAllDay\" type=\"checkbox\" class=\"input_chk\" checked=\"\"> 종일</label>",
@@ -1081,13 +1835,21 @@
     },
     {
       "type": "wait",
-      "ms": 1000,
+      "ms": 600,
       "description": "[기한] '종일' 요소 반응 대기",
       "_lastHumanTarget": "종일"
     },
     {
       "type": "click",
       "selector": "input#aglTaskReg_deadlineTime:visible, #aglTaskReg_deadlineTime:visible, input[placeholder*='hh:mm']:visible",
+      "cursorOffset": {
+        "x": 41,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 844,
+        "y": 532
+      },
       "description": "[기한] 'hh:mm' 입력창 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<input id=\"aglTaskReg_deadlineTime\" type=\"text\" placeholder=\"hh:mm\" class=\"input_time ui-timepicker-input\" autocomplete=\"off\">",
@@ -1095,28 +1857,43 @@
     },
     {
       "type": "wait",
-      "ms": 1000,
+      "ms": 600,
       "description": "[기한] 'hh:mm' 입력창 반응 대기",
       "_lastHumanTarget": "hh:mm"
     },
     {
       "type": "click",
-      "selector": ".ui-timepicker-list:visible li:text-is('19:00'):visible, .ui-timepicker-wrapper:visible li:has-text('19:00'):visible",
-      "text": "19:00",
-      "description": "[시간 선택] '19:00' 시간 클릭 클릭",
+      "selector": "ul.ui-timepicker-list li:has-text('19:00'):visible, li:has-text('19:00'):visible, div.ui-timepicker-wrapper:nth-of-type(18) > ul.ui-timepicker-list > li:nth-of-type(39):visible",
+      "cursorOffset": {
+        "x": 40,
+        "y": 5
+      },
+      "clickCoords": {
+        "x": 844,
+        "y": 637
+      },
+      "description": "'19:00' 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<li>19:00</li>",
       "_lastHumanTarget": "19:00"
     },
     {
       "type": "wait",
-      "ms": 1000,
-      "description": "[시간 선택] '19:00' 시간 클릭 반응 대기",
+      "ms": 600,
+      "description": "'19:00' 요소 반응 대기",
       "_lastHumanTarget": "19:00"
     },
     {
       "type": "click",
       "selector": "div.limit_btn button._confirmBtn.btn.btn_pri:text-is('확인'):visible, div#aglTaskReg_deadlineBtns button._confirmBtn:visible, button._confirmBtn:visible, div#aglTaskReg_deadlineBtns button._confirmBtn.btn.btn_pri:has-text('확인'):visible, div#aglTaskReg_deadlineBtns button._confirmBtn:has-text('확인'):visible",
+      "cursorOffset": {
+        "x": 21,
+        "y": 6
+      },
+      "clickCoords": {
+        "x": 819,
+        "y": 580
+      },
       "description": "[기한] '확인' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" class=\"btn btn_pri _confirmBtn\">확인</button>",
@@ -1124,22 +1901,26 @@
     },
     {
       "type": "wait",
-      "ms": 1600,
+      "ms": 1100,
       "description": "[기한] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
       "_lastHumanTarget": "확인"
     },
     {
       "type": "type",
       "selector": "div[data-document-fixed-width='false']:visible, div[data-document-padding-top='18']:visible, div[data-document-padding-bottom='18']:visible, div[data-document-padding-left='23']:visible, div[data-document-padding-right='23']:visible, [role='textbox'].se-contents:visible",
-      "text": "복무 규정 개정안 안내문 배포 하겠습니다.",
+      "text": "복무 규정 개정안 안내문 배포하겠습니다.",
       "editorParaIndex": 0,
       "cursorOffset": {
-        "x": 269,
-        "y": 75
+        "x": 214,
+        "y": 88
       },
-      "description": "'에디터 본문' 입력 영역에 '복무 규정 개정안 안내문 배포 하겠습니다.' 입력",
+      "clickCoords": {
+        "x": 845,
+        "y": 517
+      },
+      "description": "'에디터 본문' 입력 영역에 '복무 규정 개정안 안내문 배포하겠습니다.' 입력",
       "recordedByEyedropper": true,
-      "targetHtml": "<div class=\"se-contents\" role=\"textbox\" data-document-fixed-width=\"false\" data-document-padding-top=\"18\" data-document-padding-bottom=\"18\" data-document-padding-left=\"23\" data-document-padding-right=\"23\"><p id=\"se_f456722b-258c-4e2f-b83a-415e89460006\" style=\"margin: 0px; display: block; overflow-wrap: break-word;\">복무 규정 개정안 안내문 배포 하겠습니다.</div>",
+      "targetHtml": "<div class=\"se-contents\" role=\"textbox\" data-document-fixed-width=\"false\" data-document-padding-top=\"18\" data-document-padding-bottom=\"18\" data-document-padding-left=\"23\" data-document-padding-right=\"23\"><p id=\"se_21ffd288-c2a5-421e-be04-75a157b33533\" style=\"margin: 0px; display: block; overflow-wrap: break-word;\">복무 규정 개정안 안내문 배포하겠습니다.</div>",
       "_lastHumanTarget": "에디터 본문"
     },
     {
@@ -1149,24 +1930,16 @@
       "_lastHumanTarget": ""
     },
     {
-      "type": "upload",
-      "selector": "div#aglTaskReg_upload div.fileupload-buttonbar div.fileinput-button.btn:has-text('내 PC'):visible, div#aglTaskReg_upload div.fileinput-button.btn:has-text('내 PC'):visible, div#aglTaskReg_upload > div.fileupload-buttonbar:nth-of-type(1) > div.fileinput-button.btn:visible, div#aglTaskReg_upload input[type='file'][name='files[]'], div.fileupload-buttonbar div.fileinput-button.btn:has-text('내 PC'):visible, div.fileinput-button.btn:has-text('내 PC'):visible, input[type='file'][name='files[]']",
-      "filePath": "data/taskboard/uploads/할일.pdf",
-      "text": "할일.pdf",
-      "description": "'내 PC' 버튼에 '할일.pdf' 첨부",
-      "recordedByEyedropper": true,
-      "targetHtml": "<div class=\"btn fileinput-button\"> <i class=\"ico ico_atch\"></i> <span>내 PC</span> <input type=\"file\" title=\"내 PC\" name=\"files[]\" multiple=\"\"> </div>",
-      "_lastHumanTarget": "내 PC"
-    },
-    {
-      "type": "wait",
-      "ms": 1400,
-      "description": "첨부 파일 업로드 및 목록 반영 대기",
-      "_lastHumanTarget": ""
-    },
-    {
       "type": "click",
       "selector": "div#aglTaskReg_btmBtns div.btn_area button._saveBtn.btn.btn_pri:text-is('저장'):visible, div#aglTaskReg_btmBtns button._saveBtn:visible, div#aglTaskReg_btmBtns > button._saveBtn.btn.btn_pri:nth-of-type(1):visible, div#aglTaskReg_btmBtns button._saveBtn:has-text('저장'):visible, div.btn_area button._saveBtn.btn.btn_pri:text-is('저장'):visible, button._saveBtn:visible",
+      "cursorOffset": {
+        "x": 21,
+        "y": 4
+      },
+      "clickCoords": {
+        "x": 929,
+        "y": 876
+      },
       "description": "'저장' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" class=\"btn btn_pri _saveBtn\"><strong>저장</strong></button>",
@@ -1181,6 +1954,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible button#naon-cmm-alert-confirm:visible",
+      "cursorOffset": {
+        "x": 23,
+        "y": 27
+      },
+      "clickCoords": {
+        "x": 933,
+        "y": 147
+      },
       "description": "[알림 팝업] '확인' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"naon-cmm-alert-confirm\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
@@ -1194,21 +1975,37 @@
     },
     {
       "type": "click",
-      "selector": "div.task_inner div.info:has-text('10-30 1 임 1'):visible, div.info:has-text('10-30 1 임 1'):visible",
-      "description": "'10-30 1 임 1' 요소 클릭",
+      "selector": "div.group_lst:nth-of-type(2) > ul.mg_ul > li._task > div.task_card > div.task_info._taskInfo:nth-of-type(2) > div.task_inner:visible, div.task_info._taskInfo div.task_inner:visible",
+      "cursorOffset": {
+        "x": 113,
+        "y": 66
+      },
+      "clickCoords": {
+        "x": 693,
+        "y": 288
+      },
+      "description": "'복무 규정 개정안 안내문 배포 11-03' 요소 클릭",
       "recordedByEyedropper": true,
-      "targetHtml": "<div class=\"info\">10-30 1 임 1</div>",
-      "_lastHumanTarget": "10-30 1 임 1"
+      "targetHtml": "<div class=\"task_inner\">복무 규정 개정안 안내문 배포 11-03 임 1</div>",
+      "_lastHumanTarget": "복무 규정 개정안 안내문 배포 11-03"
     },
     {
       "type": "wait",
       "ms": 1000,
-      "description": "'10-30 1 임 1' 요소 반응 대기",
-      "_lastHumanTarget": "10-30 1 임 1"
+      "description": "'복무 규정 개정안 안내문 배포 11-03' 요소 반응 대기",
+      "_lastHumanTarget": "복무 규정 개정안 안내문 배포 11-03"
     },
     {
       "type": "click",
-      "selector": "div#aglTaskView_labelBox > div.box_cont:nth-of-type(2) > div.label_bar > div.optn:nth-of-type(2) > button._addLabel.btn.btn_ico:visible, div#aglTaskView_labelBox button._addLabel:has-text('라벨 추가'):visible, div#aglTaskView_labelBox button._addLabel:visible, div#aglTaskView_labelBox button._addLabel[title='라벨 추가']:visible, div#aglTaskView_labelBox button[title='라벨 추가']:visible, button._addLabel[title='라벨 추가']:visible, button[title='라벨 추가']:visible",
+      "selector": "div#aglTaskView_labelBox > div.box_cont:nth-of-type(2) > div.label_bar > div.optn:nth-of-type(2) > button._addLabel.btn.btn_ico:visible, div#aglTaskView_labelBox div.optn button._addLabel.btn.btn_ico:visible, div#aglTaskView_labelBox button._addLabel:has-text('라벨 추가'):visible, div#aglTaskView_labelBox button._addLabel:visible, div#aglTaskView_labelBox button._addLabel[title='라벨 추가']:visible, div#aglTaskView_labelBox button[title='라벨 추가']:visible, div.optn button._addLabel.btn.btn_ico:visible, button._addLabel[title='라벨 추가']:visible, button[title='라벨 추가']:visible",
+      "cursorOffset": {
+        "x": 10,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 1238,
+        "y": 397
+      },
       "description": "'라벨 추가' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"라벨 추가\" class=\"btn btn_ico _addLabel\"><i class=\"ico ico_label\"><span>라벨 추가</span></i></button>",
@@ -1222,120 +2019,37 @@
     },
     {
       "type": "click",
-      "selector": "li:has-text('배포') > button.btn_edit:visible, li:has-text('배포') button.btn_edit:has-text('수정'):visible, li:has-text('배포') button.btn_edit:visible, li:has-text('배포') button.btn_edit[title='수정']:visible, li:has-text('배포') button[title='수정']:visible, li#TA01m60td69gncytr4xr9gp0cb06 > button.btn_edit:visible, li#TA01m60td69gncytr4xr9gp0cb06 button.btn_edit:has-text('수정'):visible, li#TA01m60td69gncytr4xr9gp0cb06 button.btn_edit:visible, li#TA01m60td69gncytr4xr9gp0cb06 button.btn_edit[title='수정']:visible, li#TA01m60td69gncytr4xr9gp0cb06 button[title='수정']:visible",
-      "description": "[라벨 선택 팝업] '수정' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button type=\"button\" title=\"수정\" class=\"btn_edit\"><i class=\"ico ico_write\"><span>수정</span></i></button>",
-      "_lastHumanTarget": "수정"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "[라벨 선택 팝업] '수정' 버튼 반응 대기",
-      "_lastHumanTarget": "수정"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible button#aglLabelReg_delBtn:visible, .ui-dialog:visible div#aglLabelReg_btns button.btn_del._delBtn.btn:has-text('삭제'):visible, .ui-dialog:visible div.btn_area button.btn_del._delBtn.btn:text-is('삭제'):visible, .ui-dialog:visible button.btn_del._delBtn.btn:has-text('삭제'):visible",
-      "description": "[라벨 정보 팝업] '삭제' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button type=\"button\" id=\"aglLabelReg_delBtn\" class=\"btn btn_del _delBtn\" style=\"\">삭제</button>",
-      "_lastHumanTarget": "삭제"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "[라벨 정보 팝업] '삭제' 버튼 반응 대기",
-      "_lastHumanTarget": "삭제"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible button#naon-cmm-confirm-ok:visible",
-      "description": "[알림 팝업] '확인' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button id=\"naon-cmm-confirm-ok\" type=\"button\" class=\"abtn abtn_dan\"><i class=\"ico ico_check\"></i> 확인</button>",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "wait",
-      "ms": 1600,
-      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible button#aglLabelSelect_lblRegBtn:visible, .ui-dialog:visible div.label_add button.btn_link.btn:has-text('라벨 추가'):visible, .ui-dialog:visible div#aglLabelSelect button.btn_link.btn:has-text('라벨 추가'):visible",
-      "description": "[라벨 선택 팝업] '라벨 추가' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button type=\"button\" id=\"aglLabelSelect_lblRegBtn\" class=\"btn btn_link\"><i class=\"ico ico_plus\"></i> 라벨 추가</button>",
-      "_lastHumanTarget": "라벨 추가"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "[라벨 선택 팝업] '라벨 추가' 버튼 반응 대기",
-      "_lastHumanTarget": "라벨 추가"
-    },
-    {
-      "type": "type",
-      "selector": ".ui-dialog:visible input#aglLabelReg_lblName:visible, input#aglLabelReg_lblName:visible, .ui-dialog:visible input[placeholder*='라벨 이름']:visible, .ui-dialog:visible input[title*='라벨 이름']:visible",
-      "text": "배포",
-      "description": "[라벨 정보 팝업] '라벨 이름' 입력창에 '배포' 입력",
-      "recordedByEyedropper": true,
-      "targetHtml": "<input id=\"aglLabelReg_lblName\" type=\"text\" title=\"라벨 이름\" placeholder=\"라벨 이름\" class=\"input_txt\" maxlength=\"30\">",
-      "_lastHumanTarget": "라벨 이름"
-    },
-    {
-      "type": "wait",
-      "ms": 900,
-      "description": "입력 텍스트 확인 여유 대기",
-      "_lastHumanTarget": ""
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible ul#aglLabelReg_colorList label.rdobtn:has(input[name='aglLabelReg_lblColor'][value='sky']):visible, .ui-dialog:visible ul#aglLabelReg_colorList label.rdobtn:has(input[value='sky']):visible, .ui-dialog:visible label.rdobtn:has(input[value='sky']):visible, .ui-dialog:visible label.rdobtn:has(input[name='aglLabelReg_lblColor'][value='sky']):visible, ul#aglLabelReg_colorList > li:nth-of-type(7) > label.rdobtn:visible",
-      "description": "[라벨 정보 팝업] '하늘' 요소 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<label class=\"rdobtn\"> <input name=\"aglLabelReg_lblColor\" type=\"radio\" value=\"sky\" class=\"input_rdo\"> <span class=\"label lb_sky\"><span class=\"label_txt\">하늘</span></span> </label>",
-      "_lastHumanTarget": "sky"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "[라벨 정보 팝업] '하늘' 요소 반응 대기",
-      "_lastHumanTarget": "하늘"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible div.btn_area button._saveBtn.btn.btn_pri:text-is('저장'):visible, .ui-dialog:visible div#aglLabelReg_btns button._saveBtn:visible, .ui-dialog:visible button._saveBtn:visible, .ui-dialog:visible div#aglLabelReg_btns button._saveBtn.btn.btn_pri:has-text('저장'):visible, .ui-dialog:visible div#aglLabelReg_btns button._saveBtn:has-text('저장'):visible",
-      "description": "[라벨 정보 팝업] '저장' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button type=\"button\" class=\"btn btn_pri _saveBtn\"><strong>저장</strong></button>",
-      "_lastHumanTarget": "저장"
-    },
-    {
-      "type": "wait",
-      "ms": 1600,
-      "description": "[라벨 정보 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기",
-      "_lastHumanTarget": "저장"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible li#TA01m62jvd5qheq6x99mqehmxzhs label:has(input[value='TA01m62jvd5qheq6x99mqehmxzhs']):visible, .ui-dialog:visible label:has(input[value='TA01m62jvd5qheq6x99mqehmxzhs']):visible, .ui-dialog:visible li:has-text('배포') label:has(input[value='TA01m62jvd5qheq6x99mqehmxzhs']):visible, .ui-dialog:visible li:has-text('배포') > label:visible, .ui-dialog:visible li._label label:text-is('배포'):visible, li#TA01m62jvd5qheq6x99mqehmxzhs > label:visible, .ui-dialog:visible label:text-is('배포'):visible",
+      "selector": ".ui-dialog:visible ul#aglLabelSelect_labelList label:has(input[value='TA01m6d2bk8dwa6c818hd2tmzq3g']):visible, .ui-dialog:visible label:has(input[value='TA01m6d2bk8dwa6c818hd2tmzq3g']):visible, .ui-dialog:visible li._label label:text-is('배포'):visible, .ui-dialog:visible label:text-is('배포'):visible, ul#aglLabelSelect_labelList > li._label:nth-of-type(2) > label:visible",
+      "cursorOffset": {
+        "x": 87,
+        "y": 24
+      },
+      "clickCoords": {
+        "x": 917,
+        "y": 256
+      },
       "description": "[라벨 선택 팝업] '배포' 요소 클릭",
       "recordedByEyedropper": true,
-      "targetHtml": "<label> <input type=\"checkbox\" value=\"TA01m62jvd5qheq6x99mqehmxzhs\" class=\"input_chk\"> <span title=\"배포\" class=\"label lb_sky\"><span class=\"label_txt\">배포</span></span> </label>",
+      "targetHtml": "<label> <input type=\"checkbox\" value=\"TA01m6d2bk8dwa6c818hd2tmzq3g\" class=\"input_chk\"> <span title=\"배포\" class=\"label lb_sky\"><span class=\"label_txt\">배포</span></span> </label>",
       "_lastHumanTarget": "배포"
     },
     {
       "type": "wait",
-      "ms": 1000,
+      "ms": 600,
       "description": "[라벨 선택 팝업] '배포' 요소 반응 대기",
       "_lastHumanTarget": "배포"
     },
     {
       "type": "click",
       "selector": ".ui-dialog:visible div.btn_area button._confirmBtn.btn.btn_pri:text-is('확인'):visible, .ui-dialog:visible div#aglLabelSelect_btns button._confirmBtn:visible, .ui-dialog:visible button._confirmBtn:visible, .ui-dialog:visible div#aglLabelSelect_btns button._confirmBtn.btn.btn_pri:has-text('확인'):visible, .ui-dialog:visible div#aglLabelSelect_btns button._confirmBtn:has-text('확인'):visible",
+      "cursorOffset": {
+        "x": 39,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 937,
+        "y": 358
+      },
       "description": "[라벨 선택 팝업] '확인' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" class=\"btn btn_pri _confirmBtn\"><strong>확인</strong></button>",
@@ -1343,13 +2057,21 @@
     },
     {
       "type": "wait",
-      "ms": 1600,
+      "ms": 1100,
       "description": "[라벨 선택 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
       "_lastHumanTarget": "확인"
     },
     {
       "type": "click",
       "selector": "button#aglTaskView_regCmmntBtn:visible, #aglTaskView_regCmmntBtn:visible, div.comment_write button.btn:has-text('댓글 작성'):visible, div#tab_1 button.btn:has-text('댓글 작성'):visible",
+      "cursorOffset": {
+        "x": 41,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 1230,
+        "y": 504
+      },
       "description": "'댓글 작성' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" id=\"aglTaskView_regCmmntBtn\" onclick=\"return false;\" class=\"btn\"><i class=\"ico ico_plus\"></i> 댓글 작성</button>",
@@ -1364,15 +2086,19 @@
     {
       "type": "type",
       "selector": "div[data-document-fixed-width='false']:visible, div[data-document-padding-top='18']:visible, div[data-document-padding-bottom='18']:visible, div[data-document-padding-left='23']:visible, div[data-document-padding-right='23']:visible, [role='textbox'].se-contents:visible",
-      "text": "배포하겠습니다",
+      "text": "배포하겠습니다.",
       "editorParaIndex": 0,
       "cursorOffset": {
-        "x": 169,
-        "y": 72
+        "x": 167,
+        "y": 78
       },
-      "description": "'에디터 본문' 입력 영역에 '배포하겠습니다' 입력",
+      "clickCoords": {
+        "x": 788,
+        "y": 280
+      },
+      "description": "'에디터 본문' 입력 영역에 '배포하겠습니다.' 입력",
       "recordedByEyedropper": true,
-      "targetHtml": "<div class=\"se-contents\" role=\"textbox\" data-document-fixed-width=\"false\" data-document-padding-top=\"18\" data-document-padding-bottom=\"18\" data-document-padding-left=\"23\" data-document-padding-right=\"23\"><p id=\"se_9b3909ac-9367-4299-a9c3-d0a8e8f688d5\" style=\"margin: 0px; display: block; overflow-wrap: break-word;\">배포하겠습니다</div>",
+      "targetHtml": "<div class=\"se-contents\" role=\"textbox\" data-document-fixed-width=\"false\" data-document-padding-top=\"18\" data-document-padding-bottom=\"18\" data-document-padding-left=\"23\" data-document-padding-right=\"23\"><p id=\"se_60478bd2-6f2d-421e-b515-41085de16c34\" style=\"margin: 0px; display: block; overflow-wrap: break-word;\">배포하겠습니다.</div>",
       "_lastHumanTarget": "에디터 본문"
     },
     {
@@ -1384,6 +2110,14 @@
     {
       "type": "click",
       "selector": "button#aglCommentWrite_saveBtn:visible, #aglCommentWrite_saveBtn:visible, div.btn_area button.btn.btn_pri:text-is('저장'):visible, div#aglCommentWrite_dialogContent button.btn.btn_pri:has-text('저장'):visible",
+      "cursorOffset": {
+        "x": 26,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 940,
+        "y": 760
+      },
       "description": "'저장' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" id=\"aglCommentWrite_saveBtn\" class=\"btn btn_pri\"><strong>저장</strong></button>",
@@ -1397,83 +2131,15 @@
     },
     {
       "type": "click",
-      "selector": "li:has-text('복무 규정 개정안 안내문 배포') button._btn_edit:visible, li:has-text('복무 규정 개정안 안내문 배포') button.btn_edit._btn_edit:has-text('수정'):visible, li:has-text('복무 규정 개정안 안내문 배포') button.btn_edit[title='수정']:visible, li:has-text('복무 규정 개정안 안내문 배포') button[title='수정']:visible, li:has-text('복무 규정 개정안 안내문 배포') button.btn_edit._btn_edit[title='수정']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button._btn_edit:visible, li[id^='aglTaskView_opin'] button._btn_edit:visible, button._btn_edit:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_edit._btn_edit:has-text('수정'):visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_edit[title='수정']:visible, li[id^='aglTaskView_opin'] button.btn_edit[title='수정']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button[title='수정']:visible, li[id^='aglTaskView_opin'] button[title='수정']:visible, button.btn_edit[title='수정']:visible, button[title='수정']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_edit._btn_edit[title='수정']:visible, li[id^='aglTaskView_opin'] button.btn_edit._btn_edit[title='수정']:visible, li[id^='aglTaskView_opin'] button.btn_edit._btn_edit:has-text('수정'):visible",
-      "description": "'수정' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button type=\"button\" title=\"수정\" class=\"btn_edit _btn_edit\"><span>수정</span></button>",
-      "_lastHumanTarget": "수정"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "'수정' 버튼 반응 대기",
-      "_lastHumanTarget": "수정"
-    },
-    {
-      "type": "type",
-      "selector": "div[data-document-fixed-width='false']:visible, div[data-document-padding-top='18']:visible, div[data-document-padding-bottom='18']:visible, div[data-document-padding-left='23']:visible, div[data-document-padding-right='23']:visible, [role='textbox'].se-contents:visible",
-      "text": "!!",
-      "editorParaIndex": 0,
+      "selector": "button#aglTaskView_closeBtn:visible, #aglTaskView_closeBtn:visible, button.btn_close[title='닫기']:visible, button[title='닫기']:visible",
       "cursorOffset": {
-        "x": 307,
-        "y": 39
+        "x": 26,
+        "y": 9
       },
-      "description": "'에디터 본문' 입력 영역에 '!!' 입력",
-      "recordedByEyedropper": true,
-      "targetHtml": "<div class=\"se-contents\" role=\"textbox\" data-document-fixed-width=\"false\" data-document-padding-top=\"18\" data-document-padding-bottom=\"18\" data-document-padding-left=\"23\" data-document-padding-right=\"23\"><p id=\"se_111b07b0-f1a8-411c-9476-597d8fb18d51\" style=\"margin: 0px; display: block; overflow-wrap: break-word;\">배포하겠습니다 !!</div>",
-      "_lastHumanTarget": "에디터 본문"
-    },
-    {
-      "type": "wait",
-      "ms": 900,
-      "description": "입력 텍스트 확인 여유 대기",
-      "_lastHumanTarget": ""
-    },
-    {
-      "type": "click",
-      "selector": "button#aglCommentWrite_saveBtn:visible, #aglCommentWrite_saveBtn:visible, div.btn_area button.btn.btn_pri:text-is('저장'):visible, div#aglCommentWrite_dialogContent button.btn.btn_pri:has-text('저장'):visible",
-      "description": "'저장' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button type=\"button\" id=\"aglCommentWrite_saveBtn\" class=\"btn btn_pri\"><strong>저장</strong></button>",
-      "_lastHumanTarget": "저장"
-    },
-    {
-      "type": "wait",
-      "ms": 1600,
-      "description": "'저장' 버튼 클릭 후 화면/팝업 전환 대기",
-      "_lastHumanTarget": "저장"
-    },
-    {
-      "type": "click",
-      "selector": "li:has-text('복무 규정 개정안 안내문 배포') button._btn_del:visible, li:has-text('복무 규정 개정안 안내문 배포') button.btn_del._btn_del:has-text('삭제'):visible, li:has-text('복무 규정 개정안 안내문 배포') > div.cmt_item > div.cmt_user:nth-of-type(1) > div.user:nth-of-type(2) > div.optn:nth-of-type(3) > button.btn_del._btn_del:nth-of-type(2):visible, li:has-text('복무 규정 개정안 안내문 배포') button.btn_del[title='삭제']:visible, li:has-text('복무 규정 개정안 안내문 배포') button[title='삭제']:visible, li:has-text('복무 규정 개정안 안내문 배포') button.btn_del._btn_del[title='삭제']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button._btn_del:visible, li[id^='aglTaskView_opin'] button._btn_del:visible, button._btn_del:visible, div.optn button.btn_del._btn_del:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_del._btn_del:has-text('삭제'):visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_del[title='삭제']:visible, li[id^='aglTaskView_opin'] button.btn_del[title='삭제']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button[title='삭제']:visible, li[id^='aglTaskView_opin'] button[title='삭제']:visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm button.btn_del._btn_del[title='삭제']:visible, li[id^='aglTaskView_opin'] button.btn_del._btn_del[title='삭제']:visible, li[id^='aglTaskView_opin'] button.btn_del._btn_del:has-text('삭제'):visible, li#aglTaskView_opinTY01m62jw4azanqbet0vyevm7zhm > div.cmt_item > div.cmt_user:nth-of-type(1) > div.user:nth-of-type(2) > div.optn:nth-of-type(3) > button.btn_del._btn_del:nth-of-type(2):visible, li[id^='aglTaskView_opin'] > div.cmt_item > div.cmt_user:nth-of-type(1) > div.user:nth-of-type(2) > div.optn:nth-of-type(3) > button.btn_del._btn_del:nth-of-type(2):visible",
-      "description": "'삭제' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button type=\"button\" title=\"삭제\" class=\"btn_del _btn_del\"><span>삭제</span></button>",
-      "_lastHumanTarget": "삭제"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "'삭제' 버튼 반응 대기",
-      "_lastHumanTarget": "삭제"
-    },
-    {
-      "type": "click",
-      "selector": "ul.nav.nav_tabs a:has-text('활동 내역'):visible, li#aglTaskView_activityTab > a:visible, a:has-text('활동 내역'):visible",
-      "description": "'활동 내역' 메뉴/링크 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<a href=\"#tab_2\" data-toggle=\"tab\">활동 내역</a>",
-      "_lastHumanTarget": "활동 내역"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "'활동 내역' 메뉴/링크 반응 대기",
-      "_lastHumanTarget": "활동 내역"
-    },
-    {
-      "type": "click",
-      "selector": "button#aglTaskView_closeBtn:visible, #aglTaskView_closeBtn:visible, button.btn_close[title='닫기']:visible, button[title='닫기']:visible",
+      "clickCoords": {
+        "x": 1291,
+        "y": 69
+      },
       "description": "'닫기' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"aglTaskView_closeBtn\" type=\"button\" title=\"닫기\" class=\"btn_close\"><i class=\"icon\"><span>닫기</span></i></button>",
@@ -1487,13 +2153,21 @@
     },
     {
       "type": "dragAndDrop",
-      "sourceSelector": "li:has([data-lbl-id='TA01m60seypssx5nwz772e74p3hp']):visible, div#task_board li._task:has-text('점검 교과목 시간표 최종 점검 10-30 0/3 1'):visible, li._task:has-text('점검 교과목 시간표 최종 점검 10-30 0/3 1'):visible",
-      "targetSelector": "div#task_board > div.task_group.color_8:nth-of-type(4) > div.group_lst:nth-of-type(2) > ul.mg_ul:visible",
-      "description": "'점검 교과목 시간표 최종 점검 10-30' 요소을(를) ul 요소으로 드래그 앤 드롭",
+      "sourceSelector": "li:has([data-lbl-id='TA01m6d2bk8dwa6c818hd2tmzq3g']):visible, div#task_board li._task:has-text('배포 복무 규정 개정안 안내문 배포 11-03 1'):visible, li._task:has-text('배포 복무 규정 개정안 안내문 배포 11-03 1'):visible",
+      "targetSelector": "div#task_board > div.task_group.color_4:nth-of-type(3) > div.group_lst:nth-of-type(2) > ul.mg_ul > li._task:visible",
+      "dragFromCoords": {
+        "x": 720,
+        "y": 224
+      },
+      "dragToCoords": {
+        "x": 1053,
+        "y": 240
+      },
+      "description": "'배포 복무 규정 개정안 안내문 배포 11' 요소을(를) li 요소으로 드래그 앤 드롭",
       "recordedByEyedropper": true,
-      "targetHtml": "<ul class=\"mg_ul ui-sortable\"> <li class=\"_task ui-sortable-placeholder\" style=\"visibility: hidden; height: 104px;\"></li></ul>",
-      "selector": "li:has([data-lbl-id='TA01m60seypssx5nwz772e74p3hp']):visible, div#task_board li._task:has-text('점검 교과목 시간표 최종 점검 10-30 0/3 1'):visible, li._task:has-text('점검 교과목 시간표 최종 점검 10-30 0/3 1'):visible",
-      "_lastHumanTarget": "점검 교과목 시간표 최종 점검 10-30 0/3 1"
+      "targetHtml": "<li class=\"_task ui-sortable-placeholder\" style=\"visibility: hidden; height: 104px;\"></li>",
+      "selector": "li:has([data-lbl-id='TA01m6d2bk8dwa6c818hd2tmzq3g']):visible, div#task_board li._task:has-text('배포 복무 규정 개정안 안내문 배포 11-03 1'):visible, li._task:has-text('배포 복무 규정 개정안 안내문 배포 11-03 1'):visible",
+      "_lastHumanTarget": "배포 복무 규정 개정안 안내문 배포 11-03 1"
     },
     {
       "type": "wait",
@@ -1503,13 +2177,21 @@
     },
     {
       "type": "dragAndDrop",
-      "sourceSelector": "li:has([data-lbl-id='TA01m62jvd5qheq6x99mqehmxzhs']):visible, div#task_board li._task:has-text('배포 복무 규정 개정안 안내문 배포 10-30 1'):visible, li._task:has-text('배포 복무 규정 개정안 안내문 배포 10-30 1'):visible",
-      "targetSelector": "div#task_board > div.task_group.color_4:nth-of-type(3) > div.group_lst:nth-of-type(2) > ul.mg_ul:visible",
-      "description": "'배포 복무 규정 개정안 안내문 배포 10' 요소을(를) ul 요소으로 드래그 앤 드롭",
+      "sourceSelector": "li:has([data-lbl-id='TA01m6daz02wt53m065pzvp61h9b']):visible, div#task_board li._task:has-text('점검 교과목 시간표 최종 점검 11-03 0/3 1'):visible, li._task:has-text('점검 교과목 시간표 최종 점검 11-03 0/3 1'):visible",
+      "targetSelector": "div#task_board > div.task_group.color_8:nth-of-type(4) > div.group_lst:nth-of-type(2) > ul.mg_ul > li._task:visible",
+      "dragFromCoords": {
+        "x": 415,
+        "y": 232
+      },
+      "dragToCoords": {
+        "x": 1345,
+        "y": 249
+      },
+      "description": "'점검 교과목 시간표 최종 점검 11-03' 요소을(를) li 요소으로 드래그 앤 드롭",
       "recordedByEyedropper": true,
-      "targetHtml": "<ul class=\"mg_ul ui-sortable\"> <li class=\"_task ui-sortable-placeholder\" style=\"visibility: hidden; height: 104px;\"></li></ul>",
-      "selector": "li:has([data-lbl-id='TA01m62jvd5qheq6x99mqehmxzhs']):visible, div#task_board li._task:has-text('배포 복무 규정 개정안 안내문 배포 10-30 1'):visible, li._task:has-text('배포 복무 규정 개정안 안내문 배포 10-30 1'):visible",
-      "_lastHumanTarget": "배포 복무 규정 개정안 안내문 배포 10-30 1"
+      "targetHtml": "<li class=\"_task ui-sortable-placeholder\" style=\"visibility: hidden; height: 104px;\"></li>",
+      "selector": "li:has([data-lbl-id='TA01m6daz02wt53m065pzvp61h9b']):visible, div#task_board li._task:has-text('점검 교과목 시간표 최종 점검 11-03 0/3 1'):visible, li._task:has-text('점검 교과목 시간표 최종 점검 11-03 0/3 1'):visible",
+      "_lastHumanTarget": "점검 교과목 시간표 최종 점검 11-03 0/3 1"
     },
     {
       "type": "wait",
@@ -1519,148 +2201,37 @@
     },
     {
       "type": "click",
-      "selector": "div.task_inner:has-text('교과목 시간표 최종 점검 10-30 0/3 1 임'):visible",
-      "description": "'점검 교과목 시간표 최종 점검 10-30' 요소 클릭",
+      "selector": "div.task_inner:has-text('교과목 시간표 최종 점검 11-03 0/3 1 임'):visible",
+      "cursorOffset": {
+        "x": 174,
+        "y": 94
+      },
+      "clickCoords": {
+        "x": 1354,
+        "y": 316
+      },
+      "description": "'점검 교과목 시간표 최종 점검 11-03' 요소 클릭",
       "recordedByEyedropper": true,
-      "targetHtml": "<div class=\"task_inner\"><span class=\"label lb_red\" data-lbl-id=\"TA01m60seypssx5nwz772e74p3hp\">점검 교과목 시간표 최종 점검 10-30 0/3 1 임</div>",
-      "_lastHumanTarget": "교과목 시간표 최종 점검 10-30 0/3 1 임"
+      "targetHtml": "<div class=\"task_inner\"><span class=\"label lb_red\" data-lbl-id=\"TA01m6daz02wt53m065pzvp61h9b\">점검 교과목 시간표 최종 점검 11-03 0/3 1 임</div>",
+      "_lastHumanTarget": "교과목 시간표 최종 점검 11-03 0/3 1 임"
     },
     {
       "type": "wait",
       "ms": 1000,
-      "description": "'점검 교과목 시간표 최종 점검 10-30' 요소 반응 대기",
-      "_lastHumanTarget": "점검 교과목 시간표 최종 점검 10-30"
+      "description": "'점검 교과목 시간표 최종 점검 11-03' 요소 반응 대기",
+      "_lastHumanTarget": "점검 교과목 시간표 최종 점검 11-03"
     },
     {
       "type": "click",
       "selector": "div#aglTaskView_topBox > div.optn:nth-of-type(3) > div.btn_drop > button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu:has-text('메뉴'):visible, div#aglTaskView_topBox button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu[title='메뉴']:visible, div#aglTaskView_topBox button[title='메뉴']:visible, button.btn_menu[title='메뉴']:visible, button[title='메뉴']:visible",
-      "description": "'메뉴' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button type=\"button\" title=\"메뉴\" data-toggle=\"dropdown\" class=\"btn_menu\"><i class=\"icon\"><span>메뉴</span></i></button>",
-      "_lastHumanTarget": "메뉴"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "'메뉴' 버튼 반응 대기",
-      "_lastHumanTarget": "메뉴"
-    },
-    {
-      "type": "click",
-      "selector": "ul.drop_menu.pull_right a._move:text-is('이동'):visible, ul#aglTaskView_dropMenu a._move:has-text('이동'):visible, a._move:has-text('이동'):visible, ul#aglTaskView_dropMenu > li:nth-of-type(1) > a._move:visible",
-      "description": "'이동' 메뉴/링크 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<a href=\"#\" class=\"_move\">이동</a>",
-      "_lastHumanTarget": "이동"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "'이동' 메뉴/링크 반응 대기",
-      "_lastHumanTarget": "이동"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible button#aglBrdTaskGrpSelect_selBrdBtn:visible, button#aglBrdTaskGrpSelect_selBrdBtn:visible",
-      "description": "[보드 선택 팝업] '선택' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button id=\"aglBrdTaskGrpSelect_selBrdBtn\" type=\"button\" title=\"선택\" class=\"btn btn_ico\"><i class=\"ico ico_fldr\"><span>선택</span></i></button>",
-      "_lastHumanTarget": "선택"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "[보드 선택 팝업] '선택' 버튼 반응 대기",
-      "_lastHumanTarget": "선택"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible li._brd label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible",
-      "description": "[보드 선택 팝업] '공동업무 보드' 요소 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<label class=\"rdobtn\"><input name=\"aglTaskBrdSelect_taskBrdId\" type=\"radio\" value=\"TB01m62jjtekjvv9gb1sa392k3yq\" class=\"input_rdo lst_rdo\"> 공동업무 보드</label>",
-      "_lastHumanTarget": "공동업무 보드"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "[보드 선택 팝업] '공동업무 보드' 요소 반응 대기",
-      "_lastHumanTarget": "공동업무 보드"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible select#aglBrdTaskGrpSelect_taskGrpList:visible, select#aglBrdTaskGrpSelect_taskGrpList:visible",
-      "text": "할일",
-      "description": "[보드 선택 팝업] '- 그룹 선택 - 할일 진행 해결 이슈 ' 요소에서 '할일' 선택",
-      "recordedByEyedropper": true,
-      "targetHtml": "<select id=\"aglBrdTaskGrpSelect_taskGrpList\" class=\"frm_select\"><option value=\"\">- 그룹 선택 -</option> <option value=\"TG01m62jjtem5b5g512bsp10p3h8\">할일</option> <option value=\"TG01m62jjten9pdy9j15c2qvkzm1\">진행</option> <option value=\"TG01m62jjten9pdy9j15c2qvkzm2\">해결</option> <option value=\"TG01m62jjtepmqx9ytjgw5f84hne\">이슈</option> <option value=\"TG01m62jmr3bxb6ap2v7hkxhkd8s\">취소</option></select>",
-      "_lastHumanTarget": "- 그룹 선택 - 할일 진행 해결 이슈"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "[보드 선택 팝업] '- 그룹 선택 - 할일 진행 해결 이슈 ' 요소에서 '할일' 선택 반응 대기",
-      "_lastHumanTarget": "- 그룹 선택 - 할일 진행 해결 이슈"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible div.btn_area button._confirmBtn.btn.btn_pri:text-is('확인'):visible, .ui-dialog:visible div#aglBrdTaskGrpSelect_btmBtns button._confirmBtn:visible, .ui-dialog:visible button._confirmBtn:visible, .ui-dialog:visible div#aglBrdTaskGrpSelect_btmBtns button._confirmBtn.btn.btn_pri:has-text('확인'):visible, .ui-dialog:visible div#aglBrdTaskGrpSelect_btmBtns button._confirmBtn:has-text('확인'):visible",
-      "description": "[보드 선택 팝업] '확인' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button type=\"button\" class=\"btn btn_pri _confirmBtn\"><strong>확인</strong></button>",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "wait",
-      "ms": 1600,
-      "description": "[보드 선택 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible button#naon-cmm-alert-confirm:visible",
-      "description": "[알림 팝업] '확인' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button id=\"naon-cmm-alert-confirm\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "wait",
-      "ms": 1600,
-      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "click",
-      "selector": "button#aglTaskView_closeBtn:visible, #aglTaskView_closeBtn:visible, button.btn_close[title='닫기']:visible, button[title='닫기']:visible",
-      "description": "'닫기' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button id=\"aglTaskView_closeBtn\" type=\"button\" title=\"닫기\" class=\"btn_close\"><i class=\"icon\"><span>닫기</span></i></button>",
-      "_lastHumanTarget": "닫기"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "'닫기' 버튼 반응 대기",
-      "_lastHumanTarget": "닫기"
-    },
-    {
-      "type": "click",
-      "selector": "div.task_inner:has-text('교과목 시간표 최종 점검 10-30 0/3 1 임'):visible, div.group_lst:nth-of-type(2) > ul.mg_ul > li._task > div.task_card > div.task_info._taskInfo:nth-of-type(2) > div.task_inner:visible",
-      "description": "'점검 교과목 시간표 최종 점검 10-30' 요소 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<div class=\"task_inner\"><span class=\"label lb_red\" data-lbl-id=\"TA01m60seypssx5nwz772e74p3hp\">점검 교과목 시간표 최종 점검 10-30 0/3 1 임</div>",
-      "_lastHumanTarget": "교과목 시간표 최종 점검 10-30 0/3 1 임"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "'점검 교과목 시간표 최종 점검 10-30' 요소 반응 대기",
-      "_lastHumanTarget": "점검 교과목 시간표 최종 점검 10-30"
-    },
-    {
-      "type": "click",
-      "selector": "div#aglTaskView_topBox > div.optn:nth-of-type(3) > div.btn_drop > button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu:has-text('메뉴'):visible, div#aglTaskView_topBox button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu[title='메뉴']:visible, div#aglTaskView_topBox button[title='메뉴']:visible, button.btn_menu[title='메뉴']:visible, button[title='메뉴']:visible",
+      "cursorOffset": {
+        "x": 8,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 1275,
+        "y": 136
+      },
       "description": "'메뉴' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"메뉴\" data-toggle=\"dropdown\" class=\"btn_menu\"><i class=\"icon\"><span>메뉴</span></i></button>",
@@ -1675,6 +2246,14 @@
     {
       "type": "click",
       "selector": "ul.drop_menu.pull_right a._moveToCmnt:has-text('이동(댓글)'):visible, ul#aglTaskView_dropMenu a._moveToCmnt:has-text('이동(댓글)'):visible, a._moveToCmnt:has-text('이동(댓글)'):visible, ul#aglTaskView_dropMenu > li:nth-of-type(2) > a._moveToCmnt:visible",
+      "cursorOffset": {
+        "x": 79,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 1253,
+        "y": 204
+      },
       "description": "'이동(댓글)' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" class=\"_moveToCmnt\">이동(댓글)</a>",
@@ -1689,6 +2268,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible button#naon-cmm-confirm-ok:visible",
+      "cursorOffset": {
+        "x": 37,
+        "y": 19
+      },
+      "clickCoords": {
+        "x": 890,
+        "y": 159
+      },
       "description": "[알림 팝업] '확인' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"naon-cmm-confirm-ok\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
@@ -1703,6 +2290,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible button#aglBrdTaskGrpSelect_selBrdBtn:visible, button#aglBrdTaskGrpSelect_selBrdBtn:visible",
+      "cursorOffset": {
+        "x": 15,
+        "y": 21
+      },
+      "clickCoords": {
+        "x": 1111,
+        "y": 408
+      },
       "description": "[보드 선택 팝업] '선택' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"aglBrdTaskGrpSelect_selBrdBtn\" type=\"button\" title=\"선택\" class=\"btn btn_ico\"><i class=\"ico ico_fldr\"><span>선택</span></i></button>",
@@ -1716,10 +2311,18 @@
     },
     {
       "type": "click",
-      "selector": ".ui-dialog:visible li._brd label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible label.rdobtn:has(input[value='TB01m62jjtekjvv9gb1sa392k3yq']):visible, .ui-dialog:visible label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m62jjtekjvv9gb1sa392k3yq']):visible",
+      "selector": ".ui-dialog:visible li._brd label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has-text('공동업무 보드'):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m6dawmherke3n52a1hgs5m9m']):visible, .ui-dialog:visible ul#aglTaskBrdSelect_boardList label.rdobtn:has(input[value='TB01m6dawmherke3n52a1hgs5m9m']):visible, .ui-dialog:visible label.rdobtn:has(input[value='TB01m6dawmherke3n52a1hgs5m9m']):visible, .ui-dialog:visible label.rdobtn:has(input[name='aglTaskBrdSelect_taskBrdId'][value='TB01m6dawmherke3n52a1hgs5m9m']):visible",
+      "cursorOffset": {
+        "x": 90,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 861,
+        "y": 331
+      },
       "description": "[보드 선택 팝업] '공동업무 보드' 요소 클릭",
       "recordedByEyedropper": true,
-      "targetHtml": "<label class=\"rdobtn\"><input name=\"aglTaskBrdSelect_taskBrdId\" type=\"radio\" value=\"TB01m62jjtekjvv9gb1sa392k3yq\" class=\"input_rdo lst_rdo\"> 공동업무 보드</label>",
+      "targetHtml": "<label class=\"rdobtn\"><input name=\"aglTaskBrdSelect_taskBrdId\" type=\"radio\" value=\"TB01m6dawmherke3n52a1hgs5m9m\" class=\"input_rdo lst_rdo\"> 공동업무 보드</label>",
       "_lastHumanTarget": "공동업무 보드"
     },
     {
@@ -1732,9 +2335,17 @@
       "type": "click",
       "selector": ".ui-dialog:visible select#aglBrdTaskGrpSelect_taskGrpList:visible, select#aglBrdTaskGrpSelect_taskGrpList:visible",
       "text": "해결",
+      "cursorOffset": {
+        "x": 320,
+        "y": 10
+      },
+      "clickCoords": {
+        "x": 1110,
+        "y": 441
+      },
       "description": "[보드 선택 팝업] '- 그룹 선택 - 할일 진행 해결 이슈 ' 요소에서 '해결' 선택",
       "recordedByEyedropper": true,
-      "targetHtml": "<select id=\"aglBrdTaskGrpSelect_taskGrpList\" class=\"frm_select\"><option value=\"\">- 그룹 선택 -</option> <option value=\"TG01m62jjtem5b5g512bsp10p3h8\">할일</option> <option value=\"TG01m62jjten9pdy9j15c2qvkzm1\">진행</option> <option value=\"TG01m62jjten9pdy9j15c2qvkzm2\">해결</option> <option value=\"TG01m62jjtepmqx9ytjgw5f84hne\">이슈</option> <option value=\"TG01m62jmr3bxb6ap2v7hkxhkd8s\">취소</option></select>",
+      "targetHtml": "<select id=\"aglBrdTaskGrpSelect_taskGrpList\" class=\"frm_select\"><option value=\"\">- 그룹 선택 -</option> <option value=\"TG01m6dawmhff9wym08wprqrbzzw\">할일</option> <option value=\"TG01m6dawmhff9wym08wprqrbzzx\">진행</option> <option value=\"TG01m6dawmhff9wym08wprqrbzzy\">해결</option> <option value=\"TG01m6dawmhgjtg2t9f25s7jb1mx\">이슈</option> <option value=\"TG01m6daxf3h8s1rzns7ez3t80xe\">취소</option></select>",
       "_lastHumanTarget": "- 그룹 선택 - 할일 진행 해결 이슈"
     },
     {
@@ -1747,9 +2358,17 @@
       "type": "click",
       "selector": ".ui-dialog:visible select#aglBrdTaskGrpSelect_taskList:visible, select#aglBrdTaskGrpSelect_taskList:visible",
       "text": "복무 규정 개정안 안내문 배포",
+      "cursorOffset": {
+        "x": 139,
+        "y": 23
+      },
+      "clickCoords": {
+        "x": 929,
+        "y": 498
+      },
       "description": "[보드 선택 팝업] '- 할일 선택 - 복무 규정 개정안 안내' 요소에서 '복무 규정 개정안 안내문 배포' 선택",
       "recordedByEyedropper": true,
-      "targetHtml": "<select id=\"aglBrdTaskGrpSelect_taskList\" class=\"frm_select\"><option value=\"\">- 할일 선택 -</option> <option value=\"TT01m62jtndhtefk24t10c0azg4w\">복무 규정 개정안 안내문 배포</option></select>",
+      "targetHtml": "<select id=\"aglBrdTaskGrpSelect_taskList\" class=\"frm_select\"><option value=\"\">- 할일 선택 -</option> <option value=\"TT01m6db1q4xsp3exe8mxxf4cahf\">복무 규정 개정안 안내문 배포</option></select>",
       "_lastHumanTarget": "- 할일 선택 - 복무 규정 개정안 안내"
     },
     {
@@ -1761,6 +2380,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible div.btn_area button._confirmBtn.btn.btn_pri:text-is('확인'):visible, .ui-dialog:visible div#aglBrdTaskGrpSelect_btmBtns button._confirmBtn:visible, .ui-dialog:visible button._confirmBtn:visible, .ui-dialog:visible div#aglBrdTaskGrpSelect_btmBtns button._confirmBtn.btn.btn_pri:has-text('확인'):visible, .ui-dialog:visible div#aglBrdTaskGrpSelect_btmBtns button._confirmBtn:has-text('확인'):visible",
+      "cursorOffset": {
+        "x": 34,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 932,
+        "y": 542
+      },
       "description": "[보드 선택 팝업] '확인' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" class=\"btn btn_pri _confirmBtn\"><strong>확인</strong></button>",
@@ -1775,6 +2402,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible button#naon-cmm-alert-confirm:visible",
+      "cursorOffset": {
+        "x": 55,
+        "y": 32
+      },
+      "clickCoords": {
+        "x": 965,
+        "y": 152
+      },
       "description": "[알림 팝업] '확인' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"naon-cmm-alert-confirm\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
@@ -1788,217 +2423,59 @@
     },
     {
       "type": "click",
-      "selector": "div.task_inner div.info:has-text('10-30 1 1 임 1'):visible, div.info:has-text('10-30 1 1 임 1'):visible, ul.mg_ul > li._task > div.task_card > div.task_info._taskInfo:nth-of-type(2) > div.task_inner > div.info:nth-of-type(3):visible",
-      "description": "'10-30 1 1 임 1' 요소 클릭",
+      "selector": "div.task_inner:has-text('복무 규정 개정안 안내문 배포 11-03 2 임 1'):visible, div.group_lst:nth-of-type(2) > ul.mg_ul > li._task > div.task_card > div.task_info._taskInfo:nth-of-type(2) > div.task_inner:visible",
+      "cursorOffset": {
+        "x": 122,
+        "y": 93
+      },
+      "clickCoords": {
+        "x": 1002,
+        "y": 315
+      },
+      "description": "'배포 복무 규정 개정안 안내문 배포 11' 요소 클릭",
       "recordedByEyedropper": true,
-      "targetHtml": "<div class=\"info\">10-30 1 1 임 1</div>",
-      "_lastHumanTarget": "10-30 1 1 임 1"
+      "targetHtml": "<div class=\"task_inner\"><span class=\"label lb_sky\" data-lbl-id=\"TA01m6d2bk8dwa6c818hd2tmzq3g\">배포 복무 규정 개정안 안내문 배포 11-03 2 임 1</div>",
+      "_lastHumanTarget": "복무 규정 개정안 안내문 배포 11-03 2 임 1"
     },
     {
       "type": "wait",
       "ms": 1000,
-      "description": "'10-30 1 1 임 1' 요소 반응 대기",
-      "_lastHumanTarget": "10-30 1 1 임 1"
+      "description": "'배포 복무 규정 개정안 안내문 배포 11' 요소 반응 대기",
+      "_lastHumanTarget": "배포 복무 규정 개정안 안내문 배포 11"
     },
     {
       "type": "click",
-      "selector": "div#aglTaskView_topBox > div.optn:nth-of-type(3) > div.btn_drop > button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu:has-text('메뉴'):visible, div#aglTaskView_topBox button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu[title='메뉴']:visible, div#aglTaskView_topBox button[title='메뉴']:visible, button.btn_menu[title='메뉴']:visible, button[title='메뉴']:visible",
-      "description": "'메뉴' 버튼 클릭",
+      "selector": "button#aglTaskView_closeBtn:visible, #aglTaskView_closeBtn:visible, button.btn_close[title='닫기']:visible, button[title='닫기']:visible",
+      "cursorOffset": {
+        "x": 11,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 1276,
+        "y": 75
+      },
+      "description": "'닫기' 버튼 클릭",
       "recordedByEyedropper": true,
-      "targetHtml": "<button type=\"button\" title=\"메뉴\" data-toggle=\"dropdown\" class=\"btn_menu\"><i class=\"icon\"><span>메뉴</span></i></button>",
-      "_lastHumanTarget": "메뉴"
+      "targetHtml": "<button id=\"aglTaskView_closeBtn\" type=\"button\" title=\"닫기\" class=\"btn_close\"><i class=\"icon\"><span>닫기</span></i></button>",
+      "_lastHumanTarget": "닫기"
     },
     {
       "type": "wait",
       "ms": 1000,
-      "description": "'메뉴' 버튼 반응 대기",
-      "_lastHumanTarget": "메뉴"
-    },
-    {
-      "type": "click",
-      "selector": "ul.drop_menu.pull_right a._archive:text-is('보관'):visible, ul#aglTaskView_dropMenu a._archive:has-text('보관'):visible, a._archive:has-text('보관'):visible, ul#aglTaskView_dropMenu > li:nth-of-type(3) > a._archive:visible",
-      "description": "'보관' 메뉴/링크 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<a href=\"#\" class=\"_archive\">보관</a>",
-      "_lastHumanTarget": "보관"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "'보관' 메뉴/링크 반응 대기",
-      "_lastHumanTarget": "보관"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible button#naon-cmm-confirm-ok:visible",
-      "description": "[알림 팝업] '확인' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button id=\"naon-cmm-confirm-ok\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "wait",
-      "ms": 1600,
-      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
-      "_lastHumanTarget": "확인"
+      "description": "'닫기' 버튼 반응 대기",
+      "_lastHumanTarget": "닫기"
     },
     {
       "type": "click",
       "selector": "div.btn_drop button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, div#aglHeader_title button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, div#aglHeader_title button.btn_tit._taskBrdName:has-text('공동업무 보드'):visible, div#aglHeader_title button._taskBrdName:visible",
-      "description": "'공동업무 보드' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button type=\"button\" data-toggle=\"dropdown\" class=\"btn btn_tit _taskBrdName\"> 공동업무 보드 <span class=\"caret\"></span></button>",
-      "_lastHumanTarget": "공동업무 보드"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "'공동업무 보드' 버튼 반응 대기",
-      "_lastHumanTarget": "공동업무 보드"
-    },
-    {
-      "type": "click",
-      "selector": "ul.drop_menu a.archive:has-text('보관함'):visible, div#aglHeader_title a.archive:has-text('보관함'):visible, a.archive:has-text('보관함'):visible, div#aglHeader_title > div.btn_drop > ul.drop_menu > li:nth-of-type(2) > a.archive:visible",
-      "description": "'보관함' 메뉴/링크 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<a href=\"#\" class=\"archive\">보관함</a>",
-      "_lastHumanTarget": "보관함"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "'보관함' 메뉴/링크 반응 대기",
-      "_lastHumanTarget": "보관함"
-    },
-    {
-      "type": "click",
-      "selector": "ul#aglTaskArchive_taskList > li._task > div.task_card > div.task_info._taskInfo:nth-of-type(1):visible",
-      "description": "[보관함 팝업] '복무 규정 개정안 안내문 배포 10-30' 요소 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<div class=\"task_info _taskInfo\"><span class=\"label lb_sky\" data-lbl-id=\"TA01m62jvd5qheq6x99mqehmxzhs\">복무 규정 개정안 안내문 배포 10-30 1 1 임 1</div>",
-      "_lastHumanTarget": "복무 규정 개정안 안내문 배포 10-30"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "[보관함 팝업] '복무 규정 개정안 안내문 배포 10-30' 요소 반응 대기",
-      "_lastHumanTarget": "복무 규정 개정안 안내문 배포 10-30"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible ul#aglTaskArchive_taskList button.btn_rstn._restoreTask:has-text('복원'):visible, .ui-dialog:visible ul#aglTaskArchive_taskList button._restoreTask:visible, .ui-dialog:visible ul#aglTaskArchive_taskList button.btn_rstn[title='복원']:visible, .ui-dialog:visible ul#aglTaskArchive_taskList button[title='복원']:visible, .ui-dialog:visible button.btn_rstn[title='복원']:visible, .ui-dialog:visible button[title='복원']:visible, .ui-dialog:visible ul#aglTaskArchive_taskList button.btn_rstn._restoreTask[title='복원']:visible, ul#aglTaskArchive_taskList > li._task > div.task_card > div.task_optn:nth-of-type(2) > button.btn_rstn._restoreTask:visible",
-      "description": "[보관함 팝업] '복원' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button type=\"button\" title=\"복원\" class=\"btn_rstn _restoreTask\"><i class=\"ico ico_cncl\"><span>복원</span></i></button>",
-      "_lastHumanTarget": "복원"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "[보관함 팝업] '복원' 버튼 반응 대기",
-      "_lastHumanTarget": "복원"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible button#naon-cmm-confirm-ok:visible",
-      "description": "[알림 팝업] '확인' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button id=\"naon-cmm-confirm-ok\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "wait",
-      "ms": 1600,
-      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible button#naon-cmm-alert-confirm:visible",
-      "description": "[알림 팝업] '확인' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button id=\"naon-cmm-alert-confirm\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "wait",
-      "ms": 1600,
-      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible button._cmmDialogClose:visible, .ui-dialog:visible div.ui-dialog-titlebar.ui-helper-clearfix:nth-of-type(1) > button.ui-dialog-titlebar-close._cmmDialogClose:visible, .ui-dialog:visible div.ui-dialog-titlebar.ui-helper-clearfix button.ui-dialog-titlebar-close._cmmDialogClose:visible, .ui-dialog:visible button.ui-dialog-titlebar-close._cmmDialogClose:visible",
-      "description": "[보관함 팝업] button 요소 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button type=\"button\" class=\"ui-dialog-titlebar-close _cmmDialogClose\"></button>",
-      "_lastHumanTarget": "보관함 팝업"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "[보관함 팝업] button 요소 반응 대기",
-      "_lastHumanTarget": "보관함 팝업"
-    },
-    {
-      "type": "click",
-      "selector": "div.task_inner:has-text('복무 규정 개정안 안내문 배포 10-30 1 1 임'):visible, div.group_lst:nth-of-type(2) > ul.mg_ul > li._task > div.task_card > div.task_info._taskInfo:nth-of-type(2) > div.task_inner:visible",
-      "description": "'배포 복무 규정 개정안 안내문 배포 10' 요소 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<div class=\"task_inner\"><span class=\"label lb_sky\" data-lbl-id=\"TA01m62jvd5qheq6x99mqehmxzhs\">배포 복무 규정 개정안 안내문 배포 10-30 1 1 임 1</div>",
-      "_lastHumanTarget": "복무 규정 개정안 안내문 배포 10-30 1 1 임"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "'배포 복무 규정 개정안 안내문 배포 10' 요소 반응 대기",
-      "_lastHumanTarget": "배포 복무 규정 개정안 안내문 배포 10"
-    },
-    {
-      "type": "click",
-      "selector": "div#aglTaskView_topBox > div.optn:nth-of-type(3) > div.btn_drop > button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu:has-text('메뉴'):visible, div#aglTaskView_topBox button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu[title='메뉴']:visible, div#aglTaskView_topBox button[title='메뉴']:visible, button.btn_menu[title='메뉴']:visible, button[title='메뉴']:visible",
-      "description": "'메뉴' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button type=\"button\" title=\"메뉴\" data-toggle=\"dropdown\" class=\"btn_menu\"><i class=\"icon\"><span>메뉴</span></i></button>",
-      "_lastHumanTarget": "메뉴"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "'메뉴' 버튼 반응 대기",
-      "_lastHumanTarget": "메뉴"
-    },
-    {
-      "type": "click",
-      "selector": "ul#aglTaskView_dropMenu a._delete:has-text('삭제'):visible, ul.drop_menu.pull_right a._delete:text-is('삭제'):visible, ul#aglTaskView_dropMenu > li:nth-of-type(4) > a._delete:visible, a._delete:has-text('삭제'):visible",
-      "description": "'삭제' 메뉴/링크 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<a href=\"#\" class=\"_delete\">삭제</a>",
-      "_lastHumanTarget": "삭제"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "'삭제' 메뉴/링크 반응 대기",
-      "_lastHumanTarget": "삭제"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible button#naon-cmm-confirm-ok:visible",
-      "description": "[알림 팝업] '확인' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button id=\"naon-cmm-confirm-ok\" type=\"button\" class=\"abtn abtn_dan\"><i class=\"ico ico_check\"></i> 확인</button>",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "wait",
-      "ms": 1600,
-      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "click",
-      "selector": "div.btn_drop button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, div#aglHeader_title button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, div#aglHeader_title button.btn_tit._taskBrdName:has-text('공동업무 보드'):visible, div#aglHeader_title button._taskBrdName:visible",
+      "cursorOffset": {
+        "x": 94,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 511,
+        "y": 141
+      },
       "description": "'공동업무 보드' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" data-toggle=\"dropdown\" class=\"btn btn_tit _taskBrdName\"> 공동업무 보드 <span class=\"caret\"></span></button>",
@@ -2013,6 +2490,14 @@
     {
       "type": "click",
       "selector": "ul.drop_menu a.trash:has-text('삭제함'):visible, div#aglHeader_title a.trash:has-text('삭제함'):visible, a.trash:has-text('삭제함'):visible, div#aglHeader_title > div.btn_drop > ul.drop_menu > li:nth-of-type(3) > a.trash:visible",
+      "cursorOffset": {
+        "x": 63,
+        "y": 6
+      },
+      "clickCoords": {
+        "x": 481,
+        "y": 230
+      },
       "description": "'삭제함' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" class=\"trash\">삭제함</a>",
@@ -2026,22 +2511,170 @@
     },
     {
       "type": "click",
-      "selector": "ul#aglTaskTrash_taskList > li._task[data-task-id='TT01m62jnbtz31r9jxn2nhv6a03w']:nth-of-type(2) > div.task_card > div.task_info._taskInfo:nth-of-type(1):visible, ul#aglTaskTrash_taskList > li._task:nth-of-type(2) > div.task_card > div.task_info._taskInfo:nth-of-type(1):visible",
-      "description": "[삭제함 팝업] '교과목 시간표 최종 점검 10-30 0/' 요소 클릭",
+      "selector": ".ui-dialog:visible button._cmmDialogClose:visible, .ui-dialog:visible div.ui-dialog-titlebar.ui-helper-clearfix:nth-of-type(1) > button.ui-dialog-titlebar-close._cmmDialogClose:visible, .ui-dialog:visible div.ui-dialog-titlebar.ui-helper-clearfix button.ui-dialog-titlebar-close._cmmDialogClose:visible, .ui-dialog:visible button.ui-dialog-titlebar-close._cmmDialogClose:visible",
+      "cursorOffset": {
+        "x": 4,
+        "y": 14
+      },
+      "clickCoords": {
+        "x": 1168,
+        "y": 83
+      },
+      "description": "[삭제함 팝업] button 요소 클릭",
       "recordedByEyedropper": true,
-      "targetHtml": "<div class=\"task_info _taskInfo\"><span class=\"label lb_red\" data-lbl-id=\"TA01m60seypssx5nwz772e74p3hp\">교과목 시간표 최종 점검 10-30 0/3 1 임</div>",
-      "_lastHumanTarget": "교과목 시간표 최종 점검 10-30 0/"
+      "targetHtml": "<button type=\"button\" class=\"ui-dialog-titlebar-close _cmmDialogClose\"></button>",
+      "_lastHumanTarget": "삭제함 팝업"
     },
     {
       "type": "wait",
       "ms": 1000,
-      "description": "[삭제함 팝업] '교과목 시간표 최종 점검 10-30 0/' 요소 반응 대기",
-      "_lastHumanTarget": "교과목 시간표 최종 점검 10-30 0/"
+      "description": "[삭제함 팝업] button 요소 반응 대기",
+      "_lastHumanTarget": "삭제함 팝업"
     },
     {
       "type": "click",
-      "selector": "ul#aglTaskTrash_taskList > li._task[data-task-id='TT01m62jnbtz31r9jxn2nhv6a03w']:nth-of-type(2) > div.task_card > div.task_optn:nth-of-type(2) > button.btn_rstn._restoreTask:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn._restoreTask:has-text('복원'):visible, .ui-dialog:visible ul#aglTaskTrash_taskList button._restoreTask:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn[title='복원']:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button[title='복원']:visible, .ui-dialog:visible button.btn_rstn[title='복원']:visible, .ui-dialog:visible button[title='복원']:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn._restoreTask[title='복원']:visible, ul#aglTaskTrash_taskList > li._task:nth-of-type(2) > div.task_card > div.task_optn:nth-of-type(2) > button.btn_rstn._restoreTask:visible",
-      "description": "[삭제함 팝업] '복원' 버튼 클릭",
+      "selector": "div.task_inner:has-text('복무 규정 개정안 안내문 배포 11-03 2 임 1'):visible, div.group_lst:nth-of-type(2) > ul.mg_ul > li._task > div.task_card > div.task_info._taskInfo:nth-of-type(2) > div.task_inner:visible",
+      "cursorOffset": {
+        "x": 182,
+        "y": 95
+      },
+      "clickCoords": {
+        "x": 1062,
+        "y": 317
+      },
+      "description": "'배포 복무 규정 개정안 안내문 배포 11' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<div class=\"task_inner\"><span class=\"label lb_sky\" data-lbl-id=\"TA01m6d2bk8dwa6c818hd2tmzq3g\">배포 복무 규정 개정안 안내문 배포 11-03 2 임 1</div>",
+      "_lastHumanTarget": "복무 규정 개정안 안내문 배포 11-03 2 임 1"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'배포 복무 규정 개정안 안내문 배포 11' 요소 반응 대기",
+      "_lastHumanTarget": "배포 복무 규정 개정안 안내문 배포 11"
+    },
+    {
+      "type": "click",
+      "selector": "div#aglTaskView_topBox > div.optn:nth-of-type(3) > div.btn_drop > button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu:has-text('메뉴'):visible, div#aglTaskView_topBox button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu[title='메뉴']:visible, div#aglTaskView_topBox button[title='메뉴']:visible, button.btn_menu[title='메뉴']:visible, button[title='메뉴']:visible",
+      "cursorOffset": {
+        "x": 14,
+        "y": 23
+      },
+      "clickCoords": {
+        "x": 1268,
+        "y": 144
+      },
+      "description": "'메뉴' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" title=\"메뉴\" data-toggle=\"dropdown\" class=\"btn_menu\"><i class=\"icon\"><span>메뉴</span></i></button>",
+      "_lastHumanTarget": "메뉴"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'메뉴' 버튼 반응 대기",
+      "_lastHumanTarget": "메뉴"
+    },
+    {
+      "type": "click",
+      "selector": "ul.drop_menu.pull_right a._archive:text-is('보관'):visible, ul#aglTaskView_dropMenu a._archive:has-text('보관'):visible, a._archive:has-text('보관'):visible, ul#aglTaskView_dropMenu > li:nth-of-type(3) > a._archive:visible",
+      "cursorOffset": {
+        "x": 21,
+        "y": 3
+      },
+      "clickCoords": {
+        "x": 1182,
+        "y": 220
+      },
+      "description": "'보관' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"_archive\">보관</a>",
+      "_lastHumanTarget": "보관"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'보관' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "보관"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#naon-cmm-confirm-ok:visible",
+      "cursorOffset": {
+        "x": 70,
+        "y": 23
+      },
+      "clickCoords": {
+        "x": 923,
+        "y": 143
+      },
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"naon-cmm-confirm-ok\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "click",
+      "selector": "div.btn_drop button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, div#aglHeader_title button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, div#aglHeader_title button.btn_tit._taskBrdName:has-text('공동업무 보드'):visible, div#aglHeader_title button._taskBrdName:visible",
+      "cursorOffset": {
+        "x": 40,
+        "y": 19
+      },
+      "clickCoords": {
+        "x": 457,
+        "y": 143
+      },
+      "description": "'공동업무 보드' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" data-toggle=\"dropdown\" class=\"btn btn_tit _taskBrdName\"> 공동업무 보드 <span class=\"caret\"></span></button>",
+      "_lastHumanTarget": "공동업무 보드"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'공동업무 보드' 버튼 반응 대기",
+      "_lastHumanTarget": "공동업무 보드"
+    },
+    {
+      "type": "click",
+      "selector": "ul.drop_menu a.archive:has-text('보관함'):visible, div#aglHeader_title a.archive:has-text('보관함'):visible, a.archive:has-text('보관함'):visible, div#aglHeader_title > div.btn_drop > ul.drop_menu > li:nth-of-type(2) > a.archive:visible",
+      "cursorOffset": {
+        "x": 60,
+        "y": 8
+      },
+      "clickCoords": {
+        "x": 478,
+        "y": 202
+      },
+      "description": "'보관함' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"archive\">보관함</a>",
+      "_lastHumanTarget": "보관함"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'보관함' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "보관함"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible div.task_optn button.btn_rstn._restoreTask:visible, .ui-dialog:visible ul#aglTaskArchive_taskList button.btn_rstn._restoreTask:has-text('복원'):visible, .ui-dialog:visible ul#aglTaskArchive_taskList button._restoreTask:visible, .ui-dialog:visible button.btn_rstn[title='복원']:visible, .ui-dialog:visible button[title='복원']:visible, .ui-dialog:visible ul#aglTaskArchive_taskList button.btn_rstn[title='복원']:visible, .ui-dialog:visible ul#aglTaskArchive_taskList button[title='복원']:visible, .ui-dialog:visible ul#aglTaskArchive_taskList button.btn_rstn._restoreTask[title='복원']:visible, ul#aglTaskArchive_taskList > li._task > div.task_card > div.task_optn:nth-of-type(2) > button.btn_rstn._restoreTask:visible",
+      "cursorOffset": {
+        "x": 17,
+        "y": 7
+      },
+      "clickCoords": {
+        "x": 1146,
+        "y": 194
+      },
+      "description": "[보관함 팝업] '복원' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" title=\"복원\" class=\"btn_rstn _restoreTask\"><i class=\"ico ico_cncl\"><span>복원</span></i></button>",
       "_lastHumanTarget": "복원"
@@ -2049,12 +2682,20 @@
     {
       "type": "wait",
       "ms": 1000,
-      "description": "[삭제함 팝업] '복원' 버튼 반응 대기",
+      "description": "[보관함 팝업] '복원' 버튼 반응 대기",
       "_lastHumanTarget": "복원"
     },
     {
       "type": "click",
       "selector": ".ui-dialog:visible button#naon-cmm-confirm-ok:visible",
+      "cursorOffset": {
+        "x": 25,
+        "y": 23
+      },
+      "clickCoords": {
+        "x": 878,
+        "y": 143
+      },
       "description": "[알림 팝업] '확인' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"naon-cmm-confirm-ok\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
@@ -2069,48 +2710,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible button#naon-cmm-alert-confirm:visible",
-      "description": "[알림 팝업] '확인' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button id=\"naon-cmm-alert-confirm\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "wait",
-      "ms": 1600,
-      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "click",
-      "selector": "ul#aglTaskTrash_taskList > li._task[data-task-id='TT01m62jtndhtefk24t10c0azg4w'] > div.task_card > div.task_optn:nth-of-type(2) > button.btn_rstn._restoreTask:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn._restoreTask:has-text('복원'):visible, .ui-dialog:visible ul#aglTaskTrash_taskList button._restoreTask:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn[title='복원']:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button[title='복원']:visible, .ui-dialog:visible button.btn_rstn[title='복원']:visible, .ui-dialog:visible button[title='복원']:visible, .ui-dialog:visible ul#aglTaskTrash_taskList button.btn_rstn._restoreTask[title='복원']:visible, ul#aglTaskTrash_taskList > li._task > div.task_card > div.task_optn:nth-of-type(2) > button.btn_rstn._restoreTask:visible",
-      "description": "[삭제함 팝업] '복원' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button type=\"button\" title=\"복원\" class=\"btn_rstn _restoreTask\"><i class=\"ico ico_cncl\"><span>복원</span></i></button>",
-      "_lastHumanTarget": "복원"
-    },
-    {
-      "type": "wait",
-      "ms": 1000,
-      "description": "[삭제함 팝업] '복원' 버튼 반응 대기",
-      "_lastHumanTarget": "복원"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible button#naon-cmm-confirm-ok:visible",
-      "description": "[알림 팝업] '확인' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button id=\"naon-cmm-confirm-ok\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "wait",
-      "ms": 1600,
-      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible button#naon-cmm-alert-confirm:visible",
+      "cursorOffset": {
+        "x": 56,
+        "y": 9
+      },
+      "clickCoords": {
+        "x": 966,
+        "y": 169
+      },
       "description": "[알림 팝업] '확인' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"naon-cmm-alert-confirm\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
@@ -2125,20 +2732,36 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible button._cmmDialogClose:visible, .ui-dialog:visible div.ui-dialog-titlebar.ui-helper-clearfix:nth-of-type(1) > button.ui-dialog-titlebar-close._cmmDialogClose:visible, .ui-dialog:visible div.ui-dialog-titlebar.ui-helper-clearfix button.ui-dialog-titlebar-close._cmmDialogClose:visible, .ui-dialog:visible button.ui-dialog-titlebar-close._cmmDialogClose:visible",
-      "description": "[삭제함 팝업] button 요소 클릭",
+      "cursorOffset": {
+        "x": 13,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 1177,
+        "y": 84
+      },
+      "description": "[보관함 팝업] button 요소 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" class=\"ui-dialog-titlebar-close _cmmDialogClose\"></button>",
-      "_lastHumanTarget": "삭제함 팝업"
+      "_lastHumanTarget": "보관함 팝업"
     },
     {
       "type": "wait",
       "ms": 1000,
-      "description": "[삭제함 팝업] button 요소 반응 대기",
-      "_lastHumanTarget": "삭제함 팝업"
+      "description": "[보관함 팝업] button 요소 반응 대기",
+      "_lastHumanTarget": "보관함 팝업"
     },
     {
       "type": "click",
       "selector": "div.btn_drop button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, div#aglHeader_title button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, div#aglHeader_title button.btn_tit._taskBrdName:has-text('공동업무 보드'):visible, div#aglHeader_title button._taskBrdName:visible",
+      "cursorOffset": {
+        "x": 81,
+        "y": 10
+      },
+      "clickCoords": {
+        "x": 498,
+        "y": 134
+      },
       "description": "'공동업무 보드' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button type=\"button\" data-toggle=\"dropdown\" class=\"btn btn_tit _taskBrdName\"> 공동업무 보드 <span class=\"caret\"></span></button>",
@@ -2153,6 +2776,14 @@
     {
       "type": "click",
       "selector": "ul.drop_menu a._lock:text-is('잠금'):visible, div#aglHeader_title a._lock:has-text('잠금'):visible, a._lock:has-text('잠금'):visible, div#aglHeader_title > div.btn_drop > ul.drop_menu > li:nth-of-type(5) > a._lock:visible",
+      "cursorOffset": {
+        "x": 83,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 501,
+        "y": 280
+      },
       "description": "'잠금' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" class=\"_lock\">잠금</a>",
@@ -2167,6 +2798,14 @@
     {
       "type": "click",
       "selector": ".ui-dialog:visible button#naon-cmm-alert-confirm:visible",
+      "cursorOffset": {
+        "x": 32,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 942,
+        "y": 133
+      },
       "description": "[알림 팝업] '확인' 버튼 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<button id=\"naon-cmm-alert-confirm\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
@@ -2180,77 +2819,81 @@
     },
     {
       "type": "click",
-      "selector": "div.btn_drop button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, div#aglHeader_title button.btn_tit._taskBrdName.btn:has-text('공동업무 보드'):visible, div#aglHeader_title button.btn_tit._taskBrdName:has-text('잠금 공동업무 보드'):visible, div#aglHeader_title button._taskBrdName:visible",
-      "description": "'공동업무 보드' 버튼 클릭",
+      "selector": "div.task_inner:has-text('복무 규정 개정안 안내문 배포 11-03 2 임 1'):visible, div.group_lst:nth-of-type(2) > ul.mg_ul > li._task > div.task_card > div.task_info._taskInfo:nth-of-type(2) > div.task_inner:visible",
+      "cursorOffset": {
+        "x": 209,
+        "y": 97
+      },
+      "clickCoords": {
+        "x": 1089,
+        "y": 319
+      },
+      "description": "'배포 복무 규정 개정안 안내문 배포 11' 요소 클릭",
       "recordedByEyedropper": true,
-      "targetHtml": "<button type=\"button\" data-toggle=\"dropdown\" class=\"btn btn_tit _taskBrdName\"> <i title=\"잠금\" class=\"ico ico_lock\"><span>잠금</span></i> 공동업무 보드 <span class=\"caret\"></span></button>",
-      "_lastHumanTarget": "공동업무 보드"
+      "targetHtml": "<div class=\"task_inner\"><span class=\"label lb_sky\" data-lbl-id=\"TA01m6d2bk8dwa6c818hd2tmzq3g\">배포 복무 규정 개정안 안내문 배포 11-03 2 임 1</div>",
+      "_lastHumanTarget": "복무 규정 개정안 안내문 배포 11-03 2 임 1"
     },
     {
       "type": "wait",
       "ms": 1000,
-      "description": "'공동업무 보드' 버튼 반응 대기",
-      "_lastHumanTarget": "공동업무 보드"
+      "description": "'배포 복무 규정 개정안 안내문 배포 11' 요소 반응 대기",
+      "_lastHumanTarget": "배포 복무 규정 개정안 안내문 배포 11"
     },
     {
       "type": "click",
-      "selector": "div#aglHeader_title a._deleteBrd:has-text('삭제'):visible, ul.drop_menu a._deleteBrd:text-is('삭제'):visible, div#aglHeader_title > div.btn_drop > ul.drop_menu > li:nth-of-type(6) > a._deleteBrd:visible, a._deleteBrd:has-text('삭제'):visible",
-      "description": "'삭제' 메뉴/링크 클릭",
+      "selector": "div#aglTaskView_topBox > div.optn:nth-of-type(3) > div.btn_drop > button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu:has-text('메뉴'):visible, div#aglTaskView_topBox button.btn_menu:visible, div#aglTaskView_topBox button.btn_menu[title='메뉴']:visible, div#aglTaskView_topBox button[title='메뉴']:visible, button.btn_menu[title='메뉴']:visible, button[title='메뉴']:visible",
+      "cursorOffset": {
+        "x": 12,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 1279,
+        "y": 138
+      },
+      "description": "'메뉴' 버튼 클릭",
       "recordedByEyedropper": true,
-      "targetHtml": "<a href=\"#\" class=\"_deleteBrd\">삭제</a>",
-      "_lastHumanTarget": "삭제"
+      "targetHtml": "<button type=\"button\" title=\"메뉴\" data-toggle=\"dropdown\" class=\"btn_menu\"><i class=\"icon\"><span>메뉴</span></i></button>",
+      "_lastHumanTarget": "메뉴"
     },
     {
       "type": "wait",
       "ms": 1000,
-      "description": "'삭제' 메뉴/링크 반응 대기",
-      "_lastHumanTarget": "삭제"
+      "description": "'메뉴' 버튼 반응 대기",
+      "_lastHumanTarget": "메뉴"
     },
     {
       "type": "click",
-      "selector": ".ui-dialog:visible button#naon-cmm-confirm-ok:visible",
-      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "selector": "button#aglTaskView_closeBtn:visible, #aglTaskView_closeBtn:visible, button.btn_close[title='닫기']:visible, button[title='닫기']:visible",
+      "cursorOffset": {
+        "x": 12,
+        "y": 14
+      },
+      "clickCoords": {
+        "x": 1277,
+        "y": 74
+      },
+      "description": "'닫기' 버튼 클릭",
       "recordedByEyedropper": true,
-      "targetHtml": "<button id=\"naon-cmm-confirm-ok\" type=\"button\" class=\"abtn abtn_dan\"><i class=\"ico ico_check\"></i> 확인</button>",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "wait",
-      "ms": 1600,
-      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "click",
-      "selector": ".ui-dialog:visible button#naon-cmm-alert-confirm:visible",
-      "description": "[알림 팝업] '확인' 버튼 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<button id=\"naon-cmm-alert-confirm\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "wait",
-      "ms": 1600,
-      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
-      "_lastHumanTarget": "확인"
-    },
-    {
-      "type": "click",
-      "selector": "#snb div.mn.aglTreeUtil-node a.item:has-text('모든 보드'):visible, div#aglSnb_fldTree a.item:has-text('모든 보드'):visible, #snb a.item:has-text('모든 보드'):visible, div#aglSnb_fldTree > ul.mn_lst > li:nth-of-type(2) > div.mn.aglTreeUtil-node.aglTreeUtil-exp-c > a.item:visible",
-      "description": "'모든 보드' 메뉴/링크 클릭",
-      "recordedByEyedropper": true,
-      "targetHtml": "<a href=\"#\" class=\"item\">모든 보드</a>",
-      "_lastHumanTarget": "모든 보드"
+      "targetHtml": "<button id=\"aglTaskView_closeBtn\" type=\"button\" title=\"닫기\" class=\"btn_close\"><i class=\"icon\"><span>닫기</span></i></button>",
+      "_lastHumanTarget": "닫기"
     },
     {
       "type": "wait",
       "ms": 1000,
-      "description": "'모든 보드' 메뉴/링크 반응 대기",
-      "_lastHumanTarget": "모든 보드"
+      "description": "'닫기' 버튼 반응 대기",
+      "_lastHumanTarget": "닫기"
     },
     {
       "type": "click",
-      "selector": "#snb div.mn.aglTreeUtil-node a.item:has-text('나의 할일'):visible, div#aglSnb_fldTree a.item:has-text('나의 할일'):visible, #snb a.item:has-text('나의 할일'):visible, div#aglSnb_fldTree > ul.mn_lst > li:nth-of-type(1) > div.mn.aglTreeUtil-node.aglTreeUtil-exp-c > a.item:visible",
+      "selector": "div.mn.aglTreeUtil-node a.item:has-text('나의 할일'):visible, div#aglSnb_fldTree a.item:has-text('나의 할일'):visible, a.item:has-text('나의 할일'):visible, div#aglSnb_fldTree > ul.mn_lst > li:nth-of-type(1) > div.mn.aglTreeUtil-node.aglTreeUtil-exp-c > a.item:visible",
+      "cursorOffset": {
+        "x": 50,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 104,
+        "y": 202
+      },
       "description": "'나의 할일' 메뉴/링크 클릭",
       "recordedByEyedropper": true,
       "targetHtml": "<a href=\"#\" class=\"item\">나의 할일</a>",

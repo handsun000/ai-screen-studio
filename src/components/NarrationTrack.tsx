@@ -32,7 +32,8 @@ export const NarrationTrack: React.FC<NarrationTrackProps> = ({ editPlan }) => {
   let subtitleOpacity = 0;
 
   if (showSubtitles) {
-    for (const cue of narration.cues) {
+    for (let idx = 0; idx < narration.cues.length; idx++) {
+      const cue = narration.cues[idx];
       if (compTimeMs >= cue.startMs && compTimeMs <= cue.endMs) {
         activeCue = cue;
         const intoMs = compTimeMs - cue.startMs;
@@ -70,7 +71,7 @@ export const NarrationTrack: React.FC<NarrationTrackProps> = ({ editPlan }) => {
             position: "absolute",
             left: 0,
             right: 0,
-            bottom: 36,
+            bottom: 22,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -81,19 +82,19 @@ export const NarrationTrack: React.FC<NarrationTrackProps> = ({ editPlan }) => {
         >
           <div
             style={{
-              maxWidth: 1420,
+              maxWidth: 1320,
               background: "rgba(15, 23, 42, 0.86)",
               border: "1px solid rgba(148, 163, 184, 0.32)",
               borderRadius: 12,
-              padding: "12px 28px",
+              padding: "11px 26px",
               boxShadow: "0 12px 32px rgba(0, 0, 0, 0.45)",
               color: "#F8FAFC",
               fontFamily:
                 "'Pretendard', 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif",
-              fontSize: 27,
+              fontSize: 25,
               fontWeight: 600,
               letterSpacing: "-0.01em",
-              lineHeight: 1.42,
+              lineHeight: 1.38,
               textAlign: "center",
               wordBreak: "keep-all",
             }}

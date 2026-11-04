@@ -1,0 +1,149 @@
+{
+  "url": "https://gwdev.unison.co.kr/ekp/main/home/homGwMain",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "windowBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 1920,
+    "height": 1080,
+    "windowState": "normal"
+  },
+  "requiresLogin": true,
+  "recordedByEyedropper": true,
+  "actions": [
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기"
+    },
+    {
+      "type": "click",
+      "selector": "div#main_menu a[title='게시판'][onclick*='/ekp/scr/board/boardMain']:visible, div#main_menu a[title='게시판']:visible, div#main_menu a[onclick*='/ekp/scr/board/boardMain']:visible, a[onclick*='/ekp/scr/board/boardMain']:visible, div#main_menu a.nta[title='게시판']:visible, li.nt.nt_3 a.nta.nta_drop:has-text('게시판'):visible, a.nta[title='게시판']:visible, a[title='게시판']:visible, div#main_menu a.nta.nta_drop:has-text('게시판'):visible, div#main_menu a.nta.nta_drop[title='게시판']:visible",
+      "cursorOffset": {
+        "x": 48,
+        "y": 27
+      },
+      "clickCoords": {
+        "x": 702,
+        "y": 82
+      },
+      "description": "'게시판' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" title=\"게시판\" class=\"nta nta_drop\" onclick=\"GwMainMenu.fn.openDropMenu(this, 'MNU93414167351865876511', 'https://gwdev.unison.co.kr/ekp/scr/board/boardMain','G', 'L', '0', '0');return false;\"> <i class=\"nti nti_bbs\"></i>게시판 </a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'게시판' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "type": "click",
+      "selector": "a[onclick*='/ekp/scr/board/boardMain?brdId=BBN']:visible, a:has-text('공지사항'):visible, ul.svc_lst > li.nt.nt_3:nth-of-type(3) > div.nt_sub.sub_h2 > ul > li:nth-of-type(2) > a:visible",
+      "cursorOffset": {
+        "x": 69,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 702,
+        "y": 167
+      },
+      "description": "'공지사항' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" onclick=\"GwMainMenu.fn.goPage('MNU93414167351921422331', 'https://gwdev.unison.co.kr/ekp/scr/board/boardMain?brdId=BBN','G', 'L', '0', '0');return false;\">공지사항</a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'공지사항' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "type": "click",
+      "selector": "div.mn a.item:has-text('최근 게시함'):visible, div#mainBrdList a.item:has-text('최근 게시함'):visible, a.item:has-text('최근 게시함'):visible, div#mainBrdList > ul.mn_lst > li[data-key='BBA'] > div.mn > a.item:visible",
+      "cursorOffset": {
+        "x": 34,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 88,
+        "y": 246
+      },
+      "description": "'최근 게시함' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"item\">최근 게시함</a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'최근 게시함' 메뉴/링크 반응 대기"
+    },
+    {
+      "type": "click",
+      "selector": ".dynatree-title:text-is('중요게시글'):visible, .dynatree-title:has-text('중요게시글'):visible, span.dynatree-node.tico_impt a.dynatree-title:has-text('중요게시글'):visible, li#dynatree-id-BBS a.dynatree-title:has-text('중요게시글'):visible",
+      "cursorOffset": {
+        "x": 35,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 85,
+        "y": 416
+      },
+      "description": "트리 '중요게시글' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"dynatree-title\">중요게시글</a>"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "트리 '중요게시글' 항목 반응 대기"
+    },
+    {
+      "type": "type",
+      "selector": "input#brdBoardHeader_srchInputTxt:visible, #brdBoardHeader_srchInputTxt:visible, input[placeholder*='검색어']:visible",
+      "text": "공지",
+      "cursorOffset": {
+        "x": 75,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 1732,
+        "y": 140
+      },
+      "description": "'검색어' 입력창에 '공지' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input name=\"\" type=\"text\" placeholder=\"검색어\" autocomplete=\"off\" class=\"input_txt\" id=\"brdBoardHeader_srchInputTxt\">"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "type": "click",
+      "selector": "button#brdBoardHeader_searchBtn:visible, #brdBoardHeader_searchBtn:visible",
+      "cursorOffset": {
+        "x": 14,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 1821,
+        "y": 140
+      },
+      "description": "'검색' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" title=\"검색\" class=\"btn btn_ico\" id=\"brdBoardHeader_searchBtn\"><i class=\"ico ico_srch\"><span>검색</span></i></button>"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'검색' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "type": "wait",
+      "ms": 2000,
+      "description": "최종 시연 결과 화면 클로즈업 확인 대기"
+    }
+  ]
+}

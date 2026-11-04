@@ -8,6 +8,7 @@ import {
   ensurePublicNarrationAssets,
   getNarration,
 } from "./narrationService";
+import { fastApplyNarrationToRenderedMp4, type RenderedBaseMeta } from "./slideVideoComposer";
 import type { EditPlan, MomentsFile, TimeRegion } from "../types";
 
 export interface RenderOptions {
@@ -111,10 +112,14 @@ export function scaleEditPlanForFps(
   cloned.fps = targetFps;
 
   if (cloned.narration && Array.isArray(cloned.narration.cues) && cloned.narration.cues.length > 0) {
+    const bakedIntroMs = cloned.narration.introBakedIntoVideo
+      ? Math.round(Number(cloned.narration.bakedIntroDurationMs) || 0)
+      : 0;
     const { timeRegions, totalCompFrames, rawTotalFrames } = computeTimeRegionsAndSyncCues(
       cloned.narration.cues,
       rawTotalMs,
-      targetFps
+      targetFps,
+      bakedIntroMs
     );
     cloned.timeRegions = timeRegions;
     cloned.totalDurationFrames = totalCompFrames;
@@ -187,6 +192,8 @@ class RenderRunner extends EventEmitter {
   getRenderInfo(slug: string): RenderInfo {
     const rootDir = path.resolve(__dirname, "..", "..");
     const outputPath = path.join(rootDir, "output", `${slug}.mp4`);
+    const recordingPath = path.join(rootDir, "data", slug, "recording.mp4");
+    const narrationPath = path.join(rootDir, "data", slug, "narration.json");
 
     if (fs.existsSync(outputPath)) {
       try {
@@ -334,17 +341,25 @@ class RenderRunner extends EventEmitter {
         );
       }
 
-      // Ensure static sfx assets exist in bundleDir/public/sfx
-      const srcSfxDir = path.join(rootDir, "public", "sfx");
-      const destSfxDir = path.join(bundleDir, "public", "sfx");
-      if (fs.existsSync(srcSfxDir)) {
-        fs.mkdirSync(destSfxDir, { recursive: true });
-        for (const f of fs.readdirSync(srcSfxDir)) {
-          const dst = path.join(destSfxDir, f);
-          if (!fs.existsSync(dst)) {
-            linkOrCopyFileSync(path.join(srcSfxDir, f), dst);
+      // Ensure static sfx and brand assets (including site-brands subdirectories) exist in bundleDir/public
+      const copyDirRecursiveSync = (srcDir: string, dstDir: string) => {
+        if (!fs.existsSync(srcDir)) return;
+        fs.mkdirSync(dstDir, { recursive: true });
+        for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
+          const sPath = path.join(srcDir, entry.name);
+          const dPath = path.join(dstDir, entry.name);
+          if (entry.isDirectory()) {
+            copyDirRecursiveSync(sPath, dPath);
+          } else if (!fs.existsSync(dPath)) {
+            linkOrCopyFileSync(sPath, dPath);
           }
         }
+      };
+      for (const subDir of ["sfx", "assets"]) {
+        copyDirRecursiveSync(
+          path.join(rootDir, "public", subDir),
+          path.join(bundleDir, "public", subDir)
+        );
       }
 
       return bundleDir;
@@ -388,9 +403,12 @@ class RenderRunner extends EventEmitter {
         `🎞️ [백그라운드 렌더러 시작] '${slug}' 최종 MP4 렌더링 (${targetFps}fps · 완전 격리 모드)`
       );
 
-      // 1. Check if moments.json is already calibrated; only run calibrate-moments.py asynchronously if needed
+      // 1. Check if moments.json is already calibrated or has a baked opening slide; only run calibrate-moments.py if needed
       let needsCalibration = true;
-      if (fs.existsSync(momentsPath) && fs.existsSync(editPlanPath)) {
+      const existingNarrationForCalib = getNarration(slug);
+      if (existingNarrationForCalib?.introBakedIntoVideo) {
+        needsCalibration = false;
+      } else if (fs.existsSync(momentsPath) && fs.existsSync(editPlanPath)) {
         try {
           const mData = JSON.parse(fs.readFileSync(momentsPath, "utf-8"));
           if (
@@ -431,6 +449,50 @@ class RenderRunner extends EventEmitter {
       }
 
       if ((task.status as string) === "stopped") return;
+
+      // 통합 병합 시나리오(mergedFromSlugs)는 각 챕터가 이미 Remotion 렌더링 완료된 상태이므로
+      // 이중 FloatingWindow 래핑 없이 고속 하이브리드 자막·오디오 합성(fastApplyNarrationToRenderedMp4)으로 즉시 갱신합니다.
+      const bpPath = path.join(dataDir, "browse-plan.json");
+      let isMergedScenario = false;
+      try {
+        const nCheck = getNarration(slug) as any;
+        if (Array.isArray(nCheck?.mergedFromSlugs) && nCheck.mergedFromSlugs.length > 0) {
+          isMergedScenario = true;
+        } else if (fs.existsSync(bpPath)) {
+          const bpCheck = JSON.parse(fs.readFileSync(bpPath, "utf-8"));
+          if (Array.isArray(bpCheck?.mergedFromSlugs) && bpCheck.mergedFromSlugs.length > 0) {
+            isMergedScenario = true;
+          }
+        }
+      } catch {}
+
+      if (isMergedScenario) {
+        this.logForTask(task, `  * 통합 병합 시나리오 고속 자막·음성·홀드 반영 중...`);
+        task.progress = 50;
+        task.progressPercent = 50;
+        this.emit("progress", task);
+        const fastMergedRes = await fastApplyNarrationToRenderedMp4(slug);
+        task.endTime = Date.now();
+        const elapsed = ((task.endTime - task.startTime) / 1000).toFixed(1);
+        if (fastMergedRes.updated && fs.existsSync(outputFilePath)) {
+          const stat = fs.statSync(outputFilePath);
+          const sizeMb = (stat.size / (1024 * 1024)).toFixed(2);
+          task.status = "completed";
+          task.progress = 100;
+          task.progressPercent = 100;
+          task.outputSizeBytes = stat.size;
+          this.logForTask(
+            task,
+            `\n🎉 [렌더링 완료!] '${slug}' 통합 시나리오 MP4 고속 갱신 완료 (${sizeMb}MB, 소요 시간: ${elapsed}초)`
+          );
+        } else {
+          task.status = "failed";
+          task.error = "통합 시나리오 고속 합성 실패";
+          this.logForTask(task, `❌ [렌더링 실패] '${slug}' 통합 시나리오 합성에 실패했습니다.`);
+        }
+        this.emit("status", task);
+        return;
+      }
 
       // 3. Get or build cached Remotion bundle (0ms on cache hit)
       bundleDir = await this.getOrBuildRemotionBundle(rootDir, task);
@@ -477,8 +539,23 @@ class RenderRunner extends EventEmitter {
       const scaledEditPlan = scaleEditPlanForFps(rawEditPlan, momentsFile, targetFps);
       task.totalFrames = scaledEditPlan.totalDurationFrames;
 
+      // 자막과 나레이션 오디오를 제외한 순수 줌/커서 베이스 영상(rendered.base.mp4)을 먼저 렌더링하고
+      // 이후 fastApplyNarrationToRenderedMp4로 자막/음성을 3초 만에 입혀 대본 수정 시 재렌더링 없이 즉시 갱신 가능하게 함
+      const baseEditPlan: EditPlan = {
+        ...scaledEditPlan,
+        narration: scaledEditPlan.narration
+          ? {
+              ...scaledEditPlan.narration,
+              enabled: false,
+              showSubtitles: false,
+            }
+          : undefined,
+      };
+      const baseMp4Path = path.join(dataDir, "rendered.base.mp4");
+      const baseJsonPath = path.join(dataDir, "rendered.base.json");
+
       const inputProps = {
-        editPlan: scaledEditPlan,
+        editPlan: baseEditPlan,
         moments: momentsFile,
         videoFileName: videoRelPath,
         showCursor: true,
@@ -495,7 +572,7 @@ class RenderRunner extends EventEmitter {
         "render",
         bundleDir,
         "ScreenDemo",
-        `output/${slug}.mp4`,
+        `data/${slug}/rendered.base.mp4`,
         `--props=${propsFilePath}`,
         "--gl=angle",
         `--concurrency=${concurrency}`,
@@ -646,12 +723,37 @@ class RenderRunner extends EventEmitter {
           }
         });
 
-        child.on("close", (code) => {
+        child.on("close", async (code) => {
           this.childProcess = null;
           cleanupStaging();
           if (task.status === "stopped") {
             resolve();
             return;
+          }
+
+          if (code === 0 && fs.existsSync(baseMp4Path)) {
+            try {
+              const baseMeta: RenderedBaseMeta = {
+                fps: targetFps,
+                width: 1920,
+                height: 1080,
+                bakedIntroDurationMs: Number(scaledEditPlan.narration?.bakedIntroDurationMs || 0),
+                totalDurationFrames: scaledEditPlan.totalDurationFrames,
+                planFps: targetFps,
+                timeRegions: scaledEditPlan.timeRegions || [],
+              };
+              fs.writeFileSync(baseJsonPath, JSON.stringify(baseMeta, null, 2), "utf-8");
+              this.logForTask(task, `  * 자막·음성 고속 레이어 합성 중 (rendered.base.mp4 -> output/${slug}.mp4)...`);
+              const fastRes = await fastApplyNarrationToRenderedMp4(slug);
+              if (!fastRes.updated && !fs.existsSync(outputFilePath)) {
+                fs.copyFileSync(baseMp4Path, outputFilePath);
+              }
+            } catch (composeErr) {
+              console.warn(`[RenderRunner] 자막·음성 합성 폴백 복사:`, composeErr);
+              if (!fs.existsSync(outputFilePath)) {
+                fs.copyFileSync(baseMp4Path, outputFilePath);
+              }
+            }
           }
 
           task.endTime = Date.now();

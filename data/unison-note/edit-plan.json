@@ -1,0 +1,241 @@
+{
+  "totalDurationFrames": 2209,
+  "rawDurationFrames": 2161,
+  "fps": 60,
+  "defaultZoom": 1,
+  "segments": [
+    {
+      "momentId": 2,
+      "startFrame": 944,
+      "endFrame": 1182,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1076,
+        "y": 108
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1075, 82) + Click at (1076, 135)"
+    },
+    {
+      "momentId": 6,
+      "startFrame": 1310,
+      "endFrame": 1667,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 81,
+        "y": 253
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (81, 270) + Click at (81, 304) + Click at (81, 202)"
+    },
+    {
+      "momentId": 12,
+      "startFrame": 1751,
+      "endFrame": 1958,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1738,
+        "y": 148
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Typing: 안내 + Click at (1774, 140)"
+    }
+  ],
+  "timeRegions": [
+    {
+      "videoStartFrame": 0,
+      "videoEndFrame": 12,
+      "compStartFrame": 0,
+      "compEndFrame": 12,
+      "speed": 1
+    },
+    {
+      "videoStartFrame": 12,
+      "videoEndFrame": 941,
+      "compStartFrame": 12,
+      "compEndFrame": 941,
+      "speed": 1,
+      "cueId": 1
+    },
+    {
+      "videoStartFrame": 941,
+      "videoEndFrame": 1455,
+      "compStartFrame": 941,
+      "compEndFrame": 1455,
+      "speed": 1,
+      "cueId": 2
+    },
+    {
+      "videoStartFrame": 1455,
+      "videoEndFrame": 1713,
+      "compStartFrame": 1455,
+      "compEndFrame": 1713,
+      "speed": 1,
+      "cueId": 3
+    },
+    {
+      "videoStartFrame": 1713,
+      "videoEndFrame": 1718,
+      "compStartFrame": 1713,
+      "compEndFrame": 1766,
+      "speed": 0.09434,
+      "cueId": 3
+    },
+    {
+      "videoStartFrame": 1718,
+      "videoEndFrame": 1745,
+      "compStartFrame": 1766,
+      "compEndFrame": 1793,
+      "speed": 1,
+      "cueId": 3
+    },
+    {
+      "videoStartFrame": 1745,
+      "videoEndFrame": 2161,
+      "compStartFrame": 1793,
+      "compEndFrame": 2209,
+      "speed": 1,
+      "cueId": 4
+    }
+  ],
+  "narration": {
+    "slug": "unison-note",
+    "voice": "ko-KR-SunHiNeural",
+    "rate": "+5%",
+    "pitch": "+0Hz",
+    "style": "manual",
+    "enabled": true,
+    "showSubtitles": true,
+    "showIntroToc": true,
+    "introToc": {
+      "enabled": true,
+      "badge": "사내쪽지 사용 매뉴얼",
+      "title": "사내쪽지 보관함 확인 및 검색 방법 안내",
+      "summary": "임직원 간 실시간 업무 메시지를 관리하고 검색하는 방법을 안내합니다.",
+      "items": [
+        {
+          "title": "사내쪽지 진입 및 수발신 내역 확인",
+          "description": "사내쪽지 메뉴 접속과 받은 쪽지 및 보낸 쪽지 보관함 확인 방법을 소개합니다."
+        },
+        {
+          "title": "중요 쪽지 및 전체 쪽지 조회",
+          "description": "별표로 표시한 중요 쪽지와 모든 수발신 내역을 모아 보는 방법을 안내합니다."
+        },
+        {
+          "title": "키워드 기반 쪽지 검색",
+          "description": "검색어를 입력하여 필요한 업무 쪽지를 빠르게 찾아내는 기능을 소개합니다."
+        }
+      ],
+      "siteBrand": {
+        "hostKey": "gwdev.unison.co.kr",
+        "originUrl": "https://gwdev.unison.co.kr",
+        "siteName": "유니슨 그룹",
+        "manualBadge": "그룹웨어 사용 매뉴얼",
+        "tagline": "",
+        "primaryColor": "#218CF3",
+        "secondaryColor": "#1C6AB9",
+        "accentColor": "#35B5FF",
+        "logoUrl": "/assets/sites/gwdev.unison.co.kr/logo.png",
+        "heroThumbUrl": "/assets/sites/gwdev.unison.co.kr/hero.png",
+        "createdAt": "2026-10-31T15:31:25.841Z"
+      }
+    },
+    "siteBrand": {
+      "hostKey": "gwdev.unison.co.kr",
+      "originUrl": "https://gwdev.unison.co.kr",
+      "siteName": "유니슨 그룹",
+      "manualBadge": "그룹웨어 사용 매뉴얼",
+      "tagline": "",
+      "primaryColor": "#218CF3",
+      "secondaryColor": "#1C6AB9",
+      "accentColor": "#35B5FF",
+      "logoUrl": "/assets/sites/gwdev.unison.co.kr/logo.png",
+      "heroThumbUrl": "/assets/sites/gwdev.unison.co.kr/hero.png",
+      "createdAt": "2026-10-31T15:31:25.841Z"
+    },
+    "introBakedIntoVideo": true,
+    "bakedIntroDurationMs": 13416,
+    "updatedAt": "2026-11-03T08:52:47.478Z",
+    "cues": [
+      {
+        "id": 1,
+        "startMs": 200,
+        "endMs": 13016,
+        "videoStartMs": 200,
+        "videoEndMs": 15680,
+        "extraHoldMs": 0,
+        "isIntro": true,
+        "text": "사내쪽지는 임직원 간 간단한 업무 전달과 소통을 신속하게 처리하는 메시지 기능입니다. 이번 영상에서는 쪽지 보관함별 조회 방법과 키워드 검색 방법을 안내합니다.",
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|사내쪽지는 임직원 간 간단한 업무 전달과 소통을 신속하게 처리하는 메시지 기능입니다. 이번 영상에서는 쪽지 보관함별 조회 방법과 키워드 검색 방법을 안내합니다.",
+        "audioDurationMs": 12816,
+        "audioFile": "narration/unison-note/cue-01.mp3",
+        "compStartMs": 200,
+        "compEndMs": 13016
+      },
+      {
+        "id": 2,
+        "startMs": 15683,
+        "endMs": 23099,
+        "videoStartMs": 15680,
+        "videoEndMs": 24245,
+        "extraHoldMs": 0,
+        "isIntro": false,
+        "text": "임직원 간 빠른 소통을 지원하는 사내쪽지 메뉴로 이동해 받은 쪽지와 보낸 쪽지 내역을 차례로 확인합니다.",
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|임직원 간 빠른 소통을 지원하는 사내쪽지 메뉴로 이동해 받은 쪽지와 보낸 쪽지 내역을 차례로 확인합니다.",
+        "audioDurationMs": 7416,
+        "audioFile": "narration/unison-note/cue-02.mp3",
+        "compStartMs": 15683,
+        "compEndMs": 23099
+      },
+      {
+        "id": 3,
+        "startMs": 24250,
+        "endMs": 29698,
+        "videoStartMs": 24245,
+        "videoEndMs": 29081,
+        "extraHoldMs": 0,
+        "isIntro": false,
+        "text": "별표한 중요 쪽지와 모든 수발신 내역을 전체 쪽지함에서 조회합니다.",
+        "autoHoldMs": 792,
+        "effectiveDeltaMs": 792,
+        "playbackRate": 1,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|별표한 중요 쪽지와 모든 수발신 내역을 전체 쪽지함에서 조회합니다.",
+        "audioDurationMs": 5448,
+        "audioFile": "narration/unison-note/cue-03.mp3",
+        "compStartMs": 24250,
+        "compEndMs": 29698
+      },
+      {
+        "id": 4,
+        "startMs": 29883,
+        "endMs": 36507,
+        "videoStartMs": 29081,
+        "videoEndMs": 36016,
+        "extraHoldMs": 0,
+        "isIntro": false,
+        "text": "상단 검색창에 관련 키워드를 입력해 찾고자 하는 업무 쪽지를 신속하게 검색합니다.",
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|상단 검색창에 관련 키워드를 입력해 찾고자 하는 업무 쪽지를 신속하게 검색합니다.",
+        "audioDurationMs": 6624,
+        "audioFile": "narration/unison-note/cue-04.mp3",
+        "compStartMs": 29883,
+        "compEndMs": 36507
+      }
+    ],
+    "_bakedSlideSig": "{\"layoutVersion\":\"contents-only-v2\",\"badge\":\"사내쪽지 사용 매뉴얼\",\"title\":\"사내쪽지 보관함 확인 및 검색 방법 안내\",\"summary\":\"임직원 간 실시간 업무 메시지를 관리하고 검색하는 방법을 안내합니다.\",\"items\":[{\"title\":\"사내쪽지 진입 및 수발신 내역 확인\",\"description\":\"사내쪽지 메뉴 접속과 받은 쪽지 및 보낸 쪽지 보관함 확인 방법을 소개합니다.\"},{\"title\":\"중요 쪽지 및 전체 쪽지 조회\",\"description\":\"별표로 표시한 중요 쪽지와 모든 수발신 내역을 모아 보는 방법을 안내합니다.\"},{\"title\":\"키워드 기반 쪽지 검색\",\"description\":\"검색어를 입력하여 필요한 업무 쪽지를 빠르게 찾아내는 기능을 소개합니다.\"}],\"hostKey\":\"gwdev.unison.co.kr\",\"primaryColor\":\"#218CF3\",\"cue0Text\":\"사내쪽지는 임직원 간 간단한 업무 전달과 소통을 신속하게 처리하는 메시지 기능입니다. 이번 영상에서는 쪽지 보관함별 조회 방법과 키워드 검색 방법을 안내합니다.\",\"cue0Sig\":\"ko-KR-SunHiNeural|+5%|+0Hz|사내쪽지는 임직원 간 간단한 업무 전달과 소통을 신속하게 처리하는 메시지 기능입니다. 이번 영상에서는 쪽지 보관함별 조회 방법과 키워드 검색 방법을 안내합니다.\",\"introDurationMs\":13416}"
+  }
+}

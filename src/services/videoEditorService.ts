@@ -2,6 +2,17 @@ import * as fs from "fs";
 import * as path from "path";
 import { spawnSync } from "child_process";
 import { getNarration, saveNarrationFile } from "./narrationService";
+import { ensureSiteBrandForScenario } from "./siteBrandService";
+import {
+  bakeOpeningSlideIntoRecording,
+  buildCoverSlideHtmlDocument,
+  buildSlideHtmlDocument,
+  encodeSlidePngToMp4,
+  ensureRenderedBaseVideo,
+  fastApplyNarrationToRenderedMp4,
+  renderSlideHtmlToPng,
+} from "./slideVideoComposer";
+import type { IntroTocConfig, IntroTocItem } from "../types";
 
 const ROOT_DIR = path.resolve(__dirname, "..", "..");
 const DATA_DIR = path.join(ROOT_DIR, "data");
@@ -116,8 +127,12 @@ function backupFilesBeforeEdit(sDir: string) {
   }
 }
 
-function syncPublicRecordingCopy(_slug: string, _mp4Path: string) {
-  // No-op: scenarios are now isolated in data/<slug>/recording.mp4 and staged on-demand per render
+function syncPublicRecordingCopy(slug: string, mp4Path: string) {
+  try {
+    const pubVideosDir = path.join(PUBLIC_DIR, "videos");
+    fs.mkdirSync(pubVideosDir, { recursive: true });
+    fs.copyFileSync(mp4Path, path.join(pubVideosDir, `${slug}.mp4`));
+  } catch {}
 }
 
 /**
@@ -182,6 +197,7 @@ export function cutVideoSegment(slug: string, rawStartSec: number, rawEndSec: nu
   const tmpOut = path.join(sDir, "recording_cut_tmp.mp4");
   const keepHead = startSec > 0.08;
   const keepTail = endSec < totalDurSec - 0.08;
+  const srcMeta = probeClipMeta(mp4Path);
 
   let ffmpegArgs: string[] = [];
   if (!keepHead && keepTail) {
@@ -206,7 +222,7 @@ export function cutVideoSegment(slug: string, rawStartSec: number, rawEndSec: nu
       "yuv420p",
       "-g",
       "30",
-      "-an",
+      ...(srcMeta.hasAudio ? ["-c:a", "aac", "-b:a", "192k"] : ["-an"]),
       "-movflags",
       "+faststart",
       tmpOut,
@@ -233,16 +249,24 @@ export function cutVideoSegment(slug: string, rawStartSec: number, rawEndSec: nu
       "yuv420p",
       "-g",
       "30",
-      "-an",
+      ...(srcMeta.hasAudio ? ["-c:a", "aac", "-b:a", "192k"] : ["-an"]),
       "-movflags",
       "+faststart",
       tmpOut,
     ];
   } else {
     // Cut middle: keep [0, startSec] + [endSec, totalDurSec]
-    const filterComplex = `[0:v]trim=start=0:end=${startSec.toFixed(3)},setpts=PTS-STARTPTS[v0];[0:v]trim=start=${endSec.toFixed(
-      3
-    )},setpts=PTS-STARTPTS[v1];[v0][v1]concat=n=2:v=1:a=0,fps=30[outv]`;
+    const filterComplex = srcMeta.hasAudio
+      ? `[0:v]trim=start=0:end=${startSec.toFixed(3)},setpts=PTS-STARTPTS[v0];[0:a]atrim=start=0:end=${startSec.toFixed(
+          3
+        )},asetpts=PTS-STARTPTS[a0];[0:v]trim=start=${endSec.toFixed(
+          3
+        )},setpts=PTS-STARTPTS[v1];[0:a]atrim=start=${endSec.toFixed(
+          3
+        )},asetpts=PTS-STARTPTS[a1];[v0][a0][v1][a1]concat=n=2:v=1:a=1[outvraw][outa];[outvraw]fps=30[outv]`
+      : `[0:v]trim=start=0:end=${startSec.toFixed(3)},setpts=PTS-STARTPTS[v0];[0:v]trim=start=${endSec.toFixed(
+          3
+        )},setpts=PTS-STARTPTS[v1];[v0][v1]concat=n=2:v=1:a=0,fps=30[outv]`;
     ffmpegArgs = [
       "-y",
       "-v",
@@ -253,6 +277,7 @@ export function cutVideoSegment(slug: string, rawStartSec: number, rawEndSec: nu
       filterComplex,
       "-map",
       "[outv]",
+      ...(srcMeta.hasAudio ? ["-map", "[outa]", "-c:a", "aac", "-b:a", "192k"] : []),
       "-c:v",
       "libx264",
       "-preset",
@@ -276,6 +301,35 @@ export function cutVideoSegment(slug: string, rawStartSec: number, rawEndSec: nu
 
   replaceFileSafeWindows(tmpOut, mp4Path);
   syncPublicRecordingCopy(slug, mp4Path);
+  const bpCutCheckPath = path.join(sDir, "browse-plan.json");
+  let isMergedOnCut = false;
+  if (fs.existsSync(bpCutCheckPath)) {
+    try {
+      const bpObj = JSON.parse(fs.readFileSync(bpCutCheckPath, "utf-8"));
+      if (Array.isArray(bpObj?.mergedFromSlugs) && bpObj.mergedFromSlugs.length > 0) {
+        isMergedOnCut = true;
+      }
+    } catch {}
+  }
+  const staleRenderedOnCut = path.join(ROOT_DIR, "output", `${slug}.mp4`);
+  if (isMergedOnCut) {
+    try {
+      fs.copyFileSync(mp4Path, staleRenderedOnCut);
+      fs.copyFileSync(mp4Path, path.join(sDir, "merged.orig.mp4"));
+    } catch {}
+  } else {
+    for (const stalePath of [
+      staleRenderedOnCut,
+      path.join(sDir, "rendered.base.mp4"),
+      path.join(sDir, "rendered.base.json"),
+    ]) {
+      if (fs.existsSync(stalePath)) {
+        try {
+          fs.unlinkSync(stalePath);
+        } catch {}
+      }
+    }
+  }
 
   const newDurSec = probeVideoDurationSec(mp4Path) || Math.max(1, Number((totalDurSec - cutDurSec).toFixed(3)));
   const newDurMs = Math.round(newDurSec * 1000);
@@ -456,6 +510,35 @@ export function restoreVideoBackup(slug: string, mode: "undo" | "orig"): VideoCu
   }
 
   syncPublicRecordingCopy(slug, mp4Path);
+  const bpRestoreCheckPath = path.join(sDir, "browse-plan.json");
+  let isMergedOnRestore = false;
+  if (fs.existsSync(bpRestoreCheckPath)) {
+    try {
+      const bpObj = JSON.parse(fs.readFileSync(bpRestoreCheckPath, "utf-8"));
+      if (Array.isArray(bpObj?.mergedFromSlugs) && bpObj.mergedFromSlugs.length > 0) {
+        isMergedOnRestore = true;
+      }
+    } catch {}
+  }
+  const staleRenderedOnRestore = path.join(ROOT_DIR, "output", `${slug}.mp4`);
+  if (isMergedOnRestore) {
+    try {
+      fs.copyFileSync(mp4Path, staleRenderedOnRestore);
+      fs.copyFileSync(mp4Path, path.join(sDir, "merged.orig.mp4"));
+    } catch {}
+  } else {
+    for (const stalePath of [
+      staleRenderedOnRestore,
+      path.join(sDir, "rendered.base.mp4"),
+      path.join(sDir, "rendered.base.json"),
+    ]) {
+      if (fs.existsSync(stalePath)) {
+        try {
+          fs.unlinkSync(stalePath);
+        } catch {}
+      }
+    }
+  }
   const newDurSec = probeVideoDurationSec(mp4Path);
 
   const readJsonSafe = (p: string) => {
@@ -553,10 +636,84 @@ function mapRawFrameToCompFrame(rawFrame: number, editPlan: any): number {
   return rawFrame;
 }
 
-export function mergeRenderedVideos(options: {
+function mixScenarioNarrationAudioIntoRawVideo(
+  slug: string,
+  rawMp4Path: string,
+  outTempMp4Path: string
+): string {
+  const sDir = path.join(DATA_DIR, slug);
+  const narration = getNarration(slug);
+  if (!narration || !Array.isArray(narration.cues) || narration.cues.length === 0) {
+    return rawMp4Path;
+  }
+
+  const audioInputs: { path: string; delayMs: number }[] = [];
+  for (let i = 0; i < narration.cues.length; i++) {
+    const c = narration.cues[i];
+    if (!c.audioFile) continue;
+    const mp3Path = path.join(sDir, "audio", path.basename(c.audioFile));
+    if (fs.existsSync(mp3Path)) {
+      const delayMs = Math.max(0, Math.round(Number(c.videoStartMs ?? c.startMs ?? 0)));
+      audioInputs.push({ path: mp3Path, delayMs });
+    }
+  }
+
+  if (audioInputs.length === 0) {
+    return rawMp4Path;
+  }
+
+  const meta = probeClipMeta(rawMp4Path);
+  const durStr = Math.max(1.0, meta.durationSec).toFixed(3);
+  const args: string[] = ["-y", "-v", "error", "-i", rawMp4Path];
+  for (const ai of audioInputs) {
+    args.push("-i", ai.path);
+  }
+
+  const filterParts: string[] = [
+    `anullsrc=channel_layout=stereo:sample_rate=48000,atrim=0:${durStr},asetpts=PTS-STARTPTS[abg]`,
+  ];
+  const mixLabels: string[] = ["[abg]"];
+  audioInputs.forEach((ai, idx) => {
+    const inIdx = idx + 1;
+    const d = ai.delayMs;
+    filterParts.push(
+      `[${inIdx}:a]aformat=sample_rates=48000:channel_layouts=stereo,adelay=${d}|${d}[a${inIdx}]`
+    );
+    mixLabels.push(`[a${inIdx}]`);
+  });
+  filterParts.push(
+    `${mixLabels.join("")}amix=inputs=${mixLabels.length}:duration=first:dropout_transition=0,volume=${mixLabels.length}[outa]`
+  );
+
+  args.push(
+    "-filter_complex",
+    filterParts.join(";"),
+    "-map",
+    "0:v:0",
+    "-map",
+    "[outa]",
+    "-c:v",
+    "copy",
+    "-c:a",
+    "aac",
+    "-b:a",
+    "192k",
+    "-movflags",
+    "+faststart",
+    outTempMp4Path
+  );
+
+  const res = spawnSync("ffmpeg", args, { encoding: "utf-8" });
+  if (res.status === 0 && fs.existsSync(outTempMp4Path)) {
+    return outTempMp4Path;
+  }
+  return rawMp4Path;
+}
+
+export async function mergeRenderedVideos(options: {
   slugs: string[];
   outputSlug?: string;
-}): VideoMergeResult {
+}): Promise<VideoMergeResult> {
   const rawSlugs = Array.isArray(options?.slugs)
     ? options.slugs.map((s) => String(s || "").trim()).filter(Boolean)
     : [];
@@ -568,22 +725,6 @@ export function mergeRenderedVideos(options: {
   const outputDir = path.join(ROOT_DIR, "output");
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
-  }
-
-  // Validate all source rendered MP4 files exist
-  const sourceFiles: { slug: string; mp4Path: string; meta: ProbedStreamMeta }[] = [];
-  for (const slug of rawSlugs) {
-    const mp4Path = path.join(outputDir, `${slug}.mp4`);
-    if (!fs.existsSync(mp4Path)) {
-      throw new Error(
-        `'${slug}' 시나리오의 최종 렌더링 영상(output/${slug}.mp4)이 없습니다. 먼저 해당 시나리오의 [🎞️ 최종 MP4 렌더링]을 완료해주세요.`
-      );
-    }
-    const meta = probeClipMeta(mp4Path);
-    if (meta.durationSec <= 0.1) {
-      throw new Error(`'${slug}' 렌더링 영상(output/${slug}.mp4)의 길이를 읽을 수 없습니다.`);
-    }
-    sourceFiles.push({ slug, mp4Path, meta });
   }
 
   // Sanitize or generate target outputSlug
@@ -602,129 +743,6 @@ export function mergeRenderedVideos(options: {
     targetSlug = `${targetSlug}-merged`;
   }
 
-  const outMp4Path = path.join(outputDir, `${targetSlug}.mp4`);
-  const tmpOutPath = path.join(outputDir, `${targetSlug}_concat_tmp.mp4`);
-  const concatListPath = path.join(outputDir, `${targetSlug}_concat_list.txt`);
-
-  // Check if all clips share identical video & audio specs for 0.5s lossless stream copy (-c copy)
-  const firstMeta = sourceFiles[0].meta;
-  const canTryFastCopy = sourceFiles.every(
-    (item) =>
-      item.meta.hasAudio === firstMeta.hasAudio &&
-      item.meta.videoCodec === firstMeta.videoCodec &&
-      item.meta.rFrameRate === firstMeta.rFrameRate &&
-      item.meta.width === firstMeta.width &&
-      item.meta.height === firstMeta.height
-  );
-
-  let usedFastCopy = false;
-
-  if (canTryFastCopy) {
-    try {
-      const listContent = sourceFiles
-        .map((item) => {
-          const normalized = item.mp4Path.replace(/\\/g, "/").replace(/'/g, "'\\''");
-          return `file '${normalized}'`;
-        })
-        .join("\n");
-      fs.writeFileSync(concatListPath, listContent, "utf-8");
-
-      const copyRes = spawnSync(
-        "ffmpeg",
-        [
-          "-y",
-          "-v",
-          "error",
-          "-f",
-          "concat",
-          "-safe",
-          "0",
-          "-i",
-          concatListPath,
-          "-c",
-          "copy",
-          "-movflags",
-          "+faststart",
-          tmpOutPath,
-        ],
-        { encoding: "utf-8" }
-      );
-
-      if (copyRes.status === 0 && fs.existsSync(tmpOutPath) && probeVideoDurationSec(tmpOutPath) > 0.5) {
-        usedFastCopy = true;
-      }
-    } catch {} finally {
-      if (fs.existsSync(concatListPath)) {
-        try {
-          fs.unlinkSync(concatListPath);
-        } catch {}
-      }
-    }
-  }
-
-  // Fallback: Normalized filter_complex concat if stream specs differ or fast copy failed
-  if (!usedFastCopy) {
-    const inputArgs: string[] = ["-y", "-v", "error"];
-    for (const item of sourceFiles) {
-      inputArgs.push("-i", item.mp4Path);
-    }
-
-    const filterParts: string[] = [];
-    const concatInputs: string[] = [];
-
-    sourceFiles.forEach((item, idx) => {
-      filterParts.push(
-        `[${idx}:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,fps=60,format=yuv420p,setpts=PTS-STARTPTS[v${idx}]`
-      );
-      if (item.meta.hasAudio) {
-        filterParts.push(
-          `[${idx}:a]aformat=sample_rates=48000:channel_layouts=stereo,asetpts=PTS-STARTPTS[a${idx}]`
-        );
-      } else {
-        const dur = Math.max(0.2, item.meta.durationSec).toFixed(3);
-        filterParts.push(
-          `anullsrc=channel_layout=stereo:sample_rate=48000,atrim=0:${dur},asetpts=PTS-STARTPTS[a${idx}]`
-        );
-      }
-      concatInputs.push(`[v${idx}][a${idx}]`);
-    });
-
-    filterParts.push(`${concatInputs.join("")}concat=n=${sourceFiles.length}:v=1:a=1[outv][outa]`);
-
-    const reencodeArgs = [
-      ...inputArgs,
-      "-filter_complex",
-      filterParts.join(";"),
-      "-map",
-      "[outv]",
-      "-map",
-      "[outa]",
-      "-c:v",
-      "libx264",
-      "-preset",
-      "veryfast",
-      "-crf",
-      "18",
-      "-pix_fmt",
-      "yuv420p",
-      "-c:a",
-      "aac",
-      "-b:a",
-      "192k",
-      "-movflags",
-      "+faststart",
-      tmpOutPath,
-    ];
-
-    const ffRes = spawnSync("ffmpeg", reencodeArgs, { encoding: "utf-8" });
-    if (ffRes.status !== 0 || !fs.existsSync(tmpOutPath)) {
-      throw new Error(`FFmpeg 영상 병합 실패: ${ffRes.stderr || "알 수 없는 오류"}`);
-    }
-  }
-
-  replaceFileSafeWindows(tmpOutPath, outMp4Path);
-
-  // Create combined scenario folder in data/<targetSlug>/ so it appears in the Scenario Library with full timeline & download support
   const mergedDataDir = path.join(DATA_DIR, targetSlug);
   if (!fs.existsSync(mergedDataDir)) {
     fs.mkdirSync(mergedDataDir, { recursive: true });
@@ -734,26 +752,382 @@ export function mergeRenderedVideos(options: {
   if (!fs.existsSync(mergedAudioDir)) fs.mkdirSync(mergedAudioDir, { recursive: true });
   if (!fs.existsSync(publicNarrationDir)) fs.mkdirSync(publicNarrationDir, { recursive: true });
 
-  // Copy merged MP4 to data/<targetSlug>/recording.mp4 as well so raw/rendered player modes both work
-  const mergedRecordingPath = path.join(mergedDataDir, "recording.mp4");
-  try {
-    fs.copyFileSync(outMp4Path, mergedRecordingPath);
-    syncPublicRecordingCopy(targetSlug, mergedRecordingPath);
-  } catch {}
+  const tempCleanupFiles: string[] = [];
 
-  const fps = 60;
-  let cumulativeMs = 0;
-  let cumulativeFrames = 0;
+  // Validate all source MP4 files (rendered output/<slug>.mp4 preferred; fallback to slide-baked data/<slug>/recording.mp4)
+  const sourceFiles: { slug: string; mp4Path: string; meta: ProbedStreamMeta }[] = [];
+  for (const slug of rawSlugs) {
+    const renderedMp4Path = path.join(outputDir, `${slug}.mp4`);
+    const rawRecMp4Path = path.join(DATA_DIR, slug, "recording.mp4");
+    let usePath = "";
 
-  const combinedActions: any[] = [];
-  const combinedMoments: any[] = [];
-  const combinedSegments: any[] = [];
-  const combinedCues: any[] = [];
-  let firstBaseUrl = "";
+    // 각 시나리오의 세부내용 슬라이드가 최신 Contents 단독 레이아웃(contents-only-v2)인지 확인 및 자동 갱신
+    const chNarrationBefore = getNarration(slug) as any;
+    const needsSlideLayoutUpgrade =
+      chNarrationBefore &&
+      chNarrationBefore.showIntroToc !== false &&
+      (!chNarrationBefore._bakedSlideSig ||
+        !String(chNarrationBefore._bakedSlideSig).includes("contents-only-v2"));
+
+    if (needsSlideLayoutUpgrade && fs.existsSync(rawRecMp4Path)) {
+      try {
+        await bakeOpeningSlideIntoRecording(slug, { force: true });
+        if (fs.existsSync(renderedMp4Path)) {
+          await ensureRenderedBaseVideo(slug);
+          await fastApplyNarrationToRenderedMp4(slug);
+        }
+      } catch (upErr) {
+        console.warn(`[Merge] '${slug}' 세부내용 슬라이드 레이아웃 자동 업그레이드 경고:`, upErr);
+      }
+    }
+
+    const isRenderedFresh =
+      fs.existsSync(renderedMp4Path) &&
+      (!fs.existsSync(rawRecMp4Path) ||
+        fs.statSync(renderedMp4Path).mtimeMs + 2000 >= fs.statSync(rawRecMp4Path).mtimeMs);
+
+    if (isRenderedFresh) {
+      usePath = renderedMp4Path;
+    } else if (fs.existsSync(rawRecMp4Path)) {
+      try {
+        await bakeOpeningSlideIntoRecording(slug);
+      } catch {}
+      const mixedTmp = path.join(outputDir, `${targetSlug}_ch_${slug}_mixed.mp4`);
+      usePath = mixScenarioNarrationAudioIntoRawVideo(slug, rawRecMp4Path, mixedTmp);
+      if (usePath === mixedTmp) {
+        tempCleanupFiles.push(mixedTmp);
+      }
+    } else {
+      throw new Error(
+        `'${slug}' 시나리오의 영상 파일(output/${slug}.mp4 또는 data/${slug}/recording.mp4)이 없습니다.`
+      );
+    }
+
+    const meta = probeClipMeta(usePath);
+    if (meta.durationSec <= 0.1) {
+      throw new Error(`'${slug}' 영상의 길이를 읽을 수 없습니다.`);
+    }
+    sourceFiles.push({ slug, mp4Path: usePath, meta });
+  }
+
+  // 1. [첫장: 그룹웨어 사용 매뉴얼 표지 슬라이드] + [둘째장: 각 시나리오의 큰 타이틀 슬라이드(Master Contents)] 생성
+  const siteBrand = await ensureSiteBrandForScenario(rawSlugs[0]);
   let voice = "ko-KR-SunHiNeural";
   let rate = "+5%";
   let pitch = "+0Hz";
   let style: any = "manual";
+
+  const masterItems: IntroTocItem[] = [];
+  const chapterShortNames: string[] = [];
+
+  rawSlugs.forEach((slug, idx) => {
+    const chNarration = getNarration(slug);
+    if (idx === 0 && chNarration) {
+      if (chNarration.voice) voice = chNarration.voice;
+      if (chNarration.rate) rate = chNarration.rate;
+      if (chNarration.pitch) pitch = chNarration.pitch;
+      if (chNarration.style) style = chNarration.style;
+    }
+    const chTitle =
+      chNarration?.introToc?.title && !/^live\s+demo\s+\d+$/i.test(chNarration.introToc.title)
+        ? chNarration.introToc.title
+        : slug.replace(/[-_]+/g, " ");
+    const chSummary =
+      chNarration?.introToc?.summary ||
+      (Array.isArray(chNarration?.introToc?.items) && chNarration!.introToc!.items.length > 0
+        ? chNarration!.introToc!.items.map((it) => it.title || it.description).slice(0, 3).join(", ") +
+          " 과정을 안내합니다."
+        : `${chTitle}의 주요 기능과 처리 절차를 안내합니다.`);
+
+    chapterShortNames.push(chTitle);
+    masterItems.push({
+      title: chTitle,
+      description: chSummary,
+    });
+  });
+
+  const shortModuleLabels = chapterShortNames.map((name) => {
+    const cleaned = name
+      .replace(/\s*(?:사용\s*매뉴얼|매뉴얼|가이드|안내)+$/g, "")
+      .replace(/\s+(?:및|와|과)$/g, "")
+      .trim();
+    return cleaned || name;
+  });
+
+  const firstMeta = sourceFiles[0].meta;
+  const targetW = Math.floor((firstMeta.width || 1920) / 2) * 2;
+  const targetH = Math.floor((firstMeta.height || 1080) / 2) * 2;
+
+  // (1) 첫장: 그룹웨어 사용 매뉴얼 표지 페이지 (Cover Slide)
+  const coverOpeningText = `${siteBrand.siteName} 그룹웨어 사용 매뉴얼 영상을 시작합니다.`;
+  const coverAudioFileName = "ch0_00_cover_intro.mp3";
+  const coverAudioMp3Path = path.join(mergedAudioDir, coverAudioFileName);
+  const publicCoverAudioPath = path.join(publicNarrationDir, coverAudioFileName);
+
+  try {
+    spawnSync(
+      "python",
+      [
+        "-m",
+        "edge_tts",
+        "--voice",
+        voice,
+        `--rate=${rate}`,
+        `--pitch=${pitch}`,
+        "--text",
+        coverOpeningText,
+        "--write-media",
+        coverAudioMp3Path,
+      ],
+      { cwd: ROOT_DIR, encoding: "utf-8", timeout: 25000 }
+    );
+    if (fs.existsSync(coverAudioMp3Path)) {
+      fs.copyFileSync(coverAudioMp3Path, publicCoverAudioPath);
+    }
+  } catch (ttsErr) {
+    console.warn("[Cover Intro TTS] 표지 오프닝 음성 합성 경고:", ttsErr);
+  }
+
+  const coverAudioDurSec = fs.existsSync(coverAudioMp3Path)
+    ? probeVideoDurationSec(coverAudioMp3Path) || 4.2
+    : 4.0;
+  const coverDurationSec = Number(Math.max(4.0, coverAudioDurSec + 0.6).toFixed(3));
+  const coverDurationMs = Math.round(coverDurationSec * 1000);
+
+  const coverSlidePngPath = path.join(mergedDataDir, "master-cover-slide.png");
+  const coverSlideMp4Path = path.join(outputDir, `${targetSlug}_master_cover.mp4`);
+  tempCleanupFiles.push(coverSlideMp4Path);
+
+  const coverSlideHtml = buildCoverSlideHtmlDocument({
+    siteBrand,
+    title: "그룹웨어 사용 매뉴얼",
+    subtitle: `${siteBrand.siteName} 주요 업무 모듈별 핵심 기능 및 표준 사용 절차를 안내합니다.`,
+    chapterTitles: shortModuleLabels,
+    width: targetW,
+    height: targetH,
+    subtitleText: coverOpeningText,
+  });
+  await renderSlideHtmlToPng(coverSlideHtml, coverSlidePngPath, targetW, targetH);
+
+  encodeSlidePngToMp4({
+    pngPath: coverSlidePngPath,
+    outMp4Path: coverSlideMp4Path,
+    durationSec: coverDurationSec,
+    width: targetW,
+    height: targetH,
+    fps: 60,
+    audioMp3Path: fs.existsSync(coverAudioMp3Path) ? coverAudioMp3Path : undefined,
+  });
+
+  // (2) 둘째장: 각 시나리오의 큰 타이틀 슬라이드 (Master Contents Slide)
+  const masterToc: IntroTocConfig = {
+    enabled: true,
+    badge: siteBrand.manualBadge || "그룹웨어 사용 매뉴얼",
+    title: `${siteBrand.siteName} 주요 시나리오 목차`,
+    summary: `총 ${rawSlugs.length}개 주요 시나리오(${shortModuleLabels.join(" · ")})의 핵심 개념과 상세 사용 방법을 순서대로 안내합니다.`,
+    items: masterItems.slice(0, 8),
+    siteBrand,
+  };
+
+  const masterOpeningText = `이번 통합 매뉴얼은 ${shortModuleLabels.join(
+    ", "
+  )} 등 총 ${rawSlugs.length}개 시나리오로 구성되어 있습니다. 각 시나리오의 세부 목차와 실습 영상을 순서대로 살펴보겠습니다.`;
+
+  const masterAudioFileName = "ch0_01_master_intro.mp3";
+  const masterAudioMp3Path = path.join(mergedAudioDir, masterAudioFileName);
+  const publicMasterAudioPath = path.join(publicNarrationDir, masterAudioFileName);
+
+  try {
+    spawnSync(
+      "python",
+      [
+        "-m",
+        "edge_tts",
+        "--voice",
+        voice,
+        `--rate=${rate}`,
+        `--pitch=${pitch}`,
+        "--text",
+        masterOpeningText,
+        "--write-media",
+        masterAudioMp3Path,
+      ],
+      { cwd: ROOT_DIR, encoding: "utf-8", timeout: 25000 }
+    );
+    if (fs.existsSync(masterAudioMp3Path)) {
+      fs.copyFileSync(masterAudioMp3Path, publicMasterAudioPath);
+    }
+  } catch (ttsErr) {
+    console.warn("[Master Intro TTS] 전체 목차 음성 합성 경고:", ttsErr);
+  }
+
+  const masterAudioDurSec = fs.existsSync(masterAudioMp3Path)
+    ? probeVideoDurationSec(masterAudioMp3Path) || 6.5
+    : 5.5;
+  const masterIntroDurationSec = Number(Math.max(4.8, masterAudioDurSec + 0.7).toFixed(3));
+  const masterIntroDurationMs = Math.round(masterIntroDurationSec * 1000);
+
+  const masterSlidePngPath = path.join(mergedDataDir, "master-intro-slide.png");
+  const masterSlideMp4Path = path.join(outputDir, `${targetSlug}_master_intro.mp4`);
+  tempCleanupFiles.push(masterSlideMp4Path);
+
+  const masterSlideHtml = buildSlideHtmlDocument({
+    toc: masterToc,
+    siteBrand,
+    width: targetW,
+    height: targetH,
+    headerLabel: "Contents",
+    subtitleText: masterOpeningText,
+    mode: "chapter-titles",
+  });
+  await renderSlideHtmlToPng(masterSlideHtml, masterSlidePngPath, targetW, targetH);
+
+  encodeSlidePngToMp4({
+    pngPath: masterSlidePngPath,
+    outMp4Path: masterSlideMp4Path,
+    durationSec: masterIntroDurationSec,
+    width: targetW,
+    height: targetH,
+    fps: 60,
+    audioMp3Path: fs.existsSync(masterAudioMp3Path) ? masterAudioMp3Path : undefined,
+  });
+
+  const coverClipMeta = probeClipMeta(coverSlideMp4Path);
+  const masterClipMeta = probeClipMeta(masterSlideMp4Path);
+  const allClipsToConcat: { slug: string; mp4Path: string; meta: ProbedStreamMeta }[] = [
+    { slug: "__master_cover__", mp4Path: coverSlideMp4Path, meta: coverClipMeta },
+    { slug: "__master_intro__", mp4Path: masterSlideMp4Path, meta: masterClipMeta },
+    ...sourceFiles,
+  ];
+
+  const outMp4Path = path.join(outputDir, `${targetSlug}.mp4`);
+  const tmpOutPath = path.join(outputDir, `${targetSlug}_concat_tmp.mp4`);
+
+  const inputArgs: string[] = ["-y", "-v", "error"];
+  for (const item of allClipsToConcat) {
+    inputArgs.push("-i", item.mp4Path);
+  }
+
+  const filterParts: string[] = [];
+  const concatInputs: string[] = [];
+
+  allClipsToConcat.forEach((item, idx) => {
+    filterParts.push(
+      `[${idx}:v]scale=${targetW}:${targetH}:force_original_aspect_ratio=decrease,pad=${targetW}:${targetH}:(ow-iw)/2:(oh-ih)/2,fps=60,format=yuv420p,setpts=PTS-STARTPTS[v${idx}]`
+    );
+    if (item.meta.hasAudio) {
+      filterParts.push(
+        `[${idx}:a]aformat=sample_rates=48000:channel_layouts=stereo,asetpts=PTS-STARTPTS[a${idx}]`
+      );
+    } else {
+      const dur = Math.max(0.2, item.meta.durationSec).toFixed(3);
+      filterParts.push(
+        `anullsrc=channel_layout=stereo:sample_rate=48000,atrim=0:${dur},asetpts=PTS-STARTPTS[a${idx}]`
+      );
+    }
+    concatInputs.push(`[v${idx}][a${idx}]`);
+  });
+
+  filterParts.push(`${concatInputs.join("")}concat=n=${allClipsToConcat.length}:v=1:a=1[outv][outa]`);
+
+  const reencodeArgs = [
+    ...inputArgs,
+    "-filter_complex",
+    filterParts.join(";"),
+    "-map",
+    "[outv]",
+    "-map",
+    "[outa]",
+    "-c:v",
+    "libx264",
+    "-preset",
+    "veryfast",
+    "-crf",
+    "18",
+    "-pix_fmt",
+    "yuv420p",
+    "-c:a",
+    "aac",
+    "-b:a",
+    "192k",
+    "-movflags",
+    "+faststart",
+    tmpOutPath,
+  ];
+
+  const ffRes = spawnSync("ffmpeg", reencodeArgs, { encoding: "utf-8" });
+  for (const tf of tempCleanupFiles) {
+    try {
+      if (fs.existsSync(tf)) fs.unlinkSync(tf);
+    } catch {}
+  }
+
+  if (ffRes.status !== 0 || !fs.existsSync(tmpOutPath)) {
+    throw new Error(`FFmpeg 영상 병합 실패: ${ffRes.stderr || "알 수 없는 오류"}`);
+  }
+
+  const usedFastCopy = false;
+  replaceFileSafeWindows(tmpOutPath, outMp4Path);
+
+  // Copy merged MP4 to data/<targetSlug>/recording.mp4 and merged.orig.mp4 so raw/rendered player modes and post-merge cue additions work
+  const mergedRecordingPath = path.join(mergedDataDir, "recording.mp4");
+  const mergedOrigPath = path.join(mergedDataDir, "merged.orig.mp4");
+  try {
+    fs.copyFileSync(outMp4Path, mergedRecordingPath);
+    fs.copyFileSync(outMp4Path, mergedOrigPath);
+    syncPublicRecordingCopy(targetSlug, mergedRecordingPath);
+  } catch {}
+
+  const fps = 60;
+  const totalFrontIntroMs = coverDurationMs + masterIntroDurationMs;
+  const totalFrontIntroSec = coverDurationSec + masterIntroDurationSec;
+  let cumulativeMs = totalFrontIntroMs;
+  let cumulativeFrames = Math.round(totalFrontIntroSec * fps);
+
+  const combinedActions: any[] = [];
+  const combinedMoments: any[] = [];
+  const combinedSegments: any[] = [];
+  const combinedCues: any[] = [
+    {
+      id: 1,
+      isIntro: true,
+      text: coverOpeningText,
+      startMs: 200,
+      endMs: Math.max(1500, coverDurationMs - 200),
+      videoStartMs: 200,
+      videoEndMs: coverDurationMs,
+      compStartMs: 200,
+      compEndMs: Math.max(1500, coverDurationMs - 200),
+      audioDurationMs: Math.round(coverAudioDurSec * 1000),
+      autoHoldMs: 0,
+      extraHoldMs: 0,
+      effectiveDeltaMs: 0,
+      playbackRate: 1.0,
+      audioFile: fs.existsSync(coverAudioMp3Path)
+        ? `narration/${targetSlug}/${coverAudioFileName}`
+        : undefined,
+    },
+    {
+      id: 2,
+      isIntro: true,
+      text: masterOpeningText,
+      startMs: coverDurationMs + 200,
+      endMs: coverDurationMs + Math.max(1500, masterIntroDurationMs - 200),
+      videoStartMs: coverDurationMs + 200,
+      videoEndMs: totalFrontIntroMs,
+      compStartMs: coverDurationMs + 200,
+      compEndMs: coverDurationMs + Math.max(1500, masterIntroDurationMs - 200),
+      audioDurationMs: Math.round(masterAudioDurSec * 1000),
+      autoHoldMs: 0,
+      extraHoldMs: 0,
+      effectiveDeltaMs: 0,
+      playbackRate: 1.0,
+      audioFile: fs.existsSync(masterAudioMp3Path)
+        ? `narration/${targetSlug}/${masterAudioFileName}`
+        : undefined,
+    },
+  ];
+  let firstBaseUrl = "";
 
   sourceFiles.forEach((item, chapterIdx) => {
     const chSlug = item.slug;
@@ -863,7 +1237,7 @@ export function mergeRenderedVideos(options: {
         combinedCues.push({
           ...cue,
           id: combinedCues.length + 1,
-          isIntro: chapterIdx === 0 && Boolean(cue.isIntro),
+          isIntro: Boolean(cue.isIntro),
           startMs: shiftedStartMs,
           endMs: shiftedEndMs,
           videoStartMs: shiftedStartMs,
@@ -874,6 +1248,75 @@ export function mergeRenderedVideos(options: {
           extraHoldMs: 0,
           audioFile: newAudioFile,
         });
+      });
+    }
+
+    // 다음 챕터로 넘어갈 때 어떤 메뉴에 대해 안내할지 브릿지 오프닝 대본 자동 생성 및 TTS 합성
+    if (chapterIdx < sourceFiles.length - 1) {
+      const nextLabel =
+        shortModuleLabels[chapterIdx + 1] ||
+        chapterShortNames[chapterIdx + 1] ||
+        rawSlugs[chapterIdx + 1];
+      const bridgeText = `${nextLabel} 사용법에 대해 알아보겠습니다.`;
+      const bridgeAudioFileName = `ch${chapterIdx + 1}_99_bridge_next.mp3`;
+      const bridgeAudioMp3Path = path.join(mergedAudioDir, bridgeAudioFileName);
+      const publicBridgeAudioPath = path.join(publicNarrationDir, bridgeAudioFileName);
+
+      try {
+        spawnSync(
+          "python",
+          [
+            "-m",
+            "edge_tts",
+            "--voice",
+            voice,
+            `--rate=${rate}`,
+            `--pitch=${pitch}`,
+            "--text",
+            bridgeText,
+            "--write-media",
+            bridgeAudioMp3Path,
+          ],
+          { cwd: ROOT_DIR, encoding: "utf-8", timeout: 25000 }
+        );
+        if (fs.existsSync(bridgeAudioMp3Path)) {
+          fs.copyFileSync(bridgeAudioMp3Path, publicBridgeAudioPath);
+        }
+      } catch (bErr) {
+        console.warn(`[Bridge TTS] 챕터 ${chapterIdx + 1} 전환 대본 음성 합성 경고:`, bErr);
+      }
+
+      const bridgeAudioDurSec = fs.existsSync(bridgeAudioMp3Path)
+        ? probeVideoDurationSec(bridgeAudioMp3Path) || 3.4
+        : 3.4;
+      const bridgeAudioDurMs = Math.round(bridgeAudioDurSec * 1000);
+      const prevCue = combinedCues[combinedCues.length - 1];
+      const prevVoiceEndMs = prevCue
+        ? Number(prevCue.videoStartMs || 0) + Number(prevCue.audioDurationMs || 0)
+        : cumulativeMs;
+      const chapterEndMs = cumulativeMs + chDurMs;
+      const bridgeStartMs = Math.min(
+        chapterEndMs - 300,
+        Math.max(prevVoiceEndMs + 100, chapterEndMs - 600)
+      );
+
+      combinedCues.push({
+        id: combinedCues.length + 1,
+        isIntro: false,
+        text: bridgeText,
+        startMs: bridgeStartMs,
+        endMs: bridgeStartMs + bridgeAudioDurMs,
+        videoStartMs: bridgeStartMs,
+        videoEndMs: chapterEndMs,
+        compStartMs: bridgeStartMs,
+        compEndMs: bridgeStartMs + bridgeAudioDurMs,
+        audioDurationMs: bridgeAudioDurMs,
+        autoHoldMs: Math.max(0, bridgeAudioDurMs - Math.max(200, chapterEndMs - bridgeStartMs) + 180),
+        extraHoldMs: 0,
+         _isAutoBridgeCue: true,
+        audioFile: fs.existsSync(bridgeAudioMp3Path)
+          ? `narration/${targetSlug}/${bridgeAudioFileName}`
+          : undefined,
       });
     }
 
@@ -924,8 +1367,15 @@ export function mergeRenderedVideos(options: {
   const mergedNarration =
     combinedCues.length > 0
       ? {
+          slug: targetSlug,
           enabled: true,
           showSubtitles: true,
+          showIntroToc: true,
+          introToc: masterToc,
+          siteBrand,
+          introBakedIntoVideo: true,
+          bakedIntroDurationMs: totalFrontIntroMs,
+          mergedFromSlugs: rawSlugs,
           style,
           voice,
           rate,
@@ -937,10 +1387,19 @@ export function mergeRenderedVideos(options: {
 
   if (mergedNarration) {
     fs.writeFileSync(
-      path.join(mergedDataDir, "narration.json"),
-      JSON.stringify(mergedNarration, null, 2),
+      path.join(mergedDataDir, "merged.orig.json"),
+      JSON.stringify(
+        {
+          mergedFromSlugs: rawSlugs,
+          totalFrontIntroMs,
+          cues: combinedCues.filter((c) => !c._isAutoBridgeCue),
+        },
+        null,
+        2
+      ),
       "utf-8"
     );
+    saveNarrationFile(targetSlug, mergedNarration as any);
   }
 
   const mergedEditPlan: any = {
@@ -956,7 +1415,7 @@ export function mergeRenderedVideos(options: {
       rippleColor: "rgba(59, 130, 246, 0.45)",
       rippleRadius: 36,
     },
-    ...(mergedNarration ? { narration: mergedNarration } : {}),
+    ...(mergedNarration ? { narration: getNarration(targetSlug) || mergedNarration } : {}),
   };
   fs.writeFileSync(
     path.join(mergedDataDir, "edit-plan.json"),
@@ -964,13 +1423,22 @@ export function mergeRenderedVideos(options: {
     "utf-8"
   );
 
+  if (mergedNarration) {
+    try {
+      await fastApplyNarrationToRenderedMp4(targetSlug);
+    } catch (applyErr) {
+      console.warn(`[Merge] 챕터 전환 브릿지 대본 영상 합성 경고:`, applyErr);
+    }
+  }
+
+  const finalDurSec = probeVideoDurationSec(outMp4Path) || actualTotalDurSec;
   const stat = fs.statSync(outMp4Path);
 
   return {
     success: true,
     outputSlug: targetSlug,
     mergedSlugs: rawSlugs,
-    totalDurationSec: actualTotalDurSec,
+    totalDurationSec: finalDurSec,
     fileSizeBytes: stat.size,
     videoUrl: `/api/rendered-video/${targetSlug}`,
     downloadUrl: `/api/download/${targetSlug}`,

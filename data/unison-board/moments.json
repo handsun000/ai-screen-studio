@@ -1,0 +1,157 @@
+{
+  "metadata": {
+    "url": "https://gwdev.unison.co.kr/ekp/main/home/homGwMain",
+    "viewportWidth": 1920,
+    "viewportHeight": 1080,
+    "totalDurationMs": 34379,
+    "recordingStart": "2026-10-31T15:36:51.849Z",
+    "calibratedToVideoDurationMs": 34379
+  },
+  "moments": [
+    {
+      "id": 1,
+      "type": "wait",
+      "timestamp": 13897,
+      "description": "초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기"
+    },
+    {
+      "id": 2,
+      "type": "click",
+      "timestamp": 15911,
+      "description": "'게시판' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 702,
+        "y": 82
+      },
+      "target": {
+        "x": 654,
+        "y": 55,
+        "width": 97,
+        "height": 55
+      }
+    },
+    {
+      "id": 3,
+      "type": "wait",
+      "timestamp": 17731,
+      "description": "'게시판' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 4,
+      "type": "click",
+      "timestamp": 19718,
+      "description": "'공지사항' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 702,
+        "y": 167
+      },
+      "target": {
+        "x": 633,
+        "y": 151,
+        "width": 140,
+        "height": 32
+      }
+    },
+    {
+      "id": 5,
+      "type": "wait",
+      "timestamp": 20801,
+      "description": "'공지사항' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 6,
+      "type": "click",
+      "timestamp": 22764,
+      "description": "'최근 게시함' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 88,
+        "y": 246
+      },
+      "target": {
+        "x": 54,
+        "y": 234,
+        "width": 68,
+        "height": 24
+      }
+    },
+    {
+      "id": 7,
+      "type": "wait",
+      "timestamp": 23836,
+      "description": "'최근 게시함' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 8,
+      "type": "click",
+      "timestamp": 25234,
+      "description": "트리 '중요게시글' 항목 클릭",
+      "cursor": {
+        "x": 85,
+        "y": 416
+      },
+      "target": {
+        "x": 50,
+        "y": 404,
+        "width": 70,
+        "height": 24
+      }
+    },
+    {
+      "id": 9,
+      "type": "wait",
+      "timestamp": 26272,
+      "description": "트리 '중요게시글' 항목 반응 대기"
+    },
+    {
+      "id": 10,
+      "type": "type",
+      "timestamp": 27495,
+      "description": "'검색어' 입력창에 '공지' 입력",
+      "cursor": {
+        "x": 1748,
+        "y": 157
+      },
+      "target": {
+        "x": 1657,
+        "y": 123,
+        "width": 150,
+        "height": 34
+      },
+      "keys": "공지"
+    },
+    {
+      "id": 11,
+      "type": "wait",
+      "timestamp": 28272,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 12,
+      "type": "click",
+      "timestamp": 29521,
+      "description": "'검색' 버튼 클릭",
+      "cursor": {
+        "x": 1821,
+        "y": 140
+      },
+      "target": {
+        "x": 1807,
+        "y": 123,
+        "width": 28,
+        "height": 34
+      }
+    },
+    {
+      "id": 13,
+      "type": "wait",
+      "timestamp": 30580,
+      "description": "'검색' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 14,
+      "type": "wait",
+      "timestamp": 32201,
+      "description": "최종 시연 결과 화면 클로즈업 확인 대기"
+    }
+  ]
+}

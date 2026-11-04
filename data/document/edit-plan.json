@@ -1,0 +1,1283 @@
+{
+  "totalDurationFrames": 14736,
+  "rawDurationFrames": 13748,
+  "fps": 60,
+  "defaultZoom": 1,
+  "segments": [
+    {
+      "momentId": 1,
+      "startFrame": 944,
+      "endFrame": 1001,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1354,
+        "y": 90
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1354, 90)"
+    },
+    {
+      "momentId": 3,
+      "startFrame": 1088,
+      "endFrame": 2083,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 326,
+        "y": 348
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (524, 405) + Click at (562, 275) + Click at (101, 210) + Click at (91, 355) + Click at (135, 486) + Click at (161, 209)"
+    },
+    {
+      "momentId": 15,
+      "startFrame": 2175,
+      "endFrame": 2232,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 123,
+        "y": 633
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (123, 633)"
+    },
+    {
+      "momentId": 17,
+      "startFrame": 2324,
+      "endFrame": 2681,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 429,
+        "y": 284
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (520, 281) + Click at (641, 358) + Click at (217, 211)"
+    },
+    {
+      "momentId": 23,
+      "startFrame": 2775,
+      "endFrame": 3278,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 82,
+        "y": 351
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (48, 209) + Click at (92, 383) + Click at (110, 426) + Click at (115, 493)"
+    },
+    {
+      "momentId": 31,
+      "startFrame": 3370,
+      "endFrame": 3427,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 65,
+        "y": 148
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (65, 148)"
+    },
+    {
+      "momentId": 33,
+      "startFrame": 3563,
+      "endFrame": 5438,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 766,
+        "y": 424
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (591, 294) + Click at (731, 281) + Click at (862, 277) + Click at (971, 282) + Click at (971, 321) + Click at (560, 326) + Click at (873, 320) + Click at (814, 572) + Click at (612, 337) + Click at (630, 367) + Click at (637, 438) + Click at (915, 320) + Click at (938, 537)"
+    },
+    {
+      "momentId": 59,
+      "startFrame": 5561,
+      "endFrame": 6858,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 779,
+        "y": 668
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (980, 614) + Click at (1024, 726) + Click at (1005, 663) + Click at (1027, 767) + Click at (921, 723) + Typing: 2026학년도 학사운영 및 업무편람 + Typing: 2026학년도 학사운영 및 업무편람 자료입니다. + Click at (531, 600)"
+    },
+    {
+      "momentId": 74,
+      "startFrame": 6885,
+      "endFrame": 6992,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1042,
+        "y": 522
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (935, 382) + Click at (1149, 662)"
+    },
+    {
+      "momentId": 77,
+      "startFrame": 7139,
+      "endFrame": 7196,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 529,
+        "y": 816
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (529, 816)"
+    },
+    {
+      "momentId": 79,
+      "startFrame": 7292,
+      "endFrame": 7502,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 660,
+        "y": 319
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (585, 361) + Click at (735, 277)"
+    },
+    {
+      "momentId": 83,
+      "startFrame": 7599,
+      "endFrame": 7800,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 952,
+        "y": 846
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (921, 768) + Click at (982, 925)"
+    },
+    {
+      "momentId": 87,
+      "startFrame": 7941,
+      "endFrame": 8256,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 655,
+        "y": 212
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (886, 141) + Click at (424, 283)"
+    },
+    {
+      "momentId": 91,
+      "startFrame": 8346,
+      "endFrame": 9333,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1172,
+        "y": 382
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1149, 238) + Click at (1095, 235) + Click at (1099, 353) + Click at (1239, 346) + Click at (1408, 339) + Click at (952, 240) + Typing: 자료변경"
+    },
+    {
+      "momentId": 105,
+      "startFrame": 9416,
+      "endFrame": 9473,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 918,
+        "y": 569
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (918, 569)"
+    },
+    {
+      "momentId": 107,
+      "startFrame": 9610,
+      "endFrame": 9667,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 916,
+        "y": 144
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (916, 144)"
+    },
+    {
+      "momentId": 109,
+      "startFrame": 9795,
+      "endFrame": 9852,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1776,
+        "y": 694
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1776, 694)"
+    },
+    {
+      "momentId": 111,
+      "startFrame": 9939,
+      "endFrame": 10117,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 840,
+        "y": 522
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (531, 561) + Click at (935, 382) + Click at (1149, 662)"
+    },
+    {
+      "momentId": 115,
+      "startFrame": 10270,
+      "endFrame": 10327,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 963,
+        "y": 866
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (963, 866)"
+    },
+    {
+      "momentId": 117,
+      "startFrame": 10507,
+      "endFrame": 10564,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1180,
+        "y": 414
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1180, 414)"
+    },
+    {
+      "momentId": 119,
+      "startFrame": 10655,
+      "endFrame": 10712,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1784,
+        "y": 498
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1784, 498)"
+    },
+    {
+      "momentId": 121,
+      "startFrame": 10808,
+      "endFrame": 11015,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 976,
+        "y": 388
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (951, 536) + Click at (1001, 239)"
+    },
+    {
+      "momentId": 125,
+      "startFrame": 11111,
+      "endFrame": 11356,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 940,
+        "y": 138
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (915, 143) + Click at (965, 132)"
+    },
+    {
+      "momentId": 129,
+      "startFrame": 11486,
+      "endFrame": 11543,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 84,
+        "y": 320
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (84, 320)"
+    },
+    {
+      "momentId": 131,
+      "startFrame": 11628,
+      "endFrame": 13352,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1604,
+        "y": 225
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Typing: 사용자매뉴얼 + Click at (1766, 143) + Click at (1434, 141) + Click at (1510, 141) + Click at (1516, 259) + Click at (1714, 141) + Click at (1766, 144) + Click at (1517, 147) + Click at (1535, 309) + Typing: 사용자매뉴얼.20.모바일.pptx + Click at (1774, 143)"
+    },
+    {
+      "momentId": 153,
+      "startFrame": 13480,
+      "endFrame": 13567,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 583,
+        "y": 288
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (583, 288)"
+    }
+  ],
+  "narration": {
+    "slug": "document",
+    "style": "manual",
+    "voice": "ko-KR-SunHiNeural",
+    "pitch": "+0Hz",
+    "rate": "+5%",
+    "enabled": true,
+    "showSubtitles": true,
+    "showIntroToc": true,
+    "introToc": {
+      "enabled": true,
+      "badge": "문서관리 사용 매뉴얼",
+      "title": "문서함 조회와 문서 등록 및 버전 관리",
+      "summary": "사내 업무 문서를 체계적으로 분류하고 관리하는 방법을 안내합니다.",
+      "items": [
+        {
+          "title": "문서함 및 분류·조직별 조회",
+          "description": "문서함과 분류, 조직, 내 문서 탭을 활용해 자료를 조회하는 방법을 소개합니다."
+        },
+        {
+          "title": "문서 등록 및 개별 권한 설정",
+          "description": "신규 문서 등록 시 다중 분류와 열람·수정 권한을 부여하는 방법을 안내합니다."
+        },
+        {
+          "title": "문서 분류 변경 및 개정 관리",
+          "description": "등록된 문서의 분류를 변경하고 반출·반입으로 버전을 개정하는 기능을 소개합니다."
+        },
+        {
+          "title": "상세 조건 기반 문서 검색",
+          "description": "검색어 포함 조건과 기간 필터를 조합해 원하는 문서를 찾는 방법을 안내합니다."
+        }
+      ],
+      "siteBrand": {
+        "hostKey": "gw.bc.ac.kr",
+        "originUrl": "https://gw.bc.ac.kr/ekp/main/home/homGwMain",
+        "siteName": "부천대학교",
+        "manualBadge": "그룹웨어 사용 매뉴얼",
+        "tagline": "",
+        "primaryColor": "#FF9600",
+        "secondaryColor": "#D67200",
+        "accentColor": "#FFC01C",
+        "logoUrl": "/assets/sites/gw.bc.ac.kr/logo.png",
+        "heroThumbUrl": "/assets/sites/gw.bc.ac.kr/hero.png",
+        "createdAt": "2026-10-31T11:43:57.743Z"
+      }
+    },
+    "siteBrand": {
+      "hostKey": "gw.bc.ac.kr",
+      "originUrl": "https://gw.bc.ac.kr/ekp/main/home/homGwMain",
+      "siteName": "부천대학교",
+      "manualBadge": "그룹웨어 사용 매뉴얼",
+      "tagline": "",
+      "primaryColor": "#FF9600",
+      "secondaryColor": "#D67200",
+      "accentColor": "#FFC01C",
+      "logoUrl": "/assets/sites/gw.bc.ac.kr/logo.png",
+      "heroThumbUrl": "/assets/sites/gw.bc.ac.kr/hero.png",
+      "createdAt": "2026-10-31T11:43:57.743Z"
+    },
+    "introBakedIntoVideo": true,
+    "bakedIntroDurationMs": 14832,
+    "_bakedSlideSig": "{\"layoutVersion\":\"contents-only-v2\",\"badge\":\"문서관리 사용 매뉴얼\",\"title\":\"문서함 조회와 문서 등록 및 버전 관리\",\"summary\":\"사내 업무 문서를 체계적으로 분류하고 관리하는 방법을 안내합니다.\",\"items\":[{\"title\":\"문서함 및 분류·조직별 조회\",\"description\":\"문서함과 분류, 조직, 내 문서 탭을 활용해 자료를 조회하는 방법을 소개합니다.\"},{\"title\":\"문서 등록 및 개별 권한 설정\",\"description\":\"신규 문서 등록 시 다중 분류와 열람·수정 권한을 부여하는 방법을 안내합니다.\"},{\"title\":\"문서 분류 변경 및 개정 관리\",\"description\":\"등록된 문서의 분류를 변경하고 반출·반입으로 버전을 개정하는 기능을 소개합니다.\"},{\"title\":\"상세 조건 기반 문서 검색\",\"description\":\"검색어 포함 조건과 기간 필터를 조합해 원하는 문서를 찾는 방법을 안내합니다.\"}],\"hostKey\":\"gw.bc.ac.kr\",\"primaryColor\":\"#FF9600\",\"cue0Text\":\"문서관리는 사내 규정과 업무 자료를 체계적으로 축적하고 버전 이력과 열람 권한을 안전하게 통제하는 지식 관리 기능입니다. 문서 조회부터 등록, 개정 및 상세 검색 방법을 안내합니다.\",\"cue0Sig\":\"ko-KR-SunHiNeural|+5%|+0Hz|문서관리는 사내 규정과 업무 자료를 체계적으로 축적하고 버전 이력과 열람 권한을 안전하게 통제하는 지식 관리 기능입니다. 문서 조회부터 등록, 개정 및 상세 검색 방법을 안내합니다.\",\"introDurationMs\":14832}",
+    "updatedAt": "2026-11-03T08:52:47.418Z",
+    "cues": [
+      {
+        "videoStartMs": 200,
+        "startMs": 200,
+        "endMs": 14432,
+        "text": "문서관리는 사내 규정과 업무 자료를 체계적으로 축적하고 버전 이력과 열람 권한을 안전하게 통제하는 지식 관리 기능입니다. 문서 조회부터 등록, 개정 및 상세 검색 방법을 안내합니다.",
+        "isIntro": true,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-01.mp3",
+        "audioDurationMs": 14232,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|문서관리는 사내 규정과 업무 자료를 체계적으로 축적하고 버전 이력과 열람 권한을 안전하게 통제하는 지식 관리 기능입니다. 문서 조회부터 등록, 개정 및 상세 검색 방법을 안내합니다.",
+        "id": 1,
+        "videoEndMs": 15600,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 200,
+        "compEndMs": 14432
+      },
+      {
+        "videoStartMs": 15600,
+        "startMs": 15600,
+        "endMs": 23784,
+        "text": "포탈 전체메뉴에서 부서 및 사내 문서를 통합 보관하고 공유하는 문서관리 메뉴로 이동해 등록된 문서를 확인합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-02.mp3",
+        "audioDurationMs": 8184,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|포탈 전체메뉴에서 부서 및 사내 문서를 통합 보관하고 공유하는 문서관리 메뉴로 이동해 등록된 문서를 확인합니다.",
+        "id": 2,
+        "videoEndMs": 26000,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 15600,
+        "compEndMs": 23784
+      },
+      {
+        "videoStartMs": 26000,
+        "startMs": 26000,
+        "endMs": 33368,
+        "text": "좌측 탭에서 주제별 카테고리로 문서를 모아 보는 분류 탭을 선택해 하위 분류별 자료를 탐색합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-03.mp3",
+        "audioDurationMs": 7368,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|좌측 탭에서 주제별 카테고리로 문서를 모아 보는 분류 탭을 선택해 하위 분류별 자료를 탐색합니다.",
+        "id": 3,
+        "videoEndMs": 36200,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 26000,
+        "compEndMs": 33368
+      },
+      {
+        "videoStartMs": 36200,
+        "startMs": 36200,
+        "endMs": 41672,
+        "text": "조직 탭에서 특정 부서를 선택해 해당 부서의 문서를 열람할 수 있습니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-04.mp3",
+        "audioDurationMs": 5472,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|조직 탭에서 특정 부서를 선택해 해당 부서의 문서를 열람할 수 있습니다.",
+        "id": 4,
+        "videoEndMs": 41200,
+        "autoHoldMs": 652,
+        "effectiveDeltaMs": 652,
+        "playbackRate": 1,
+        "compStartMs": 36200,
+        "compEndMs": 41672
+      },
+      {
+        "videoStartMs": 41200,
+        "startMs": 41850,
+        "endMs": 46986,
+        "text": "내가 작성하거나 관여한 문서를 모아 보는 내 문서 탭을 확인합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-05.mp3",
+        "audioDurationMs": 5136,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|내가 작성하거나 관여한 문서를 모아 보는 내 문서 탭을 확인합니다.",
+        "id": 5,
+        "videoEndMs": 46200,
+        "autoHoldMs": 316,
+        "effectiveDeltaMs": 316,
+        "playbackRate": 1,
+        "compStartMs": 41850,
+        "compEndMs": 46986
+      },
+      {
+        "videoStartMs": 46200,
+        "startMs": 47167,
+        "endMs": 55087,
+        "text": "다시 기본 문서함 탭으로 이동하여 부서별 폴더 트리를 차례로 펼쳐 자료를 등록할 대상 문서함을 선택합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-06.mp3",
+        "audioDurationMs": 7920,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|다시 기본 문서함 탭으로 이동하여 부서별 폴더 트리를 차례로 펼쳐 자료를 등록할 대상 문서함을 선택합니다.",
+        "id": 6,
+        "videoEndMs": 56100,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 47167,
+        "compEndMs": 55087
+      },
+      {
+        "videoStartMs": 56100,
+        "startMs": 57067,
+        "endMs": 64147,
+        "text": "선택한 문서함에 새로운 업무 자료를 올리기 위해 좌측 상단의 문서 등록 버튼을 클릭합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-07.mp3",
+        "audioDurationMs": 7080,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|선택한 문서함에 새로운 업무 자료를 올리기 위해 좌측 상단의 문서 등록 버튼을 클릭합니다.",
+        "id": 7,
+        "videoEndMs": 59300,
+        "autoHoldMs": 4060,
+        "effectiveDeltaMs": 4060,
+        "playbackRate": 1,
+        "compStartMs": 57067,
+        "compEndMs": 64147
+      },
+      {
+        "videoStartMs": 59300,
+        "startMs": 64333,
+        "endMs": 73381,
+        "text": "문서 성격에 맞는 1차부터 3차까지의 세분화된 분류 체계를 지정하고, 필요 시 분류추가 버튼으로 다중 분류를 연결합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-08.mp3",
+        "audioDurationMs": 9048,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|문서 성격에 맞는 1차부터 3차까지의 세분화된 분류 체계를 지정하고, 필요 시 분류추가 버튼으로 다중 분류를 연결합니다.",
+        "id": 8,
+        "videoEndMs": 69100,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 64333,
+        "compEndMs": 73381
+      },
+      {
+        "videoStartMs": 69100,
+        "startMs": 74133,
+        "endMs": 81093,
+        "text": "문서의 기본 권한 외에 특정 사용자에게만 별도 권한을 부여하는 개별권한 설정 창을 엽니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-09.mp3",
+        "audioDurationMs": 6960,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|문서의 기본 권한 외에 특정 사용자에게만 별도 권한을 부여하는 개별권한 설정 창을 엽니다.",
+        "id": 9,
+        "videoEndMs": 81600,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 74133,
+        "compEndMs": 81093
+      },
+      {
+        "videoStartMs": 81600,
+        "startMs": 86633,
+        "endMs": 96113,
+        "text": "조직도에서 권한을 부여할 대상자를 찾아 추가한 뒤, 해당 사용자의 기본 열람 권한 범위를 설정하기 위해 조회 옵션을 선택합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-10.mp3",
+        "audioDurationMs": 9480,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|조직도에서 권한을 부여할 대상자를 찾아 추가한 뒤, 해당 사용자의 기본 열람 권한 범위를 설정하기 위해 조회 옵션을 선택합니다.",
+        "id": 10,
+        "videoEndMs": 95100,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 86633,
+        "compEndMs": 96113
+      },
+      {
+        "videoStartMs": 95100,
+        "startMs": 100133,
+        "endMs": 108341,
+        "text": "열람 및 저장 권한과 문서 수정 권한 범위를 각각 세부적으로 지정하고 확인을 눌러 개별 권한 설정을 완료합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-11.mp3",
+        "audioDurationMs": 8208,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|열람 및 저장 권한과 문서 수정 권한 범위를 각각 세부적으로 지정하고 확인을 눌러 개별 권한 설정을 완료합니다.",
+        "id": 11,
+        "videoEndMs": 107300,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 100133,
+        "compEndMs": 108341
+      },
+      {
+        "videoStartMs": 107300,
+        "startMs": 112333,
+        "endMs": 119341,
+        "text": "등록할 문서의 제목과 상세 본문 내용을 작성하여 문서의 개요와 목적을 명확히 기재합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-12.mp3",
+        "audioDurationMs": 7008,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|등록할 문서의 제목과 상세 본문 내용을 작성하여 문서의 개요와 목적을 명확히 기재합니다.",
+        "id": 12,
+        "videoEndMs": 113500,
+        "autoHoldMs": 988,
+        "effectiveDeltaMs": 988,
+        "playbackRate": 1,
+        "compStartMs": 112333,
+        "compEndMs": 119341
+      },
+      {
+        "videoStartMs": 113500,
+        "startMs": 119517,
+        "endMs": 123525,
+        "text": "공유할 업무 문서 파일을 선택하여 첨부합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-13.mp3",
+        "audioDurationMs": 4008,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|공유할 업무 문서 파일을 선택하여 첨부합니다.",
+        "id": 13,
+        "videoEndMs": 118900,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 119517,
+        "compEndMs": 123525
+      },
+      {
+        "videoStartMs": 118900,
+        "startMs": 124917,
+        "endMs": 133317,
+        "text": "작성 중인 문서와 연관된 기존 자료를 함께 참조할 수 있도록 관련문서 선택 창에서 참고 문서를 찾아 연결합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-14.mp3",
+        "audioDurationMs": 8400,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|작성 중인 문서와 연관된 기존 자료를 함께 참조할 수 있도록 관련문서 선택 창에서 참고 문서를 찾아 연결합니다.",
+        "id": 14,
+        "videoEndMs": 129000,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 124917,
+        "compEndMs": 133317
+      },
+      {
+        "videoStartMs": 129000,
+        "startMs": 135017,
+        "endMs": 142001,
+        "text": "모든 항목 입력을 마친 후 저장 버튼을 클릭하고 확인 팝업을 닫아 문서 등록을 완료합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-15.mp3",
+        "audioDurationMs": 6984,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|모든 항목 입력을 마친 후 저장 버튼을 클릭하고 확인 팝업을 닫아 문서 등록을 완료합니다.",
+        "id": 15,
+        "videoEndMs": 136600,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 135017,
+        "compEndMs": 142001
+      },
+      {
+        "videoStartMs": 136600,
+        "startMs": 142617,
+        "endMs": 150753,
+        "text": "등록한 문서를 선택해 상세 화면으로 이동한 뒤, 상단의 이 문서를 메뉴를 열어 추가 관리 기능을 사용할 수 있습니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-16.mp3",
+        "audioDurationMs": 8136,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|등록한 문서를 선택해 상세 화면으로 이동한 뒤, 상단의 이 문서를 메뉴를 열어 추가 관리 기능을 사용할 수 있습니다.",
+        "id": 16,
+        "videoEndMs": 141700,
+        "autoHoldMs": 3216,
+        "effectiveDeltaMs": 3216,
+        "playbackRate": 1,
+        "compStartMs": 142617,
+        "compEndMs": 150753
+      },
+      {
+        "videoStartMs": 141700,
+        "startMs": 150933,
+        "endMs": 159765,
+        "text": "문서의 성격을 재분류하기 위해 분류변경 버튼을 누르고 하위 분류 항목을 새로 지정한 뒤 저장하여 즉시 반영합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-17.mp3",
+        "audioDurationMs": 8832,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|문서의 성격을 재분류하기 위해 분류변경 버튼을 누르고 하위 분류 항목을 새로 지정한 뒤 저장하여 즉시 반영합니다.",
+        "id": 17,
+        "videoEndMs": 152200,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 150933,
+        "compEndMs": 159765
+      },
+      {
+        "videoStartMs": 152200,
+        "startMs": 161433,
+        "endMs": 170697,
+        "text": "기존 문서를 업데이트하여 새 버전을 생성하는 개정 버튼을 클릭하고, 반출 사유를 입력해 문서를 수정 상태로 전환합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-18.mp3",
+        "audioDurationMs": 9264,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|기존 문서를 업데이트하여 새 버전을 생성하는 개정 버튼을 클릭하고, 반출 사유를 입력해 문서를 수정 상태로 전환합니다.",
+        "id": 18,
+        "videoEndMs": 163100,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 161433,
+        "compEndMs": 170697
+      },
+      {
+        "videoStartMs": 163100,
+        "startMs": 172333,
+        "endMs": 180181,
+        "text": "문서 수정 화면에서 기존 첨부파일을 삭제하고 최신 내용이 반영된 새로운 파일로 교체하여 첨부합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-19.mp3",
+        "audioDurationMs": 7848,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|문서 수정 화면에서 기존 첨부파일을 삭제하고 최신 내용이 반영된 새로운 파일로 교체하여 첨부합니다.",
+        "id": 19,
+        "videoEndMs": 171100,
+        "autoHoldMs": 28,
+        "effectiveDeltaMs": 28,
+        "playbackRate": 1,
+        "compStartMs": 172333,
+        "compEndMs": 180181
+      },
+      {
+        "videoStartMs": 171100,
+        "startMs": 180367,
+        "endMs": 187375,
+        "text": "수정을 마친 후 반입 버튼을 클릭하여 변경 사항을 새 버전의 문서로 정식 등록합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-20.mp3",
+        "audioDurationMs": 7008,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|수정을 마친 후 반입 버튼을 클릭하여 변경 사항을 새 버전의 문서로 정식 등록합니다.",
+        "id": 20,
+        "videoEndMs": 175000,
+        "autoHoldMs": 3288,
+        "effectiveDeltaMs": 3288,
+        "playbackRate": 1,
+        "compStartMs": 180367,
+        "compEndMs": 187375
+      },
+      {
+        "videoStartMs": 175000,
+        "startMs": 187550,
+        "endMs": 196286,
+        "text": "상세 화면에서 버전보기 버튼을 눌러 개정 이력을 펼치고, 반출사유 버튼을 클릭해 문서가 변경된 사유를 확인합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-21.mp3",
+        "audioDurationMs": 8736,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|상세 화면에서 버전보기 버튼을 눌러 개정 이력을 펼치고, 반출사유 버튼을 클릭해 문서가 변경된 사유를 확인합니다.",
+        "id": 21,
+        "videoEndMs": 182500,
+        "autoHoldMs": 1416,
+        "effectiveDeltaMs": 1416,
+        "playbackRate": 1,
+        "compStartMs": 187550,
+        "compEndMs": 196286
+      },
+      {
+        "videoStartMs": 182500,
+        "startMs": 196467,
+        "endMs": 202875,
+        "text": "더 이상 보관할 필요가 없는 문서는 상단 삭제 버튼을 클릭하여 목록에서 제거합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-22.mp3",
+        "audioDurationMs": 6408,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|더 이상 보관할 필요가 없는 문서는 상단 삭제 버튼을 클릭하여 목록에서 제거합니다.",
+        "id": 22,
+        "videoEndMs": 191300,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 196467,
+        "compEndMs": 202875
+      },
+      {
+        "videoStartMs": 191300,
+        "startMs": 205267,
+        "endMs": 211075,
+        "text": "문서함으로 이동한 뒤, 검색어를 입력해 원하는 문서를 빠르게 조회합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-23.mp3",
+        "audioDurationMs": 5808,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|문서함으로 이동한 뒤, 검색어를 입력해 원하는 문서를 빠르게 조회합니다.",
+        "id": 23,
+        "videoEndMs": 199000,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 205267,
+        "compEndMs": 211075
+      },
+      {
+        "videoStartMs": 199000,
+        "startMs": 212967,
+        "endMs": 220743,
+        "text": "검색 기간 범위를 확인하고, 검색어 일치 방식과 정렬 기준을 조정하기 위해 검색 필터 옵션을 엽니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-24.mp3",
+        "audioDurationMs": 7776,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|검색 기간 범위를 확인하고, 검색어 일치 방식과 정렬 기준을 조정하기 위해 검색 필터 옵션을 엽니다.",
+        "id": 24,
+        "videoEndMs": 204600,
+        "autoHoldMs": 2356,
+        "effectiveDeltaMs": 2356,
+        "playbackRate": 1,
+        "compStartMs": 212967,
+        "compEndMs": 220743
+      },
+      {
+        "videoStartMs": 204600,
+        "startMs": 220917,
+        "endMs": 229485,
+        "text": "입력한 모든 단어가 포함된 문서만 추려내는 모두포함 조건을 선택한 뒤 다시 검색을 실행하여 결과를 좁힙니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-25.mp3",
+        "audioDurationMs": 8568,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|입력한 모든 단어가 포함된 문서만 추려내는 모두포함 조건을 선택한 뒤 다시 검색을 실행하여 결과를 좁힙니다.",
+        "id": 25,
+        "videoEndMs": 213200,
+        "autoHoldMs": 148,
+        "effectiveDeltaMs": 148,
+        "playbackRate": 1,
+        "compStartMs": 220917,
+        "compEndMs": 229485
+      },
+      {
+        "videoStartMs": 213200,
+        "startMs": 229667,
+        "endMs": 237707,
+        "text": "검색어와 제목이 완전히 동일한 자료만 찾는 정확히 일치 조건을 선택하고 전체 파일명을 입력해 검색합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/document/cue-26.mp3",
+        "audioDurationMs": 8040,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|검색어와 제목이 완전히 동일한 자료만 찾는 정확히 일치 조건을 선택하고 전체 파일명을 입력해 검색합니다.",
+        "id": 26,
+        "videoEndMs": 229133,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 229667,
+        "compEndMs": 237707
+      }
+    ]
+  },
+  "timeRegions": [
+    {
+      "videoStartFrame": 0,
+      "videoEndFrame": 12,
+      "compStartFrame": 0,
+      "compEndFrame": 12,
+      "speed": 1
+    },
+    {
+      "videoStartFrame": 12,
+      "videoEndFrame": 936,
+      "compStartFrame": 12,
+      "compEndFrame": 936,
+      "speed": 1,
+      "cueId": 1
+    },
+    {
+      "videoStartFrame": 936,
+      "videoEndFrame": 1560,
+      "compStartFrame": 936,
+      "compEndFrame": 1560,
+      "speed": 1,
+      "cueId": 2
+    },
+    {
+      "videoStartFrame": 1560,
+      "videoEndFrame": 2172,
+      "compStartFrame": 1560,
+      "compEndFrame": 2172,
+      "speed": 1,
+      "cueId": 3
+    },
+    {
+      "videoStartFrame": 2172,
+      "videoEndFrame": 2440,
+      "compStartFrame": 2172,
+      "compEndFrame": 2440,
+      "speed": 1,
+      "cueId": 4
+    },
+    {
+      "videoStartFrame": 2440,
+      "videoEndFrame": 2445,
+      "compStartFrame": 2440,
+      "compEndFrame": 2484,
+      "speed": 0.11364,
+      "cueId": 4
+    },
+    {
+      "videoStartFrame": 2445,
+      "videoEndFrame": 2472,
+      "compStartFrame": 2484,
+      "compEndFrame": 2511,
+      "speed": 1,
+      "cueId": 4
+    },
+    {
+      "videoStartFrame": 2472,
+      "videoEndFrame": 2740,
+      "compStartFrame": 2511,
+      "compEndFrame": 2779,
+      "speed": 1,
+      "cueId": 5
+    },
+    {
+      "videoStartFrame": 2740,
+      "videoEndFrame": 2745,
+      "compStartFrame": 2779,
+      "compEndFrame": 2803,
+      "speed": 0.20833,
+      "cueId": 5
+    },
+    {
+      "videoStartFrame": 2745,
+      "videoEndFrame": 2772,
+      "compStartFrame": 2803,
+      "compEndFrame": 2830,
+      "speed": 1,
+      "cueId": 5
+    },
+    {
+      "videoStartFrame": 2772,
+      "videoEndFrame": 3366,
+      "compStartFrame": 2830,
+      "compEndFrame": 3424,
+      "speed": 1,
+      "cueId": 6
+    },
+    {
+      "videoStartFrame": 3366,
+      "videoEndFrame": 3526,
+      "compStartFrame": 3424,
+      "compEndFrame": 3584,
+      "speed": 1,
+      "cueId": 7
+    },
+    {
+      "videoStartFrame": 3526,
+      "videoEndFrame": 3531,
+      "compStartFrame": 3584,
+      "compEndFrame": 3833,
+      "speed": 0.02008,
+      "cueId": 7
+    },
+    {
+      "videoStartFrame": 3531,
+      "videoEndFrame": 3558,
+      "compStartFrame": 3833,
+      "compEndFrame": 3860,
+      "speed": 1,
+      "cueId": 7
+    },
+    {
+      "videoStartFrame": 3558,
+      "videoEndFrame": 4146,
+      "compStartFrame": 3860,
+      "compEndFrame": 4448,
+      "speed": 1,
+      "cueId": 8
+    },
+    {
+      "videoStartFrame": 4146,
+      "videoEndFrame": 4896,
+      "compStartFrame": 4448,
+      "compEndFrame": 5198,
+      "speed": 1,
+      "cueId": 9
+    },
+    {
+      "videoStartFrame": 4896,
+      "videoEndFrame": 5706,
+      "compStartFrame": 5198,
+      "compEndFrame": 6008,
+      "speed": 1,
+      "cueId": 10
+    },
+    {
+      "videoStartFrame": 5706,
+      "videoEndFrame": 6438,
+      "compStartFrame": 6008,
+      "compEndFrame": 6740,
+      "speed": 1,
+      "cueId": 11
+    },
+    {
+      "videoStartFrame": 6438,
+      "videoEndFrame": 6778,
+      "compStartFrame": 6740,
+      "compEndFrame": 7080,
+      "speed": 1,
+      "cueId": 12
+    },
+    {
+      "videoStartFrame": 6778,
+      "videoEndFrame": 6783,
+      "compStartFrame": 7080,
+      "compEndFrame": 7144,
+      "speed": 0.07813,
+      "cueId": 12
+    },
+    {
+      "videoStartFrame": 6783,
+      "videoEndFrame": 6810,
+      "compStartFrame": 7144,
+      "compEndFrame": 7171,
+      "speed": 1,
+      "cueId": 12
+    },
+    {
+      "videoStartFrame": 6810,
+      "videoEndFrame": 7134,
+      "compStartFrame": 7171,
+      "compEndFrame": 7495,
+      "speed": 1,
+      "cueId": 13
+    },
+    {
+      "videoStartFrame": 7134,
+      "videoEndFrame": 7740,
+      "compStartFrame": 7495,
+      "compEndFrame": 8101,
+      "speed": 1,
+      "cueId": 14
+    },
+    {
+      "videoStartFrame": 7740,
+      "videoEndFrame": 8196,
+      "compStartFrame": 8101,
+      "compEndFrame": 8557,
+      "speed": 1,
+      "cueId": 15
+    },
+    {
+      "videoStartFrame": 8196,
+      "videoEndFrame": 8470,
+      "compStartFrame": 8557,
+      "compEndFrame": 8831,
+      "speed": 1,
+      "cueId": 16
+    },
+    {
+      "videoStartFrame": 8470,
+      "videoEndFrame": 8475,
+      "compStartFrame": 8831,
+      "compEndFrame": 9029,
+      "speed": 0.02525,
+      "cueId": 16
+    },
+    {
+      "videoStartFrame": 8475,
+      "videoEndFrame": 8502,
+      "compStartFrame": 9029,
+      "compEndFrame": 9056,
+      "speed": 1,
+      "cueId": 16
+    },
+    {
+      "videoStartFrame": 8502,
+      "videoEndFrame": 9132,
+      "compStartFrame": 9056,
+      "compEndFrame": 9686,
+      "speed": 1,
+      "cueId": 17
+    },
+    {
+      "videoStartFrame": 9132,
+      "videoEndFrame": 9786,
+      "compStartFrame": 9686,
+      "compEndFrame": 10340,
+      "speed": 1,
+      "cueId": 18
+    },
+    {
+      "videoStartFrame": 9786,
+      "videoEndFrame": 10234,
+      "compStartFrame": 10340,
+      "compEndFrame": 10788,
+      "speed": 1,
+      "cueId": 19
+    },
+    {
+      "videoStartFrame": 10234,
+      "videoEndFrame": 10239,
+      "compStartFrame": 10788,
+      "compEndFrame": 10795,
+      "speed": 0.71429,
+      "cueId": 19
+    },
+    {
+      "videoStartFrame": 10239,
+      "videoEndFrame": 10266,
+      "compStartFrame": 10795,
+      "compEndFrame": 10822,
+      "speed": 1,
+      "cueId": 19
+    },
+    {
+      "videoStartFrame": 10266,
+      "videoEndFrame": 10468,
+      "compStartFrame": 10822,
+      "compEndFrame": 11024,
+      "speed": 1,
+      "cueId": 20
+    },
+    {
+      "videoStartFrame": 10468,
+      "videoEndFrame": 10473,
+      "compStartFrame": 11024,
+      "compEndFrame": 11226,
+      "speed": 0.02475,
+      "cueId": 20
+    },
+    {
+      "videoStartFrame": 10473,
+      "videoEndFrame": 10500,
+      "compStartFrame": 11226,
+      "compEndFrame": 11253,
+      "speed": 1,
+      "cueId": 20
+    },
+    {
+      "videoStartFrame": 10500,
+      "videoEndFrame": 10918,
+      "compStartFrame": 11253,
+      "compEndFrame": 11671,
+      "speed": 1,
+      "cueId": 21
+    },
+    {
+      "videoStartFrame": 10918,
+      "videoEndFrame": 10923,
+      "compStartFrame": 11671,
+      "compEndFrame": 11761,
+      "speed": 0.05556,
+      "cueId": 21
+    },
+    {
+      "videoStartFrame": 10923,
+      "videoEndFrame": 10950,
+      "compStartFrame": 11761,
+      "compEndFrame": 11788,
+      "speed": 1,
+      "cueId": 21
+    },
+    {
+      "videoStartFrame": 10950,
+      "videoEndFrame": 11478,
+      "compStartFrame": 11788,
+      "compEndFrame": 12316,
+      "speed": 1,
+      "cueId": 22
+    },
+    {
+      "videoStartFrame": 11478,
+      "videoEndFrame": 11940,
+      "compStartFrame": 12316,
+      "compEndFrame": 12778,
+      "speed": 1,
+      "cueId": 23
+    },
+    {
+      "videoStartFrame": 11940,
+      "videoEndFrame": 12244,
+      "compStartFrame": 12778,
+      "compEndFrame": 13082,
+      "speed": 1,
+      "cueId": 24
+    },
+    {
+      "videoStartFrame": 12244,
+      "videoEndFrame": 12249,
+      "compStartFrame": 13082,
+      "compEndFrame": 13228,
+      "speed": 0.03425,
+      "cueId": 24
+    },
+    {
+      "videoStartFrame": 12249,
+      "videoEndFrame": 12276,
+      "compStartFrame": 13228,
+      "compEndFrame": 13255,
+      "speed": 1,
+      "cueId": 24
+    },
+    {
+      "videoStartFrame": 12276,
+      "videoEndFrame": 12760,
+      "compStartFrame": 13255,
+      "compEndFrame": 13739,
+      "speed": 1,
+      "cueId": 25
+    },
+    {
+      "videoStartFrame": 12760,
+      "videoEndFrame": 12765,
+      "compStartFrame": 13739,
+      "compEndFrame": 13753,
+      "speed": 0.35714,
+      "cueId": 25
+    },
+    {
+      "videoStartFrame": 12765,
+      "videoEndFrame": 12792,
+      "compStartFrame": 13753,
+      "compEndFrame": 13780,
+      "speed": 1,
+      "cueId": 25
+    },
+    {
+      "videoStartFrame": 12792,
+      "videoEndFrame": 13748,
+      "compStartFrame": 13780,
+      "compEndFrame": 14736,
+      "speed": 1,
+      "cueId": 26
+    }
+  ]
+}

@@ -1,0 +1,227 @@
+{
+  "totalDurationFrames": 2231,
+  "rawDurationFrames": 2231,
+  "fps": 60,
+  "defaultZoom": 1,
+  "segments": [
+    {
+      "momentId": 2,
+      "startFrame": 1045,
+      "endFrame": 1102,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 943,
+        "y": 82
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (943, 82)"
+    },
+    {
+      "momentId": 4,
+      "startFrame": 1267,
+      "endFrame": 1531,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 103,
+        "y": 500
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (100, 381) + Click at (106, 619)"
+    },
+    {
+      "momentId": 8,
+      "startFrame": 1682,
+      "endFrame": 1739,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 106,
+        "y": 789
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (106, 789)"
+    },
+    {
+      "momentId": 10,
+      "startFrame": 1829,
+      "endFrame": 1886,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 211,
+        "y": 209
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (211, 209)"
+    },
+    {
+      "momentId": 12,
+      "startFrame": 1977,
+      "endFrame": 2064,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 92,
+        "y": 981
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (92, 981)"
+    }
+  ],
+  "timeRegions": [
+    {
+      "videoStartFrame": 0,
+      "videoEndFrame": 12,
+      "compStartFrame": 0,
+      "compEndFrame": 12,
+      "speed": 1
+    },
+    {
+      "videoStartFrame": 12,
+      "videoEndFrame": 1042,
+      "compStartFrame": 12,
+      "compEndFrame": 1042,
+      "speed": 1,
+      "cueId": 1
+    },
+    {
+      "videoStartFrame": 1042,
+      "videoEndFrame": 1676,
+      "compStartFrame": 1042,
+      "compEndFrame": 1676,
+      "speed": 1,
+      "cueId": 2
+    },
+    {
+      "videoStartFrame": 1676,
+      "videoEndFrame": 2231,
+      "compStartFrame": 1676,
+      "compEndFrame": 2231,
+      "speed": 1,
+      "cueId": 3
+    }
+  ],
+  "narration": {
+    "slug": "unison-reservation",
+    "voice": "ko-KR-SunHiNeural",
+    "rate": "+5%",
+    "pitch": "+0Hz",
+    "style": "manual",
+    "enabled": true,
+    "showSubtitles": true,
+    "showIntroToc": true,
+    "introToc": {
+      "enabled": true,
+      "badge": "자원예약 사용 매뉴얼",
+      "title": "자원예약관리 메뉴 구성 및 조회 안내",
+      "summary": "사내 공용 자원의 현황 조회와 예약 관리 방법을 안내합니다.",
+      "items": [
+        {
+          "title": "자원예약관리 접속 및 분류 조회",
+          "description": "자원예약관리 메뉴 접속과 사업장별 회의실 등 자원 현황 확인 방법을 소개합니다."
+        },
+        {
+          "title": "내 예약 내역 확인",
+          "description": "개인이 신청한 공용 자원의 예약 내역과 이용 상태를 조회하는 기능을 안내합니다."
+        },
+        {
+          "title": "예약승인관리 현황 조회",
+          "description": "승인이 필요한 자원의 예약 신청 건을 확인하고 처리하는 관리 메뉴를 소개합니다."
+        }
+      ],
+      "siteBrand": {
+        "hostKey": "gwdev.unison.co.kr",
+        "originUrl": "https://gwdev.unison.co.kr",
+        "siteName": "유니슨 그룹",
+        "manualBadge": "그룹웨어 사용 매뉴얼",
+        "tagline": "",
+        "primaryColor": "#218CF3",
+        "secondaryColor": "#1C6AB9",
+        "accentColor": "#35B5FF",
+        "logoUrl": "/assets/sites/gwdev.unison.co.kr/logo.png",
+        "heroThumbUrl": "/assets/sites/gwdev.unison.co.kr/hero.png",
+        "createdAt": "2026-10-31T15:31:25.841Z"
+      }
+    },
+    "siteBrand": {
+      "hostKey": "gwdev.unison.co.kr",
+      "originUrl": "https://gwdev.unison.co.kr",
+      "siteName": "유니슨 그룹",
+      "manualBadge": "그룹웨어 사용 매뉴얼",
+      "tagline": "",
+      "primaryColor": "#218CF3",
+      "secondaryColor": "#1C6AB9",
+      "accentColor": "#35B5FF",
+      "logoUrl": "/assets/sites/gwdev.unison.co.kr/logo.png",
+      "heroThumbUrl": "/assets/sites/gwdev.unison.co.kr/hero.png",
+      "createdAt": "2026-10-31T15:31:25.841Z"
+    },
+    "introBakedIntoVideo": true,
+    "bakedIntroDurationMs": 15120,
+    "updatedAt": "2026-11-03T08:52:47.480Z",
+    "cues": [
+      {
+        "id": 1,
+        "startMs": 200,
+        "endMs": 14720,
+        "videoStartMs": 200,
+        "videoEndMs": 17371,
+        "extraHoldMs": 0,
+        "isIntro": true,
+        "text": "자원예약관리는 회의실이나 공용 설비 등 사내 자원의 사용 일정을 실시간으로 공유하고 예약하는 기능입니다. 이번 영상에서는 사업장별 자원 현황 조회부터 내 예약 및 승인 관리 메뉴를 안내합니다.",
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|자원예약관리는 회의실이나 공용 설비 등 사내 자원의 사용 일정을 실시간으로 공유하고 예약하는 기능입니다. 이번 영상에서는 사업장별 자원 현황 조회부터 내 예약 및 승인 관리 메뉴를 안내합니다.",
+        "audioDurationMs": 14520,
+        "audioFile": "narration/unison-reservation/cue-01.mp3",
+        "compStartMs": 200,
+        "compEndMs": 14720
+      },
+      {
+        "id": 2,
+        "startMs": 17367,
+        "endMs": 26319,
+        "videoStartMs": 17371,
+        "videoEndMs": 27936,
+        "extraHoldMs": 0,
+        "isIntro": false,
+        "text": "사내 공용 자원을 통합 관리하는 자원예약관리 메뉴로 이동하여 좌측 분류 트리에서 사업장별 회의실 예약 현황을 확인합니다.",
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|사내 공용 자원을 통합 관리하는 자원예약관리 메뉴로 이동하여 좌측 분류 트리에서 사업장별 회의실 예약 현황을 확인합니다.",
+        "audioDurationMs": 8952,
+        "audioFile": "narration/unison-reservation/cue-02.mp3",
+        "compStartMs": 17367,
+        "compEndMs": 26319
+      },
+      {
+        "id": 3,
+        "startMs": 27933,
+        "endMs": 36717,
+        "videoStartMs": 27936,
+        "videoEndMs": 37187,
+        "extraHoldMs": 0,
+        "isIntro": false,
+        "text": "이어서 신청한 내역을 모아보는 내 예약 메뉴와 담당자가 예약 신청 건을 검토하는 예약승인관리 메뉴를 차례로 조회합니다.",
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|이어서 신청한 내역을 모아보는 내 예약 메뉴와 담당자가 예약 신청 건을 검토하는 예약승인관리 메뉴를 차례로 조회합니다.",
+        "audioDurationMs": 8784,
+        "audioFile": "narration/unison-reservation/cue-03.mp3",
+        "compStartMs": 27933,
+        "compEndMs": 36717
+      }
+    ],
+    "_bakedSlideSig": "{\"layoutVersion\":\"contents-only-v2\",\"badge\":\"자원예약 사용 매뉴얼\",\"title\":\"자원예약관리 메뉴 구성 및 조회 안내\",\"summary\":\"사내 공용 자원의 현황 조회와 예약 관리 방법을 안내합니다.\",\"items\":[{\"title\":\"자원예약관리 접속 및 분류 조회\",\"description\":\"자원예약관리 메뉴 접속과 사업장별 회의실 등 자원 현황 확인 방법을 소개합니다.\"},{\"title\":\"내 예약 내역 확인\",\"description\":\"개인이 신청한 공용 자원의 예약 내역과 이용 상태를 조회하는 기능을 안내합니다.\"},{\"title\":\"예약승인관리 현황 조회\",\"description\":\"승인이 필요한 자원의 예약 신청 건을 확인하고 처리하는 관리 메뉴를 소개합니다.\"}],\"hostKey\":\"gwdev.unison.co.kr\",\"primaryColor\":\"#218CF3\",\"cue0Text\":\"자원예약관리는 회의실이나 공용 설비 등 사내 자원의 사용 일정을 실시간으로 공유하고 예약하는 기능입니다. 이번 영상에서는 사업장별 자원 현황 조회부터 내 예약 및 승인 관리 메뉴를 안내합니다.\",\"cue0Sig\":\"ko-KR-SunHiNeural|+5%|+0Hz|자원예약관리는 회의실이나 공용 설비 등 사내 자원의 사용 일정을 실시간으로 공유하고 예약하는 기능입니다. 이번 영상에서는 사업장별 자원 현황 조회부터 내 예약 및 승인 관리 메뉴를 안내합니다.\",\"introDurationMs\":15120}"
+  }
+}

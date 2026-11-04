@@ -326,8 +326,9 @@ if narration_path.exists():
             if spec and spec.loader:
                 tts_mod = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(tts_mod)
+                intro_baked_ms = int(narration_data.get("bakedIntroDurationMs") or 0) if narration_data.get("introBakedIntoVideo") else 0
                 time_regions, total_comp_frames, raw_total_frames = tts_mod.compute_time_regions_and_sync_cues(
-                    cues, total_ms, fps
+                    cues, total_ms, fps, intro_baked_ms
                 )
                 edit_plan["rawDurationFrames"] = raw_total_frames
                 edit_plan["totalDurationFrames"] = total_comp_frames

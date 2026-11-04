@@ -1,6 +1,7 @@
 import { spawn, spawnSync, type ChildProcessWithoutNullStreams } from "child_process";
 import * as path from "path";
 import { EventEmitter } from "events";
+import { generateNarrationScript } from "./narrationService";
 
 export interface RecordTask {
   id: string;
@@ -113,7 +114,7 @@ class RecordRunner extends EventEmitter {
 
       if (code === 0) {
         this.currentTask.status = "completed";
-        this.log(`✅ [완료] 녹화 및 줌 플랜 생성이 성공적으로 완료되었습니다! (소요 시간: ${elapsed}초)`);
+        this.log(`✅ [완료] 녹화, 줌 플랜, AI 대본·음성 및 오프닝 슬라이드 합성이 완료되었습니다! (총 소요 시간: ${elapsed}초)`);
       } else {
         this.currentTask.status = "failed";
         this.currentTask.error = `종료 코드: ${code}`;

@@ -1,0 +1,766 @@
+{
+  "moments": [
+    {
+      "id": 1,
+      "type": "wait",
+      "timestamp": 36128,
+      "description": "[챕터 1: unison-board] 초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기"
+    },
+    {
+      "id": 2,
+      "type": "click",
+      "timestamp": 38145,
+      "description": "[챕터 1: unison-board] '게시판' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 702,
+        "y": 82
+      },
+      "target": {
+        "x": 654,
+        "y": 55,
+        "width": 97,
+        "height": 55
+      }
+    },
+    {
+      "id": 3,
+      "type": "wait",
+      "timestamp": 39961,
+      "description": "[챕터 1: unison-board] '게시판' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 4,
+      "type": "click",
+      "timestamp": 41945,
+      "description": "[챕터 1: unison-board] '공지사항' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 702,
+        "y": 167
+      },
+      "target": {
+        "x": 633,
+        "y": 151,
+        "width": 140,
+        "height": 32
+      }
+    },
+    {
+      "id": 5,
+      "type": "wait",
+      "timestamp": 43028,
+      "description": "[챕터 1: unison-board] '공지사항' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 6,
+      "type": "click",
+      "timestamp": 44995,
+      "description": "[챕터 1: unison-board] '최근 게시함' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 88,
+        "y": 246
+      },
+      "target": {
+        "x": 54,
+        "y": 234,
+        "width": 68,
+        "height": 24
+      }
+    },
+    {
+      "id": 7,
+      "type": "wait",
+      "timestamp": 46061,
+      "description": "[챕터 1: unison-board] '최근 게시함' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 8,
+      "type": "click",
+      "timestamp": 47461,
+      "description": "[챕터 1: unison-board] 트리 '중요게시글' 항목 클릭",
+      "cursor": {
+        "x": 85,
+        "y": 416
+      },
+      "target": {
+        "x": 50,
+        "y": 404,
+        "width": 70,
+        "height": 24
+      }
+    },
+    {
+      "id": 9,
+      "type": "wait",
+      "timestamp": 48495,
+      "description": "[챕터 1: unison-board] 트리 '중요게시글' 항목 반응 대기"
+    },
+    {
+      "id": 10,
+      "type": "type",
+      "timestamp": 49728,
+      "description": "[챕터 1: unison-board] '검색어' 입력창에 '공지' 입력",
+      "cursor": {
+        "x": 1748,
+        "y": 157
+      },
+      "target": {
+        "x": 1657,
+        "y": 123,
+        "width": 150,
+        "height": 34
+      },
+      "keys": "공지"
+    },
+    {
+      "id": 11,
+      "type": "wait",
+      "timestamp": 50495,
+      "description": "[챕터 1: unison-board] 입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 12,
+      "type": "click",
+      "timestamp": 51745,
+      "description": "[챕터 1: unison-board] '검색' 버튼 클릭",
+      "cursor": {
+        "x": 1821,
+        "y": 140
+      },
+      "target": {
+        "x": 1807,
+        "y": 123,
+        "width": 28,
+        "height": 34
+      }
+    },
+    {
+      "id": 13,
+      "type": "wait",
+      "timestamp": 52811,
+      "description": "[챕터 1: unison-board] '검색' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 14,
+      "type": "wait",
+      "timestamp": 54428,
+      "description": "[챕터 1: unison-board] 최종 시연 결과 화면 클로즈업 확인 대기"
+    },
+    {
+      "id": 15,
+      "type": "wait",
+      "timestamp": 71511,
+      "description": "[챕터 2: unison-schedule] 초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기"
+    },
+    {
+      "id": 16,
+      "type": "click",
+      "timestamp": 73428,
+      "description": "[챕터 2: unison-schedule] '일정관리' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 811,
+        "y": 82
+      },
+      "target": {
+        "x": 755,
+        "y": 55,
+        "width": 113,
+        "height": 55
+      }
+    },
+    {
+      "id": 17,
+      "type": "wait",
+      "timestamp": 75228,
+      "description": "[챕터 2: unison-schedule] '일정관리' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 18,
+      "type": "click",
+      "timestamp": 77211,
+      "description": "[챕터 2: unison-schedule] '일정' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 811,
+        "y": 135
+      },
+      "target": {
+        "x": 741,
+        "y": 119,
+        "width": 140,
+        "height": 32
+      }
+    },
+    {
+      "id": 19,
+      "type": "wait",
+      "timestamp": 78278,
+      "description": "[챕터 2: unison-schedule] '일정' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 20,
+      "type": "click",
+      "timestamp": 80228,
+      "description": "[챕터 2: unison-schedule] '주간' 버튼 클릭",
+      "cursor": {
+        "x": 1786,
+        "y": 197
+      },
+      "target": {
+        "x": 1763,
+        "y": 179,
+        "width": 48,
+        "height": 36
+      }
+    },
+    {
+      "id": 21,
+      "type": "wait",
+      "timestamp": 81311,
+      "description": "[챕터 2: unison-schedule] '주간' 버튼 반응 대기"
+    },
+    {
+      "id": 22,
+      "type": "click",
+      "timestamp": 82661,
+      "description": "[챕터 2: unison-schedule] '일간' 버튼 클릭",
+      "cursor": {
+        "x": 1739,
+        "y": 197
+      },
+      "target": {
+        "x": 1716,
+        "y": 179,
+        "width": 48,
+        "height": 36
+      }
+    },
+    {
+      "id": 23,
+      "type": "wait",
+      "timestamp": 83778,
+      "description": "[챕터 2: unison-schedule] '일간' 버튼 반응 대기"
+    },
+    {
+      "id": 24,
+      "type": "click",
+      "timestamp": 87878,
+      "description": "[챕터 2: unison-schedule] '할일' 버튼 클릭",
+      "cursor": {
+        "x": 424,
+        "y": 140
+      },
+      "target": {
+        "x": 389,
+        "y": 124,
+        "width": 70,
+        "height": 32
+      }
+    },
+    {
+      "id": 25,
+      "type": "wait",
+      "timestamp": 88844,
+      "description": "[챕터 2: unison-schedule] '할일' 버튼 반응 대기"
+    },
+    {
+      "id": 26,
+      "type": "click",
+      "timestamp": 92611,
+      "description": "[챕터 2: unison-schedule] '기념일' 버튼 클릭",
+      "cursor": {
+        "x": 493,
+        "y": 140
+      },
+      "target": {
+        "x": 458,
+        "y": 124,
+        "width": 70,
+        "height": 32
+      }
+    },
+    {
+      "id": 27,
+      "type": "wait",
+      "timestamp": 93561,
+      "description": "[챕터 2: unison-schedule] '기념일' 버튼 반응 대기"
+    },
+    {
+      "id": 28,
+      "type": "wait",
+      "timestamp": 94578,
+      "description": "[챕터 2: unison-schedule] 최종 시연 결과 화면 클로즈업 확인 대기"
+    },
+    {
+      "id": 29,
+      "type": "wait",
+      "timestamp": 113311,
+      "description": "[챕터 3: unison-reservation] 초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기"
+    },
+    {
+      "id": 30,
+      "type": "click",
+      "timestamp": 115195,
+      "description": "[챕터 3: unison-reservation] '자원예약관리' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 943,
+        "y": 82
+      },
+      "target": {
+        "x": 871,
+        "y": 55,
+        "width": 144,
+        "height": 55
+      }
+    },
+    {
+      "id": 31,
+      "type": "wait",
+      "timestamp": 116928,
+      "description": "[챕터 3: unison-reservation] '자원예약관리' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 32,
+      "type": "click",
+      "timestamp": 118895,
+      "description": "[챕터 3: unison-reservation] 트리 '사천본사 회의실' 항목 클릭",
+      "cursor": {
+        "x": 100,
+        "y": 381
+      },
+      "target": {
+        "x": 50,
+        "y": 369,
+        "width": 100,
+        "height": 24
+      }
+    },
+    {
+      "id": 33,
+      "type": "wait",
+      "timestamp": 120995,
+      "description": "[챕터 3: unison-reservation] 트리 '사천본사 회의실' 항목 반응 대기"
+    },
+    {
+      "id": 34,
+      "type": "click",
+      "timestamp": 122345,
+      "description": "[챕터 3: unison-reservation] 트리 '서울사무소 회의실' 항목 클릭",
+      "cursor": {
+        "x": 106,
+        "y": 619
+      },
+      "target": {
+        "x": 50,
+        "y": 607,
+        "width": 113,
+        "height": 24
+      }
+    },
+    {
+      "id": 35,
+      "type": "wait",
+      "timestamp": 124461,
+      "description": "[챕터 3: unison-reservation] 트리 '서울사무소 회의실' 항목 반응 대기"
+    },
+    {
+      "id": 36,
+      "type": "click",
+      "timestamp": 125811,
+      "description": "[챕터 3: unison-reservation] 트리 '풍력연구소 회의실' 항목 클릭",
+      "cursor": {
+        "x": 106,
+        "y": 789
+      },
+      "target": {
+        "x": 50,
+        "y": 777,
+        "width": 113,
+        "height": 24
+      }
+    },
+    {
+      "id": 37,
+      "type": "wait",
+      "timestamp": 126878,
+      "description": "[챕터 3: unison-reservation] 트리 '풍력연구소 회의실' 항목 반응 대기"
+    },
+    {
+      "id": 38,
+      "type": "click",
+      "timestamp": 128261,
+      "description": "[챕터 3: unison-reservation] '내 예약' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 211,
+        "y": 209
+      },
+      "target": {
+        "x": 183,
+        "y": 185,
+        "width": 57,
+        "height": 48
+      }
+    },
+    {
+      "id": 39,
+      "type": "wait",
+      "timestamp": 129345,
+      "description": "[챕터 3: unison-reservation] '내 예약' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 40,
+      "type": "click",
+      "timestamp": 130728,
+      "description": "[챕터 3: unison-reservation] '예약승인관리' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 92,
+        "y": 981
+      },
+      "target": {
+        "x": 54,
+        "y": 969,
+        "width": 77,
+        "height": 24
+      }
+    },
+    {
+      "id": 41,
+      "type": "wait",
+      "timestamp": 131811,
+      "description": "[챕터 3: unison-reservation] '예약승인관리' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 42,
+      "type": "wait",
+      "timestamp": 132828,
+      "description": "[챕터 3: unison-reservation] 최종 시연 결과 화면 클로즈업 확인 대기"
+    },
+    {
+      "id": 43,
+      "type": "wait",
+      "timestamp": 148761,
+      "description": "[챕터 4: unison-note] 초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기"
+    },
+    {
+      "id": 44,
+      "type": "click",
+      "timestamp": 150711,
+      "description": "[챕터 4: unison-note] '사내쪽지' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1075,
+        "y": 82
+      },
+      "target": {
+        "x": 1019,
+        "y": 55,
+        "width": 113,
+        "height": 55
+      }
+    },
+    {
+      "id": 45,
+      "type": "wait",
+      "timestamp": 151795,
+      "description": "[챕터 4: unison-note] '사내쪽지' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 46,
+      "type": "click",
+      "timestamp": 153728,
+      "description": "[챕터 4: unison-note] '받은쪽지' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1076,
+        "y": 135
+      },
+      "target": {
+        "x": 1006,
+        "y": 119,
+        "width": 140,
+        "height": 32
+      }
+    },
+    {
+      "id": 47,
+      "type": "wait",
+      "timestamp": 154828,
+      "description": "[챕터 4: unison-note] '받은쪽지' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 48,
+      "type": "click",
+      "timestamp": 156811,
+      "description": "[챕터 4: unison-note] '보낸 쪽지' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 81,
+        "y": 270
+      },
+      "target": {
+        "x": 54,
+        "y": 258,
+        "width": 55,
+        "height": 24
+      }
+    },
+    {
+      "id": 49,
+      "type": "wait",
+      "timestamp": 157911,
+      "description": "[챕터 4: unison-note] '보낸 쪽지' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 50,
+      "type": "click",
+      "timestamp": 159328,
+      "description": "[챕터 4: unison-note] '중요 쪽지' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 81,
+        "y": 304
+      },
+      "target": {
+        "x": 54,
+        "y": 292,
+        "width": 55,
+        "height": 24
+      }
+    },
+    {
+      "id": 51,
+      "type": "wait",
+      "timestamp": 160445,
+      "description": "[챕터 4: unison-note] '중요 쪽지' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 52,
+      "type": "click",
+      "timestamp": 161811,
+      "description": "[챕터 4: unison-note] '전체 쪽지' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 81,
+        "y": 202
+      },
+      "target": {
+        "x": 54,
+        "y": 190,
+        "width": 55,
+        "height": 24
+      }
+    },
+    {
+      "id": 53,
+      "type": "wait",
+      "timestamp": 162928,
+      "description": "[챕터 4: unison-note] '전체 쪽지' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 54,
+      "type": "type",
+      "timestamp": 164961,
+      "description": "[챕터 4: unison-note] '검색어' 입력창에 '안내' 입력",
+      "cursor": {
+        "x": 1701,
+        "y": 157
+      },
+      "target": {
+        "x": 1610,
+        "y": 123,
+        "width": 150,
+        "height": 34
+      },
+      "keys": "안내"
+    },
+    {
+      "id": 55,
+      "type": "wait",
+      "timestamp": 165728,
+      "description": "[챕터 4: unison-note] 입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 56,
+      "type": "click",
+      "timestamp": 166961,
+      "description": "[챕터 4: unison-note] '검색' 버튼 클릭",
+      "cursor": {
+        "x": 1774,
+        "y": 140
+      },
+      "target": {
+        "x": 1760,
+        "y": 123,
+        "width": 28,
+        "height": 34
+      }
+    },
+    {
+      "id": 57,
+      "type": "wait",
+      "timestamp": 168028,
+      "description": "[챕터 4: unison-note] '검색' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 58,
+      "type": "wait",
+      "timestamp": 169645,
+      "description": "[챕터 4: unison-note] 최종 시연 결과 화면 클로즈업 확인 대기"
+    },
+    {
+      "id": 59,
+      "type": "wait",
+      "timestamp": 185345,
+      "description": "[챕터 5: unison-address] 초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기"
+    },
+    {
+      "id": 60,
+      "type": "click",
+      "timestamp": 187245,
+      "description": "[챕터 5: unison-address] '주소록' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1184,
+        "y": 82
+      },
+      "target": {
+        "x": 1136,
+        "y": 55,
+        "width": 97,
+        "height": 55
+      }
+    },
+    {
+      "id": 61,
+      "type": "wait",
+      "timestamp": 188878,
+      "description": "[챕터 5: unison-address] '주소록' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 62,
+      "type": "click",
+      "timestamp": 190845,
+      "description": "[챕터 5: unison-address] '조직도' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 73,
+        "y": 280
+      },
+      "target": {
+        "x": 54,
+        "y": 268,
+        "width": 39,
+        "height": 24
+      }
+    },
+    {
+      "id": 63,
+      "type": "wait",
+      "timestamp": 191928,
+      "description": "[챕터 5: unison-address] '조직도' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 64,
+      "type": "click",
+      "timestamp": 193895,
+      "description": "[챕터 5: unison-address] '주소록' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 73,
+        "y": 314
+      },
+      "target": {
+        "x": 54,
+        "y": 302,
+        "width": 39,
+        "height": 24
+      }
+    },
+    {
+      "id": 65,
+      "type": "wait",
+      "timestamp": 194978,
+      "description": "[챕터 5: unison-address] '주소록' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 66,
+      "type": "click",
+      "timestamp": 196945,
+      "description": "[챕터 5: unison-address] '미분류' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 73,
+        "y": 420
+      },
+      "target": {
+        "x": 54,
+        "y": 411,
+        "width": 39,
+        "height": 18
+      }
+    },
+    {
+      "id": 67,
+      "type": "wait",
+      "timestamp": 198095,
+      "description": "[챕터 5: unison-address] '미분류' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 68,
+      "type": "click",
+      "timestamp": 199478,
+      "description": "[챕터 5: unison-address] '전체' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 66,
+        "y": 386
+      },
+      "target": {
+        "x": 54,
+        "y": 377,
+        "width": 26,
+        "height": 18
+      }
+    },
+    {
+      "id": 69,
+      "type": "wait",
+      "timestamp": 200545,
+      "description": "[챕터 5: unison-address] '전체' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 70,
+      "type": "type",
+      "timestamp": 202812,
+      "description": "[챕터 5: unison-address] '검색어' 입력창에 '관리자' 입력 후 엔터(Enter)",
+      "cursor": {
+        "x": 1748,
+        "y": 157
+      },
+      "target": {
+        "x": 1657,
+        "y": 123,
+        "width": 150,
+        "height": 34
+      },
+      "keys": "관리자"
+    },
+    {
+      "id": 71,
+      "type": "wait",
+      "timestamp": 204345,
+      "description": "[챕터 5: unison-address] 입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 72,
+      "type": "wait",
+      "timestamp": 205278,
+      "description": "[챕터 5: unison-address] 최종 시연 결과 화면 클로즈업 확인 대기"
+    }
+  ],
+  "cursorTrajectory": [],
+  "metadata": {
+    "totalDurationMs": 208333,
+    "calibratedToVideoDurationMs": 208333,
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "recordedAt": "2026-11-02T08:59:42.653Z",
+    "mergedFromSlugs": [
+      "unison-board",
+      "unison-schedule",
+      "unison-reservation",
+      "unison-note",
+      "unison-address"
+    ]
+  }
+}

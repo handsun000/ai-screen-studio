@@ -1,0 +1,1679 @@
+{
+  "url": "https://gw.bc.ac.kr/ekp/main/home/homGwMain",
+  "viewport": {
+    "width": 1920,
+    "height": 944
+  },
+  "windowBounds": {
+    "left": 1528,
+    "top": -8,
+    "width": 1936,
+    "height": 1048,
+    "windowState": "maximized"
+  },
+  "requiresLogin": true,
+  "recordedByEyedropper": true,
+  "actions": [
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": "div#main_menu button[onclick*='GwMainMenu.fn.showAllMenuBox()']:visible, div#main_menu button.btn_svc_open[title='포탈 전체메뉴']:visible, div#main_menu button[title='포탈 전체메뉴']:visible, div#main_menu button[onclick*='GwMainMenu.fn.showAllMenuBox']:visible, div#main_menu > div.optn_btns > button.btn_svc_open:visible, div#main_menu button.btn_svc_open:has-text('포탈 전체메뉴'):visible, div#main_menu button.btn_svc_open:visible, button[onclick*='GwMainMenu.fn.showAllMenuBox()']:visible, button.btn_svc_open[title='포탈 전체메뉴']:visible, button[title='포탈 전체메뉴']:visible, button[onclick*='GwMainMenu.fn.showAllMenuBox']:visible",
+      "cursorOffset": {
+        "x": 15,
+        "y": 30
+      },
+      "clickCoords": {
+        "x": 1354,
+        "y": 90
+      },
+      "description": "'포탈 전체메뉴' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" title=\"포탈 전체메뉴\" onclick=\"GwMainMenu.fn.showAllMenuBox();return false;\" class=\"btn_svc_open\"><span>포탈 전체메뉴</span></button>",
+      "_lastHumanTarget": "포탈 전체메뉴"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'포탈 전체메뉴' 버튼 반응 대기",
+      "_lastHumanTarget": "포탈 전체메뉴"
+    },
+    {
+      "type": "click",
+      "selector": "div#all_svc_inner a[title='문서관리'][onclick*='/ekp/scr/doc/board/docMain']:visible, div#all_svc_inner a[title='문서관리']:visible, div#all_svc_inner a[onclick*='/ekp/scr/doc/board/docMain']:visible, a[onclick*='/ekp/scr/doc/board/docMain']:visible, div.svc_tit a:has-text('문서관리'):visible, a[title='문서관리']:visible",
+      "cursorOffset": {
+        "x": 43,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 523,
+        "y": 405
+      },
+      "description": "'문서관리' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"if(GwMainMenu.fn.checkedEditMode()){GwMainMenu.fn.goPage('MNU12040921255950236740','https://gw.bc.ac.kr/ekp/scr/doc/board/docMain','G','L','0','0');}return false;\" title=\"문서관리\"><i class=\"nti nti_doc _punchHandle\"></i>문서관리</a>",
+      "_lastHumanTarget": "문서관리"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'문서관리' 메뉴/링크 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "문서관리"
+    },
+    {
+      "type": "click",
+      "selector": "a.sub_tp._atcl[data-atcl-no='100038']:visible, a[data-atcl-no='100038']:visible, a.sub_tp._atcl[data-brd-id='DB178218994699749']:visible, a[data-brd-id='DB178218994699749']:visible, a.sub_tp._atcl[data-grp-id='C100160111']:visible, a[data-grp-id='C100160111']:visible, span.sub.el a.sub_tp._atcl:has-text('사용자매뉴얼.20.모바일.pptx'):visible, a.sub_tp._atcl:has-text('사용자매뉴얼.20.모바일.pptx'):visible, a.sub_tp[title='사용자매뉴얼.20.모바일.pptx']:visible, a[title='사용자매뉴얼.20.모바일.pptx']:visible, a.sub_tp._atcl[title='사용자매뉴얼.20.모바일.pptx']:visible",
+      "cursorOffset": {
+        "x": 65,
+        "y": 2
+      },
+      "clickCoords": {
+        "x": 562,
+        "y": 274
+      },
+      "description": "'사용자매뉴얼.20.모바일.pptx' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" title=\"사용자매뉴얼.20.모바일.pptx\" class=\"sub_tp _atcl\" data-atcl-no=\"100038\" data-brd-id=\"DB178218994699749\" data-grp-id=\"C100160111\"> 사용자매뉴얼.20.모바일.pptx</a>",
+      "_lastHumanTarget": "사용자매뉴얼.20.모바일.pptx"
+    },
+    {
+      "type": "wait",
+      "ms": 2600,
+      "description": "'사용자매뉴얼.20.모바일.pptx' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "사용자매뉴얼.20.모바일.pptx"
+    },
+    {
+      "type": "click",
+      "selector": "ul.nav.nav_tabs a:text-is('분류'):visible, a:text-is('분류'):visible, a[title='분류']:visible, div#snb a[title='분류']:visible, div#snb > div.tabbable:nth-of-type(3) > ul.nav.nav_tabs.tab4 > li:nth-of-type(2) > a:visible",
+      "cursorOffset": {
+        "x": 31,
+        "y": 25
+      },
+      "clickCoords": {
+        "x": 101,
+        "y": 210
+      },
+      "description": "'분류' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#tab_2\" title=\"분류\" data-toggle=\"tab\"><i class=\"ico_2\"></i><span>분류</span></a>",
+      "_lastHumanTarget": "분류"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'분류' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "분류"
+    },
+    {
+      "type": "click",
+      "selector": ".dynatree-title:text-is('1차분류'):visible, .dynatree-title:has-text('1차분류'):visible, span.dynatree-node a.dynatree-title:has-text('1차분류'):visible, a.dynatree-title:has-text('1차분류'):visible",
+      "cursorOffset": {
+        "x": 32,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 91,
+        "y": 355
+      },
+      "description": "트리 '1차분류' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"dynatree-title\">1차분류</a>",
+      "_lastHumanTarget": "1차분류"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "트리 '1차분류' 항목 반응 대기",
+      "_lastHumanTarget": "1차분류"
+    },
+    {
+      "type": "click",
+      "selector": ".dynatree-title:text-is('BULRS(콘텐츠)'):visible, .dynatree-title:has-text('BULRS(콘텐츠)'):visible, span.dynatree-node a.dynatree-title:has-text('BULRS(콘텐츠)'):visible, a.dynatree-title:has-text('BULRS(콘텐츠)'):visible",
+      "cursorOffset": {
+        "x": 76,
+        "y": 8
+      },
+      "clickCoords": {
+        "x": 135,
+        "y": 486
+      },
+      "description": "트리 'BULRS(콘텐츠)' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"dynatree-title\">BULRS(콘텐츠)</a>",
+      "_lastHumanTarget": "BULRS(콘텐츠)"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "트리 'BULRS(콘텐츠)' 항목 반응 대기",
+      "_lastHumanTarget": "BULRS(콘텐츠)"
+    },
+    {
+      "type": "click",
+      "selector": "ul.nav.nav_tabs a:text-is('조직'):visible, a:text-is('조직'):visible, a[title='조직']:visible, div#snb a[title='조직']:visible, div#snb > div.tabbable:nth-of-type(3) > ul.nav.nav_tabs.tab4 > li:nth-of-type(3) > a:visible",
+      "cursorOffset": {
+        "x": 31,
+        "y": 24
+      },
+      "clickCoords": {
+        "x": 160,
+        "y": 209
+      },
+      "description": "'조직' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#tab_3\" title=\"조직\" data-toggle=\"tab\"><i class=\"ico_3\"></i><span>조직</span></a>",
+      "_lastHumanTarget": "조직"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'조직' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "조직"
+    },
+    {
+      "type": "click",
+      "selector": ".dynatree-title:text-is('정보보안센터'):visible, .dynatree-title:has-text('정보보안센터'):visible, span.dynatree-node.di2 a.dynatree-title:has-text('정보보안센터'):visible, li#dynatree-id-D488535570 a.dynatree-title:has-text('정보보안센터'):visible",
+      "cursorOffset": {
+        "x": 40,
+        "y": 19
+      },
+      "clickCoords": {
+        "x": 123,
+        "y": 633
+      },
+      "description": "트리 '정보보안센터' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"dynatree-title\">정보보안센터</a>",
+      "_lastHumanTarget": "정보보안센터"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "트리 '정보보안센터' 항목 반응 대기",
+      "_lastHumanTarget": "정보보안센터"
+    },
+    {
+      "type": "click",
+      "selector": "a.sub_tp._atcl[data-atcl-no='100038']:visible, a[data-atcl-no='100038']:visible, a.sub_tp._atcl[data-brd-id='DB178218994699749']:visible, a[data-brd-id='DB178218994699749']:visible, a.sub_tp._atcl[data-grp-id='C100160111']:visible, a[data-grp-id='C100160111']:visible, span.sub.el a.sub_tp._atcl:has-text('사용자매뉴얼.20.모바일.pptx'):visible, a.sub_tp._atcl:has-text('사용자매뉴얼.20.모바일.pptx'):visible, a.sub_tp[title='사용자매뉴얼.20.모바일.pptx']:visible, a[title='사용자매뉴얼.20.모바일.pptx']:visible, a.sub_tp._atcl[title='사용자매뉴얼.20.모바일.pptx']:visible",
+      "cursorOffset": {
+        "x": 23,
+        "y": 8
+      },
+      "clickCoords": {
+        "x": 520,
+        "y": 281
+      },
+      "description": "'사용자매뉴얼.20.모바일.pptx' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" title=\"사용자매뉴얼.20.모바일.pptx\" class=\"sub_tp _atcl\" data-atcl-no=\"100038\" data-brd-id=\"DB178218994699749\" data-grp-id=\"C100160111\"> 사용자매뉴얼.20.모바일.pptx</a>",
+      "_lastHumanTarget": "사용자매뉴얼.20.모바일.pptx"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'사용자매뉴얼.20.모바일.pptx' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "사용자매뉴얼.20.모바일.pptx"
+    },
+    {
+      "type": "click",
+      "selector": "a.sub_tp._atcl[data-atcl-no='100036']:visible, a[data-atcl-no='100036']:visible, a.sub_tp._atcl[data-brd-id='DB178218994699749']:visible, a[data-brd-id='DB178218994699749']:visible, a.sub_tp._atcl[data-grp-id='C100160111']:visible, a[data-grp-id='C100160111']:visible, span.sub.el a.sub_tp._atcl:has-text('사용자매뉴얼.19.메신저.pptx'):visible, a.sub_tp._atcl:has-text('사용자매뉴얼.19.메신저.pptx'):visible, a.sub_tp[title='사용자매뉴얼.19.메신저.pptx']:visible, a[title='사용자매뉴얼.19.메신저.pptx']:visible, a.sub_tp._atcl[title='사용자매뉴얼.19.메신저.pptx']:visible",
+      "cursorOffset": {
+        "x": 144,
+        "y": 14
+      },
+      "clickCoords": {
+        "x": 641,
+        "y": 358
+      },
+      "description": "'사용자매뉴얼.19.메신저.pptx' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" title=\"사용자매뉴얼.19.메신저.pptx\" class=\"sub_tp _atcl\" data-atcl-no=\"100036\" data-brd-id=\"DB178218994699749\" data-grp-id=\"C100160111\"> 사용자매뉴얼.19.메신저.pptx</a>",
+      "_lastHumanTarget": "사용자매뉴얼.19.메신저.pptx"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'사용자매뉴얼.19.메신저.pptx' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "사용자매뉴얼.19.메신저.pptx"
+    },
+    {
+      "type": "click",
+      "selector": "ul.nav.nav_tabs a:has-text('내 문서'):visible, a:has-text('내 문서'):visible, a[title='내 문서']:visible, div#snb a[title='내 문서']:visible, div#snb > div.tabbable:nth-of-type(3) > ul.nav.nav_tabs.tab4 > li:nth-of-type(4) > a:visible",
+      "cursorOffset": {
+        "x": 28,
+        "y": 26
+      },
+      "clickCoords": {
+        "x": 217,
+        "y": 211
+      },
+      "description": "'내 문서' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#tab_4\" title=\"내 문서\" data-toggle=\"tab\"><i class=\"ico_4\"></i><span>내 문서</span></a>",
+      "_lastHumanTarget": "내 문서"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'내 문서' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "내 문서"
+    },
+    {
+      "type": "click",
+      "selector": "ul.nav.nav_tabs a:has-text('문서함'):visible, a:has-text('문서함'):visible, a[title='문서함']:visible, div#snb a[title='문서함']:visible, div#snb > div.tabbable:nth-of-type(3) > ul.nav.nav_tabs.tab4 > li:nth-of-type(1) > a:visible",
+      "cursorOffset": {
+        "x": 38,
+        "y": 24
+      },
+      "clickCoords": {
+        "x": 48,
+        "y": 209
+      },
+      "description": "'문서함' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#tab_1\" title=\"문서함\" data-toggle=\"tab\"><i class=\"ico_1\"></i><span>문서함</span></a>",
+      "_lastHumanTarget": "문서함"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'문서함' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "문서함"
+    },
+    {
+      "type": "click",
+      "selector": ".dynatree-title:text-is('사무처'):visible, .dynatree-title:has-text('사무처'):visible, span.dynatree-node.dynatree-lazy a.dynatree-title:has-text('사무처'):visible, ul.dynatree-container > li:nth-of-type(2) > ul > li:nth-of-type(1) > span.dynatree-node.dynatree-lazy:has-text('사무처') > a.dynatree-title:visible, a.dynatree-title:has-text('사무처'):visible",
+      "cursorOffset": {
+        "x": 33,
+        "y": 7
+      },
+      "clickCoords": {
+        "x": 92,
+        "y": 383
+      },
+      "description": "트리 '사무처' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"dynatree-title\">사무처</a>",
+      "_lastHumanTarget": "사무처"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "트리 '사무처' 항목 반응 대기",
+      "_lastHumanTarget": "사무처"
+    },
+    {
+      "type": "click",
+      "selector": ".dynatree-title:text-is('정보보안센터'):visible, .dynatree-title:has-text('정보보안센터'):visible, span.dynatree-node.dynatree-lazy a.dynatree-title:has-text('정보보안센터'):visible, ul > li:nth-of-type(1) > ul > li > span.dynatree-node.dynatree-lazy:has-text('정보보안센터') > a.dynatree-title:visible, a.dynatree-title:has-text('정보보안센터'):visible",
+      "cursorOffset": {
+        "x": 43,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 110,
+        "y": 426
+      },
+      "description": "트리 '정보보안센터' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"dynatree-title\">정보보안센터</a>",
+      "_lastHumanTarget": "정보보안센터"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "트리 '정보보안센터' 항목 반응 대기",
+      "_lastHumanTarget": "정보보안센터"
+    },
+    {
+      "type": "click",
+      "selector": ".dynatree-title:text-is('그룹웨어 매뉴얼'):visible, .dynatree-title:has-text('그룹웨어 매뉴얼'):visible, span.dynatree-node.tico_k2 a.dynatree-title:has-text('그룹웨어 매뉴얼'):visible, a.dynatree-title:has-text('그룹웨어 매뉴얼'):visible",
+      "cursorOffset": {
+        "x": 40,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 115,
+        "y": 493
+      },
+      "description": "트리 '그룹웨어 매뉴얼' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"dynatree-title\">그룹웨어 매뉴얼</a>",
+      "_lastHumanTarget": "그룹웨어 매뉴얼"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "트리 '그룹웨어 매뉴얼' 항목 반응 대기",
+      "_lastHumanTarget": "그룹웨어 매뉴얼"
+    },
+    {
+      "type": "click",
+      "selector": "button#edmsLeft_docRegBtn:visible, #edmsLeft_docRegBtn:visible, div.workset_btn.workset_btn2 button.btn.btn_block:has-text('문서 등록'):visible, div#snb button.btn.btn_block:has-text('문서 등록'):visible",
+      "cursorOffset": {
+        "x": 45,
+        "y": 24
+      },
+      "clickCoords": {
+        "x": 65,
+        "y": 148
+      },
+      "description": "'문서 등록' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" id=\"edmsLeft_docRegBtn\" class=\"btn btn_block\">문서 등록</button>",
+      "_lastHumanTarget": "문서 등록"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'문서 등록' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "문서 등록"
+    },
+    {
+      "type": "click",
+      "selector": "div#atclWrite_docClassEdit select[name='atclWrite_cateSelect1']:visible, div#atclWrite_docClassEdit > select.frm_select:nth-of-type(1):visible, tr:has(th:has-text('문서분류')) select.frm_select:visible, select[name='atclWrite_cateSelect1']:visible",
+      "text": "1차분류",
+      "cursorOffset": {
+        "x": 96,
+        "y": 23
+      },
+      "clickCoords": {
+        "x": 591,
+        "y": 294
+      },
+      "description": "[문서분류] '1차 분류선택 1차분류 BULRS(콘텐츠' 요소에서 '1차분류' 선택",
+      "recordedByEyedropper": true,
+      "targetHtml": "<select name=\"atclWrite_cateSelect1\" class=\"frm_select\"> <option value=\"\">1차 분류선택</option><option value=\"DC145463616853136\">1차분류</option><option value=\"DC145463625056931\">BULRS(콘텐츠)</option></select>",
+      "_lastHumanTarget": "문서분류"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[문서분류] '1차 분류선택 1차분류 BULRS(콘텐츠' 요소에서 '1차분류' 선택 반응 대기",
+      "_lastHumanTarget": "1차 분류선택 1차분류 BULRS(콘텐츠"
+    },
+    {
+      "type": "click",
+      "selector": "div#atclWrite_docClassEdit select[name='atclWrite_cateSelect2']:visible, div#atclWrite_docClassEdit > select.frm_select:nth-of-type(2):visible, tr:has(th:has-text('문서분류')) select.frm_select:visible, select[name='atclWrite_cateSelect2']:visible",
+      "text": "1-1차분류",
+      "cursorOffset": {
+        "x": 82,
+        "y": 10
+      },
+      "clickCoords": {
+        "x": 731,
+        "y": 281
+      },
+      "description": "[문서분류] '2차 분류선택 1-1차분류 1-2차분류 ' 요소에서 '1-1차분류' 선택",
+      "recordedByEyedropper": true,
+      "targetHtml": "<select name=\"atclWrite_cateSelect2\" class=\"frm_select\"><option value=\"\">2차 분류선택</option><option value=\"DC145463617929221\">1-1차분류</option><option value=\"DC145463618568532\">1-2차분류</option><option value=\"DC145463623052962\">1-3차분류</option></select>",
+      "_lastHumanTarget": "문서분류"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[문서분류] '2차 분류선택 1-1차분류 1-2차분류 ' 요소에서 '1-1차분류' 선택 반응 대기",
+      "_lastHumanTarget": "2차 분류선택 1-1차분류 1-2차분류"
+    },
+    {
+      "type": "click",
+      "selector": "div#atclWrite_docClassEdit select[name='atclWrite_cateSelect3']:visible, div#atclWrite_docClassEdit > select.frm_select:nth-of-type(3):visible, tr:has(th:has-text('문서분류')) select.frm_select:visible, select[name='atclWrite_cateSelect3']:visible",
+      "text": "1-1-1차분류",
+      "cursorOffset": {
+        "x": 59,
+        "y": 6
+      },
+      "clickCoords": {
+        "x": 862,
+        "y": 277
+      },
+      "description": "[문서분류] '3차 분류선택 1-1-1차분류 1-1-2' 요소에서 '1-1-1차분류' 선택",
+      "recordedByEyedropper": true,
+      "targetHtml": "<select name=\"atclWrite_cateSelect3\" class=\"frm_select\"><option value=\"\">3차 분류선택</option><option value=\"DC145463619264541\">1-1-1차분류</option><option value=\"DC145463619779919\">1-1-2차분류</option><option value=\"DC145463620249614\">1-1-3차분류</option></select>",
+      "_lastHumanTarget": "문서분류"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[문서분류] '3차 분류선택 1-1-1차분류 1-1-2' 요소에서 '1-1-1차분류' 선택 반응 대기",
+      "_lastHumanTarget": "3차 분류선택 1-1-1차분류 1-1-2"
+    },
+    {
+      "type": "click",
+      "selector": "button#atclWrite_cateAddBtn:visible, #atclWrite_cateAddBtn:visible, button[title='분류추가']:visible, button.btn[title='분류추가']:visible",
+      "cursorOffset": {
+        "x": 14,
+        "y": 11
+      },
+      "clickCoords": {
+        "x": 971,
+        "y": 282
+      },
+      "description": "[문서분류] '분류추가' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" id=\"atclWrite_cateAddBtn\" title=\"분류추가\" class=\"btn btn_ico\"><i class=\"ico ico_plus\"><span>분류추가</span></i></button>",
+      "_lastHumanTarget": "분류추가"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[문서분류] '분류추가' 버튼 반응 대기",
+      "_lastHumanTarget": "분류추가"
+    },
+    {
+      "type": "click",
+      "selector": "div#atclWrite_cateAdd button[name='atclWrite_cateDelBtn']:visible, div#atclWrite_cateAdd > div.pdt > button.ico.ico_trash.mgl:visible, div#atclWrite_cateAdd button.ico_trash.mgl:has-text('삭제'):visible, div#atclWrite_cateAdd button.ico_trash:visible, div#atclWrite_cateAdd button.ico[title='삭제']:visible, div#atclWrite_cateAdd button[title='삭제']:visible, div#atclWrite_cateAdd button.ico_trash[title='삭제']:visible, div#atclWrite_cateAdd button.ico_trash.mgl[title='삭제']:visible, button[name='atclWrite_cateDelBtn']:visible, button.ico[title='삭제']:visible, button[title='삭제']:visible",
+      "cursorOffset": {
+        "x": 4,
+        "y": 2
+      },
+      "clickCoords": {
+        "x": 971,
+        "y": 321
+      },
+      "description": "[문서분류] '삭제' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" name=\"atclWrite_cateDelBtn\" title=\"삭제\" class=\"ico ico_trash mgl\"><span>삭제</span></button>",
+      "_lastHumanTarget": "삭제"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[문서분류] '삭제' 버튼 반응 대기",
+      "_lastHumanTarget": "삭제"
+    },
+    {
+      "type": "click",
+      "selector": "button#atclWrite_individualAuthBtn:visible, #atclWrite_individualAuthBtn:visible, tr#atclWrite_individualAuthArea button.btn.btn_sml:has-text('개별권한 설정'):visible",
+      "cursorOffset": {
+        "x": 65,
+        "y": 9
+      },
+      "clickCoords": {
+        "x": 560,
+        "y": 326
+      },
+      "description": "[개별권한] '개별권한 설정' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" id=\"atclWrite_individualAuthBtn\" class=\"btn btn_sml\"><i class=\"ico ico_setup\"></i> 개별권한 설정</button>",
+      "_lastHumanTarget": "개별권한 설정"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[개별권한] '개별권한 설정' 버튼 반응 대기",
+      "_lastHumanTarget": "개별권한 설정"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible label#authEdit_writeOnly:visible, .ui-dialog:visible div.mgb label.chkbox:has-text('읽기/쓰기만 설정'):visible, .ui-dialog:visible div#docMain_authEditLyr label.chkbox:has-text('읽기/쓰기만 설정'):visible",
+      "cursorOffset": {
+        "x": 103,
+        "y": 7
+      },
+      "clickCoords": {
+        "x": 873,
+        "y": 320
+      },
+      "description": "[개별권한 팝업] '읽기/쓰기만 설정' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<label id=\"authEdit_writeOnly\" class=\"chkbox\"><input name=\"\" type=\"checkbox\" value=\"\" class=\"input_chk\"> 읽기/쓰기만 설정</label>",
+      "_lastHumanTarget": "읽기/쓰기만 설정"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[개별권한 팝업] '읽기/쓰기만 설정' 요소 반응 대기",
+      "_lastHumanTarget": "읽기/쓰기만 설정"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#authEdit_authAdd:visible, .ui-dialog:visible div#docMain_authEditLyr button.btn.btn_sml:has-text('추가'):visible, .ui-dialog:visible div.lst_btm button.btn.btn_sml:text-is('추가'):visible, .ui-dialog:visible button.btn.btn_sml:has-text('추가'):visible",
+      "cursorOffset": {
+        "x": 37,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 814,
+        "y": 573
+      },
+      "description": "[개별권한 팝업] '추가' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" id=\"authEdit_authAdd\" class=\"btn btn_sml\"><i class=\"ico ico_plus\"></i> 추가</button>",
+      "_lastHumanTarget": "추가"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[개별권한 팝업] '추가' 버튼 반응 대기",
+      "_lastHumanTarget": "추가"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible .dynatree-title:text-is('부서'):visible, .ui-dialog:visible .dynatree-title:has-text('부서'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서']:has-text('부서'):visible, .ui-dialog:visible span.dynatree-node.dynatree-lazy a.dynatree-title:text-is('부서'):visible, .ui-dialog:visible a.dynatree-title:has-text('부서'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서']:visible",
+      "cursorOffset": {
+        "x": 15,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 612,
+        "y": 337
+      },
+      "description": "[개별권한 팝업] 트리 '부서' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"dynatree-title\" title=\"부천대학교 &gt; 부서\"> 부서 </a>",
+      "_lastHumanTarget": "부서"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[개별권한 팝업] 트리 '부서' 항목 반응 대기",
+      "_lastHumanTarget": "부서"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible .dynatree-title:text-is('대학본부'):visible, .ui-dialog:visible .dynatree-title:has-text('대학본부'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서 > 대학본부']:has-text('대학본부'):visible, .ui-dialog:visible span.dynatree-node.dynatree-lazy a.dynatree-title:has-text('대학본부'):visible, .ui-dialog:visible a.dynatree-title:has-text('대학본부'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서 > 대학본부']:visible",
+      "cursorOffset": {
+        "x": 25,
+        "y": 9
+      },
+      "clickCoords": {
+        "x": 630,
+        "y": 367
+      },
+      "description": "[개별권한 팝업] 트리 '대학본부' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"dynatree-title\" title=\"부천대학교 &gt; 부서 &gt; 대학본부\"> 대학본부 </a>",
+      "_lastHumanTarget": "대학본부"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[개별권한 팝업] 트리 '대학본부' 항목 반응 대기",
+      "_lastHumanTarget": "대학본부"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible .dynatree-title:text-is('사무처'):visible, .ui-dialog:visible .dynatree-title:has-text('사무처'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서 > 대학본부 > 사무처']:has-text('사무처'):visible, .ui-dialog:visible span.dynatree-node.dynatree-lazy a.dynatree-title:has-text('사무처'):visible, .ui-dialog:visible a.dynatree-title:has-text('사무처'):visible, .ui-dialog:visible a.dynatree-title[title='부천대학교 > 부서 > 대학본부 > 사무처']:visible",
+      "cursorOffset": {
+        "x": 24,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 637,
+        "y": 438
+      },
+      "description": "[개별권한 팝업] 트리 '사무처' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"return false;\" class=\"dynatree-title\" title=\"부천대학교 &gt; 부서 &gt; 대학본부 &gt; 사무처\"> 사무처 </a>",
+      "_lastHumanTarget": "사무처"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[개별권한 팝업] 트리 '사무처' 항목 반응 대기",
+      "_lastHumanTarget": "사무처"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible ul#orgUserList label.chkbox:has([data-emp-id='M574690975']):visible, .ui-dialog:visible ul#orgUserList label.user_info.chkbox:has-text('김병훈 담당 정보보안센터'):visible, .ui-dialog:visible label.user_info.chkbox:has-text('김병훈 담당 정보보안센터'):visible, ul#orgUserList > li:has-text('김병훈') > label.user_info.chkbox:visible, .ui-dialog:visible label.chkbox:has([data-emp-id='M574690975']):visible",
+      "cursorOffset": {
+        "x": 41,
+        "y": 52
+      },
+      "clickCoords": {
+        "x": 915,
+        "y": 218
+      },
+      "description": "[개별권한 팝업] '김병훈 담당 정보보안센터' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<label class=\"user_info chkbox\"><input type=\"checkbox\" value=\"\" title=\"선택\" class=\"input_chk lst_chk _chk\"><a name=\"userLyr\" href=\"#\" onclick=\"return false;\" title=\"사용자 정보\" class=\"ico ico_info\" data-emp-id=\"M574690975\">김병훈 담당 정보보안센터</label>",
+      "_lastHumanTarget": "김병훈 담당 정보보안센터"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[개별권한 팝업] '김병훈 담당 정보보안센터' 요소 반응 대기",
+      "_lastHumanTarget": "김병훈 담당 정보보안센터"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible div.btn_area button._confirm.btn.btn_med:text-is('확인'):visible, .ui-dialog:visible div#btnArea button._confirm:visible, .ui-dialog:visible button._confirm:visible, .ui-dialog:visible div#btnArea button._confirm.btn.btn_med:has-text('확인'):visible, .ui-dialog:visible div#btnArea button._confirm:has-text('확인'):visible",
+      "cursorOffset": {
+        "x": 40,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 938,
+        "y": 537
+      },
+      "description": "[개별권한 팝업] '확인' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"btn btn_med btn_pri _confirm\"><strong>확인</strong></button>",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "[개별권한 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible div#authEdit_readAuth div.combobox.dbox_pwr button.select_code:text-is('조회'):visible, .ui-dialog:visible div#authEdit_readAuth button.select_code:has-text('조회'):visible, div#authEdit_readAuth > button.select_code:visible, .ui-dialog:visible div#authEdit_readAuth button.select_code:visible, .ui-dialog:visible div.combobox.dbox_pwr button.select_code:text-is('조회'):visible, .ui-dialog:visible button.select_code:has-text('조회'):visible",
+      "cursorOffset": {
+        "x": 18,
+        "y": 3
+      },
+      "clickCoords": {
+        "x": 980,
+        "y": 615
+      },
+      "description": "[개별권한 팝업] '조회' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" data-toggle=\"dropdown\" class=\"select_code\"><span class=\"pwr\">조회</span></button>",
+      "_lastHumanTarget": "조회"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[개별권한 팝업] '조회' 버튼 반응 대기",
+      "_lastHumanTarget": "조회"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible div#authEdit_readAuth label[for='rnum3']:visible, .ui-dialog:visible label[for='rnum3']:visible, .ui-dialog:visible tr:has(th:has-text('읽기')) label:has-text('조회 < 인쇄 < 저장'):visible, .ui-dialog:visible ul.drop_menu label:has-text('조회 < 인쇄 < 저장'):visible, div#authEdit_readAuth > ul.drop_menu > li:nth-of-type(3) > label:visible",
+      "cursorOffset": {
+        "x": 61,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 1024,
+        "y": 727
+      },
+      "description": "[개별권한 팝업] '조회 < 인쇄 < 저장' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<label for=\"rnum3\"><span class=\"dir\">조회 &lt; 인쇄 &lt; </span><span class=\"pwr\">저장</span></label>",
+      "_lastHumanTarget": "읽기"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "[개별권한 팝업] '조회 < 인쇄 < 저장' 요소 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "조회 < 인쇄 < 저장"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible div#authEdit_writeAuth div.combobox.dbox_pwr button.select_code:text-is('발송'):visible, .ui-dialog:visible div#authEdit_writeAuth button.select_code:has-text('발송'):visible, div#authEdit_writeAuth > button.select_code:visible, .ui-dialog:visible div#authEdit_writeAuth button.select_code:has-text('조회 < 인쇄 < 저장 < 발송'):visible, .ui-dialog:visible div#authEdit_writeAuth button.select_code:visible, .ui-dialog:visible div.combobox.dbox_pwr button.select_code:text-is('발송'):visible, .ui-dialog:visible button.select_code:has-text('발송'):visible",
+      "cursorOffset": {
+        "x": 43,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 1005,
+        "y": 664
+      },
+      "description": "[개별권한 팝업] '발송' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" data-toggle=\"dropdown\" class=\"select_code\"><span class=\"dir\">조회 &lt; 인쇄 &lt; 저장 &lt; </span><span class=\"pwr\">발송</span></button>",
+      "_lastHumanTarget": "발송"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "[개별권한 팝업] '발송' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "발송"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible div#authEdit_writeAuth label[for='wnum3']:visible, .ui-dialog:visible label[for='wnum3']:visible, div#authEdit_writeAuth > ul.drop_menu > li:nth-of-type(3) > label:visible",
+      "cursorOffset": {
+        "x": 64,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 1027,
+        "y": 768
+      },
+      "description": "[개별권한 팝업] '조회 < 인쇄 < 저장 < 발송 < 수정' 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<label for=\"wnum3\"><span class=\"dir\">조회 &lt; 인쇄 &lt; 저장 &lt; 발송 &lt; 수정 &lt; </span><span class=\"pwr\">개정</span></label>",
+      "_lastHumanTarget": "조회 < 인쇄 < 저장 < 발송 < 수정"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "[개별권한 팝업] '조회 < 인쇄 < 저장 < 발송 < 수정' 요소 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "조회 < 인쇄 < 저장 < 발송 < 수정"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#authEdit_confirm:visible, .ui-dialog:visible div.btn_area button.btn.btn_med.btn_pri:text-is('확인'):visible, .ui-dialog:visible div#docMain_authEditLyr button.btn.btn_med.btn_pri:has-text('확인'):visible, .ui-dialog:visible button.btn.btn_med.btn_pri:has-text('확인'):visible",
+      "cursorOffset": {
+        "x": 19,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 921,
+        "y": 724
+      },
+      "description": "[개별권한 팝업] '확인' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"authEdit_confirm\" type=\"button\" class=\"btn btn_med btn_pri\"><strong>확인</strong></button>",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "[개별권한 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "type",
+      "selector": "input#atclWrite_subject:visible, #atclWrite_subject:visible, tr:has(th:has-text('제목')) input.input_txt:visible",
+      "text": "2026학년도 학사운영 및 업무편람",
+      "cursorOffset": {
+        "x": 119,
+        "y": 25
+      },
+      "clickCoords": {
+        "x": 614,
+        "y": 428
+      },
+      "description": "[제목] 'atclWrite_subject' 입력창에 '2026학년도 학사운영 및 업무편람' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input id=\"atclWrite_subject\" name=\"\" type=\"text\" class=\"input_txt\" style=\"width:70%;\" maxlength=\"100\">",
+      "_lastHumanTarget": "제목"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "type",
+      "selector": "div[data-document-fixed-width='false']:visible, div[data-document-padding-top='18']:visible, div[data-document-padding-bottom='18']:visible, div[data-document-padding-left='23']:visible, div[data-document-padding-right='23']:visible, [role='textbox'].se-contents:visible",
+      "text": "2026학년도 학사운영 및 업무편람 자료입니다.",
+      "editorParaIndex": 0,
+      "cursorOffset": {
+        "x": 466,
+        "y": 171
+      },
+      "clickCoords": {
+        "x": 768,
+        "y": 729
+      },
+      "description": "'에디터 본문' 입력 영역에 '2026학년도 학사운영 및 업무편람 자료입니다.' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<div class=\"se-contents\" role=\"textbox\" data-document-fixed-width=\"false\" data-document-padding-top=\"18\" data-document-padding-bottom=\"18\" data-document-padding-left=\"23\" data-document-padding-right=\"23\"><p id=\"se_9d8c37ce-9f3f-4112-9768-9763c54751a9\" style=\"margin: 0px; display: block; overflow-wrap: break-word;\">2026학년도 학사운영 및 업무편람 자료입니다.</div>",
+      "_lastHumanTarget": "에디터 본문"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "upload",
+      "selector": "div#atclWrite_fileUpload div.fileupload-buttonbar div.fileinput-button.btn:has-text('내 PC'):visible, div#atclWrite_fileUpload div.fileinput-button.btn:has-text('내 PC'):visible, div#atclWrite_fileUpload > div.fileupload-buttonbar:nth-of-type(1) > div.fileinput-button.btn:visible, div#atclWrite_fileUpload input[type='file'][name='files[]'], div.fileupload-buttonbar div.fileinput-button.btn:has-text('내 PC'):visible, div.fileinput-button.btn:has-text('내 PC'):visible, input[type='file'][name='files[]']",
+      "filePath": "data/document/uploads/자료.pdf",
+      "text": "자료.pdf",
+      "description": "'내 PC' 버튼에 '자료.pdf' 첨부",
+      "recordedByEyedropper": true,
+      "targetHtml": "<div class=\"btn fileinput-button\"> <i class=\"ico ico_atch\"></i> <span>내 PC</span> <input type=\"file\" title=\"내 PC\" name=\"files[]\" multiple=\"\"> </div>",
+      "_lastHumanTarget": "내 PC"
+    },
+    {
+      "type": "wait",
+      "ms": 1400,
+      "description": "첨부 파일 업로드 및 목록 반영 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": "button#atclWrite_docRelDialog:visible, #atclWrite_docRelDialog:visible, div.btn_bar.pdb button.btn:has-text('문서 선택'):visible, button.btn:has-text('문서 선택'):visible",
+      "cursorOffset": {
+        "x": 34,
+        "y": 22
+      },
+      "clickCoords": {
+        "x": 529,
+        "y": 817
+      },
+      "description": "[관련문서] '문서 선택' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" id=\"atclWrite_docRelDialog\" class=\"btn\"><i class=\"ico ico_doc1\"></i> 문서 선택</button>",
+      "_lastHumanTarget": "문서 선택"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[관련문서] '문서 선택' 버튼 반응 대기",
+      "_lastHumanTarget": "문서 선택"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible .dynatree-title:text-is('사무처'):visible, .ui-dialog:visible .dynatree-title:has-text('사무처'):visible, .ui-dialog:visible span.dynatree-node.dynatree-lazy a.dynatree-title:has-text('사무처'):visible, .ui-dialog:visible a.dynatree-title:has-text('사무처'):visible",
+      "cursorOffset": {
+        "x": 35,
+        "y": 19
+      },
+      "clickCoords": {
+        "x": 585,
+        "y": 361
+      },
+      "description": "[문서 선택 팝업] 트리 '사무처' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"dynatree-title\">사무처</a>",
+      "_lastHumanTarget": "사무처"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[문서 선택 팝업] 트리 '사무처' 항목 반응 대기",
+      "_lastHumanTarget": "사무처"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible tbody#docRelDialog_list label.chkbox:has([data-title='사용자매뉴얼.20.모바일.pptx']):visible, .ui-dialog:visible tbody#docRelDialog_list label.chkbox:has([data-file-ext-class='fico fico_pptx']):visible, .ui-dialog:visible tbody#docRelDialog_list label.chkbox:has(input[name='docRelCheck'][value='100038']):visible, .ui-dialog:visible tbody#docRelDialog_list label.chkbox:has(input[value='100038']):visible, .ui-dialog:visible label.chkbox:has(input[value='100038']):visible, .ui-dialog:visible label.chkbox:has(input[name='docRelCheck'][value='100038']):visible, .ui-dialog:visible label:has([data-title='사용자매뉴얼.20.모바일.pptx']):visible, tbody#docRelDialog_list > tr:nth-of-type(1) > td.frst:nth-of-type(1) > label.chkbox:visible",
+      "cursorOffset": {
+        "x": 14,
+        "y": 2
+      },
+      "clickCoords": {
+        "x": 735,
+        "y": 277
+      },
+      "description": "[문서 선택 팝업] '[그룹웨어 매뉴얼] 사용자매뉴얼.20.모' 체크박스 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<label class=\"chkbox\"><input type=\"checkbox\" name=\"docRelCheck\" value=\"100038\" data-file-ext-class=\"fico fico_pptx\" data-title=\"사용자매뉴얼.20.모바일.pptx\" title=\"선택\" class=\"input_chk lst_chk\"></label>",
+      "_lastHumanTarget": "100038"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[문서 선택 팝업] '[그룹웨어 매뉴얼] 사용자매뉴얼.20.모' 체크박스 반응 대기",
+      "_lastHumanTarget": "[그룹웨어 매뉴얼] 사용자매뉴얼.20.모"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#docRelDialog_confirmBtn:visible, button#docRelDialog_confirmBtn:visible",
+      "cursorOffset": {
+        "x": 23,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 921,
+        "y": 768
+      },
+      "description": "[문서 선택 팝업] '첨부' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" id=\"docRelDialog_confirmBtn\" class=\"btn btn_pri\"><strong>첨부</strong></button>",
+      "_lastHumanTarget": "첨부"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[문서 선택 팝업] '첨부' 버튼 반응 대기",
+      "_lastHumanTarget": "첨부"
+    },
+    {
+      "type": "click",
+      "selector": "div.btn_area button._save.btn.btn_med:text-is('저장'):visible, article#document_write button._save:visible, article#document_write button._save.btn.btn_med:has-text('저장'):visible, article#document_write button._save:has-text('저장'):visible, button._save:visible, article#document_write > div.document_cont:nth-of-type(1) > div.doc_bg_mdl:nth-of-type(2) > div.document_write:nth-of-type(2) > div.btn_area:nth-of-type(2) > button._save.btn.btn_med:nth-of-type(1):visible",
+      "cursorOffset": {
+        "x": 66,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 982,
+        "y": 866
+      },
+      "description": "'저장' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"submit\" class=\"btn btn_med btn_pri _save\"><strong>저장</strong></button>",
+      "_lastHumanTarget": "저장"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'저장' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "저장"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#naon-cmm-confirm-ok:visible",
+      "cursorOffset": {
+        "x": 33,
+        "y": 21
+      },
+      "clickCoords": {
+        "x": 886,
+        "y": 141
+      },
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"naon-cmm-confirm-ok\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "wait",
+      "ms": 2600,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "click",
+      "selector": "ul#atclPds_list2 a._atcl[data-atcl-no='100097']:visible, a._atcl[data-atcl-no='100097']:visible, ul#atclPds_list2 a[data-atcl-no='100097']:visible, a[data-atcl-no='100097']:visible, ul#atclPds_list2 a._atcl[data-brd-id='DB178218994699749']:visible, a._atcl[data-brd-id='DB178218994699749']:visible, ul#atclPds_list2 a[data-brd-id='DB178218994699749']:visible, a[data-brd-id='DB178218994699749']:visible, strong.sub a._atcl:has-text('2026학년도 학사운영 및 업무편람'):visible, ul#atclPds_list2 a._atcl:has-text('2026학년도 학사운영 및 업무편람'):visible, a._atcl:has-text('2026학년도 학사운영 및 업무편람'):visible",
+      "cursorOffset": {
+        "x": 106,
+        "y": 7
+      },
+      "clickCoords": {
+        "x": 424,
+        "y": 283
+      },
+      "description": "'2026학년도 학사운영 및 업무편람' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"_atcl\" data-atcl-no=\"100097\" data-brd-id=\"DB178218994699749\">2026학년도 학사운영 및 업무편람</a>",
+      "_lastHumanTarget": "2026학년도 학사운영 및 업무편람"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'2026학년도 학사운영 및 업무편람' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "2026학년도 학사운영 및 업무편람"
+    },
+    {
+      "type": "click",
+      "selector": "div#atclView_toolbar div.btn_drop.atclView_extra button.btn_link.drop_tgl.btn:has-text('이 문서를'):visible, div#atclView_toolbar button.btn_link.drop_tgl.btn:has-text('이 문서를'):visible, div#atclView_toolbar > div.btn_drop.atclView_extra > button.btn_link.drop_tgl.btn:visible, div#atclView_toolbar button.btn_link.drop_tgl:has-text('이 문서를'):visible, div#atclView_toolbar button.btn_link:visible, div.btn_drop.atclView_extra button.btn_link.drop_tgl.btn:has-text('이 문서를'):visible, button.btn_link.drop_tgl.btn:has-text('이 문서를'):visible",
+      "cursorOffset": {
+        "x": 40,
+        "y": 22
+      },
+      "clickCoords": {
+        "x": 1149,
+        "y": 238
+      },
+      "description": "'이 문서를' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" data-toggle=\"dropdown\" class=\"btn btn_link drop_tgl\">이 문서를 <span class=\"caret\"></span></button>",
+      "_lastHumanTarget": "이 문서를"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'이 문서를' 버튼 반응 대기",
+      "_lastHumanTarget": "이 문서를"
+    },
+    {
+      "type": "click",
+      "selector": "div#atclView_toolbar div.btn_toolbar button._cateEdit.btn:has-text('분류변경'):visible, div#atclView_toolbar button._cateEdit.btn:has-text('분류변경'):visible, div#atclView_toolbar > button._cateEdit.btn:nth-of-type(5):visible, div#atclView_toolbar button._cateEdit:has-text('분류변경'):visible, div#atclView_toolbar button._cateEdit:visible, div.btn_toolbar button._cateEdit.btn:has-text('분류변경'):visible, button._cateEdit.btn:has-text('분류변경'):visible",
+      "cursorOffset": {
+        "x": 64,
+        "y": 19
+      },
+      "clickCoords": {
+        "x": 1095,
+        "y": 235
+      },
+      "description": "'분류변경' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"btn _cateEdit\" style=\"\">분류변경</button>",
+      "_lastHumanTarget": "분류변경"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'분류변경' 버튼 반응 대기",
+      "_lastHumanTarget": "분류변경"
+    },
+    {
+      "type": "click",
+      "selector": "div#class_edit_100097 select[name='atclView_cateSelect2']:visible, div#class_edit_100097 > select.frm_select:nth-of-type(2):visible, select[name='atclView_cateSelect2']:visible",
+      "text": "1-2차분류",
+      "cursorOffset": {
+        "x": 55,
+        "y": 23
+      },
+      "clickCoords": {
+        "x": 1099,
+        "y": 353
+      },
+      "description": "'2차 분류선택 1-1차분류 1-2차분류 ' 요소에서 '1-2차분류' 선택",
+      "recordedByEyedropper": true,
+      "targetHtml": "<select name=\"atclView_cateSelect2\" class=\"frm_select\"> <option value=\"\">2차 분류선택</option><option value=\"DC145463617929221\">1-1차분류</option><option value=\"DC145463618568532\">1-2차분류</option><option value=\"DC145463623052962\">1-3차분류</option></select>",
+      "_lastHumanTarget": "2차 분류선택 1-1차분류 1-2차분류"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'2차 분류선택 1-1차분류 1-2차분류 ' 요소에서 '1-2차분류' 선택 반응 대기",
+      "_lastHumanTarget": "2차 분류선택 1-1차분류 1-2차분류"
+    },
+    {
+      "type": "click",
+      "selector": "div#class_edit_100097 select[name='atclView_cateSelect3']:visible, div#class_edit_100097 > select.frm_select:nth-of-type(3):visible, select[name='atclView_cateSelect3']:visible",
+      "text": "1-2-3차분류",
+      "cursorOffset": {
+        "x": 41,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 1239,
+        "y": 346
+      },
+      "description": "'3차 분류선택 1-2-1차분류 1-2-2' 요소에서 '1-2-3차분류' 선택",
+      "recordedByEyedropper": true,
+      "targetHtml": "<select name=\"atclView_cateSelect3\" class=\"frm_select\"><option value=\"\">3차 분류선택</option><option value=\"DC145463620942836\">1-2-1차분류</option><option value=\"DC145463621255382\">1-2-2차분류</option><option value=\"DC145463621566387\">1-2-3차분류</option></select>",
+      "_lastHumanTarget": "3차 분류선택 1-2-1차분류 1-2-2"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'3차 분류선택 1-2-1차분류 1-2-2' 요소에서 '1-2-3차분류' 선택 반응 대기",
+      "_lastHumanTarget": "3차 분류선택 1-2-1차분류 1-2-2"
+    },
+    {
+      "type": "click",
+      "selector": "button#atclView_cateSaveBtn_100097:visible, #atclView_cateSaveBtn_100097:visible, button[data-atcl-no='100097']:visible, div.doc_class_edit button.btn.btn_pri:text-is('저장'):visible, button.btn.btn_pri[data-atcl-no='100097']:visible",
+      "cursorOffset": {
+        "x": 20,
+        "y": 9
+      },
+      "clickCoords": {
+        "x": 1408,
+        "y": 339
+      },
+      "description": "'저장' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" onclick=\"hideLayer('class_edit_100097');showLayer('atclView_cateList_100097')\" id=\"atclView_cateSaveBtn_100097\" data-atcl-no=\"100097\" class=\"btn btn_pri\">저장</button>",
+      "_lastHumanTarget": "저장"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'저장' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "저장"
+    },
+    {
+      "type": "click",
+      "selector": "div#atclView_toolbar div.btn_toolbar button._revision.btn:text-is('개정'):visible, div#atclView_toolbar button._revision.btn:has-text('개정'):visible, div#atclView_toolbar > button._revision.btn:nth-of-type(3):visible, div#atclView_toolbar button._revision:has-text('개정'):visible, div#atclView_toolbar button._revision:visible, div.btn_toolbar button._revision.btn:text-is('개정'):visible, button._revision.btn:has-text('개정'):visible",
+      "cursorOffset": {
+        "x": 24,
+        "y": 24
+      },
+      "clickCoords": {
+        "x": 952,
+        "y": 240
+      },
+      "description": "'개정' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"btn _revision\" style=\"\">개정</button>",
+      "_lastHumanTarget": "개정"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'개정' 버튼 반응 대기",
+      "_lastHumanTarget": "개정"
+    },
+    {
+      "type": "type",
+      "selector": ".ui-dialog:visible textarea#atclView_outOpinion:visible, textarea#atclView_outOpinion:visible",
+      "text": "자료변경",
+      "cursorOffset": {
+        "x": 85,
+        "y": 55
+      },
+      "clickCoords": {
+        "x": 921,
+        "y": 469
+      },
+      "description": "[반출 팝업] 'atclView_outOpinion' 입력창에 '자료변경' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<textarea id=\"atclView_outOpinion\" cols=\"60\" rows=\"3\" class=\"textarea auto_grow\" style=\"width:100%; height:124px;\"></textarea>",
+      "_lastHumanTarget": "atclView_outOpinion"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#atclView_checkOutAtcl:visible, .ui-dialog:visible div.btn_area button.btn.btn_pri:text-is('저장'):visible, .ui-dialog:visible div#doc_export_lyr button.btn.btn_pri:has-text('저장'):visible, .ui-dialog:visible button.btn.btn_pri:has-text('저장'):visible",
+      "cursorOffset": {
+        "x": 20,
+        "y": 8
+      },
+      "clickCoords": {
+        "x": 918,
+        "y": 570
+      },
+      "description": "[반출 팝업] '저장' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"submit\" id=\"atclView_checkOutAtcl\" class=\"btn btn_pri\"><strong>저장</strong></button>",
+      "_lastHumanTarget": "저장"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "[반출 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "저장"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#naon-cmm-confirm-ok:visible",
+      "cursorOffset": {
+        "x": 63,
+        "y": 24
+      },
+      "clickCoords": {
+        "x": 916,
+        "y": 144
+      },
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"naon-cmm-confirm-ok\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "click",
+      "selector": "ul#fldOrder button.btn_sml_ico.delete[data-url='undefined']:visible, button.btn_sml_ico.delete[data-url='undefined']:visible, ul#fldOrder button[data-url='undefined']:visible, button[data-url='undefined']:visible, ul#fldOrder button.btn_sml_ico.delete:has-text('삭제'):visible, ul#fldOrder button.btn_sml_ico:visible, button.btn_sml_ico[title='삭제']:visible, ul#fldOrder button.btn_sml_ico[title='삭제']:visible, ul#fldOrder button[title='삭제']:visible, ul#fldOrder button.btn_sml_ico.delete[title='삭제']:visible",
+      "cursorOffset": {
+        "x": 10,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 1776,
+        "y": 695
+      },
+      "description": "[파일첨부] '삭제' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" title=\"삭제\" class=\"btn btn_sml_ico delete\" data-type=\"undefined\" data-url=\"undefined\"><i class=\"ico ico_trash\"><span title=\"삭제\">삭제</span></i></button>",
+      "_lastHumanTarget": "삭제"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[파일첨부] '삭제' 버튼 반응 대기",
+      "_lastHumanTarget": "삭제"
+    },
+    {
+      "type": "upload",
+      "selector": "div#atclEdit_fileUpload div.fileupload-buttonbar div.fileinput-button.btn:has-text('내 PC'):visible, div#atclEdit_fileUpload div.fileinput-button.btn:has-text('내 PC'):visible, div#atclEdit_fileUpload > div.fileupload-buttonbar:nth-of-type(1) > div.fileinput-button.btn:visible, div#atclEdit_fileUpload input[type='file'][name='files[]'], div.fileupload-buttonbar div.fileinput-button.btn:has-text('내 PC'):visible, div.fileinput-button.btn:has-text('내 PC'):visible, input[type='file'][name='files[]']",
+      "filePath": "data/document/uploads/자료.pdf",
+      "text": "자료.pdf",
+      "description": "'내 PC' 버튼에 '자료.pdf' 첨부",
+      "recordedByEyedropper": true,
+      "targetHtml": "<div class=\"btn fileinput-button\"> <i class=\"ico ico_atch\"></i> <span>내 PC</span> <input type=\"file\" title=\"내 PC\" name=\"files[]\" multiple=\"\"> </div>",
+      "_lastHumanTarget": "내 PC"
+    },
+    {
+      "type": "wait",
+      "ms": 1400,
+      "description": "첨부 파일 업로드 및 목록 반영 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": "div.btn_area button._save.btn.btn_med:text-is('반입'):visible, article#document_write button._save:visible, article#document_write button._save.btn.btn_med:has-text('반입'):visible, article#document_write button._save:has-text('반입'):visible, button._save:visible, article#document_write > div.document_cont:nth-of-type(1) > div.doc_bg_mdl:nth-of-type(2) > div.document_write:nth-of-type(2) > div.btn_area:nth-of-type(2) > button._save.btn.btn_med:nth-of-type(1):visible",
+      "cursorOffset": {
+        "x": 47,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 963,
+        "y": 899
+      },
+      "description": "'반입' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"submit\" class=\"btn btn_med btn_pri _save\"><strong>반입</strong></button>",
+      "_lastHumanTarget": "반입"
+    },
+    {
+      "type": "wait",
+      "ms": 2100,
+      "description": "'반입' 버튼 반응 대기",
+      "_lastHumanTarget": "반입"
+    },
+    {
+      "type": "click",
+      "selector": "button#atclView_versionBtn_100097:visible, #atclView_versionBtn_100097:visible, button.mgl[data-atcl-no='100097']:visible, button[data-atcl-no='100097']:visible, button.btn.btn_sml.mgl:has-text('버전보기'):visible",
+      "cursorOffset": {
+        "x": 29,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 1180,
+        "y": 414
+      },
+      "description": "'버전보기' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" id=\"atclView_versionBtn_100097\" data-atcl-no=\"100097\" class=\"btn btn_sml mgl\">버전보기</button>",
+      "_lastHumanTarget": "버전보기"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'버전보기' 버튼 반응 대기",
+      "_lastHumanTarget": "버전보기"
+    },
+    {
+      "type": "click",
+      "selector": "button._showOutReason[data-his-seq='2']:visible, button[data-his-seq='2']:visible, button._showOutReason[data-atcl-no='100097']:visible, button[data-atcl-no='100097']:visible, button._showOutReason[title='반출사유']:visible, button[title='반출사유']:visible, tr:has-text('2026학년도 학사운영 및 업무편람') button._showOutReason.btn:visible, button._showOutReason.btn[data-his-seq='2']:visible, button._showOutReason.btn[data-atcl-no='100097']:visible, button._showOutReason:has-text('반출사유'):visible, button._showOutReason:visible",
+      "cursorOffset": {
+        "x": 40,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 1784,
+        "y": 498
+      },
+      "description": "'반출사유' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" title=\"반출사유\" class=\"btn btn_sml _showOutReason\" data-his-seq=\"2\" data-atcl-no=\"100097\"> <span>반출사유</span> </button>",
+      "_lastHumanTarget": "2026학년도 학사운영 및 업무편람"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'반출사유' 버튼 반응 대기",
+      "_lastHumanTarget": "반출사유"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible div#reason_view_lyr button.btn:has-text('닫기'):visible, div#reason_view_lyr > div.btn_area:nth-of-type(3) > button.btn:visible, .ui-dialog:visible div.btn_area button.btn:text-is('닫기'):visible, .ui-dialog:visible button.btn:has-text('닫기'):visible",
+      "cursorOffset": {
+        "x": 21,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 951,
+        "y": 536
+      },
+      "description": "[반출사유 팝업] '닫기' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" onclick=\"closeDialog('reason_view_lyr')\" class=\"btn\">닫기</button>",
+      "_lastHumanTarget": "닫기"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[반출사유 팝업] '닫기' 버튼 반응 대기",
+      "_lastHumanTarget": "닫기"
+    },
+    {
+      "type": "click",
+      "selector": "div#atclView_toolbar > button._delete.btn:nth-of-type(4):visible, div#atclView_toolbar button._delete.btn:has-text('삭제'):visible, div#atclView_toolbar button._delete:has-text('삭제'):visible, div#atclView_toolbar button._delete:visible, div.btn_toolbar button._delete.btn:text-is('삭제'):visible, button._delete.btn:has-text('삭제'):visible",
+      "cursorOffset": {
+        "x": 22,
+        "y": 23
+      },
+      "clickCoords": {
+        "x": 1001,
+        "y": 239
+      },
+      "description": "'삭제' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"btn _delete\" style=\"\">삭제</button>",
+      "_lastHumanTarget": "삭제"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'삭제' 버튼 반응 대기",
+      "_lastHumanTarget": "삭제"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#naon-cmm-confirm-ok:visible",
+      "cursorOffset": {
+        "x": 62,
+        "y": 23
+      },
+      "clickCoords": {
+        "x": 915,
+        "y": 143
+      },
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"naon-cmm-confirm-ok\" type=\"button\" class=\"abtn abtn_dan\"><i class=\"ico ico_check\"></i> 확인</button>",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button#naon-cmm-alert-confirm:visible",
+      "cursorOffset": {
+        "x": 55,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 965,
+        "y": 132
+      },
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"naon-cmm-alert-confirm\" type=\"button\" class=\"abtn abtn_pri\"><i class=\"ico ico_check\"></i> 확인</button>",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "확인"
+    },
+    {
+      "type": "click",
+      "selector": ".dynatree-title:text-is('최근문서함'):visible, .dynatree-title:has-text('최근문서함'):visible, span.dynatree-node.tico_k1 a.dynatree-title:has-text('최근문서함'):visible, li#dynatree-id-DBA a.dynatree-title:has-text('최근문서함'):visible",
+      "cursorOffset": {
+        "x": 34,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 84,
+        "y": 320
+      },
+      "description": "트리 '최근문서함' 항목 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" class=\"dynatree-title\">최근문서함</a>",
+      "_lastHumanTarget": "최근문서함"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "트리 '최근문서함' 항목 반응 대기",
+      "_lastHumanTarget": "최근문서함"
+    },
+    {
+      "type": "type",
+      "selector": "input#atclList_searchWord:visible, #atclList_searchWord:visible",
+      "text": "사용자매뉴얼",
+      "cursorOffset": {
+        "x": 37,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 1647,
+        "y": 139
+      },
+      "description": "'검색어' 입력창에 '사용자매뉴얼' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input name=\"\" type=\"text\" id=\"atclList_searchWord\" title=\"검색어\" placeholder=\"검색어\" autocomplete=\"off\" class=\"input_txt\">",
+      "_lastHumanTarget": "검색어"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": "button#atclList_srchBtn:visible, #atclList_srchBtn:visible",
+      "cursorOffset": {
+        "x": 6,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 1766,
+        "y": 143
+      },
+      "description": "'검색' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" id=\"atclList_srchBtn\" title=\"검색\" class=\"btn btn_ico\"><i class=\"ico ico_srch\"><span>검색</span></i></button>",
+      "_lastHumanTarget": "검색"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'검색' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "검색"
+    },
+    {
+      "type": "click",
+      "selector": "div#docHeader_btnToolbar div.combobox button.drop_value.atclList_searchPeriodBtn:has-text('전체기간'):visible, div#docHeader_btnToolbar button.drop_value.atclList_searchPeriodBtn:has-text('전체기간'):visible, div#docHeader_btnToolbar > div.combobox:nth-of-type(2) > button.drop_value.atclList_searchPeriodBtn:visible, div#docHeader_btnToolbar button.drop_value:visible, div.combobox button.drop_value.atclList_searchPeriodBtn:has-text('전체기간'):visible, button.drop_value.atclList_searchPeriodBtn:has-text('전체기간'):visible",
+      "cursorOffset": {
+        "x": 63,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 1434,
+        "y": 141
+      },
+      "description": "'전체기간' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" data-toggle=\"dropdown\" class=\"drop_value atclList_searchPeriodBtn\"> 전체기간</button>",
+      "_lastHumanTarget": "전체기간"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'전체기간' 버튼 반응 대기",
+      "_lastHumanTarget": "전체기간"
+    },
+    {
+      "type": "click",
+      "selector": "button#docHeader_srchFilterTitle:visible, #docHeader_srchFilterTitle:visible, div.btn_drop.drop_filter_optn button.btn:has-text('일부포함/등록일순'):visible, div#docHeader_srchTypeSelect button.btn:has-text('일부포함/등록일순'):visible",
+      "cursorOffset": {
+        "x": 48,
+        "y": 16
+      },
+      "clickCoords": {
+        "x": 1510,
+        "y": 141
+      },
+      "description": "'일부포함/등록일순' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" data-toggle=\"dropdown\" class=\"btn\" id=\"docHeader_srchFilterTitle\">일부포함/등록일순</button>",
+      "_lastHumanTarget": "일부포함/등록일순"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'일부포함/등록일순' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "일부포함/등록일순"
+    },
+    {
+      "type": "click",
+      "selector": "div.optn_btns button._docSearchOperator.btn:has-text('모두포함'):visible, div#docHeader_srchTypeSelect button._docSearchOperator.btn:has-text('모두포함'):visible, button._docSearchOperator.btn:has-text('모두포함'):visible, div#docHeader_srchTypeSelect button._docSearchOperator:has-text('모두포함'):visible, div#docHeader_srchTypeSelect button._docSearchOperator:visible",
+      "cursorOffset": {
+        "x": 37,
+        "y": 8
+      },
+      "clickCoords": {
+        "x": 1516,
+        "y": 259
+      },
+      "description": "'모두포함' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"btn _docSearchOperator\" data-operator-type=\"A\">모두포함</button>",
+      "_lastHumanTarget": "모두포함"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'모두포함' 버튼 반응 대기",
+      "_lastHumanTarget": "모두포함"
+    },
+    {
+      "type": "click",
+      "selector": "input#atclList_searchWord:visible, #atclList_searchWord:visible",
+      "cursorOffset": {
+        "x": 104,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 1714,
+        "y": 141
+      },
+      "description": "'검색어' 입력창 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input name=\"\" type=\"text\" id=\"atclList_searchWord\" title=\"검색어\" placeholder=\"검색어\" autocomplete=\"off\" class=\"input_txt\">",
+      "_lastHumanTarget": "검색어"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'검색어' 입력창 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "검색어"
+    },
+    {
+      "type": "click",
+      "selector": "button#atclList_srchBtn:visible, #atclList_srchBtn:visible",
+      "cursorOffset": {
+        "x": 6,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 1766,
+        "y": 144
+      },
+      "description": "'검색' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" id=\"atclList_srchBtn\" title=\"검색\" class=\"btn btn_ico\"><i class=\"ico ico_srch\"><span>검색</span></i></button>",
+      "_lastHumanTarget": "검색"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'검색' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "검색"
+    },
+    {
+      "type": "click",
+      "selector": "button#docHeader_srchFilterTitle:visible, #docHeader_srchFilterTitle:visible, div.btn_drop.drop_filter_optn button.btn:has-text('일부포함/등록일순'):visible, div#docHeader_srchTypeSelect button.btn:has-text('일부포함/등록일순'):visible",
+      "cursorOffset": {
+        "x": 55,
+        "y": 22
+      },
+      "clickCoords": {
+        "x": 1517,
+        "y": 147
+      },
+      "description": "'일부포함/등록일순' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" data-toggle=\"dropdown\" class=\"btn\" id=\"docHeader_srchFilterTitle\">일부포함/등록일순</button>",
+      "_lastHumanTarget": "일부포함/등록일순"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'일부포함/등록일순' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "일부포함/등록일순"
+    },
+    {
+      "type": "click",
+      "selector": "div.optn_btns button._docSearchOperator.btn:has-text('정확히 일치'):visible, div#docHeader_srchTypeSelect button._docSearchOperator.btn:has-text('정확히 일치'):visible, button._docSearchOperator.btn:has-text('정확히 일치'):visible, div#docHeader_srchTypeSelect button._docSearchOperator:has-text('정확히 일치'):visible, div#docHeader_srchTypeSelect button._docSearchOperator:visible",
+      "cursorOffset": {
+        "x": 56,
+        "y": 22
+      },
+      "clickCoords": {
+        "x": 1535,
+        "y": 309
+      },
+      "description": "'정확히 일치' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"btn _docSearchOperator\" data-operator-type=\"E\">정확히 일치</button>",
+      "_lastHumanTarget": "정확히 일치"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'정확히 일치' 버튼 반응 대기",
+      "_lastHumanTarget": "정확히 일치"
+    },
+    {
+      "type": "type",
+      "selector": "input#atclList_searchWord:visible, #atclList_searchWord:visible",
+      "text": "사용자매뉴얼.20.모바일.pptx",
+      "cursorOffset": {
+        "x": 101,
+        "y": 19
+      },
+      "clickCoords": {
+        "x": 1711,
+        "y": 145
+      },
+      "description": "'검색어' 입력창에 '사용자매뉴얼.20.모바일.pptx' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input name=\"\" type=\"text\" id=\"atclList_searchWord\" title=\"검색어\" placeholder=\"검색어\" autocomplete=\"off\" class=\"input_txt\">",
+      "_lastHumanTarget": "검색어"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": "button#atclList_srchBtn:visible, #atclList_srchBtn:visible",
+      "cursorOffset": {
+        "x": 14,
+        "y": 17
+      },
+      "clickCoords": {
+        "x": 1774,
+        "y": 143
+      },
+      "description": "'검색' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" id=\"atclList_srchBtn\" title=\"검색\" class=\"btn btn_ico\"><i class=\"ico ico_srch\"><span>검색</span></i></button>",
+      "_lastHumanTarget": "검색"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'검색' 버튼 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "검색"
+    },
+    {
+      "type": "click",
+      "selector": "a.sub_tp._atcl[data-atcl-no='100038']:visible, a[data-atcl-no='100038']:visible, a.sub_tp._atcl[data-brd-id='DB178218994699749']:visible, a[data-brd-id='DB178218994699749']:visible, a.sub_tp._atcl[data-grp-id='C100160111']:visible, a[data-grp-id='C100160111']:visible, span.sub.el a.sub_tp._atcl:has-text('사용자매뉴얼.20.모바일.pptx'):visible, a.sub_tp._atcl:has-text('사용자매뉴얼.20.모바일.pptx'):visible, a.sub_tp[title='사용자매뉴얼.20.모바일.pptx']:visible, a[title='사용자매뉴얼.20.모바일.pptx']:visible, a.sub_tp._atcl[title='사용자매뉴얼.20.모바일.pptx']:visible",
+      "cursorOffset": {
+        "x": 86,
+        "y": 15
+      },
+      "clickCoords": {
+        "x": 583,
+        "y": 288
+      },
+      "description": "'사용자매뉴얼.20.모바일.pptx' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" title=\"사용자매뉴얼.20.모바일.pptx\" class=\"sub_tp _atcl\" data-atcl-no=\"100038\" data-brd-id=\"DB178218994699749\" data-grp-id=\"C100160111\"> 사용자매뉴얼.20.모바일.pptx</a>",
+      "_lastHumanTarget": "사용자매뉴얼.20.모바일.pptx"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'사용자매뉴얼.20.모바일.pptx' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "사용자매뉴얼.20.모바일.pptx"
+    },
+    {
+      "type": "wait",
+      "ms": 2000,
+      "description": "최종 시연 결과 화면 클로즈업 확인 대기",
+      "_lastHumanTarget": ""
+    }
+  ]
+}

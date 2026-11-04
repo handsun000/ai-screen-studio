@@ -1,0 +1,179 @@
+{
+  "metadata": {
+    "url": "https://gwdev.unison.co.kr/ekp/main/home/homGwMain",
+    "viewportWidth": 1920,
+    "viewportHeight": 1080,
+    "totalDurationMs": 36016,
+    "recordingStart": "2026-10-31T15:46:31.721Z",
+    "calibratedToVideoDurationMs": 36016
+  },
+  "moments": [
+    {
+      "id": 1,
+      "type": "wait",
+      "timestamp": 13787,
+      "description": "초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기"
+    },
+    {
+      "id": 2,
+      "type": "click",
+      "timestamp": 15730,
+      "description": "'사내쪽지' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1075,
+        "y": 82
+      },
+      "target": {
+        "x": 1019,
+        "y": 55,
+        "width": 113,
+        "height": 55
+      }
+    },
+    {
+      "id": 3,
+      "type": "wait",
+      "timestamp": 16813,
+      "description": "'사내쪽지' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 4,
+      "type": "click",
+      "timestamp": 18755,
+      "description": "'받은쪽지' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1076,
+        "y": 135
+      },
+      "target": {
+        "x": 1006,
+        "y": 119,
+        "width": 140,
+        "height": 32
+      }
+    },
+    {
+      "id": 5,
+      "type": "wait",
+      "timestamp": 19850,
+      "description": "'받은쪽지' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 6,
+      "type": "click",
+      "timestamp": 21833,
+      "description": "'보낸 쪽지' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 81,
+        "y": 270
+      },
+      "target": {
+        "x": 54,
+        "y": 258,
+        "width": 55,
+        "height": 24
+      }
+    },
+    {
+      "id": 7,
+      "type": "wait",
+      "timestamp": 22936,
+      "description": "'보낸 쪽지' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 8,
+      "type": "click",
+      "timestamp": 24345,
+      "description": "'중요 쪽지' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 81,
+        "y": 304
+      },
+      "target": {
+        "x": 54,
+        "y": 292,
+        "width": 55,
+        "height": 24
+      }
+    },
+    {
+      "id": 9,
+      "type": "wait",
+      "timestamp": 25459,
+      "description": "'중요 쪽지' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 10,
+      "type": "click",
+      "timestamp": 26833,
+      "description": "'전체 쪽지' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 81,
+        "y": 202
+      },
+      "target": {
+        "x": 54,
+        "y": 190,
+        "width": 55,
+        "height": 24
+      }
+    },
+    {
+      "id": 11,
+      "type": "wait",
+      "timestamp": 27954,
+      "description": "'전체 쪽지' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 12,
+      "type": "type",
+      "timestamp": 29181,
+      "description": "'검색어' 입력창에 '안내' 입력",
+      "cursor": {
+        "x": 1701,
+        "y": 157
+      },
+      "target": {
+        "x": 1610,
+        "y": 123,
+        "width": 150,
+        "height": 34
+      },
+      "keys": "안내"
+    },
+    {
+      "id": 13,
+      "type": "wait",
+      "timestamp": 29943,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 14,
+      "type": "click",
+      "timestamp": 31182,
+      "description": "'검색' 버튼 클릭",
+      "cursor": {
+        "x": 1774,
+        "y": 140
+      },
+      "target": {
+        "x": 1760,
+        "y": 123,
+        "width": 28,
+        "height": 34
+      }
+    },
+    {
+      "id": 15,
+      "type": "wait",
+      "timestamp": 32254,
+      "description": "'검색' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 16,
+      "type": "wait",
+      "timestamp": 33869,
+      "description": "최종 시연 결과 화면 클로즈업 확인 대기"
+    }
+  ]
+}

@@ -1,0 +1,605 @@
+{
+  "url": "https://gw.bc.ac.kr/ekp/main/home/homGwMain",
+  "viewport": {
+    "width": 1920,
+    "height": 944
+  },
+  "windowBounds": {
+    "left": 1528,
+    "top": -8,
+    "width": 1936,
+    "height": 1048,
+    "windowState": "maximized"
+  },
+  "requiresLogin": true,
+  "recordedByEyedropper": true,
+  "actions": [
+    {
+      "type": "wait",
+      "ms": 1500,
+      "description": "초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "type",
+      "selector": "input#userId:visible, #userId:visible, input[data-validation-message='아이디를 입력하세요.']:visible, input[name='userId']:visible",
+      "text": "test_prof_two",
+      "cursorOffset": {
+        "x": 23,
+        "y": 31
+      },
+      "clickCoords": {
+        "x": 859,
+        "y": 108
+      },
+      "description": "'ID' 입력창에 'test_prof_two' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input id=\"userId\" name=\"userId\" type=\"text\" autocomplete=\"off\" autocapitalize=\"none\" placeholder=\"ID\" tabindex=\"1\" data-validation-message=\"아이디를 입력하세요.\" class=\"input on\">",
+      "_lastHumanTarget": "ID"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "type",
+      "selector": "input#password:visible, #password:visible, input[data-validation-message='비밀번호를 입력하세요.']:visible, input[name='password']:visible",
+      "text": "tkancjDkagh01@)",
+      "cursorOffset": {
+        "x": 16,
+        "y": 7
+      },
+      "clickCoords": {
+        "x": 852,
+        "y": 129
+      },
+      "description": "'PASSWORD' 입력창에 'tkancjDkagh01@)' 입력",
+      "recordedByEyedropper": true,
+      "targetHtml": "<input id=\"password\" name=\"password\" type=\"password\" autocomplete=\"new-password\" placeholder=\"PASSWORD\" tabindex=\"1\" data-validation-message=\"비밀번호를 입력하세요.\" class=\"input on\">",
+      "_lastHumanTarget": "PASSWORD"
+    },
+    {
+      "type": "wait",
+      "ms": 900,
+      "description": "입력 텍스트 확인 여유 대기",
+      "_lastHumanTarget": ""
+    },
+    {
+      "type": "click",
+      "selector": "button#btnLogin:visible, #btnLogin:visible, button[data-text='Login']:visible",
+      "cursorOffset": {
+        "x": 222,
+        "y": 31
+      },
+      "clickCoords": {
+        "x": 1017,
+        "y": 206
+      },
+      "description": "'Login' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button id=\"btnLogin\" type=\"submit\" data-text=\"Login\" tabindex=\"2\"> <span>L</span><span>o</span><span>g</span><span>i</span><span>n</span> </button>",
+      "_lastHumanTarget": "Login"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'Login' 버튼 반응 대기",
+      "_lastHumanTarget": "Login"
+    },
+    {
+      "type": "click",
+      "selector": "li.mn_li.mn_down a.mn.mn_down:has-text('설치프로그램'):visible, div#gnb_menu a.mn.mn_down:has-text('설치프로그램'):visible, div#gnb_menu > ul.mn_ul:nth-of-type(1) > li.mn_li.mn_down:nth-of-type(10) > a.mn.mn_down:visible",
+      "cursorOffset": {
+        "x": 11,
+        "y": 2
+      },
+      "clickCoords": {
+        "x": 1559,
+        "y": 18
+      },
+      "description": "'설치프로그램' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"javascript:openInsPrglyr();return false;\" class=\"mn mn_down\"><i class=\"icon\"></i>설치프로그램</a>",
+      "_lastHumanTarget": "설치프로그램"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'설치프로그램' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "설치프로그램"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible div.fr a:has-text('Windows'):visible, .ui-dialog:visible a:has-text('Windows'):visible, .ui-dialog:visible div.download_center > ul.download_list:nth-of-type(2) > li._TOOLBOX:has-text('메신저') > div.down_div > div.fr:nth-of-type(2) > a:nth-of-type(1):visible",
+      "cursorOffset": {
+        "x": 42,
+        "y": 12
+      },
+      "clickCoords": {
+        "x": 1065,
+        "y": 470
+      },
+      "description": "[설치프로그램 팝업] 'Windows' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"/ekp/service/api/file/install/toolbox\"><span>Windows</span></a>",
+      "_lastHumanTarget": "Windows"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[설치프로그램 팝업] 'Windows' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "Windows"
+    },
+    {
+      "type": "click",
+      "selector": ".ui-dialog:visible button._cmmDialogClose:visible, .ui-dialog:visible div.ui-dialog-titlebar.ui-helper-clearfix:nth-of-type(1) > button.ui-dialog-titlebar-close._cmmDialogClose:visible, .ui-dialog:visible div.ui-dialog-titlebar.ui-helper-clearfix button.ui-dialog-titlebar-close._cmmDialogClose:visible, .ui-dialog:visible button.ui-dialog-titlebar-close._cmmDialogClose:visible",
+      "cursorOffset": {
+        "x": 9,
+        "y": 5
+      },
+      "clickCoords": {
+        "x": 1133,
+        "y": 408
+      },
+      "description": "[설치프로그램 팝업] button 요소 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"ui-dialog-titlebar-close _cmmDialogClose\"></button>",
+      "_lastHumanTarget": "설치프로그램 팝업"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "[설치프로그램 팝업] button 요소 반응 대기",
+      "_lastHumanTarget": "설치프로그램 팝업"
+    },
+    {
+      "type": "click",
+      "selector": "a[title='결재'][onclick*='/ekp/scr/app/gapp/gapMain']:visible, a[title='결재']:visible, a[onclick*='/ekp/scr/app/gapp/gapMain']:visible, a.nta[title='결재']:visible, li.nt.nt_1 a.nta:text-is('결재'):visible, a.nta:has-text('결재'):visible",
+      "cursorOffset": {
+        "x": 64,
+        "y": 19
+      },
+      "clickCoords": {
+        "x": 500,
+        "y": 74
+      },
+      "description": "'결재' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" title=\"결재\" class=\"nta\" onclick=\"GwMainMenu.fn.goPage('MNU12040923794020883473', 'https://gw.bc.ac.kr/ekp/scr/app/gapp/gapMain','G', 'L', '', '');return false;\"> <i class=\"nti nti_app\"></i>결재 </a>",
+      "_lastHumanTarget": "결재"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'결재' 메뉴/링크 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "결재"
+    },
+    {
+      "type": "click",
+      "selector": "div#main_menu a[title='전자우편'][onclick*='/ekp/scr/eml/emlMain']:visible, div#main_menu a[title='전자우편']:visible, div#main_menu a[onclick*='/ekp/scr/eml/emlMain']:visible, a[onclick*='/ekp/scr/eml/emlMain']:visible, div#main_menu a.nta[title='전자우편']:visible, li.nt.nt_3 a.nta.nta_drop:has-text('전자우편'):visible, a.nta[title='전자우편']:visible, a[title='전자우편']:visible, div#main_menu a.nta.nta_drop:has-text('전자우편'):visible, div#main_menu a.nta.nta_drop[title='전자우편']:visible",
+      "cursorOffset": {
+        "x": 70,
+        "y": 29
+      },
+      "clickCoords": {
+        "x": 708,
+        "y": 84
+      },
+      "description": "'전자우편' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" title=\"전자우편\" class=\"nta nta_drop\" onclick=\"GwMainMenu.fn.openDropMenu(this, 'MNU12040916944257236754', 'https://gw.bc.ac.kr/ekp/scr/eml/emlMain','G', 'L', '', '');return false;\"> <i class=\"nti nti_mail\"></i>전자우편 </a>",
+      "_lastHumanTarget": "전자우편"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'전자우편' 메뉴/링크 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "전자우편"
+    },
+    {
+      "type": "click",
+      "selector": "a._mail[data-mail-id='91318241918134404168']:visible, a[data-mail-id='91318241918134404168']:visible, a._mail[data-mail-uid='10']:visible, a[data-mail-uid='10']:visible, a._mail[data-mailbox-id='32465376863850916819']:visible, a[data-mailbox-id='32465376863850916819']:visible, a._mail[data-physical-path='INBOX']:visible, a[data-physical-path='INBOX']:visible, a._mail[data-hasqtip='12']:visible, a[data-hasqtip='12']:visible",
+      "cursorOffset": {
+        "x": 163,
+        "y": 13
+      },
+      "clickCoords": {
+        "x": 538,
+        "y": 274
+      },
+      "description": "'2026년도 디지털미디어디자인학과 제47' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" data-mail-id=\"91318241918134404168\" data-mail-uid=\"10\" data-mailbox-id=\"32465376863850916819\" data-physical-path=\"INBOX\" class=\"_mail\" data-hasqtip=\"12\" title=\"\">2026년도 디지털미디어디자인학과 제47회 졸업작품전시회를 개최합니다</a>",
+      "_lastHumanTarget": "2026년도 디지털미디어디자인학과 제47"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'2026년도 디지털미디어디자인학과 제47' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "2026년도 디지털미디어디자인학과 제47"
+    },
+    {
+      "type": "click",
+      "selector": "div#main_menu a[title='공지사항'][onclick*='/ekp/scr/board/boardMain']:visible, div#main_menu a[title='공지사항']:visible, div#main_menu a[onclick*='/ekp/scr/board/boardMain']:visible, a[onclick*='/ekp/scr/board/boardMain']:visible, div#main_menu a.nta.nta_drop:has-text('공지사항'):visible, a.nta[title='공지사항']:visible, a[title='공지사항']:visible, div#main_menu a.nta[title='공지사항']:visible, div#main_menu a.nta.nta_drop[title='공지사항']:visible, div#main_menu > ul.svc_lst > li.nt.nt_4:nth-of-type(4) > a.nta.nta_drop:visible",
+      "cursorOffset": {
+        "x": 18,
+        "y": 32
+      },
+      "clickCoords": {
+        "x": 772,
+        "y": 87
+      },
+      "description": "'공지사항' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" title=\"공지사항\" class=\"nta nta_drop\" onclick=\"GwMainMenu.fn.openDropMenu(this, 'MNU12040918778701411570', 'https://gw.bc.ac.kr/ekp/scr/board/boardMain','G', 'L', '', '');return false;\"> <i class=\"nti nti_bbs\"></i>공지사항 </a>",
+      "_lastHumanTarget": "공지사항"
+    },
+    {
+      "type": "wait",
+      "ms": 3600,
+      "description": "'공지사항' 메뉴/링크 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "공지사항"
+    },
+    {
+      "type": "click",
+      "selector": "a[title='기록물철'][onclick*='/ekp/scr/apprec/appRecMain']:visible, a[title='기록물철']:visible, a[onclick*='/ekp/scr/apprec/appRecMain']:visible, a.nta[title='기록물철']:visible, li.nt.nt_5 a.nta:has-text('기록물철'):visible, a.nta:has-text('기록물철'):visible",
+      "cursorOffset": {
+        "x": 52,
+        "y": 42
+      },
+      "clickCoords": {
+        "x": 923,
+        "y": 97
+      },
+      "description": "'기록물철' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" title=\"기록물철\" class=\"nta\" onclick=\"GwMainMenu.fn.goPage('MNU12040923561636437466', 'https://gw.bc.ac.kr/ekp/scr/apprec/appRecMain','G', 'N', '', '');return false;\"> <i class=\"nti nti_gapp\"></i>기록물철 </a>",
+      "_lastHumanTarget": "기록물철"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'기록물철' 메뉴/링크 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "기록물철"
+    },
+    {
+      "type": "click",
+      "selector": "div#main_menu a[title='일정관리'][onclick*='/ekp/scr/schedule/main/getMainView']:visible, div#main_menu a[title='일정관리']:visible, div#main_menu a[onclick*='/ekp/scr/schedule/main/getMainView']:visible, a[onclick*='/ekp/scr/schedule/main/getMainView']:visible, div#main_menu a.nta[title='일정관리']:visible, li.nt.nt_6 a.nta.nta_drop:has-text('일정관리'):visible, a.nta[title='일정관리']:visible, a[title='일정관리']:visible, div#main_menu a.nta.nta_drop:has-text('일정관리'):visible, div#main_menu a.nta.nta_drop[title='일정관리']:visible",
+      "cursorOffset": {
+        "x": 72,
+        "y": 26
+      },
+      "clickCoords": {
+        "x": 1059,
+        "y": 81
+      },
+      "description": "'일정관리' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" title=\"일정관리\" class=\"nta nta_drop\" onclick=\"GwMainMenu.fn.openDropMenu(this, 'MNU12040919645603328254', 'https://gw.bc.ac.kr/ekp/scr/schedule/main/getMainView','G', 'L', '', '');return false;\"> <i class=\"nti nti_cal\"></i>일정관리 </a>",
+      "_lastHumanTarget": "일정관리"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'일정관리' 메뉴/링크 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "일정관리"
+    },
+    {
+      "type": "click",
+      "selector": "a[title='위키'][onclick*='/ekp/scr/wiki/main/wikiMain']:visible, a[title='위키']:visible, a[onclick*='/ekp/scr/wiki/main/wikiMain']:visible, a.nta[title='위키']:visible, li.nt.nt_7 a.nta:text-is('위키'):visible, a.nta:has-text('위키'):visible",
+      "cursorOffset": {
+        "x": 35,
+        "y": 31
+      },
+      "clickCoords": {
+        "x": 1139,
+        "y": 86
+      },
+      "description": "'위키' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"javascript:void(0);\" title=\"위키\" class=\"nta\" onclick=\"GwMainMenu.fn.goPage('MNU12040925244048286569', 'https://gw.bc.ac.kr/ekp/scr/wiki/main/wikiMain','G', 'L', '', '');return false;\"> <i class=\"nti nti_wiki\"></i>위키 </a>",
+      "_lastHumanTarget": "위키"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'위키' 메뉴/링크 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "위키"
+    },
+    {
+      "type": "click",
+      "selector": "div#main_menu button[onclick*='GwMainMenu.fn.showAllMenuBox()']:visible, div#main_menu button.btn_svc_open[title='포탈 전체메뉴']:visible, div#main_menu button[title='포탈 전체메뉴']:visible, div#main_menu button[onclick*='GwMainMenu.fn.showAllMenuBox']:visible, div#main_menu > div.optn_btns > button.btn_svc_open:visible, div#main_menu button.btn_svc_open:has-text('포탈 전체메뉴'):visible, div#main_menu button.btn_svc_open:visible, button[onclick*='GwMainMenu.fn.showAllMenuBox()']:visible, button.btn_svc_open[title='포탈 전체메뉴']:visible, button[title='포탈 전체메뉴']:visible, button[onclick*='GwMainMenu.fn.showAllMenuBox']:visible",
+      "cursorOffset": {
+        "x": 25,
+        "y": 19
+      },
+      "clickCoords": {
+        "x": 1364,
+        "y": 79
+      },
+      "description": "'포탈 전체메뉴' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" title=\"포탈 전체메뉴\" onclick=\"GwMainMenu.fn.showAllMenuBox();return false;\" class=\"btn_svc_open\"><span>포탈 전체메뉴</span></button>",
+      "_lastHumanTarget": "포탈 전체메뉴"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'포탈 전체메뉴' 버튼 반응 대기",
+      "_lastHumanTarget": "포탈 전체메뉴"
+    },
+    {
+      "type": "click",
+      "selector": "div#all_svc_inner a[title='스마트워크'][onclick*='/ekp/scr/smw/smwWorkMain']:visible, div#all_svc_inner a[title='스마트워크']:visible, div#all_svc_inner a[onclick*='/ekp/scr/smw/smwWorkMain']:visible, a[onclick*='/ekp/scr/smw/smwWorkMain']:visible, div.svc_tit a:has-text('스마트워크'):visible, a[title='스마트워크']:visible",
+      "cursorOffset": {
+        "x": 51,
+        "y": 9
+      },
+      "clickCoords": {
+        "x": 1120,
+        "y": 326
+      },
+      "description": "'스마트워크' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"if(GwMainMenu.fn.checkedEditMode()){GwMainMenu.fn.goPage('MNU12040924012363598265','https://gw.bc.ac.kr/ekp/scr/smw/smwWorkMain','G','L','null','null');}return false;\" title=\"스마트워크\"><i class=\"nti nti_work _punchHandle\"></i>스마트워크</a>",
+      "_lastHumanTarget": "스마트워크"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'스마트워크' 메뉴/링크 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "스마트워크"
+    },
+    {
+      "type": "click",
+      "selector": "div#main_menu button[onclick*='GwMainMenu.fn.showAllMenuBox()']:visible, div#main_menu button.btn_svc_open[title='포탈 전체메뉴']:visible, div#main_menu button[title='포탈 전체메뉴']:visible, div#main_menu button[onclick*='GwMainMenu.fn.showAllMenuBox']:visible, div#main_menu > div.optn_btns > button.btn_svc_open:visible, div#main_menu button.btn_svc_open:has-text('포탈 전체메뉴'):visible, div#main_menu button.btn_svc_open:visible, button[onclick*='GwMainMenu.fn.showAllMenuBox()']:visible, button.btn_svc_open[title='포탈 전체메뉴']:visible, button[title='포탈 전체메뉴']:visible, button[onclick*='GwMainMenu.fn.showAllMenuBox']:visible",
+      "cursorOffset": {
+        "x": 40,
+        "y": 29
+      },
+      "clickCoords": {
+        "x": 1379,
+        "y": 89
+      },
+      "description": "'포탈 전체메뉴' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" title=\"포탈 전체메뉴\" onclick=\"GwMainMenu.fn.showAllMenuBox();return false;\" class=\"btn_svc_open\"><span>포탈 전체메뉴</span></button>",
+      "_lastHumanTarget": "포탈 전체메뉴"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'포탈 전체메뉴' 버튼 반응 대기",
+      "_lastHumanTarget": "포탈 전체메뉴"
+    },
+    {
+      "type": "click",
+      "selector": "div#all_svc_inner a[title='태스크보드'][onclick*='/ekp/scr/agl/aglMain']:visible, div#all_svc_inner a[title='태스크보드']:visible, div#all_svc_inner a[onclick*='/ekp/scr/agl/aglMain']:visible, a[onclick*='/ekp/scr/agl/aglMain']:visible, div.svc_tit a:has-text('태스크보드'):visible, a[title='태스크보드']:visible",
+      "cursorOffset": {
+        "x": 89,
+        "y": 19
+      },
+      "clickCoords": {
+        "x": 962,
+        "y": 336
+      },
+      "description": "'태스크보드' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"if(GwMainMenu.fn.checkedEditMode()){GwMainMenu.fn.goPage('MNU12040924383733611546','https://gw.bc.ac.kr/ekp/scr/agl/aglMain','G','L','null','null');}return false;\" title=\"태스크보드\"><i class=\"nti nti_agl _punchHandle\"></i>태스크보드</a>",
+      "_lastHumanTarget": "태스크보드"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'태스크보드' 메뉴/링크 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "태스크보드"
+    },
+    {
+      "type": "click",
+      "selector": "div#main_menu button[onclick*='GwMainMenu.fn.showAllMenuBox()']:visible, div#main_menu button.btn_svc_open[title='포탈 전체메뉴']:visible, div#main_menu button[title='포탈 전체메뉴']:visible, div#main_menu button[onclick*='GwMainMenu.fn.showAllMenuBox']:visible, div#main_menu > div.optn_btns > button.btn_svc_open:visible, div#main_menu button.btn_svc_open:has-text('포탈 전체메뉴'):visible, div#main_menu button.btn_svc_open:visible, button[onclick*='GwMainMenu.fn.showAllMenuBox()']:visible, button.btn_svc_open[title='포탈 전체메뉴']:visible, button[title='포탈 전체메뉴']:visible, button[onclick*='GwMainMenu.fn.showAllMenuBox']:visible",
+      "cursorOffset": {
+        "x": 31,
+        "y": 40
+      },
+      "clickCoords": {
+        "x": 1370,
+        "y": 100
+      },
+      "description": "'포탈 전체메뉴' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" title=\"포탈 전체메뉴\" onclick=\"GwMainMenu.fn.showAllMenuBox();return false;\" class=\"btn_svc_open\"><span>포탈 전체메뉴</span></button>",
+      "_lastHumanTarget": "포탈 전체메뉴"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'포탈 전체메뉴' 버튼 반응 대기",
+      "_lastHumanTarget": "포탈 전체메뉴"
+    },
+    {
+      "type": "click",
+      "selector": "div#all_svc_inner a[title='문서관리'][onclick*='/ekp/scr/doc/board/docMain']:visible, div#all_svc_inner a[title='문서관리']:visible, div#all_svc_inner a[onclick*='/ekp/scr/doc/board/docMain']:visible, a[onclick*='/ekp/scr/doc/board/docMain']:visible, div.svc_tit a:has-text('문서관리'):visible, a[title='문서관리']:visible",
+      "cursorOffset": {
+        "x": 62,
+        "y": 10
+      },
+      "clickCoords": {
+        "x": 542,
+        "y": 402
+      },
+      "description": "'문서관리' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"if(GwMainMenu.fn.checkedEditMode()){GwMainMenu.fn.goPage('MNU12040921255950236740','https://gw.bc.ac.kr/ekp/scr/doc/board/docMain','G','L','0','0');}return false;\" title=\"문서관리\"><i class=\"nti nti_doc _punchHandle\"></i>문서관리</a>",
+      "_lastHumanTarget": "문서관리"
+    },
+    {
+      "type": "wait",
+      "ms": 3100,
+      "description": "'문서관리' 메뉴/링크 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "문서관리"
+    },
+    {
+      "type": "click",
+      "selector": "a.sub_tp._atcl[data-atcl-no='100038']:visible, a[data-atcl-no='100038']:visible, a.sub_tp._atcl[data-brd-id='DB178218994699749']:visible, a[data-brd-id='DB178218994699749']:visible, a.sub_tp._atcl[data-grp-id='C100160111']:visible, a[data-grp-id='C100160111']:visible, span.sub.el a.sub_tp._atcl:has-text('사용자매뉴얼.20.모바일.pptx'):visible, a.sub_tp._atcl:has-text('사용자매뉴얼.20.모바일.pptx'):visible, a.sub_tp[title='사용자매뉴얼.20.모바일.pptx']:visible, a[title='사용자매뉴얼.20.모바일.pptx']:visible, a.sub_tp._atcl[title='사용자매뉴얼.20.모바일.pptx']:visible",
+      "cursorOffset": {
+        "x": 86,
+        "y": 14
+      },
+      "clickCoords": {
+        "x": 583,
+        "y": 287
+      },
+      "description": "'사용자매뉴얼.20.모바일.pptx' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" title=\"사용자매뉴얼.20.모바일.pptx\" class=\"sub_tp _atcl\" data-atcl-no=\"100038\" data-brd-id=\"DB178218994699749\" data-grp-id=\"C100160111\"> 사용자매뉴얼.20.모바일.pptx</a>",
+      "_lastHumanTarget": "사용자매뉴얼.20.모바일.pptx"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'사용자매뉴얼.20.모바일.pptx' 메뉴/링크 반응 대기",
+      "_lastHumanTarget": "사용자매뉴얼.20.모바일.pptx"
+    },
+    {
+      "type": "click",
+      "selector": "div#main_menu button[onclick*='GwMainMenu.fn.showAllMenuBox()']:visible, div#main_menu button.btn_svc_open[title='포탈 전체메뉴']:visible, div#main_menu button[title='포탈 전체메뉴']:visible, div#main_menu button[onclick*='GwMainMenu.fn.showAllMenuBox']:visible, div#main_menu > div.optn_btns > button.btn_svc_open:visible, div#main_menu button.btn_svc_open:has-text('포탈 전체메뉴'):visible, div#main_menu button.btn_svc_open:visible, button[onclick*='GwMainMenu.fn.showAllMenuBox()']:visible, button.btn_svc_open[title='포탈 전체메뉴']:visible, button[title='포탈 전체메뉴']:visible, button[onclick*='GwMainMenu.fn.showAllMenuBox']:visible",
+      "cursorOffset": {
+        "x": 24,
+        "y": 23
+      },
+      "clickCoords": {
+        "x": 1363,
+        "y": 83
+      },
+      "description": "'포탈 전체메뉴' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" title=\"포탈 전체메뉴\" onclick=\"GwMainMenu.fn.showAllMenuBox();return false;\" class=\"btn_svc_open\"><span>포탈 전체메뉴</span></button>",
+      "_lastHumanTarget": "포탈 전체메뉴"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'포탈 전체메뉴' 버튼 반응 대기",
+      "_lastHumanTarget": "포탈 전체메뉴"
+    },
+    {
+      "type": "click",
+      "selector": "div#all_svc_inner a[title='AI Chat'][onclick*='/ekp/view/ai/cmmAiChatMain']:visible, div#all_svc_inner a[title='AI Chat']:visible, div#all_svc_inner a[onclick*='/ekp/view/ai/cmmAiChatMain']:visible, a[onclick*='/ekp/view/ai/cmmAiChatMain']:visible, div.svc_tit a:has-text('AI Chat'):visible, a[title='AI Chat']:visible",
+      "cursorOffset": {
+        "x": 40,
+        "y": 18
+      },
+      "clickCoords": {
+        "x": 717,
+        "y": 560
+      },
+      "description": "'AI Chat' 메뉴/링크 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<a href=\"#\" onclick=\"if(GwMainMenu.fn.checkedEditMode()){GwMainMenu.fn.goPage('MNU36268734857158169167','https://gw.bc.ac.kr/ekp/view/ai/cmmAiChatMain','P','L','null','null');}return false;\" title=\"AI Chat\"><i class=\"nti nti_1 _punchHandle\"></i>AI Chat</a>",
+      "_lastHumanTarget": "AI Chat"
+    },
+    {
+      "type": "wait",
+      "ms": 1600,
+      "description": "'AI Chat' 메뉴/링크 클릭 후 화면/팝업 전환 대기",
+      "_lastHumanTarget": "AI Chat"
+    },
+    {
+      "type": "click",
+      "selector": "button[name='topMenu_aiChat']:visible, div#lnb button.btn_ai:has-text('AI Chat'):visible, div#lnb button.btn_ai:visible, button.btn_ai[title='AI Chat']:visible, button[title='AI Chat']:visible, div#lnb button.btn_ai[title='AI Chat']:visible, div#lnb button[title='AI Chat']:visible, div#lnb > div.nav:nth-of-type(1) > div.quick_menu:nth-of-type(3) > ul > li.qm_ai:nth-of-type(3) > button.btn_ai:visible",
+      "cursorOffset": {
+        "x": 41,
+        "y": 21
+      },
+      "clickCoords": {
+        "x": 1686,
+        "y": 81
+      },
+      "description": "'AI Chat' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" title=\"AI Chat\" class=\"btn_ai\" name=\"topMenu_aiChat\"><span>AI Chat</span></button>",
+      "_lastHumanTarget": "AI Chat"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'AI Chat' 버튼 반응 대기",
+      "_lastHumanTarget": "AI Chat"
+    },
+    {
+      "type": "click",
+      "selector": "div#cmmAiChat_topMenu button._close:visible, div#cmmAiChat_topMenu > button.btn_close._close._toolTip:nth-of-type(4):visible, div#cmmAiChat_topMenu div.optn button.btn_close._close._toolTip:visible, div#cmmAiChat_topMenu button.btn_close._close._toolTip:visible, div#cmmAiChat_topMenu button.btn_close._close:has-text('닫기'):visible, div.optn button.btn_close._close._toolTip:visible, button.btn_close._close._toolTip:visible, button._close:visible",
+      "iframe": "iframe#chat_iframe",
+      "cursorOffset": {
+        "x": 14,
+        "y": 10
+      },
+      "clickCoords": {
+        "x": 330,
+        "y": 22
+      },
+      "description": "'닫기' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"btn_close _close _toolTip\" style=\"\"><span>닫기</span></button>",
+      "_lastHumanTarget": "닫기"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'닫기' 버튼 반응 대기",
+      "_lastHumanTarget": "닫기"
+    },
+    {
+      "type": "click",
+      "selector": "button.btn_notify[title='통합알림']:visible, button[title='통합알림']:visible, button[name='topMenu_notification']:visible, li.qm_noti button.btn_notify:text-is('3'):visible, button.btn_notify:has-text('알림 3'):visible",
+      "cursorOffset": {
+        "x": 14,
+        "y": 29
+      },
+      "clickCoords": {
+        "x": 1704,
+        "y": 89
+      },
+      "description": "'3' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" name=\"topMenu_notification\" title=\"통합알림\" class=\"btn_notify\"> <span>알림</span> <i class=\"count\" style=\"\"><em>3</em></i> </button>",
+      "_lastHumanTarget": "3"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'3' 버튼 반응 대기",
+      "_lastHumanTarget": "3"
+    },
+    {
+      "type": "click",
+      "selector": "div#ntcnNotification_notixBox_MSG01m6cs9yh8aaa354dvy9x5fyrd button._btnLink[data-link-url='https://gw.bc.ac.kr/ekp/view/eml/emlMailViewPopup?boxType=RESERV_MAIL_LIST&amp;mailId=91318241918134404168']:visible, button._btnLink[data-link-url='https://gw.bc.ac.kr/ekp/view/eml/emlMailViewPopup?boxType=RESERV_MAIL_LIST&amp;mailId=91318241918134404168']:visible, div#ntcnNotification_notixBox_MSG01m6cs9yh8aaa354dvy9x5fyrd button[data-link-url='https://gw.bc.ac.kr/ekp/view/eml/emlMailViewPopup?boxType=RESERV_MAIL_LIST&amp;mailId=91318241918134404168']:visible, button[data-link-url='https://gw.bc.ac.kr/ekp/view/eml/emlMailViewPopup?boxType=RESERV_MAIL_LIST&amp;mailId=91318241918134404168']:visible, div#ntcnNotification_notixBox_MSG01m6cs9yh8aaa354dvy9x5fyrd button._btnLink:visible, div#ntcnNotification_notixBox_MSG01m6cs9yh8aaa354dvy9x5fyrd > div.noti_btn:nth-of-type(6) > button._btnLink.btn.btn_block:visible, div#ntcnNotification_notixBox_MSG01m6cs9yh8aaa354dvy9x5fyrd button._btnLink.btn.btn_block:has-text('조회'):visible, div#ntcnNotification_notixBox_MSG01m6cs9yh8aaa354dvy9x5fyrd button._btnLink:has-text('조회'):visible",
+      "cursorOffset": {
+        "x": 187,
+        "y": 6
+      },
+      "clickCoords": {
+        "x": 1563,
+        "y": 679
+      },
+      "description": "'조회' 버튼 클릭",
+      "recordedByEyedropper": true,
+      "targetHtml": "<button type=\"button\" class=\"btn btn_block _btnLink\" data-link-url=\"https://gw.bc.ac.kr/ekp/view/eml/emlMailViewPopup?boxType=RESERV_MAIL_LIST&amp;mailId=91318241918134404168\" data-link-param=\"\">조회</button>",
+      "_lastHumanTarget": "조회"
+    },
+    {
+      "type": "wait",
+      "ms": 1000,
+      "description": "'조회' 버튼 반응 대기",
+      "_lastHumanTarget": "조회"
+    },
+    {
+      "type": "wait",
+      "ms": 2000,
+      "description": "최종 시연 결과 화면 클로즈업 확인 대기",
+      "_lastHumanTarget": ""
+    }
+  ]
+}

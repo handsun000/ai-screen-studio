@@ -1,0 +1,199 @@
+{
+  "totalDurationFrames": 2063,
+  "rawDurationFrames": 2063,
+  "fps": 60,
+  "defaultZoom": 1,
+  "segments": [
+    {
+      "momentId": 2,
+      "startFrame": 955,
+      "endFrame": 1240,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 702,
+        "y": 124
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (702, 82) + Click at (702, 167)"
+    },
+    {
+      "momentId": 6,
+      "startFrame": 1366,
+      "endFrame": 1571,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 86,
+        "y": 331
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (88, 246) + Click at (85, 416)"
+    },
+    {
+      "momentId": 10,
+      "startFrame": 1650,
+      "endFrame": 1858,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1784,
+        "y": 148
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Typing: 공지 + Click at (1821, 140)"
+    }
+  ],
+  "timeRegions": [
+    {
+      "videoStartFrame": 0,
+      "videoEndFrame": 12,
+      "compStartFrame": 0,
+      "compEndFrame": 12,
+      "speed": 1
+    },
+    {
+      "videoStartFrame": 12,
+      "videoEndFrame": 952,
+      "compStartFrame": 12,
+      "compEndFrame": 952,
+      "speed": 1,
+      "cueId": 1
+    },
+    {
+      "videoStartFrame": 952,
+      "videoEndFrame": 1508,
+      "compStartFrame": 952,
+      "compEndFrame": 1508,
+      "speed": 1,
+      "cueId": 2
+    },
+    {
+      "videoStartFrame": 1508,
+      "videoEndFrame": 2063,
+      "compStartFrame": 1508,
+      "compEndFrame": 2063,
+      "speed": 1,
+      "cueId": 3
+    }
+  ],
+  "narration": {
+    "slug": "unison-board",
+    "voice": "ko-KR-SunHiNeural",
+    "rate": "+5%",
+    "pitch": "+0Hz",
+    "style": "manual",
+    "enabled": true,
+    "showSubtitles": true,
+    "showIntroToc": true,
+    "introToc": {
+      "enabled": true,
+      "badge": "게시판 사용 매뉴얼",
+      "title": "게시판 메뉴 이동 및 게시글 조회 안내",
+      "summary": "사내 공지 및 주요 게시글을 분류별로 조회하고 검색하는 기능을 안내합니다.",
+      "items": [
+        {
+          "title": "게시판 접속 및 주요 메뉴 확인",
+          "description": "게시판 모듈에 접속하여 공지사항과 최근 게시함을 조회하는 방법을 안내합니다."
+        },
+        {
+          "title": "중요게시글 분류별 모아보기",
+          "description": "별표 표시하거나 주요하게 지정된 중요게시글만 따로 모아 확인하는 기능을 소개합니다."
+        },
+        {
+          "title": "키워드 기반 게시글 검색",
+          "description": "검색어를 입력하여 원하는 주제의 게시글을 빠르게 찾아내는 방법을 안내합니다."
+        }
+      ],
+      "siteBrand": {
+        "hostKey": "gwdev.unison.co.kr",
+        "originUrl": "https://gwdev.unison.co.kr",
+        "siteName": "유니슨 그룹",
+        "manualBadge": "그룹웨어 사용 매뉴얼",
+        "tagline": "",
+        "primaryColor": "#218CF3",
+        "secondaryColor": "#1C6AB9",
+        "accentColor": "#35B5FF",
+        "logoUrl": "/assets/sites/gwdev.unison.co.kr/logo.png",
+        "heroThumbUrl": "/assets/sites/gwdev.unison.co.kr/hero.png",
+        "createdAt": "2026-10-31T15:31:25.841Z"
+      }
+    },
+    "siteBrand": {
+      "hostKey": "gwdev.unison.co.kr",
+      "originUrl": "https://gwdev.unison.co.kr",
+      "siteName": "유니슨 그룹",
+      "manualBadge": "그룹웨어 사용 매뉴얼",
+      "tagline": "",
+      "primaryColor": "#218CF3",
+      "secondaryColor": "#1C6AB9",
+      "accentColor": "#35B5FF",
+      "logoUrl": "/assets/sites/gwdev.unison.co.kr/logo.png",
+      "heroThumbUrl": "/assets/sites/gwdev.unison.co.kr/hero.png",
+      "createdAt": "2026-10-31T15:31:25.841Z"
+    },
+    "introBakedIntoVideo": true,
+    "bakedIntroDurationMs": 13512,
+    "updatedAt": "2026-11-03T08:52:47.473Z",
+    "cues": [
+      {
+        "id": 1,
+        "startMs": 200,
+        "endMs": 13112,
+        "videoStartMs": 200,
+        "videoEndMs": 15861,
+        "extraHoldMs": 0,
+        "isIntro": true,
+        "text": "게시판은 전사 공지사항과 부서별 업무 자료를 공유하고 소통하는 공간입니다. 주요 게시함별 열람 방법과 키워드 검색으로 원하는 게시글을 빠르게 찾는 방법을 알아보겠습니다.",
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|게시판은 전사 공지사항과 부서별 업무 자료를 공유하고 소통하는 공간입니다. 주요 게시함별 열람 방법과 키워드 검색으로 원하는 게시글을 빠르게 찾는 방법을 알아보겠습니다.",
+        "audioDurationMs": 12912,
+        "audioFile": "narration/unison-board/cue-01.mp3",
+        "compStartMs": 200,
+        "compEndMs": 13112
+      },
+      {
+        "id": 2,
+        "startMs": 15867,
+        "endMs": 24843,
+        "videoStartMs": 15861,
+        "videoEndMs": 25134,
+        "extraHoldMs": 0,
+        "isIntro": false,
+        "text": "사내 소식을 공유하는 게시판 메뉴로 이동해 전사 공지사항과 최신 등록 글을 모아 보여주는 최근 게시함을 차례로 확인합니다.",
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|사내 소식을 공유하는 게시판 메뉴로 이동해 전사 공지사항과 최신 등록 글을 모아 보여주는 최근 게시함을 차례로 확인합니다.",
+        "audioDurationMs": 8976,
+        "audioFile": "narration/unison-board/cue-02.mp3",
+        "compStartMs": 15867,
+        "compEndMs": 24843
+      },
+      {
+        "id": 3,
+        "startMs": 25133,
+        "endMs": 32837,
+        "videoStartMs": 25134,
+        "videoEndMs": 34379,
+        "extraHoldMs": 0,
+        "isIntro": false,
+        "text": "주요 공지를 따로 관리하는 중요게시글 메뉴로 이동한 뒤 검색어를 입력해 원하는 게시글을 빠르게 조회합니다.",
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|주요 공지를 따로 관리하는 중요게시글 메뉴로 이동한 뒤 검색어를 입력해 원하는 게시글을 빠르게 조회합니다.",
+        "audioDurationMs": 7704,
+        "audioFile": "narration/unison-board/cue-03.mp3",
+        "compStartMs": 25133,
+        "compEndMs": 32837
+      }
+    ],
+    "_bakedSlideSig": "{\"layoutVersion\":\"contents-only-v2\",\"badge\":\"게시판 사용 매뉴얼\",\"title\":\"게시판 메뉴 이동 및 게시글 조회 안내\",\"summary\":\"사내 공지 및 주요 게시글을 분류별로 조회하고 검색하는 기능을 안내합니다.\",\"items\":[{\"title\":\"게시판 접속 및 주요 메뉴 확인\",\"description\":\"게시판 모듈에 접속하여 공지사항과 최근 게시함을 조회하는 방법을 안내합니다.\"},{\"title\":\"중요게시글 분류별 모아보기\",\"description\":\"별표 표시하거나 주요하게 지정된 중요게시글만 따로 모아 확인하는 기능을 소개합니다.\"},{\"title\":\"키워드 기반 게시글 검색\",\"description\":\"검색어를 입력하여 원하는 주제의 게시글을 빠르게 찾아내는 방법을 안내합니다.\"}],\"hostKey\":\"gwdev.unison.co.kr\",\"primaryColor\":\"#218CF3\",\"cue0Text\":\"게시판은 전사 공지사항과 부서별 업무 자료를 공유하고 소통하는 공간입니다. 주요 게시함별 열람 방법과 키워드 검색으로 원하는 게시글을 빠르게 찾는 방법을 알아보겠습니다.\",\"cue0Sig\":\"ko-KR-SunHiNeural|+5%|+0Hz|게시판은 전사 공지사항과 부서별 업무 자료를 공유하고 소통하는 공간입니다. 주요 게시함별 열람 방법과 키워드 검색으로 원하는 게시글을 빠르게 찾는 방법을 알아보겠습니다.\",\"introDurationMs\":13512}"
+  }
+}

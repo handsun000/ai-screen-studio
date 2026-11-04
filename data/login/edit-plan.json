@@ -1,0 +1,529 @@
+{
+  "totalDurationFrames": 6761,
+  "rawDurationFrames": 6687,
+  "fps": 60,
+  "defaultZoom": 1,
+  "segments": [
+    {
+      "momentId": 2,
+      "startFrame": 1096,
+      "endFrame": 1463,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 946,
+        "y": 167
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Typing: test_prof_two + typing: tkancjDkagh01@) + Click at (1017, 206)"
+    },
+    {
+      "momentId": 8,
+      "startFrame": 1653,
+      "endFrame": 1710,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1559,
+        "y": 19
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1559, 19)"
+    },
+    {
+      "momentId": 10,
+      "startFrame": 1800,
+      "endFrame": 2070,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1099,
+        "y": 439
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1065, 470) + Click at (1133, 408)"
+    },
+    {
+      "momentId": 14,
+      "startFrame": 2161,
+      "endFrame": 2743,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 636,
+        "y": 174
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (500, 74) + Click at (708, 84) + Click at (538, 274) + Click at (772, 87)"
+    },
+    {
+      "momentId": 22,
+      "startFrame": 3164,
+      "endFrame": 3221,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 923,
+        "y": 97
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (923, 97)"
+    },
+    {
+      "momentId": 24,
+      "startFrame": 3729,
+      "endFrame": 4893,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1170,
+        "y": 208
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1059, 81) + Click at (1139, 86) + Click at (1364, 79) + Click at (1120, 326) + Click at (1379, 89) + Click at (962, 336) + Click at (1370, 100)"
+    },
+    {
+      "momentId": 38,
+      "startFrame": 4986,
+      "endFrame": 5319,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 563,
+        "y": 344
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (543, 402) + Click at (583, 287)"
+    },
+    {
+      "momentId": 42,
+      "startFrame": 5545,
+      "endFrame": 5602,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1363,
+        "y": 83
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1363, 83)"
+    },
+    {
+      "momentId": 44,
+      "startFrame": 5697,
+      "endFrame": 5754,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 717,
+        "y": 560
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (717, 560)"
+    },
+    {
+      "momentId": 46,
+      "startFrame": 5901,
+      "endFrame": 6261,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1791,
+        "y": 106
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1686, 81) + Click at (1896, 132) + Click at (1704, 89)"
+    },
+    {
+      "momentId": 52,
+      "startFrame": 6381,
+      "endFrame": 6468,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1563,
+        "y": 550
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1563, 550)"
+    }
+  ],
+  "timeRegions": [
+    {
+      "videoStartFrame": 0,
+      "videoEndFrame": 12,
+      "compStartFrame": 0,
+      "compEndFrame": 12,
+      "speed": 1
+    },
+    {
+      "videoStartFrame": 12,
+      "videoEndFrame": 1116,
+      "compStartFrame": 12,
+      "compEndFrame": 1116,
+      "speed": 1,
+      "cueId": 1
+    },
+    {
+      "videoStartFrame": 1116,
+      "videoEndFrame": 1674,
+      "compStartFrame": 1116,
+      "compEndFrame": 1674,
+      "speed": 1,
+      "cueId": 2
+    },
+    {
+      "videoStartFrame": 1674,
+      "videoEndFrame": 2358,
+      "compStartFrame": 1674,
+      "compEndFrame": 2358,
+      "speed": 1,
+      "cueId": 3
+    },
+    {
+      "videoStartFrame": 2358,
+      "videoEndFrame": 3174,
+      "compStartFrame": 2358,
+      "compEndFrame": 3174,
+      "speed": 1,
+      "cueId": 4
+    },
+    {
+      "videoStartFrame": 3174,
+      "videoEndFrame": 3750,
+      "compStartFrame": 3174,
+      "compEndFrame": 3750,
+      "speed": 1,
+      "cueId": 5
+    },
+    {
+      "videoStartFrame": 3750,
+      "videoEndFrame": 4306,
+      "compStartFrame": 3750,
+      "compEndFrame": 4306,
+      "speed": 1,
+      "cueId": 6
+    },
+    {
+      "videoStartFrame": 4306,
+      "videoEndFrame": 4311,
+      "compStartFrame": 4306,
+      "compEndFrame": 4317,
+      "speed": 0.45455,
+      "cueId": 6
+    },
+    {
+      "videoStartFrame": 4311,
+      "videoEndFrame": 4338,
+      "compStartFrame": 4317,
+      "compEndFrame": 4344,
+      "speed": 1,
+      "cueId": 6
+    },
+    {
+      "videoStartFrame": 4338,
+      "videoEndFrame": 4854,
+      "compStartFrame": 4344,
+      "compEndFrame": 4860,
+      "speed": 1,
+      "cueId": 7
+    },
+    {
+      "videoStartFrame": 4854,
+      "videoEndFrame": 5562,
+      "compStartFrame": 4860,
+      "compEndFrame": 5568,
+      "speed": 1,
+      "cueId": 8
+    },
+    {
+      "videoStartFrame": 5562,
+      "videoEndFrame": 6222,
+      "compStartFrame": 5568,
+      "compEndFrame": 6228,
+      "speed": 1,
+      "cueId": 9
+    },
+    {
+      "videoStartFrame": 6222,
+      "videoEndFrame": 6655,
+      "compStartFrame": 6228,
+      "compEndFrame": 6661,
+      "speed": 1,
+      "cueId": 10
+    },
+    {
+      "videoStartFrame": 6655,
+      "videoEndFrame": 6660,
+      "compStartFrame": 6661,
+      "compEndFrame": 6734,
+      "speed": 0.06849,
+      "cueId": 10
+    },
+    {
+      "videoStartFrame": 6660,
+      "videoEndFrame": 6687,
+      "compStartFrame": 6734,
+      "compEndFrame": 6761,
+      "speed": 1,
+      "cueId": 10
+    }
+  ],
+  "narration": {
+    "slug": "login",
+    "style": "manual",
+    "voice": "ko-KR-SunHiNeural",
+    "pitch": "+0Hz",
+    "rate": "+5%",
+    "enabled": true,
+    "showSubtitles": true,
+    "showIntroToc": true,
+    "introToc": {
+      "enabled": true,
+      "badge": "그룹웨어 사용 매뉴얼",
+      "title": "그룹웨어 접속 및 기본 화면 안내",
+      "summary": "그룹웨어 접속 방법과 주요 업무 메뉴 구성을 안내합니다.",
+      "items": [
+        {
+          "title": "그룹웨어 로그인 및 전용 앱 설치",
+          "description": "계정 로그인 방법과 PC 메신저 등 부가 연동 프로그램의 설치 경로를 소개합니다."
+        },
+        {
+          "title": "상단 기본 업무 메뉴 둘러보기",
+          "description": "결재, 전자우편, 공지사항, 기록물철, 일정관리, 위키 등 주요 포털 메뉴 구성을 안내합니다."
+        },
+        {
+          "title": "전체메뉴 및 협업·문서관리 이동",
+          "description": "포탈 전체메뉴를 통한 스마트워크, 태스크보드, 문서관리 모듈 이동 방법을 소개합니다."
+        },
+        {
+          "title": "AI Chat 및 실시간 통합알림 활용",
+          "description": "대화형 AI Chat 실행 방법과 우측 상단 실시간 통합알림 확인 기능을 안내합니다."
+        }
+      ],
+      "siteBrand": {
+        "hostKey": "gw.bc.ac.kr",
+        "originUrl": "https://gw.bc.ac.kr/ekp/main/home/homGwMain",
+        "siteName": "부천대학교",
+        "manualBadge": "그룹웨어 사용 매뉴얼",
+        "tagline": "",
+        "primaryColor": "#FF9600",
+        "secondaryColor": "#D67200",
+        "accentColor": "#FFC01C",
+        "logoUrl": "/assets/sites/gw.bc.ac.kr/logo.png",
+        "heroThumbUrl": "/assets/sites/gw.bc.ac.kr/hero.png",
+        "createdAt": "2026-10-31T11:43:57.743Z"
+      }
+    },
+    "siteBrand": {
+      "hostKey": "gw.bc.ac.kr",
+      "originUrl": "https://gw.bc.ac.kr/ekp/main/home/homGwMain",
+      "siteName": "부천대학교",
+      "manualBadge": "그룹웨어 사용 매뉴얼",
+      "tagline": "",
+      "primaryColor": "#FF9600",
+      "secondaryColor": "#D67200",
+      "accentColor": "#FFC01C",
+      "logoUrl": "/assets/sites/gw.bc.ac.kr/logo.png",
+      "heroThumbUrl": "/assets/sites/gw.bc.ac.kr/hero.png",
+      "createdAt": "2026-10-31T11:43:57.743Z"
+    },
+    "introBakedIntoVideo": true,
+    "bakedIntroDurationMs": 15984,
+    "_bakedSlideSig": "{\"layoutVersion\":\"contents-only-v2\",\"badge\":\"그룹웨어 사용 매뉴얼\",\"title\":\"그룹웨어 접속 및 기본 화면 안내\",\"summary\":\"그룹웨어 접속 방법과 주요 업무 메뉴 구성을 안내합니다.\",\"items\":[{\"title\":\"그룹웨어 로그인 및 전용 앱 설치\",\"description\":\"계정 로그인 방법과 PC 메신저 등 부가 연동 프로그램의 설치 경로를 소개합니다.\"},{\"title\":\"상단 기본 업무 메뉴 둘러보기\",\"description\":\"결재, 전자우편, 공지사항, 기록물철, 일정관리, 위키 등 주요 포털 메뉴 구성을 안내합니다.\"},{\"title\":\"전체메뉴 및 협업·문서관리 이동\",\"description\":\"포탈 전체메뉴를 통한 스마트워크, 태스크보드, 문서관리 모듈 이동 방법을 소개합니다.\"},{\"title\":\"AI Chat 및 실시간 통합알림 활용\",\"description\":\"대화형 AI Chat 실행 방법과 우측 상단 실시간 통합알림 확인 기능을 안내합니다.\"}],\"hostKey\":\"gw.bc.ac.kr\",\"primaryColor\":\"#FF9600\",\"cue0Text\":\"그룹웨어는 전자결재와 메일, 일정, 문서관리 등 사내 모든 업무와 협업을 한곳에서 처리하는 통합 업무 공간입니다. 로그인 및 프로그램 설치부터 주요 업무 메뉴와 통합알림 활용법까지 차례대로 안내합니다.\",\"cue0Sig\":\"ko-KR-SunHiNeural|+5%|+0Hz|그룹웨어는 전자결재와 메일, 일정, 문서관리 등 사내 모든 업무와 협업을 한곳에서 처리하는 통합 업무 공간입니다. 로그인 및 프로그램 설치부터 주요 업무 메뉴와 통합알림 활용법까지 차례대로 안내합니다.\",\"introDurationMs\":15984}",
+    "updatedAt": "2026-11-03T08:52:47.441Z",
+    "cues": [
+      {
+        "videoStartMs": 200,
+        "startMs": 200,
+        "endMs": 15584,
+        "text": "그룹웨어는 전자결재와 메일, 일정, 문서관리 등 사내 모든 업무와 협업을 한곳에서 처리하는 통합 업무 공간입니다. 로그인 및 프로그램 설치부터 주요 업무 메뉴와 통합알림 활용법까지 차례대로 안내합니다.",
+        "isIntro": true,
+        "extraHoldMs": 0,
+        "id": 1,
+        "videoEndMs": 18596,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|그룹웨어는 전자결재와 메일, 일정, 문서관리 등 사내 모든 업무와 협업을 한곳에서 처리하는 통합 업무 공간입니다. 로그인 및 프로그램 설치부터 주요 업무 메뉴와 통합알림 활용법까지 차례대로 안내합니다.",
+        "audioDurationMs": 15384,
+        "audioFile": "narration/login/cue-01.mp3",
+        "compStartMs": 200,
+        "compEndMs": 15584
+      },
+      {
+        "videoStartMs": 18596,
+        "startMs": 18600,
+        "endMs": 24864,
+        "text": "부여받은 사용자 아이디와 비밀번호를 입력해 그룹웨어 메인 포털에 접속합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/login/cue-02.mp3",
+        "audioDurationMs": 6264,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|부여받은 사용자 아이디와 비밀번호를 입력해 그룹웨어 메인 포털에 접속합니다.",
+        "id": 2,
+        "videoEndMs": 27896,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 18600,
+        "compEndMs": 24864
+      },
+      {
+        "videoStartMs": 27896,
+        "startMs": 27900,
+        "endMs": 36444,
+        "text": "PC 메신저 등 부가 도구를 내려받는 설치프로그램 팝업을 확인한 뒤, 기안과 승인을 처리하는 결재 메뉴로 이동합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/login/cue-03.mp3",
+        "audioDurationMs": 8544,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|PC 메신저 등 부가 도구를 내려받는 설치프로그램 팝업을 확인한 뒤, 기안과 승인을 처리하는 결재 메뉴로 이동합니다.",
+        "id": 3,
+        "videoEndMs": 39296,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 27900,
+        "compEndMs": 36444
+      },
+      {
+        "videoStartMs": 39296,
+        "startMs": 39300,
+        "endMs": 47748,
+        "text": "업무 메일을 수발신하는 전자우편에서 메일 본문을 열람하고, 사내 주요 소식을 전하는 공지사항 메뉴를 확인합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/login/cue-04.mp3",
+        "audioDurationMs": 8448,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|업무 메일을 수발신하는 전자우편에서 메일 본문을 열람하고, 사내 주요 소식을 전하는 공지사항 메뉴를 확인합니다.",
+        "id": 4,
+        "videoEndMs": 52896,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 39300,
+        "compEndMs": 47748
+      },
+      {
+        "videoStartMs": 52896,
+        "startMs": 52900,
+        "endMs": 61372,
+        "text": "부서 보존 문서와 결재 완료 기록물을 체계적으로 분류해 보관하는 기록물철 메뉴에 접속하여 문서 현황을 조회합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/login/cue-05.mp3",
+        "audioDurationMs": 8472,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|부서 보존 문서와 결재 완료 기록물을 체계적으로 분류해 보관하는 기록물철 메뉴에 접속하여 문서 현황을 조회합니다.",
+        "id": 5,
+        "videoEndMs": 62496,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 52900,
+        "compEndMs": 61372
+      },
+      {
+        "videoStartMs": 62496,
+        "startMs": 62500,
+        "endMs": 72220,
+        "text": "개인·부서 일정을 공유하는 일정관리와 지식 공유 공간인 위키 메뉴입니다. 포탈 전체메뉴를 열어 전체 서비스를 확인합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/login/cue-06.mp3",
+        "audioDurationMs": 9720,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|개인·부서 일정을 공유하는 일정관리와 지식 공유 공간인 위키 메뉴입니다. 포탈 전체메뉴를 열어 전체 서비스를 확인합니다.",
+        "id": 6,
+        "videoEndMs": 72296,
+        "autoHoldMs": 100,
+        "effectiveDeltaMs": 100,
+        "playbackRate": 1,
+        "compStartMs": 62500,
+        "compEndMs": 72220
+      },
+      {
+        "videoStartMs": 72296,
+        "startMs": 72400,
+        "endMs": 79888,
+        "text": "맞춤형 업무 앱으로 협업을 돕는 스마트워크와 할 일을 보드 형태로 시각화해 관리하는 태스크보드 메뉴입니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/login/cue-07.mp3",
+        "audioDurationMs": 7488,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|맞춤형 업무 앱으로 협업을 돕는 스마트워크와 할 일을 보드 형태로 시각화해 관리하는 태스크보드 메뉴입니다.",
+        "id": 7,
+        "videoEndMs": 80896,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 72400,
+        "compEndMs": 79888
+      },
+      {
+        "videoStartMs": 80896,
+        "startMs": 81000,
+        "endMs": 87960,
+        "text": "사내 표준 규정과 업무 자료를 통합 보관하는 문서관리 메뉴로 이동해 필요한 문서를 조회합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/login/cue-08.mp3",
+        "audioDurationMs": 6960,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|사내 표준 규정과 업무 자료를 통합 보관하는 문서관리 메뉴로 이동해 필요한 문서를 조회합니다.",
+        "id": 8,
+        "videoEndMs": 92696,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 81000,
+        "compEndMs": 87960
+      },
+      {
+        "videoStartMs": 92696,
+        "startMs": 92800,
+        "endMs": 100984,
+        "text": "대화형 인공지능으로 업무 질의와 작성을 돕는 AI Chat을 전체메뉴 및 상단 바로가기 버튼으로 실행할 수 있습니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/login/cue-09.mp3",
+        "audioDurationMs": 8184,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|대화형 인공지능으로 업무 질의와 작성을 돕는 AI Chat을 전체메뉴 및 상단 바로가기 버튼으로 실행할 수 있습니다.",
+        "id": 9,
+        "videoEndMs": 103696,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 92800,
+        "compEndMs": 100984
+      },
+      {
+        "videoStartMs": 103696,
+        "startMs": 103800,
+        "endMs": 112416,
+        "text": "우측 상단 통합알림 아이콘을 눌러 새로 도착한 메일이나 결재 알림 내역을 확인하고 해당 문서 화면으로 즉시 이동합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/login/cue-10.mp3",
+        "audioDurationMs": 8616,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|우측 상단 통합알림 아이콘을 눌러 새로 도착한 메일이나 결재 알림 내역을 확인하고 해당 문서 화면으로 즉시 이동합니다.",
+        "id": 10,
+        "videoEndMs": 111451,
+        "autoHoldMs": 1121,
+        "effectiveDeltaMs": 1121,
+        "playbackRate": 1,
+        "compStartMs": 103800,
+        "compEndMs": 112416
+      }
+    ]
+  }
+}

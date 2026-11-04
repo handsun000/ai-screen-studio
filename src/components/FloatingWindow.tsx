@@ -5,6 +5,7 @@ interface FloatingWindowProps {
   height: number;
   windowWidth?: number;
   windowHeight?: number;
+  fullBleed?: boolean;
   children?: React.ReactNode;
 }
 
@@ -40,19 +41,22 @@ export const FloatingWindow: React.FC<FloatingWindowProps> = ({
   height,
   windowWidth = WINDOW_WIDTH,
   windowHeight = WINDOW_HEIGHT,
+  fullBleed = false,
   children,
 }) => {
+  const effectiveW = fullBleed ? width : windowWidth;
+  const effectiveH = fullBleed ? height : windowHeight;
   return (
     <div
       style={{
         position: "absolute",
-        left: (width - windowWidth) / 2,
-        top: (height - windowHeight) / 2,
-        width: windowWidth,
-        height: windowHeight,
-        borderRadius: WINDOW_BORDER_RADIUS,
+        left: (width - effectiveW) / 2,
+        top: (height - effectiveH) / 2,
+        width: effectiveW,
+        height: effectiveH,
+        borderRadius: fullBleed ? 0 : WINDOW_BORDER_RADIUS,
         overflow: "hidden",
-        boxShadow: "0 24px 80px rgba(0,0,0,0.5)",
+        boxShadow: fullBleed ? "none" : "0 24px 80px rgba(0,0,0,0.5)",
       }}
     >
       {children}

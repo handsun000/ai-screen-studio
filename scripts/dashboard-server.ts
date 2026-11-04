@@ -44,6 +44,11 @@ import {
   saveNarrationFile,
   synthesizeNarrationAudio,
 } from "../src/services/narrationService";
+import {
+  bakeOpeningSlideIntoRecording,
+  ensureRenderedBaseVideo,
+  fastApplyNarrationToRenderedMp4,
+} from "../src/services/slideVideoComposer";
 import { getAiUsageSummary, resetAiUsageStore } from "../src/services/aiUsageTracker";
 import { detectAvailableClis, generateAiContent } from "../src/services/aiClient";
 
@@ -56,6 +61,11 @@ const DATA_DIR = path.join(ROOT_DIR, "data");
 
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
+app.use("/api", (_req: Request, res: Response, next) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  next();
+});
 
 // 1. Health & Config Status API
 app.get("/api/status", (_req: Request, res: Response) => {
@@ -717,6 +727,7 @@ function streamMp4File(filePath: string, req: Request, res: Response) {
       "Accept-Ranges": "bytes",
       "Content-Length": chunksize,
       "Content-Type": "video/mp4",
+      "Cache-Control": "no-store, no-cache, must-revalidate",
     };
     res.writeHead(206, head);
     file.pipe(res);
@@ -724,6 +735,7 @@ function streamMp4File(filePath: string, req: Request, res: Response) {
     const head = {
       "Content-Length": fileSize,
       "Content-Type": "video/mp4",
+      "Cache-Control": "no-store, no-cache, must-revalidate",
     };
     res.writeHead(200, head);
     const file = fs.createReadStream(filePath);
@@ -781,7 +793,8 @@ app.get("/api/narration/:slug", (req: Request, res: Response) => {
 app.post("/api/narration/:slug/generate", async (req: Request, res: Response) => {
   try {
     const slug = req.params.slug as string;
-    const { voice, rate, pitch, style, enabled, showSubtitles } = req.body || {};
+    const { voice, rate, pitch, style, enabled, showSubtitles, showIntroToc } = req.body || {};
+    await ensureRenderedBaseVideo(slug).catch(() => {});
     const narration = await generateNarrationScript(slug, {
       voice,
       rate,
@@ -789,35 +802,92 @@ app.post("/api/narration/:slug/generate", async (req: Request, res: Response) =>
       style,
       enabled,
       showSubtitles,
+      showIntroToc,
       synthesizeAudio: true,
     });
+    const fastRender = await fastApplyNarrationToRenderedMp4(slug).catch(() => ({ updated: false }));
+    const finalNarration = getNarration(slug) || narration;
     const editPlanPath = path.join(DATA_DIR, slug, "edit-plan.json");
+    const momentsPath = path.join(DATA_DIR, slug, "moments.json");
     const editPlan = fs.existsSync(editPlanPath) ? JSON.parse(fs.readFileSync(editPlanPath, "utf-8")) : undefined;
-    res.json({ success: true, narration, editPlan });
+    const moments = fs.existsSync(momentsPath) ? JSON.parse(fs.readFileSync(momentsPath, "utf-8")) : undefined;
+    res.json({
+      success: true,
+      narration: finalNarration,
+      editPlan,
+      moments,
+      renderedVideoUpdated: fastRender.updated,
+    });
   } catch (err: any) {
     console.error("[Narration Generate Error]", err);
     res.status(500).json({ error: err.message || "AI 대본 생성 중 오류가 발생했습니다." });
   }
 });
 
-app.post("/api/narration/:slug/save", (req: Request, res: Response) => {
+app.post("/api/narration/:slug/save", async (req: Request, res: Response) => {
   try {
     const slug = req.params.slug as string;
-    const { narration, synthesize } = req.body || {};
+    const { narration, synthesize, bakeSlide } = req.body || {};
     if (!narration) {
       res.status(400).json({ error: "저장할 대본 데이터가 없습니다." });
       return;
     }
+    await ensureRenderedBaseVideo(slug).catch(() => {});
     let saved = saveNarrationFile(slug, narration);
     if (synthesize !== false) {
       saved = synthesizeNarrationAudio(slug, saved.voice, saved.rate, saved.pitch) || saved;
+      await bakeOpeningSlideIntoRecording(slug, { force: Boolean(bakeSlide) });
+      saved = getNarration(slug) || saved;
+    } else if (bakeSlide) {
+      await bakeOpeningSlideIntoRecording(slug, { force: true });
+      saved = getNarration(slug) || saved;
     }
+    const fastRender = await fastApplyNarrationToRenderedMp4(slug).catch(() => ({ updated: false }));
+    saved = getNarration(slug) || saved;
     const editPlanPath = path.join(DATA_DIR, slug, "edit-plan.json");
+    const momentsPath = path.join(DATA_DIR, slug, "moments.json");
     const editPlan = fs.existsSync(editPlanPath) ? JSON.parse(fs.readFileSync(editPlanPath, "utf-8")) : undefined;
-    res.json({ success: true, narration: saved, editPlan });
+    const moments = fs.existsSync(momentsPath) ? JSON.parse(fs.readFileSync(momentsPath, "utf-8")) : undefined;
+    res.json({
+      success: true,
+      narration: saved,
+      editPlan,
+      moments,
+      renderedVideoUpdated: fastRender.updated,
+    });
   } catch (err: any) {
     console.error("[Narration Save Error]", err);
     res.status(500).json({ error: err.message || "대본 저장 및 음성 합성 중 오류가 발생했습니다." });
+  }
+});
+
+app.post("/api/narration/:slug/bake-slide", async (req: Request, res: Response) => {
+  try {
+    const slug = req.params.slug as string;
+    const { narration } = req.body || {};
+    await ensureRenderedBaseVideo(slug).catch(() => {});
+    if (narration) {
+      saveNarrationFile(slug, narration);
+    }
+    const bakeResult = await bakeOpeningSlideIntoRecording(slug, { force: true });
+    const fastRender = await fastApplyNarrationToRenderedMp4(slug).catch(() => ({ updated: false }));
+    const updatedNarration = getNarration(slug);
+    const editPlanPath = path.join(DATA_DIR, slug, "edit-plan.json");
+    const momentsPath = path.join(DATA_DIR, slug, "moments.json");
+    const editPlan = fs.existsSync(editPlanPath) ? JSON.parse(fs.readFileSync(editPlanPath, "utf-8")) : undefined;
+    const moments = fs.existsSync(momentsPath) ? JSON.parse(fs.readFileSync(momentsPath, "utf-8")) : undefined;
+    res.json({
+      success: true,
+      baked: bakeResult.baked,
+      introDurationMs: bakeResult.introDurationMs,
+      narration: updatedNarration,
+      editPlan,
+      moments,
+      renderedVideoUpdated: fastRender.updated,
+    });
+  } catch (err: any) {
+    console.error("[Narration Bake Slide Error]", err);
+    res.status(500).json({ error: err.message || "오프닝 슬라이드 영상 합성 중 오류가 발생했습니다." });
   }
 });
 
@@ -869,10 +939,10 @@ app.post("/api/video-edit/:slug/restore", (req: Request, res: Response) => {
 });
 
 // 13. Rendered Videos Lossless Chapter Merge (Concat) API
-app.post("/api/video-edit/merge", (req: Request, res: Response) => {
+app.post("/api/video-edit/merge", async (req: Request, res: Response) => {
   try {
     const { slugs, outputSlug } = req.body || {};
-    const result = mergeRenderedVideos({ slugs, outputSlug });
+    const result = await mergeRenderedVideos({ slugs, outputSlug });
     res.json(result);
   } catch (err: any) {
     console.error("[Video Merge Error]", err);
@@ -880,14 +950,30 @@ app.post("/api/video-edit/merge", (req: Request, res: Response) => {
   }
 });
 
-// Static frontend serving
+// Static frontend & public assets serving (with no-store so UI and brand assets never serve stale)
 const DASHBOARD_DIR = path.join(ROOT_DIR, "dashboard");
-app.use(express.static(DASHBOARD_DIR));
+const PUBLIC_DIR = path.join(ROOT_DIR, "public");
+app.use(
+  "/assets",
+  express.static(path.join(PUBLIC_DIR, "assets"), {
+    setHeaders: (res) => {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    },
+  })
+);
+app.use(
+  express.static(DASHBOARD_DIR, {
+    setHeaders: (res) => {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    },
+  })
+);
 
 // Fallback to index.html for SPA routing
 app.use((_req: Request, res: Response) => {
   const indexPath = path.join(DASHBOARD_DIR, "index.html");
   if (fs.existsSync(indexPath)) {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     res.sendFile(indexPath);
   } else {
     res.send("Dashboard UI is building. Please refresh in a moment.");

@@ -274,7 +274,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
 
     // Strip transient Dynatree / Fancytree / jQuery UI / Select2 / TouchPunch / Checkbox runtime classes that change depending on UI state or match every tree item
     s = s.replace(
-      /\.(?:_punchHandle|chkbox_on|rdobtn_on|ico_chk_on|dynatree-(?:expanded|has-children|folder|lastsib|focused|active|selected|partsel|loading|statusnode|exp-[a-zA-Z0-9_-]+|ico-[a-zA-Z0-9_-]+)|fancytree-(?:expanded|has-children|folder|lastsib|focused|active|selected|partsel|loading|statusnode|exp-[a-zA-Z0-9_-]+|ico-[a-zA-Z0-9_-]+)|ui-state-(?:hover|focus|active|highlight)|select2-(?:focused|active|dropdown-open|container-active|drop-above))\b/g,
+      /\.(?:_punchHandle|chkbox_on|rdobtn_on|ico_chk_on|ac_over|dynatree-(?:expanded|has-children|folder|lastsib|focused|active|selected|partsel|loading|statusnode|exp-[a-zA-Z0-9_-]+|ico-[a-zA-Z0-9_-]+)|fancytree-(?:expanded|has-children|folder|lastsib|focused|active|selected|partsel|loading|statusnode|exp-[a-zA-Z0-9_-]+|ico-[a-zA-Z0-9_-]+)|ui-state-(?:hover|focus|active|highlight)|select2-(?:focused|active|dropdown-open|container-active|drop-above|highlighted|results-dept-\d+))\b/g,
       ""
     );
 
@@ -301,19 +301,12 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
     // Convert invalid CSS numeric-leading class selectors (e.g. dd.0220 -> dd[class~='0220'])
     s = s.replace(/\b([a-zA-Z][a-zA-Z0-9_-]*)\.([0-9][a-zA-Z0-9_-]*)/g, "$1[class~='$2']");
 
-    // Filter out dummy onclick='return false;' candidates, fix inverted .ui-dialog:visible prefixes, and strip erroneous #header prefixes on content/form elements
+      //Filter out dummy onclick='return false;' candidates and fix inverted .ui-dialog:visible prefixes
     const parts = splitSelectorCandidates(s)
       .filter((p) => !/\[onclick\*=['"]?(?:return\s+(?:false|true)|javascript:|void\s*\(0\))/i.test(p))
       .map((p) => {
         let cleaned = p;
-        // Fix inverted prefix like "div#eapLineSelect_lineTrgtAdd .ui-dialog:visible button..." -> ".ui-dialog:visible div#eapLineSelect_lineTrgtAdd button..."
         cleaned = cleaned.replace(/^([a-zA-Z0-9]*#[a-zA-Z0-9_-]+)\s+\.ui-dialog:visible\s+/, ".ui-dialog:visible $1 ");
-        if (
-          cleaned.startsWith("#header ") &&
-          /(input\[name|textarea|a:has-text\(['"]결재선|button:has-text\(['"]결재선|button\.btn\.btn_pri|a\.sub\._doc|#eapDocReg_|#eapWorkSelect_|eapHeader_option|_search_option_hide|\._eapSearch|\.tbl_lst|\.lst_type1)/i.test(cleaned)
-        ) {
-          cleaned = cleaned.replace(/^#header\s+/, "");
-        }
         return cleaned;
       });
 
@@ -362,23 +355,6 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       fixedActionsCount++;
     }
 
-    // 0-B. Remove untrusted synthetic JS clicks on hidden #eapHeader_option / _search_option_hide or whole-page background <article id="document_write"> wrapper
-    if (
-      action.type === "click" &&
-      (sel.includes("eapHeader_option") ||
-        sel.includes("_search_option_hide") ||
-        desc.includes("도움말 전체기간 검색 초기화") ||
-        sel.startsWith("article#document_write") ||
-        action.targetHtml?.startsWith('<article id="document_write"'))
-    ) {
-      changes.push(`[불필요 단계 제거] 비인터랙티브 배경 레이아웃/숨김 요소(${sel.split(",")[0]}) 클릭 단계를 제거했습니다.`);
-      removedActionsCount++;
-      if (i + 1 < actualPlan.actions.length && actualPlan.actions[i + 1].type === "wait") {
-        i++; // Also skip its paired wait step
-      }
-      continue;
-    }
-
     // 1. Syntax & Escaping Normalization (applies to selector, sourceSelector, targetSelector)
     if (action.selector) {
       const original = action.selector;
@@ -403,91 +379,6 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       action.targetSelector = normalizeSelectorSyntax(action.targetSelector);
       if (action.targetSelector !== origTgt) {
         changes.push(`[문법 교정] 드롭 도착지 셀렉터 정규화: "${origTgt}" -> "${action.targetSelector}"`);
-        fixedActionsCount++;
-      }
-    }
-
-    // 1-B. Deduplicate consecutive or AI-injected duplicate btn_write clicks
-    if (action.type === "click" && sel.includes("btn_write")) {
-      let prevNonWait: BrowsePlanAction | null = null;
-      for (let k = sanitizedActions.length - 1; k >= 0; k--) {
-        if (sanitizedActions[k].type !== "wait") {
-          prevNonWait = sanitizedActions[k];
-          break;
-        }
-      }
-      if (prevNonWait && prevNonWait.type === "click" && (prevNonWait.selector || "").includes("btn_write")) {
-        changes.push(`[중복 단계 제거] 선행 양식 카드 [작성] 버튼 클릭 직후 중복 삽입된 '${desc}' 단계를 제거했습니다.`);
-        removedActionsCount++;
-        if (i + 1 < actualPlan.actions.length && actualPlan.actions[i + 1].type === "wait") {
-          i++; // Also skip its paired wait step
-        }
-        continue;
-      }
-    }
-
-    // Remove previously mis-injected form-card hover steps if the following click is NOT an approval form card (e.g. Wiki/Board button._write)
-    if (action.type === "hover" && desc.includes("양식 카드에 마우스 호버")) {
-      let nextNonWait: BrowsePlanAction | null = null;
-      for (let k = i + 1; k < actualPlan.actions.length; k++) {
-        if (actualPlan.actions[k].type !== "wait") {
-          nextNonWait = actualPlan.actions[k];
-          break;
-        }
-      }
-      const nextSel = (nextNonWait?.selector || "").toLowerCase();
-      const nextDesc = (nextNonWait?.description || "").toLowerCase();
-      const isNextRealWorkCard =
-        nextSel.includes("aw_li") ||
-        nextSel.includes("app_work_box") ||
-        nextSel.includes("workselect") ||
-        nextDesc.includes("양식 카드");
-      if (nextNonWait && !isNextRealWorkCard) {
-        changes.push(`[불필요 호버 제거] 양식 카드가 아닌 일반 작성 버튼('${nextNonWait.description || ""}') 앞에 잘못 삽입된 양식 카드 호버 단계를 제거했습니다.`);
-        removedActionsCount++;
-        if (i + 1 < actualPlan.actions.length && actualPlan.actions[i + 1].type === "wait") {
-          i++; // Also skip its paired wait step
-        }
-        continue;
-      }
-    }
-
-    // Auto-inject preceding hover action ONLY if clicking a genuine hover-revealed approval form card button (inside .app_work_box / li.aw_li)
-    if (
-      action.type === "click" &&
-      ((sel.includes("btn_write") &&
-        (sel.includes("aw_li") || sel.includes("app_work_box") || sel.includes("WorkSelect"))) ||
-        (sel.includes(".app_work_box") && sel.includes("button")) ||
-        (desc.includes("양식 카드") && desc.includes("작성")))
-    ) {
-      let prevNonWait: BrowsePlanAction | null = null;
-      for (let k = sanitizedActions.length - 1; k >= 0; k--) {
-        if (sanitizedActions[k].type !== "wait") {
-          prevNonWait = sanitizedActions[k];
-          break;
-        }
-      }
-      if (!prevNonWait || prevNonWait.type !== "hover") {
-        const cardTitleMatch = sel.match(/has-text\(['"]([^'"]+)['"]\)/) || desc.match(/['"]([^'"]+)['"]/);
-        const cardTitle = cardTitleMatch ? cardTitleMatch[1].trim() : "";
-        const hoverSel =
-          cardTitle && cardTitle !== "작성"
-            ? `ul.aw_ul li.aw_li:has-text('${cardTitle}') .app_work_box:visible, li.aw_li:has-text('${cardTitle}'):visible, ul.aw_ul li.aw_li .app_work_box:visible`
-            : `ul.aw_ul li.aw_li .app_work_box:visible, .app_work_box:visible`;
-        const hoverDesc = `${cardTitle && cardTitle !== "작성" ? `'${cardTitle}' ` : ""}양식 카드에 마우스 호버 (하위 [작성] 버튼 표시)`;
-        sanitizedActions.push({
-          type: "hover",
-          selector: hoverSel,
-          iframe: action.iframe,
-          description: hoverDesc,
-          recordedByEyedropper: action.recordedByEyedropper || actualPlan.recordedByEyedropper,
-        });
-        sanitizedActions.push({
-          type: "wait",
-          ms: 600,
-          description: "마우스 호버 후 [작성] 버튼 표시 대기",
-        });
-        changes.push(`[호버 자동 주입] '${desc}' 실행 전 양식 카드 마우스 호버(hover) 단계를 자동 삽입했습니다.`);
         fixedActionsCount++;
       }
     }
@@ -762,18 +653,6 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
           .replace(/'/g, "")
           .replace(/\s+/g, " ")
           .trim();
-
-        // Strip previously mis-injected #wikiMain_snb prefixes on non-sidebar elements (e.g. _page links or admin nav tabs)
-        if (
-          workingSel.includes("#wikiMain_snb ") &&
-          !openTagAttrs.includes("_menu") &&
-          !workingSel.includes("wikiSideMenu")
-        ) {
-          const strippedSnbParts = splitSelectorCandidates(workingSel).map((p) =>
-            p.replace(/^(\.ui-dialog:visible\s+)?#wikiMain_snb\s+/, "$1")
-          );
-          workingSel = Array.from(new Set(strippedSnbParts)).join(", ");
-        }
 
         const rawIdContainerMatch = workingSel.match(
           /(?:^|,\s*)(?:\.ui-dialog:visible\s+)?([a-zA-Z0-9]*#[a-zA-Z0-9_-]+)\s+(?:>\s*)?[a-zA-Z0-9_.\[#]/
@@ -1381,21 +1260,6 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
           }
         }
 
-        // Strip dynamic random #mentiony-content-xxxxxx / #mentiony-container-xxxxxx IDs generated per session by the mentiony plugin
-        if (/^mentiony-/i.test(outerIdVal) || workingSel.includes("mentiony-")) {
-          const phMatch = openTagAttrs.match(/\b(?:data-placeholder|placeholder)=["']([^"']+)["']/i);
-          const phVal = phMatch ? phMatch[1].replace(/'/g, "").trim() : "";
-          const cleanedMentionyParts = splitSelectorCandidates(workingSel).filter(
-            (p) => !/#mentiony-(?:content|container|popover|item)-[a-zA-Z0-9_-]+/i.test(p)
-          );
-          const mentionyCands: string[] = [];
-          if (phVal) {
-            mentionyCands.push(`${modalPrefix}div.mentiony-content[contenteditable='true'][data-placeholder*='${phVal.slice(0, 15)}']:visible`);
-          }
-          mentionyCands.push(`${modalPrefix}div.mentiony-content[contenteditable='true']:visible`);
-          workingSel = Array.from(new Set([...mentionyCands, ...cleanedMentionyParts])).join(", ");
-        }
-
         // Universal Child Fingerprinting for <label>, <a>, <button>, <td>, or <span> without its own id:
         // prepend tag:has(#childId), tag:has(input[value='...']), or tag:has(.scvr*/.plt_*/._ai*) so it uniquely targets that exact option!
         if ((tagName === "label" || tagName === "a" || tagName === "button" || tagName === "td" || tagName === "span") && !outerIdVal) {
@@ -1529,7 +1393,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       let currentCandidates = splitSelectorCandidates(workingSel);
 
 
-      // Remove legacy duplicate #th\d+ or [name='th\d+'] when a row-scoped candidate exists, and demote ephemeral per-record IDs (data-atcl-id, data-folder-id, data-mail-id, data-addr-grpid) behind :has-text / data-addr-grpname
+      // Remove legacy duplicate #th\d+ or [name='th\d+'] when a row-scoped candidate exists, and demote ephemeral per-record IDs behind :has-text / data-*-name
       if (currentCandidates.length > 1) {
         const filteredTh = currentCandidates.filter(
           (c) => !/#th\d+\b/i.test(c) && !/\[name=['"]th\d+['"]\]/i.test(c)
@@ -1555,86 +1419,8 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         }
       }
 
-      // Strip erroneous #snb prefix and enforce #wikiMain_snb scope when targeting Wiki main sidebar (#wikiMain_snb / #wikiSideMenu_menuList / data-menu-id='wiki...')
-      // so child popup sidebars (wikiBookMain) are never mistaken for the main Wiki sidebar!
-      const isWikiSidebarContext =
-        normalizedHtmlHint.includes("_menu") &&
-        currentCandidates.some((c) => c.includes("wikiSideMenu") || c.includes("wikiMain_snb"));
-      if (isWikiSidebarContext) {
-        currentCandidates = Array.from(
-          new Set(
-            currentCandidates.map((c) => {
-              const stripped = c.replace(/^#snb\s+/, "");
-              if (
-                !stripped.includes("#wikiMain_snb") &&
-                !stripped.includes("wikiSideMenu") &&
-                /^a(?:\.|\[|:)/.test(stripped)
-              ) {
-                return `#wikiMain_snb ${stripped}`;
-              }
-              return stripped;
-            })
-          )
-        );
-      }
-
-      // Handle Wiki Book Cover Image Selection Popup (ul#wikiBookReg_imgList) where all 28 radio items share the identical placeholder text '주제를 표시합니다.'
-      const isWikiImgListContext =
-        currentCandidates.some((c) => c.includes("wikiBookReg_imgList") || c.includes("주제를 표시합니다")) ||
-        normalizedHtmlHint.includes("wikiBookReg_imgList") ||
-        normalizedHtmlHint.includes("주제를 표시합니다");
-      if (isWikiImgListContext) {
-        let coverNum = "";
-        for (const cand of currentCandidates) {
-          const nthMatch = cand.match(/wikiBookReg_imgList\s*>\s*li:nth-of-type\((\d+)\)/i);
-          if (nthMatch && nthMatch[1]) {
-            coverNum = nthMatch[1];
-            break;
-          }
-          const scvrMatch = cand.match(/\bscvr(\d+)\b/i);
-          if (scvrMatch && scvrMatch[1]) {
-            coverNum = scvrMatch[1];
-            break;
-          }
-        }
-        const withoutDuplicatePlaceholderText = currentCandidates.filter(
-          (c) =>
-            !(
-              (c.includes(":has-text('주제를") || c.includes(':has-text("주제를')) &&
-              !c.includes(":nth-of-type(") &&
-              !c.includes("input[value=") &&
-              !c.includes(":has(.scvr")
-            )
-        );
-        if (coverNum) {
-          const coverPriority = [
-            `.ui-dialog:visible ul#wikiBookReg_imgList label.rdobtn:has(input[value='scvr${coverNum}']):visible`,
-            `.ui-dialog:visible ul#wikiBookReg_imgList label.rdobtn:has(.scvr${coverNum}):visible`,
-            `.ui-dialog:visible ul#wikiBookReg_imgList > li:nth-of-type(${coverNum}) > label.wiki_sub_box.rdobtn:visible`,
-            `ul#wikiBookReg_imgList > li:nth-of-type(${coverNum}) > label.wiki_sub_box.rdobtn:visible`,
-          ];
-          currentCandidates = Array.from(new Set([...coverPriority, ...withoutDuplicatePlaceholderText]));
-        } else if (withoutDuplicatePlaceholderText.length > 0) {
-          currentCandidates = withoutDuplicatePlaceholderText;
-        }
-      }
-
-      // Handle Wiki Book Cover Preview box in registration form (div#wikiBookReg_imgCover / #wikiBookReg_imgCoverSub)
-      if (
-        currentCandidates.some((c) => c.includes("wikiBookReg_imgCover")) ||
-        normalizedHtmlHint.includes("wikiBookReg_imgCoverSub")
-      ) {
-        currentCandidates = Array.from(
-          new Set([
-            ...currentCandidates,
-            "div#wikiBookReg_imgCover a.sub_cover:visible",
-            "a:has(#wikiBookReg_imgCoverSub):visible",
-          ])
-        );
-      }
-
-      // If any candidate has an ancestor [data-trgt-id='...'] (e.g. div.fbox._trgtBox[data-trgt-id='M438014134'] > ... > label.chkbox:visible),
-      // synthesize a direct [data-trgt-id='...'] leaf selector at the front and remove unscoped #eapLineSelect_line label.chkbox catch-alls!
+      // If any candidate has an ancestor [data-trgt-id='...'],
+      // synthesize a direct [data-trgt-id='...'] leaf selector at the front
       for (const cand of currentCandidates) {
         const trgtMatch = cand.match(/\[data-trgt-id=['"]([^'"]+)['"]\].*>\s*([a-zA-Z0-9_.-]+(?::visible)?)$/);
         if (trgtMatch && trgtMatch[1] && trgtMatch[2]) {
@@ -1653,7 +1439,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
         }
       }
 
-      // If a bare tag:has-text('X'):visible coexists with a structural path ending in > parentTag.cls > tag:visible (e.g. div.sub._openBook > a:visible),
+      // If a bare tag:has-text('X'):visible coexists with a structural path ending in > parentTag.cls > tag:visible,
       // synthesize parentTag.cls tag:has-text('X'):visible before the bare tag:has-text('X'):visible to avoid clicking a sidebar/header duplicate!
       const bareTagTextCand = currentCandidates.find((c) => /^(?:a|button|span|strong):has-text\(['"][^'"]+['"]\):visible$/.test(c));
       if (bareTagTextCand) {
@@ -1672,31 +1458,6 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
             }
           }
         }
-      }
-
-      // Remove bogus '결재 이력' fallback AND unscoped catch-all card selectors if a real form card title candidate exists in the same selector
-      const realAwLiCardMatch = currentCandidates
-        .map((c) => c.match(/aw_li:has-text\(['"]([^'"]+)['"]\)/))
-        .find((m) => m && m[1] && m[1] !== "결재 이력");
-      const hasRealAwLiCard = Boolean(realAwLiCardMatch);
-      if (hasRealAwLiCard && realAwLiCardMatch) {
-        const cardTitle = realAwLiCardMatch[1];
-        currentCandidates = currentCandidates.filter((c) => {
-          if (c.includes("has-text('결재 이력')")) return false;
-          // Drop unscoped card fallbacks (e.g. "ul.aw_ul li.aw_li .app_work_box:visible" or "button._writeBtn:visible" or "button:text-is('결재작성'):visible")
-          if (!c.includes(cardTitle) && !/:(?:nth-of-type|nth-child)\(\d+\)/.test(c)) {
-            if (
-              c === "ul.aw_ul li.aw_li .app_work_box:visible" ||
-              c === "ul.aw_ul li.aw_li button.btn_write:visible" ||
-              /^button\b/i.test(c) ||
-              /^\.app_work_box\s+button\.btn/.test(c)
-            ) {
-              return false;
-            }
-          }
-          return true;
-        });
-        workingSel = currentCandidates.join(", ");
       }
 
       const hasSpecificTextOrAttr = currentCandidates.some(
@@ -1755,8 +1516,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
             !cand.includes(":has-text(") &&
             !cand.includes(":text-is(") &&
             !hasDataAttr &&
-            !cand.includes("[title=") &&
-            !isWikiImgListContext;
+            !cand.includes("[title=");
           const isIdAnchoredNonListContainer =
             Boolean(cleanContainerId) &&
             cand.includes(`${cleanContainerId} >`) &&
@@ -1764,12 +1524,11 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
           // Unscoped generic control text (e.g. label.chkbox:has-text('사용'):visible or button.btn:has-text('추가'):visible without row/ID/data-* scope)
           // must go to positionalLater so row-scoped tr:has(th:...) or ID-anchored DOM paths are evaluated FIRST!
           const isUnscopedGenericControlText =
-            /:(?:has-text|text-is)\(['"](?:사용|미사용|추가|선택|삭제|수정|등록|취소|닫기|초기화|목록|설정|변환|적용|주제를 표시합니다[^'"]*)['"]\)/i.test(cand) &&
+            /:(?:has-text|text-is)\(['"](?:사용|미사용|추가|선택|삭제|수정|등록|취소|닫기|초기화|목록|설정|변환|적용)['"]\)/i.test(cand) &&
             !cand.includes("#") &&
             !hasDataAttr &&
             !cand.includes("tr:has(") &&
             !cand.includes("li:has") &&
-            !cand.includes("aw_li") &&
             !cand.includes("dynatree-") &&
             !cand.includes(":nth-");
           const isPositional =
@@ -1782,8 +1541,7 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
               !cand.includes(":text-is(") &&
               !hasDataAttr &&
               !hasSlotClassAttr &&
-              !isIdAnchoredNonListContainer &&
-              !isWikiImgListContext);
+              !isIdAnchoredNonListContainer);
           const isExplicitButtonHook = /(?:button|input)(?:\.[a-zA-Z0-9_-]+)*\.[_][a-zA-Z0-9_-]+/i.test(cand);
           const isBareClassCatchAll =
             !cand.includes("#") &&
@@ -1832,29 +1590,12 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
               }
             }
             specificFirst.push(cand);
-            // ONLY for organization chart user rows (e.g. '이지민 조교 건축과 (유니슨)', 'test002 테스트 부서 (유니슨)'), also add core first-token match
-            const isOrgUserContext =
-              cand.includes("orgUserList") ||
-              cand.includes("user_info") ||
-              (textMatch && /\([^)]+\)$/.test(textMatch[2].trim()));
-            if (textMatch && isOrgUserContext) {
-              const firstToken = textMatch[2].trim().split(/\s+/)[0];
-              if (
-                firstToken &&
-                firstToken.length >= 2 &&
-                !/^\d+\.?$/.test(firstToken) &&
-                firstToken !== textMatch[2].trim()
-              ) {
-                specificFirst.push(`${textMatch[1]}:has-text('${firstToken}')${textMatch[3]}`);
-              }
-            }
           }
         }
 
-        // Remove any previously generated first-token truncated :has-text('...') duplicates (e.g. :has-text('1.'), :has-text('테스트'), :has-text('최신'))
+        // Remove any previously generated first-token truncated :has-text('...') duplicates
         // when the full multi-word :has-text('...') with the identical selector prefix/suffix exists in specificFirst!
         const dedupedSpecificFirst = specificFirst.filter((cand) => {
-          if (cand.includes("orgUserList") || cand.includes("user_info")) return true;
           const m = cand.match(/^(.*):has-text\(['"]([^'"]+)['"]\)(.*)$/);
           if (!m) return true;
           const [, pre, txt, post] = m;
@@ -1891,21 +1632,9 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
           fixedActionsCount++;
         }
       }
-      if (
-        action.type === "type" &&
-        action.targetHtml &&
-        desc.includes("'에디터 본문' 입력 영역") &&
-        (/\b(?:data-placeholder|placeholder)=["']([^"']+)["']/i.test(action.targetHtml) || /id=["'][^"']*(?:subject|title)[^"']*["']/i.test(action.targetHtml))
-      ) {
-        const phMatch = action.targetHtml.match(/\b(?:data-placeholder|placeholder)=["']([^"']+)["']/i);
-        const fieldLabel = phMatch && phMatch[1].trim() ? phMatch[1].trim() : "제목";
-        action.description = action.description.replace("'에디터 본문' 입력 영역", `'${fieldLabel}' 입력창`);
-        desc = action.description;
-      }
     } else if (action.type === "dragAndDrop") {
       const srcToRefine = action.sourceSelector || action.selector || "";
       if (srcToRefine) {
-        // Note: action.targetHtml on dragAndDrop belongs to the drop target, so pass undefined for sourceSelector refinement
         const refinedSrc = refineSelectorString(srcToRefine, undefined);
         if (refinedSrc !== srcToRefine) {
           action.sourceSelector = refinedSrc;
@@ -1945,726 +1674,6 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       if (action.targetSelector) {
         action.targetSelector = action.targetSelector.replace(/\\+"/g, "'").replace(/\\+'/g, "'").replace(/'{2,}/g, "'");
       }
-      const targetUserMatch = desc.match(/['"]([^'"]+)['"]/) || desc.match(/\b([a-zA-Z0-9_-]{3,}|[가-힣]{2,4})\s*(?:결재자|사원|직원|체크|선택|사용자)/);
-      const targetUser = targetUserMatch ? targetUserMatch[1].trim() : "";
-      if (targetUser && !["결재자", "사원", "사용자", "직원", "목록", "체크", "선택", "두번째", "두번쨰", "첫번째"].includes(targetUser)) {
-        if (!action.sourceSelector || !action.sourceSelector.includes(targetUser)) {
-          action.sourceSelector = `.ui-dialog:visible a.dynatree-title:has-text('${targetUser}'):visible, .ui-dialog:visible tr:has-text('${targetUser}'), .ui-dialog:visible li:has-text('${targetUser}'), .ui-dialog:visible label:has-text('${targetUser}'), .ui-dialog:visible :has-text('${targetUser}')`;
-          changes.push(`[정제] 드래그 출발지 사원('${targetUser}') 정밀 셀렉터 보강: ${action.sourceSelector}`);
-          fixedActionsCount++;
-        }
-      }
-
-      const isSecondApprSlot = desc.includes("결재") && (desc.includes("두번째") || desc.includes("두 번째") || desc.includes("2번째") || desc.includes("칸") || desc.includes("슬롯"));
-      if (isSecondApprSlot || !action.targetSelector || action.targetSelector.includes(".app_line_table") || action.targetSelector.includes(".line_box")) {
-        action.targetSelector = "#af_4, table#eapLineSelect_line td:nth-child(4) div.app_flow, .appline_flow table td:nth-child(4), .ui-dialog:visible div.app_flow:has(strong:has-text('결재')):nth-of-type(2), #eapLineSelect_lineTrgtAdd button[data-app-type-ordr='4']";
-        changes.push(`[정제] 드래그 도착지(두번째 결재칸) Naonsoft 정밀 targetSelector 자동 보강: ${action.targetSelector}`);
-        fixedActionsCount++;
-      }
-    }
-
-    // 1-B. Universal Tree / Folder / Category Selection Dialog Leaf Node Resolution
-    const isModalContext = desc.includes("팝업") || desc.includes("모달") || desc.includes("다이얼로그") || sel.includes(".ui-dialog") || sel.includes(".modal") || isInsideModal;
-    const isSidebarNavigation = desc.includes("좌측") || desc.includes("사이드바") || desc.includes("둘러보기") || sel.includes("#snb") || sel.includes("#left") || sel.includes(".snb");
-    const isUserSelection =
-      desc.includes("사원") ||
-      desc.includes("사용자") ||
-      desc.includes("대상자") ||
-      desc.includes("직원") ||
-      desc.includes("참석자") ||
-      desc.includes("결재자") ||
-      desc.includes("담당자") ||
-      desc.includes("인원") ||
-      desc.includes("유저") ||
-      desc.includes("멤버") ||
-      desc.includes("사람");
-
-    const isTreeExpandAction =
-      action.type === "click" &&
-      isModalContext &&
-      (desc.includes("트리") || desc.includes("부서") || desc.includes("조직도") || desc.includes("폴더") || desc.includes("모두펼침")) &&
-      (desc.includes("펼침") || desc.includes("확장"));
-
-    if (isTreeExpandAction) {
-      const original = action.selector;
-      action.selector = ".ui-dialog:visible button.btn_fopn:visible, .ui-dialog:visible button:has-text('모두펼침'):visible, .ui-dialog:visible .dynatree-expander:visible";
-      changes.push(`[정제] 트리 모달 모두펼침 버튼 셀렉터 정밀 보강: "${original}" -> "${action.selector}"`);
-      fixedActionsCount++;
-      sel = action.selector;
-    } else if (
-      action.type === "click" &&
-      isModalContext &&
-      (desc.includes("상세 설정") || desc.includes("상세 등록")) &&
-      (desc.includes("펼침") || desc.includes("확장") || desc.includes("버튼"))
-    ) {
-      action.selector = ".ui-dialog:visible button:has(#detail_tgl):visible, .ui-dialog:visible button:has-text('상세 등록'):visible, .ui-dialog:visible button:has-text('상세'):visible";
-      sel = action.selector;
-    } else if (
-      action.type === "click" &&
-      !desc.includes("확인") &&
-      !desc.includes("펼침") &&
-      !desc.includes("확장") &&
-      isModalContext &&
-      !isSidebarNavigation &&
-      !isUserSelection &&
-      !sel.includes("dynatree-checkbox") &&
-      (desc.includes("노드") || desc.includes("트리") || desc.includes("폴더") || desc.includes("분류") || desc.includes("문서함") || desc.includes("게시판") || desc.includes("캘린더") || desc.includes("양식"))
-    ) {
-      const original = action.selector;
-      const titleMatch = desc.match(/['"]([^'"]+)['"]/);
-      const titlePrefix = titleMatch ? `.ui-dialog:visible a.dynatree-title:has-text('${titleMatch[1]}'):visible, ` : "";
-      action.selector = `${titlePrefix}.ui-dialog:visible span.dynatree-checkbox:visible, .ui-dialog:visible .dynatree-container ul ul span.dynatree-checkbox:visible, .ui-dialog:visible .dynatree-container .tico_item a.dynatree-title:visible, .ui-dialog:visible .dynatree-container .dynatree-node:not(.dynatree-folder) a.dynatree-title:visible, .ui-dialog:visible .dynatree-container ul ul a.dynatree-title:visible`;
-      changes.push(`[정제] 트리/폴더 선택 모달 최상위 비등록 폴더 제외 및 말단 리프 노드 셀렉터 보강: "${original}" -> "${action.selector}"`);
-      fixedActionsCount++;
-      sel = action.selector;
-    }
-
-    // 1-B1.4 Universal Form Sub-Option / Detail Setup Trigger (before modal context)
-    const isSubOptionTrigger =
-      action.type === "click" &&
-      !isModalContext &&
-      !desc.includes("확인") &&
-      !desc.includes("저장") &&
-      !desc.includes("상신") &&
-      (desc.includes("설정") || desc.includes("지정") || desc.includes("선택") || desc.includes("추가")) &&
-      (desc.includes("권한") || desc.includes("결재선") || desc.includes("참석자") || desc.includes("수신자") || desc.includes("참조자") || desc.includes("옵션") || desc.includes("분류") || desc.includes("알림") || desc.includes("자원"));
-
-    if (isSubOptionTrigger) {
-      const match = desc.match(/(개별권한|권한설정|권한|결재선|참석자|수신자|참조자|옵션|분류|알림|자원)/);
-      const kw = match ? match[0] : "";
-      if (kw && !(action.selector || "").includes(":has-text")) {
-        action.selector = action.selector ? `button:has-text('${kw}'):visible, label:has-text('${kw}'):visible, a:has-text('${kw}'):visible, ${action.selector}` : `button:has-text('${kw}'):visible, label:has-text('${kw}'):visible, a:has-text('${kw}'):visible`;
-        sel = action.selector;
-      }
-    }
-
-    if (
-      action.type === "click" &&
-      !desc.includes("확인") &&
-      !desc.includes("닫기") &&
-      !desc.includes("취소") &&
-      !desc.includes("보기") &&
-      !desc.includes("전환") &&
-      !desc.includes("프로필") &&
-      !desc.includes("레이어") &&
-      isModalContext &&
-      isUserSelection &&
-      !desc.includes("추가") &&
-      !desc.includes("전달") &&
-      !desc.includes("이동")
-    ) {
-      const original = action.selector;
-      const targetUserMatch = desc.match(/['"]([^'"]+)['"]/) || desc.match(/\b([a-zA-Z0-9_-]{3,}|[가-힣]{2,4})\s*(?:사원|직원|체크|선택|체크박스)/);
-      const targetUser = targetUserMatch ? targetUserMatch[1].trim() : "";
-
-      if (targetUser && !["사원", "사용자", "직원", "목록", "체크", "선택", "체크박스", "첫번째", "두번째"].includes(targetUser)) {
-        action.selector = `.ui-dialog:visible span.dynatree-checkbox:has(+ a:has-text('${targetUser}')):visible, .ui-dialog:visible tr:has-text('${targetUser}') span.dynatree-checkbox:visible, .ui-dialog:visible tr:has-text('${targetUser}') input[type='checkbox']:visible, .ui-dialog:visible label:has-text('${targetUser}'):visible, .ui-dialog:visible tr:has-text('${targetUser}'):visible, .ui-dialog:visible li:has-text('${targetUser}'):visible, .ui-dialog:visible :has-text('${targetUser}'):visible`;
-        changes.push(`[정제] 특정 사원/사용자('${targetUser}') 정밀 타겟팅 및 체크박스 셀렉터 보강: "${original}" -> "${action.selector}"`);
-      } else {
-        action.selector = ".ui-dialog:visible span.dynatree-checkbox:visible, .ui-dialog:visible label.user_info.chkbox, .ui-dialog:visible label[class*='user_info'], .ui-dialog:visible #orgUserList_listbox label.user_info, .ui-dialog:visible #orgUserList_listbox li:first-child, .ui-dialog:visible .org_user_lst li:first-child, .ui-dialog:visible [id^='user_']:first-child, .ui-dialog:visible .user_card:first-child, .ui-dialog:visible [class*='user_lst'] li:first-child, .ui-dialog:visible [class*='user']:has(.name):first-child, .ui-dialog:visible li:first-child label, .ui-dialog:visible tr:first-child td";
-        changes.push(`[정제] 조직도/권한 팝업 사원/사용자 선택 중앙 후보 카드 및 체크박스 셀렉터 보강: "${original}" -> "${action.selector}"`);
-      }
-      fixedActionsCount++;
-      sel = action.selector;
-    }
-
-    // 1-B1.6 Universal Shuttle Transfer & Inner Picker Trigger Buttons
-    const isModalOpenAction =
-      desc.includes("모달 오픈") ||
-      desc.includes("모달 호출") ||
-      desc.includes("팝업 오픈") ||
-      desc.includes("팝업 호출") ||
-      desc.includes("팝업 열기") ||
-      desc.includes("창 열기") ||
-      desc.includes("버튼 클릭하여 선택 모달") ||
-      desc.includes("지정을 위해") ||
-      desc.includes("선택 버튼 클릭");
-
-    if (
-      action.type === "click" &&
-      isModalOpenAction &&
-      (desc.includes("추가") || desc.includes("조직도") || desc.includes("주소록") || desc.includes("선택") || desc.includes("검색") || desc.includes("결재선"))
-    ) {
-      const original = action.selector;
-      if (desc.includes("결재선")) {
-        action.selector = "button#eapDocReg_lineSelBtn:visible, button#eapDocReg_lineSelectBtn:visible, button:has-text('결재선 선택'):visible, button:has-text('결재선'):visible, .ui-dialog:visible button:has-text('결재선'):visible";
-        changes.push(`[정제] 결재선 선택/호출 버튼 정밀 셀렉터 보강: "${original}" -> "${action.selector}"`);
-      } else {
-        action.selector = ".ui-dialog:visible button:has-text('추가'):visible, .ui-dialog:visible button:has-text('조직도'):visible, .ui-dialog:visible button:has-text('주소록'):visible, .ui-dialog:visible button.btn_add:visible, .modal:visible button:has-text('추가'):visible, [role='dialog']:visible button:has-text('추가'):visible, button:has-text('추가'):visible, button:has-text('조직도'):visible";
-        changes.push(`[정제] 팝업 내부 하위 피커/조직도 호출 버튼 셀렉터 보강: "${original}" -> "${action.selector}"`);
-      }
-      fixedActionsCount++;
-      sel = action.selector;
-    } else if (
-      action.type === "click" &&
-      isModalContext &&
-      !isModalOpenAction &&
-      !desc.includes("양식") &&
-      !desc.includes("결재작성") &&
-      !desc.includes("결재 작성") &&
-      (desc.includes("전달") || desc.includes("이동") || ((desc.includes("추가") || desc.includes("권한")) && (desc.includes("목록으로") || desc.includes("대상 목록") || desc.includes("▲") || desc.includes("▶"))))
-    ) {
-      if (!(action as any)._lastHealReason) {
-        const original = action.selector;
-        action.selector = ".ui-dialog:visible button.drop_tgl:visible, .ui-dialog:visible button:has-text('권한'):visible, .ui-dialog:visible button:has-text('선택'):visible, .ui-dialog:visible button.btn_rgt:visible, .ui-dialog:visible button.btn_add:visible, .ui-dialog:visible .btn_area button:visible, button.drop_tgl:visible, button:has-text('권한'):visible, .ui-dialog:visible button:has-text('추가'):visible";
-        changes.push(`[정제] 셔틀 팝업 대상 추가/전달 버튼 셀렉터 보강: "${original}" -> "${action.selector}"`);
-        fixedActionsCount++;
-        sel = action.selector;
-      }
-    }
-
-    // 1-B1.65 Drag and Drop Action & Approval Line Slot Alignment
-    const isDragIntent =
-      action.type === "dragAndDrop" ||
-      (action.type !== "wait" &&
-       !desc.includes("대기") &&
-       desc.includes("드래그") &&
-       (desc.includes("드롭") || desc.includes("끌어") || desc.includes("결재칸") || desc.includes("슬롯")));
-
-    if (isDragIntent) {
-      if (action.type !== "dragAndDrop") {
-        action.type = "dragAndDrop";
-        changes.push(`[정제] 드래그 앤 드롭 의도 감지 -> action.type을 "dragAndDrop"으로 자동 변환: "${desc}"`);
-        fixedActionsCount++;
-      }
-
-      // Check source element (사원/대상)
-      const targetUserMatch = desc.match(/['"]([^'"]+)['"]/) || desc.match(/\b([a-zA-Z0-9_-]{3,}|[가-힣]{2,4})\s*(?:항목|사원|직원|체크|드래그)/);
-      const targetUser = targetUserMatch ? targetUserMatch[1].trim() : "";
-
-      if (!action.sourceSelector || (action.sourceSelector && targetUser && !action.sourceSelector.includes(targetUser))) {
-        if (targetUser) {
-          action.sourceSelector = `.ui-dialog:visible a.dynatree-title:has-text('${targetUser}'):visible, .ui-dialog:visible .dynatree-node:has(a:has-text('${targetUser}')) a.dynatree-title, .ui-dialog:visible label:has-text('${targetUser}')`;
-        } else {
-          action.sourceSelector = ".ui-dialog:visible a.dynatree-title:visible, .ui-dialog:visible label.user_info.chkbox, .ui-dialog:visible .dynatree-node a.dynatree-title";
-        }
-        changes.push(`[정제] 드래그 출발지(sourceSelector) 보강: "${action.sourceSelector}"`);
-        fixedActionsCount++;
-      }
-
-      // Check target element (결재칸/슬롯)
-      const isSecondSlot = desc.includes("두 번째") || desc.includes("두번째") || desc.includes("2번째") || desc.includes("2nd");
-      if (!action.targetSelector || (isSecondSlot && !action.targetSelector.includes("af_4") && !action.targetSelector.includes("nth-child(4)"))) {
-        if (isSecondSlot) {
-          action.targetSelector = "#af_4, table#eapLineSelect_line td:nth-child(4) div.app_flow, .appline_flow table td:nth-child(4), #eapLineSelect_lineTrgtAdd button[data-app-type-ordr='4']";
-        } else {
-          action.targetSelector = "#af_1, #af_4, table#eapLineSelect_line div.app_flow, .appline_flow table td div.app_flow";
-        }
-        changes.push(`[정제] 드래그 목적지(targetSelector) 보강: "${action.targetSelector}"`);
-        fixedActionsCount++;
-      }
-    }
-
-    // 1-B1.66 Approval Line Tab Click Safety
-    if (action.type === "click" && desc.includes("결재선") && desc.includes("탭")) {
-      action.selector = "#eapDocReg_tabBox a:has-text('결재선'), a:has-text('결재선'):visible, li:has-text('결재선') a";
-      action.optional = true;
-      action.force = true;
-    }
-
-    // 1-B1.7 Form Body Type Action Sanitization (Strip invalid iframe and ensure robust selectors)
-    if (
-      action.type === "type" &&
-      (desc.includes("내용") || desc.includes("본문") || desc.includes("회의") || desc.includes("완료") || desc.includes("작성"))
-    ) {
-      if (action.iframe) {
-        delete action.iframe;
-        changes.push(`[정제] 본문 양식 폼 입력 액션에서 불필요한 iframe 속성 제거: "${desc}"`);
-        fixedActionsCount++;
-      }
-      if (!action.selector || action.selector.includes("subBody") || action.selector.includes("iframe")) {
-        action.selector = ".doc_view_table textarea:visible, table.tbl_frm textarea:visible, #eapDocReg_contents textarea:visible, textarea:not(#eapDocReg_draftOpinCn):not([name*='opinion']):visible, textarea:visible";
-        changes.push(`[정제] 본문 양식 폼 입력 셀렉터 보강: "${action.selector}"`);
-        fixedActionsCount++;
-        sel = action.selector;
-      }
-    }
-
-    // 1-B1.8 Electronic Approval Form Selection / Draft Initiation Refinement
-    if (
-      action.type === "click" &&
-      (desc.includes("결재작성") ||
-        desc.includes("결재 작성") ||
-        desc === "'작성' 버튼 클릭" ||
-        sel === "button:has-text('작성'):visible, button.btn.btn_write:has-text('작성'):visible" ||
-        (desc.includes("양식") && (desc.includes("선택") || desc.includes("클릭"))))
-    ) {
-      const isLeftSnbBtn =
-        desc.includes("좌측") ||
-        desc.includes("사이드바") ||
-        desc.includes("snb") ||
-        ((desc.includes("결재 작성") || desc.includes("결재작성")) &&
-          !desc.includes("카드") &&
-          !desc.includes("양식"));
-      const isCardSelect =
-        (desc.includes("카드") || desc.includes("양식")) &&
-        (desc.includes("선택") || desc.includes("클릭")) &&
-        !desc.includes("버튼 클릭") &&
-        !desc.includes("작성 버튼");
-      const isCardWriteBtn =
-        desc === "'작성' 버튼 클릭" ||
-        sel === "button:has-text('작성'):visible, button.btn.btn_write:has-text('작성'):visible" ||
-        desc.includes("카드 내") ||
-        desc.includes("양식 내") ||
-        desc.includes("작성 버튼 클릭") ||
-        (desc.includes("버튼") && !isLeftSnbBtn);
-
-      if (isLeftSnbBtn) {
-        const original = action.selector;
-        action.selector =
-          "#snb button:has-text('결재 작성'):visible, .workset_btn button:has-text('결재 작성'):visible, .snb_btn_box button:has-text('결재 작성'):visible, button#gapLeft_workWriteBtn:visible, button:has-text('결재 작성'):visible";
-        changes.push(`[정제] 전자결재 좌측 SNB '결재 작성' 대버튼 셀렉터 정밀 보강: "${original}" -> "${action.selector}"`);
-        fixedActionsCount++;
-        sel = action.selector;
-      } else if (isCardSelect) {
-        const original = action.selector;
-        const cardMatch =
-          desc.match(/['"]([^'"]+)['"]/) ||
-          (desc.includes("회의록")
-            ? [null, "회의록"]
-            : desc.includes("테스트 업무")
-            ? [null, "테스트 업무"]
-            : desc.includes("지출결의서")
-            ? [null, "지출결의서"]
-            : null);
-        const cardName = cardMatch && cardMatch[1] ? cardMatch[1].trim() : "";
-        if (cardName && !["양식", "결재업무", "카드", "첫번째", "첫 번째"].includes(cardName)) {
-          action.selector = `ul.aw_ul li.aw_li:has-text('${cardName}') button.btn_write:visible, .app_work_box:has-text('${cardName}') button.btn_write:visible, ul.aw_ul li.aw_li:has-text('${cardName}') .app_work_box`;
-        } else {
-          action.selector =
-            "ul.aw_ul li.aw_li:first-child button.btn_write:visible, ul.aw_ul li.aw_li:first-child .app_work_box, .app_work_box:visible";
-        }
-        changes.push(`[정제] 전자결재 결재업무 카드 선택 셀렉터 정밀 보강: "${original}" -> "${action.selector}"`);
-        fixedActionsCount++;
-        sel = action.selector;
-      } else if (isCardWriteBtn) {
-        const original = action.selector;
-        // CRITICAL: Always scope to .app_work_box / li.aw_li / #eapWorkSelect_workList so we NEVER click top-right #header button._header_writeBtn!
-        action.selector =
-          "ul.aw_ul li.aw_li button.btn_write:visible, #eapWorkSelect_workList button.btn_write:visible, .app_work_box button.btn_write:visible, li.aw_li button.btn_write:visible, button.btn_write:not(._header_writeBtn):not(#header *):not(.gw_header *):not(#snb *):not(.workset_btn *):not(.gm_reg *):visible";
-        changes.push(`[정제] 전자결재 카드 내부 소형 '작성' 버튼 셀렉터 정밀 보강: "${original}" -> "${action.selector}"`);
-        fixedActionsCount++;
-        sel = action.selector;
-      }
-    }
-
-        // 1-B1.9 Naonsoft Groupware Canonical Action Mappings
-    if (action.type === "click") {
-      // 결재상신
-      if (
-        (desc.includes("상신 버튼") || desc.includes("결재상신") || (desc.includes("상신") && desc.includes("버튼"))) &&
-        !desc.includes("양식") &&
-        !desc.includes("확인") &&
-        !desc.includes("취소") &&
-        !desc.includes("제목") &&
-        !desc.includes("문서") &&
-        !desc.includes("목록") &&
-        !desc.includes("조회") &&
-        !desc.includes("현황")
-      ) {
-        const original = action.selector;
-        action.selector = "button._draftBtn, button._draft, button:has-text('결재상신'):visible, button:has-text('상신'):visible, .btn_draft:visible";
-        if (original !== action.selector) {
-          changes.push(`[그룹웨어 정밀 매핑] 전자결재 상신 버튼 보강: "${original}" -> "${action.selector}"`);
-          fixedActionsCount++;
-        }
-        sel = action.selector;
-      }
-      // 결재문서 목록 / 최근 결재 문서 클릭
-      else if (
-        (desc.includes("결재 문서") || desc.includes("결재문서") || desc.includes("최근 결재") || desc.includes("상신한") || desc.includes("결재현황 목록") || (desc.includes("현황") && desc.includes("문서"))) &&
-        (desc.includes("제목") || desc.includes("문서") || desc.includes("클릭") || desc.includes("조회") || desc.includes("상세"))
-      ) {
-        const original = action.selector;
-        action.selector = "table.tbl_lst tbody tr:first-child a:visible, table tbody tr:first-child a:visible, .list_box .sub:first-child a:visible, a:has-text('테스트 회의록'):visible";
-        if (original !== action.selector) {
-          changes.push(`[그룹웨어 정밀 매핑] 최신 결재문서 제목/상세 클릭 보강: "${original}" -> "${action.selector}"`);
-          fixedActionsCount++;
-        }
-        sel = action.selector;
-      }
-      // 기록물철 / 문서보관함 / 결재분류 폴더 버튼 (팝업 내부 선택이 아닌 '모달 열기 버튼'일 때만)
-      else if (
-        (desc.includes("기록물철") || desc.includes("문서보관함") || desc.includes("결재분류") || desc.includes("분류 폴더") || desc.includes("분류 선택 폴더")) &&
-        (desc.includes("선택") || desc.includes("클릭") || desc.includes("버튼")) &&
-        !desc.includes("팝업") &&
-        !desc.includes("모달") &&
-        !desc.includes("트리") &&
-        !desc.includes("노드") &&
-        !desc.includes("확인") &&
-        !desc.includes("항목")
-      ) {
-        const original = action.selector;
-        action.selector = "button#eapDocReg_binderSelBtn:visible, button#eapDocReg_bindBtn:visible, button#gapDocReg_binderSelBtn:visible, tr:has-text('결재분류') button:visible, tr:has-text('분류') button:visible, button:has-text('기록물철'):visible, button:has-text('문서보관함'):visible";
-        if (original !== action.selector) {
-          changes.push(`[그룹웨어 정밀 매핑] 결재분류/기록물철/보관함 선택 버튼 보강: "${original}" -> "${action.selector}"`);
-          fixedActionsCount++;
-        }
-        sel = action.selector;
-      }
-      // 결재분류 / 기록물철 / 문서함 팝업 내부 트리 항목 선택
-      else if (
-        (desc.includes("결재분류") || desc.includes("기록물철") || desc.includes("문서보관함") || desc.includes("문서함")) &&
-        (desc.includes("팝업") || desc.includes("모달") || desc.includes("트리") || desc.includes("노드") || desc.includes("항목")) &&
-        (desc.includes("선택") || desc.includes("클릭")) &&
-        !desc.includes("확인") &&
-        !desc.includes("닫기") &&
-        !desc.includes("취소")
-      ) {
-        const original = action.selector;
-        const nameMatch = desc.match(/['"]([^'"]{1,30})['"]/);
-        const targetNodeName = nameMatch ? nameMatch[1].trim() : "";
-        if (targetNodeName) {
-          action.selector = `.ui-dialog:visible .dynatree-title:has-text('${targetNodeName}'):visible, .ui-dialog:visible a:has-text('${targetNodeName}'):visible, .ui-dialog:visible span:has-text('${targetNodeName}'):visible`;
-        } else {
-          action.selector = `.ui-dialog:visible .dynatree-node:not(.dynatree-has-children) .dynatree-title:visible, .ui-dialog:visible .dynatree-title:visible`;
-        }
-        if (original !== action.selector) {
-          changes.push(`[그룹웨어 정밀 매핑] 분류/문서함 팝업 트리 항목(${targetNodeName || "첫번째 항목"}) 셀렉터 보강: "${original}" -> "${action.selector}"`);
-          fixedActionsCount++;
-        }
-        sel = action.selector;
-      }
-      // 일정등록
-      else if (
-        (desc.includes("일정등록") || desc.includes("일정 등록")) &&
-        !desc.includes("저장") &&
-        !desc.includes("완료") &&
-        !desc.includes("취소") &&
-        !desc.includes("확인") &&
-        !desc.includes("선택") &&
-        !desc.includes("팝업") &&
-        !desc.includes("모달")
-      ) {
-        const original = action.selector;
-        action.selector = "button#reg_shedule_lefttop:visible, button#scheduleLayerBtn:visible, button:has-text('일정 등록'):visible, button:has-text('일정등록'):visible";
-        if (original !== action.selector) {
-          changes.push(`[그룹웨어 정밀 매핑] 일정등록 버튼 보강: "${original}" -> "${action.selector}"`);
-          fixedActionsCount++;
-        }
-        sel = action.selector;
-      }
-      // 게시판 글작성
-      else if (
-        (desc.includes("글작성") || desc.includes("게시글 작성") || desc.includes("글 작성")) &&
-        !desc.includes("저장") &&
-        !desc.includes("완료") &&
-        !desc.includes("취소") &&
-        !desc.includes("확인") &&
-        !desc.includes("선택") &&
-        !desc.includes("팝업") &&
-        !desc.includes("모달")
-      ) {
-        const original = action.selector;
-        action.selector = "button#boardSideBar_write:visible, button#brdBoardLeft_writeBtn:visible, #snb button:has-text('글 작성'):visible, button:has-text('글작성'):visible";
-        if (original !== action.selector) {
-          changes.push(`[그룹웨어 정밀 매핑] 게시판 글작성 버튼 보강: "${original}" -> "${action.selector}"`);
-          fixedActionsCount++;
-        }
-        sel = action.selector;
-      }
-      // 문서관리 문서등록
-      else if (
-        (desc.includes("문서등록") || desc.includes("문서 등록")) &&
-        !desc.includes("저장") &&
-        !desc.includes("완료") &&
-        !desc.includes("취소") &&
-        !desc.includes("확인") &&
-        !desc.includes("선택") &&
-        !desc.includes("팝업") &&
-        !desc.includes("모달")
-      ) {
-        const original = action.selector;
-        action.selector = "button#docLeft_writeBtn:visible, button#reg_doc_btn:visible, #snb button:has-text('문서 등록'):visible, button:has-text('문서등록'):visible";
-        if (original !== action.selector) {
-          changes.push(`[그룹웨어 정밀 매핑] 문서관리 문서등록 버튼 보강: "${original}" -> "${action.selector}"`);
-          fixedActionsCount++;
-        }
-        sel = action.selector;
-      }
-    }
-
-    if (action.type === "type") {
-      // 기안의견
-      if (desc.includes("의견") || desc.includes("opinion")) {
-        const original = action.selector;
-        action.selector = "textarea#eapDocReg_draftOpinCn:visible, textarea#eapDocReg_opinCn:visible, textarea[name*='opinion']:visible, textarea[placeholder*='의견']:visible, textarea:visible";
-        if (original !== action.selector) {
-          changes.push(`[그룹웨어 정밀 매핑] 기안의견 입력란 보강: "${original}" -> "${action.selector}"`);
-          fixedActionsCount++;
-        }
-        sel = action.selector;
-      }
-      // 제목 입력란 (일정/예약 vs 결재/문서/게시판/메일/쪽지 구분 및 기존 고유 셀렉터 우선 보존)
-      else if (desc.includes("제목") && !desc.includes("검색") && !desc.includes("분류")) {
-        const original = action.selector || "";
-        const descWithoutQuotes = desc.replace(/['"][^'"]*['"]/g, "");
-        const isMailOrNote =
-          descWithoutQuotes.includes("메일") ||
-          descWithoutQuotes.includes("쪽지") ||
-          /\b(?:emlMailReg|mail_subject|notNoteReg)\b/i.test(original);
-        const isScheduleOrRes =
-          !isMailOrNote &&
-          (descWithoutQuotes.includes("일정") ||
-            descWithoutQuotes.includes("예약") ||
-            /^(\.ui-dialog:visible\s+)?input#subject(:visible)?$/i.test(original.trim()));
-        const origParts = splitSelectorCandidates(original);
-        const baseCandidates = isScheduleOrRes
-          ? [
-              ".ui-dialog:visible input#subject:visible",
-              "input#subject:visible",
-              "input[name='subject']:visible",
-              "input[placeholder*='제목']:visible",
-            ]
-          : isMailOrNote
-            ? [
-                "input#emlMailReg_subject:visible",
-                "input#notNoteReg_subject:visible",
-                ...origParts,
-                "input[name*='subject']:visible",
-                "input[name*='Subject']:visible",
-                "input[placeholder*='제목']:visible",
-              ]
-            : [
-                ...origParts,
-                "input#_DOC_TITLE_:visible",
-                "input#eapDocReg_docSubject:visible",
-                "input#docTitle:visible",
-                "input#atclReg_subject:visible",
-                "input#atclWrite_subject:visible",
-                "input#smwWorkReg_subject:visible",
-                "input[name*='Subject']:visible",
-                "input[placeholder*='제목']:visible",
-                "input#subject:visible",
-              ];
-        action.selector = Array.from(new Set(baseCandidates)).join(", ");
-        if (original !== action.selector) {
-          changes.push(`[그룹웨어 정밀 매핑] 제목 입력란 보강: "${original}" -> "${action.selector}"`);
-          fixedActionsCount++;
-        }
-        sel = action.selector;
-      }
-    }
-
-    // 1-B2. Universal Dialog Confirm / Apply Button
-    const isDialogConfirmIntent =
-      (desc.includes("확인 버튼") ||
-       desc.includes("확인 클릭") ||
-       desc.includes("선택 완료") ||
-       desc.includes("팝업 확인") ||
-       desc.includes("대화상자 확인") ||
-       desc.includes("다이얼로그 확인") ||
-       desc.includes("적용 버튼") ||
-       (desc.endsWith("확인") && !desc.includes("옵션") && !desc.includes("내용") && !desc.includes("여부") && !desc.includes("상태") && !desc.includes("일정") && !desc.includes("중복")));
-
-    if (
-      action.type === "click" &&
-      isDialogConfirmIntent &&
-      (isModalContext || sel.includes("confirm") || sel.includes("Confirm")) &&
-      !desc.includes("옵션") &&
-      !desc.includes("체크") &&
-      !desc.includes("설정") &&
-      !desc.includes("공개") &&
-      !desc.includes("비공개") &&
-      !desc.includes("일정확인")
-    ) {
-      action.selector = ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button._confirmBtn:visible, .ui-dialog:visible button._confirm:visible, .ui-dialog:visible .ui-dialog-buttonpane button:text-is('확인'):visible, button[id*='confirm']:visible, button[id*='Confirm']:visible, .ui-dialog:visible button.btn_pri:text-is('확인'):visible";
-      delete action.iframe;
-      if (desc.includes("완료 확인") || desc.includes("알림 팝업") || desc.includes("확인 알림") || desc.includes("상신 완료") || desc.includes("완료 알림")) {
-        action.optional = true;
-      }
-      sel = action.selector;
-    }
-
-    // Schedule form option / checkbox / place helpers
-    if (action.type === "click" && (desc.includes("공개") || desc.includes("비공개"))) {
-      action.selector = ".ui-dialog:visible label:has-text('비공개'):visible, .ui-dialog:visible label:has-text('공개'):visible, .ui-dialog:visible input#publYn:visible, input[name*='publ']:visible, label:has-text('비공개'), label:has-text('공개')";
-      action.optional = true;
-      sel = action.selector;
-    }
-
-    if (action.type === "type" && (desc.includes("장소") || desc.includes("회의실") || desc.includes("위치"))) {
-      action.selector = ".ui-dialog:visible input#palace:visible, .ui-dialog:visible input#place:visible, .ui-dialog:visible input[name*='palace']:visible, .ui-dialog:visible input[name*='place']:visible, .ui-dialog:visible input[placeholder*='장소']:visible, input#palace:visible";
-      sel = action.selector;
-    }
-
-    // 1-C. Calendar Event Item Hover & Click (Post-modal Registration)
-    if (desc.includes("캘린더") || desc.includes("등록된 일정") || desc.includes("일정 항목")) {
-      if (sel.includes(".ui-dialog")) {
-        const cleanedSel = sel.split(",").map(s => s.trim()).filter(s => !s.includes(".ui-dialog")).join(", ").trim();
-        action.selector = cleanedSel || "a.fc-event:visible, .fc-event-title:visible, .fc-event:visible";
-        sel = action.selector;
-      }
-    }
-
-    if (sel.includes("tr-child") || sel.includes("tr:first-child-child")) {
-      action.selector = sel.replace(/tr-child/g, "tr:first-child").replace(/tr:first-child-child/g, "tr:first-child");
-      sel = action.selector;
-    }
-
-    if (sel.includes("li:last-child-child") || sel.includes("li-child") || sel.includes("li:first-child-child")) {
-      action.selector = sel.replace(/li:last-child-child/g, "li:last-child").replace(/li-child/g, "li:last-child").replace(/li:first-child-child/g, "li:first-child");
-      sel = action.selector;
-    }
-
-    if (sel.includes("-child-child")) {
-      action.selector = sel.replace(/:first-child-child/g, ":first-child").replace(/:last-child-child/g, ":last-child");
-      sel = action.selector;
-    }
-
-    // 1-C. Editor Content Body Targeting (Strictly target editable canvas, avoid title inputs and toolbars)
-    if (
-      action.type === "type" &&
-      (desc.includes("내용") || desc.includes("본문") || desc.includes("content") || desc.includes("사유") || desc.includes("메모") || desc.includes("상세")) &&
-      !desc.includes("제목") &&
-      !sel.includes("contenteditable") &&
-      !sel.includes("textarea") &&
-      !sel.includes(".note-editable")
-    ) {
-      action.selector = `${sel} div[contenteditable='true']:visible, ${sel} textarea:visible, div[contenteditable='true']:visible, textarea:visible, .note-editable:visible`;
-      sel = action.selector;
-    }
-
-    // 1-D. Universal List Detail Click Dual Compatibility (Table & Vertical Split View)
-    const isClosingOrAction =
-      desc.includes("닫기") ||
-      desc.includes("취소") ||
-      desc.includes("저장") ||
-      desc.includes("상신") ||
-      desc.includes("삭제") ||
-      desc.includes("수정") ||
-      desc.includes("목록") ||
-      desc.includes("복귀") ||
-      sel.includes("close") ||
-      sel.includes("btn_close") ||
-      sel.includes("listBtn") ||
-      sel.includes("titlebar-close");
-
-    const isCalendarEvent =
-      sel.includes("fc-") ||
-      desc.includes("일정") ||
-      desc.includes("캘린더");
-
-    const isFormOrControlAction =
-      sel.includes("input") ||
-      sel.includes("checkbox") ||
-      sel.includes("radio") ||
-      sel.includes("button") ||
-      sel.includes("select") ||
-      sel.includes("dialog") ||
-      sel.includes("auth") ||
-      desc.includes("체크박스") ||
-      desc.includes("라디오") ||
-      desc.includes("권한") ||
-      desc.includes("옵션") ||
-      desc.includes("입력") ||
-      desc.includes("버튼") ||
-      desc.includes("작성");
-
-    const isListRowIntent =
-      !isFormOrControlAction &&
-      (desc.includes("목록") || desc.includes("리스트") || desc.includes("게시글") || desc.includes("문서 선택") || desc.includes("문서 클릭") || desc.includes("행 클릭") || desc.includes("첫 번째 글"));
-
-    if (
-      action.type === "click" &&
-      !isClosingOrAction &&
-      !isCalendarEvent &&
-      isListRowIntent &&
-      !sel.includes("lst_vr") &&
-      !sel.includes("sub_tp")
-    ) {
-      action.selector = `${sel}, table.tbl_lst tbody tr:first-child td.sub a:visible, table tbody tr:first-child td[class*='sub'] a:visible, table tbody tr:first-child a:visible, ul.lst_vr_ul li:first-child a.sub_tp:visible, ul.lst_vr_ul li:first-child .sub a:visible, ul[id*='List'] li:first-child a.sub_tp:visible, ul[class*='lst'] li:first-child a:visible, .lst_type1 li:first-child a:visible`;
-      sel = action.selector;
-    }
-
-    // Clean accidental table list selectors and force flags from close/cancel or form/control actions
-    if ((desc.includes("닫기") || desc.includes("취소") || isFormOrControlAction) && sel.includes("table.tbl_lst")) {
-      action.selector = sel
-        .replace(/,\s*table\.tbl_lst[\s\S]*$/, "")
-        .trim();
-      sel = action.selector;
-      changes.push(`[컨텍스트 격리] 폼/컨트롤 액션에서 부적절한 목록 선택 Fallback 제거: "${desc}"`);
-    }
-
-    if (action.force && isFormOrControlAction && !action.optional) {
-      delete action.force;
-    }
-
-    // 1-E. Module Content Search vs Sidebar Folder Search vs GNB Header Search vs AI Chat Collision Prevention
-    const isAiChatContext =
-      Boolean(action.iframe && /chat_iframe|aiChat/i.test(action.iframe)) ||
-      /\bcmmAiChat|\bmentiony-content|\b_aiReset|\b_newChat|\b_chatLink|\bdata-search-type\b/i.test(sel) ||
-      desc.includes("에이전트") ||
-      desc.includes("질문") ||
-      desc.includes("ai ") ||
-      desc.includes("ai챗") ||
-      desc.includes("챗봇");
-
-    // Restore AI Chat actions in non-Eyedropper plans that were previously overwritten with eapWorkSelect_searchWord / eapWorkSelect_searchBox
-    if (isAiChatContext) {
-      if (action.type === "type" && sel.includes("eapWorkSelect_searchWord")) {
-        action.selector =
-          "div.mentiony-content[contenteditable='true']:visible, div[contenteditable='true'][data-placeholder*='질문']:visible, textarea:visible, input[type='text']:visible";
-        sel = action.selector;
-        changes.push(`[AI Chat 복원] AI 챗봇 질문 입력창 셀렉터 복원: "${desc}"`);
-        fixedActionsCount++;
-      } else if (action.type === "click" && sel.includes("eapWorkSelect_searchBox")) {
-        if (desc.includes("에이전트")) {
-          action.selector =
-            "div#cmmAiChat_controlMenu button[data-search-type='tool']:visible, button[data-search-type='tool']:visible, button._search:has-text('에이전트 모드'):visible, button:has-text('에이전트'):visible";
-        } else {
-          action.selector =
-            "div#cmmAiChat_controlMenu button[data-search-type='gw']:visible, button[data-search-type='gw']:visible, button._search:has-text('그룹웨어 검색'):visible, button._send:visible, button[title*='전송']:visible";
-        }
-        sel = action.selector;
-        changes.push(`[AI Chat 복원] AI 챗봇 검색/모드 버튼 셀렉터 복원: "${desc}"`);
-        fixedActionsCount++;
-      }
-    }
-
-    const isFolderTreeSearch = desc.includes("문서함 검색") || desc.includes("폴더 검색") || desc.includes("트리 검색") || desc.includes("사이드바 검색");
-    const isSearchExecuteAction =
-      !isAiChatContext &&
-      action.type === "click" &&
-      (desc.includes("검색") || sel.includes("search") || sel.includes("srch")) &&
-      (desc.includes("버튼") || desc.includes("실행") || desc.includes("아이콘") || sel.includes("Btn") || sel.includes("btn") || sel.includes("submit")) &&
-      !desc.includes("결과") &&
-      !desc.includes("상세") &&
-      !desc.includes("통합검색") &&
-      !desc.includes("헤더") &&
-      !desc.includes("포탈 검색");
-
-    if (isSearchExecuteAction) {
-      if (isFolderTreeSearch) {
-        action.selector = `#snb .srch_bar button.btn_srch:visible, #snb .srch_bar button[title='검색']:visible, #snb button.btn_srch:visible`;
-      } else {
-        // Prioritize Content Toolbar & Module-Specific Search Buttons (EAP WorkSelect, Doc, Board, Email, Note, Project)
-        action.selector = `#eapWorkSelect_searchBox button.btn_srch:visible, button#atclList_srchBtn:visible, button#brdAtclList_searchBtn:visible, button#emlLmbMailList_btnSearch:visible, button#noteHeader_btnSearch:visible, button#prjTaskSearch_btnSearch:visible, button[id*='srchBtn']:visible, button[id*='searchBtn']:visible, .new_srch_bar button:visible, #content .srch_input button:has(.ico_srch):visible, #content .srch_input button[title='검색']:visible, #content button[title='검색']:visible, #content button.btn_srch:visible, #content button:has-text('검색'):visible`;
-      }
-      sel = action.selector;
-    }
-
-    // 1-F. Content List Search Input (헤더 바로 아래 본문 제목/키워드 검색창 vs 사이드바 문서함 검색창)
-    const isSearchInputAction =
-      !isAiChatContext &&
-      action.type === "type" &&
-      (desc.includes("검색") || sel.includes("search") || sel.includes("srch") || Boolean(action.useScraped)) &&
-      !desc.includes("제목") &&
-      !desc.includes("내용") &&
-      !desc.includes("본문") &&
-      !isInsideModal &&
-      !desc.includes("통합검색") &&
-      !desc.includes("헤더") &&
-      !desc.includes("포탈 검색");
-
-    if (isSearchInputAction) {
-      if (isFolderTreeSearch) {
-        action.selector = `#snb .srch_bar input:visible, #snb input[placeholder*='검색']:visible`;
-      } else {
-        // Prioritize Content Toolbar & Module-Specific Search Inputs (EAP WorkSelect, Doc, Board, Email, Note, Project)
-        action.selector = `input#eapWorkSelect_searchWord:visible, input#atclList_searchWord:visible, input#brdAtclList_searchWord:visible, input#emlLmbMailList_searchWord:visible, input#noteHeader_searchWord:visible, input#worViewerList_searchWord:visible, input#prjTaskSearch_searchWord:visible, input[id*='searchWord']:visible, .new_srch_bar input:visible, #content .srch_input input:visible, #content input[id*='search']:visible, #content input[placeholder*='검색']:visible`;
-      }
-      sel = action.selector;
     }
 
     // 2. Track Modal Dialog Entering / Leaving
@@ -2965,106 +1974,6 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
       }
     }
 
-    // 11-E. Remove bogus unrecorded topMenu_logon or duplicate logout clicks following a recorded logout click,
-    // or unrecorded frmEditByDesign_btnSaveConfirm clicks injected after frmMainList_btnConfirm popup confirm
-    if (act.type === "click") {
-      const actSel = act.selector || "";
-      const actDesc = act.description || "";
-      const prevSel = prev1?.selector || "";
-      const prevDesc = prev1?.description || "";
-      const isActLogout =
-        actSel.includes("topMenu_logon") ||
-        actSel.includes("btn_logout") ||
-        actSel.includes("goLogout") ||
-        actDesc.includes("로그아웃");
-      const isPrevLogout =
-        prev1?.type === "click" &&
-        (prevSel.includes("btn_logout") || prevSel.includes("goLogout") || prevDesc.includes("로그아웃"));
-
-      if (isActLogout && (isPrevLogout || (!act.recordedByEyedropper && actSel.includes("topMenu_logon")))) {
-        changes.push(`[정제] 로그아웃 직후 중복/오류 삽입된 로그아웃 버튼 클릭 액션 제거: "${actDesc}"`);
-        removedActionsCount++;
-        if (idx + 1 < sanitizedActions.length && sanitizedActions[idx + 1].type === "wait") {
-          idx++;
-          removedActionsCount++;
-        }
-        continue;
-      }
-
-      const prevNonWait = prev1?.type === "wait" ? prev2 : prev1;
-      const prevNonWaitSel = prevNonWait?.selector || "";
-      if (
-        !act.recordedByEyedropper &&
-        actSel.includes("frmEditByDesign_btnSaveConfirm") &&
-        (prevSel.includes("frmMainList_btnConfirm") || prevNonWaitSel.includes("frmMainList_btnConfirm"))
-      ) {
-        changes.push(`[정제] 양식 선택 팝업 확인(#frmMainList_btnConfirm) 직후 오류 삽입된 폼 디자이너 확인 액션 제거: "${actDesc}"`);
-        removedActionsCount++;
-        if (idx + 1 < sanitizedActions.length && sanitizedActions[idx + 1].type === "wait") {
-          idx++;
-          removedActionsCount++;
-        }
-        continue;
-      }
-
-      // Clean up duplicate AI-injected [포탈 전체메뉴 열기 -> 모듈 선택] steps (lacking targetHtml) right after a recorded #all_svc_inner module click
-      if (
-        !act.targetHtml &&
-        Boolean(prevNonWait?.targetHtml) &&
-        prevNonWaitSel.includes("all_svc_inner") &&
-        (actSel.includes("btn_svc_open") ||
-          actDesc.includes("포탈 전체메뉴") ||
-          actSel.includes("all_svc_inner") ||
-          actSel.includes("#svc_box"))
-      ) {
-        changes.push(`[정제] 포탈 전체메뉴 모듈 이동 직후 중복 삽입된 전체메뉴 액션 제거: "${actDesc}"`);
-        removedActionsCount++;
-        if (idx + 1 < sanitizedActions.length && sanitizedActions[idx + 1].type === "wait") {
-          idx++;
-          removedActionsCount++;
-        }
-        continue;
-      }
-
-      // Clean up duplicate AI-injected [_fileAdd / _search] steps (lacking targetHtml & recordedByEyedropper) right after a recorded AI Chat control Menu action
-      if (
-        actualPlan.recordedByEyedropper &&
-        !act.recordedByEyedropper &&
-        !act.targetHtml &&
-        Boolean(prevNonWait?.targetHtml) &&
-        (actSel.includes("_fileAdd") ||
-          actSel.includes("_search") ||
-          actSel.includes("cmmAiChat_controlMenu") ||
-          actDesc.includes("파일 추가 및 기타") ||
-          actDesc.includes("에이전트 모드"))
-      ) {
-        changes.push(`[정제] AI Chat 옵션 선택 직후 중복 삽입된 비녹화 보조 액션 제거: "${actDesc}"`);
-        removedActionsCount++;
-        if (idx + 1 < sanitizedActions.length && sanitizedActions[idx + 1].type === "wait" && !sanitizedActions[idx + 1].recordedByEyedropper) {
-          idx++;
-          removedActionsCount++;
-        }
-        continue;
-      }
-
-      // Deduplicate consecutive identical clicks on a slide-over drawer item (#cmmAiChatSideMenu_navi a)
-      // because the 1st click already selects the item and closes the drawer!
-      if (
-        prevNonWait?.type === "click" &&
-        actSel.includes("cmmAiChatSideMenu_navi") &&
-        prevNonWaitSel.includes("cmmAiChatSideMenu_navi") &&
-        (actSel === prevNonWaitSel || (act.targetHtml && act.targetHtml === prevNonWait.targetHtml))
-      ) {
-        changes.push(`[중복 클릭 제거] 슬라이드 메뉴(#cmmAiChatSideMenu_navi) 닫힘 직후 동일 항목 중복 클릭 제거: "${actDesc}"`);
-        removedActionsCount++;
-        if (idx + 1 < sanitizedActions.length && sanitizedActions[idx + 1].type === "wait") {
-          idx++;
-          removedActionsCount++;
-        }
-        continue;
-      }
-    }
-
     cleanedSanitizedActions.push(act);
   }
 
@@ -3197,314 +2106,12 @@ export function sanitizeBrowsePlan(plan: BrowsePlan): { plan: BrowsePlan; report
     }
   }
 
-  // 15-A. Universal 2-Tier Nested Picker Trigger Injection (Setting Layer -> Inner User Picker)
-  // If an outer setting layer was opened (e.g. 권한 설정, 참석자 설정, 결재선 설정, 옵션 설정),
-  // and subsequent steps attempt to select a user card or org tree,
-  // BUT there is NO step clicking the inner trigger ([추가], [조직도], [주소록]) to actually summon the picker:
-  const outerSettingTriggerIdx = optimizedActions.findIndex((a, idx) => {
-    if (a.type !== "click") return false;
-    const d = (a.description || "").toLowerCase();
-    return (
-      (d.includes("설정") || d.includes("지정")) &&
-      (d.includes("권한") || d.includes("참석자") || d.includes("결재선") || d.includes("수신자") || d.includes("자원") || d.includes("옵션")) &&
-      !d.includes("확인") &&
-      idx < optimizedActions.length - 4
-    );
-  });
-
-  if (outerSettingTriggerIdx !== -1) {
-    const userPickIdx = optimizedActions.findIndex((a, idx) => {
-      if (a.type !== "click") return false;
-      const d = (a.description || "").toLowerCase();
-      const s = (a.selector || "").toLowerCase();
-      const isTrigger =
-        d.includes("추가 버튼") ||
-        d.includes("조직도 버튼") ||
-        d.includes("피커 호출") ||
-        d.includes("대화상자 호출") ||
-        d.includes("팝업 호출") ||
-        s.includes("btn_add");
-      if (isTrigger) return false;
-      return (
-        idx > outerSettingTriggerIdx &&
-        (d.includes("사원") ||
-          d.includes("사용자 선택") ||
-          d.includes("대상자") ||
-          d.includes("직원") ||
-          d.includes("부서 노드") ||
-          s.includes("user_info") ||
-          s.includes("user_card") ||
-          s.includes("chkbox"))
-      );
-    });
-
-    if (userPickIdx !== -1) {
-      const hasInnerTriggerBetween = optimizedActions.slice(outerSettingTriggerIdx + 1, userPickIdx).some((a) => {
-        if (a.type !== "click") return false;
-        const d = (a.description || "").toLowerCase();
-        const s = (a.selector || "").toLowerCase();
-        return (
-          (d.includes("추가") && !d.includes("목록으로") && !d.includes("대상 목록")) ||
-          d.includes("조직도") ||
-          d.includes("주소록") ||
-          d.includes("피커") ||
-          s.includes("btn_add")
-        );
-      });
-
-      if (!hasInnerTriggerBetween) {
-        let insertPos = outerSettingTriggerIdx + 1;
-        if (insertPos < optimizedActions.length && optimizedActions[insertPos].type === "wait") {
-          insertPos++;
-        }
-        optimizedActions.splice(
-          insertPos,
-          0,
-          {
-            type: "click",
-            description: "설정 대화상자 내 [추가] 버튼 클릭하여 조직도/사용자 선택 팝업 호출",
-            selector: ".ui-dialog:visible button:has-text('추가'):visible, .ui-dialog:visible button:has-text('조직도'):visible, .ui-dialog:visible button:has-text('주소록'):visible, .ui-dialog:visible button.btn_add:visible, button:has-text('추가'):visible",
-          },
-          {
-            type: "wait",
-            description: "조직도/사용자 선택 팝업 로딩 대기",
-            ms: 1800,
-          }
-        );
-        changes.push(`[보강] 2-Tier 중첩 모달 감지: 설정 레이어 오픈 후 내부 [추가/조직도] 호출 액션 자동 주입`);
-        fixedActionsCount++;
-      }
-    }
-  }
-
-  // 15. Universal Multi-Tier Modal Stack Confirmation Balance (LIFO Dialog Closure)
-  // In any enterprise web application (Approval Line, Attendees, Permissions, Resources, Address Book, Categories),
-  // if an outer setting modal was opened, and then an inner picker modal was opened and confirmed,
-  // the outer setting modal must also be confirmed before proceeding to final form submit/save.
-  const outerModalTriggerIdx = optimizedActions.findIndex((a, idx) => {
-    if (a.type !== "click") return false;
-    const d = (a.description || "").toLowerCase();
-    return (
-      (d.includes("설정") || d.includes("지정") || d.includes("관리") || d.includes("선택 모달") || d.includes("팝업 오픈") || d.includes("창 열기")) &&
-      !d.includes("확인") &&
-      !d.includes("저장") &&
-      !d.includes("상신") &&
-      idx < optimizedActions.length - 4
-    );
-  });
-
-  const innerPickerConfirmIdx = optimizedActions.findIndex((a, idx) => {
-    if (a.type !== "click") return false;
-    const d = (a.description || "").toLowerCase();
-    return (
-      idx > outerModalTriggerIdx &&
-      outerModalTriggerIdx !== -1 &&
-      (d.includes("선택 대화상자") || d.includes("조직도") || d.includes("주소록") || d.includes("모달 확인") || d.includes("설정 반영") || d.includes("피커") || d.includes("선택 완료") || d.includes("적용")) &&
-      d.includes("확인")
-    );
-  });
-
-  const hasOuterConfirmAfter = optimizedActions.some((a, idx) => {
-    if (a.type !== "click") return false;
-    const d = (a.description || "").toLowerCase();
-    return idx > innerPickerConfirmIdx && innerPickerConfirmIdx !== -1 && d.includes("확인");
-  });
-
-  if (outerModalTriggerIdx !== -1 && innerPickerConfirmIdx !== -1 && !hasOuterConfirmAfter) {
-    let insertIdx = innerPickerConfirmIdx + 1;
-    if (insertIdx < optimizedActions.length && optimizedActions[insertIdx].type === "wait") {
-      insertIdx++;
-    }
-    optimizedActions.splice(
-      insertIdx,
-      0,
-      {
-        type: "click",
-        description: "상위 설정 대화상자 [확인] 버튼 클릭하여 설정 완료 및 본문 복귀",
-        selector: ".ui-dialog:visible .ui-dialog-buttonpane button:has-text('확인'):visible, .ui-dialog:visible button:has-text('확인'):visible, .modal:visible button:has-text('확인'):visible, [role='dialog']:visible button:has-text('확인'):visible, button:has-text('확인'):visible",
-        optional: true,
-      },
-      {
-        type: "wait",
-        description: "상위 설정 완료 및 본문 폼 복귀 대기",
-        ms: 1500,
-      }
-    );
-    changes.push(`[보강] 중첩 모달(Nested Dialog) 감지: 내부 피커 확인 후 상위 설정 대화상자 [확인] 액션 자동 주입`);
-    fixedActionsCount++;
-  }
-
-  // 16. Universal EKP Approval Form Card -> [작성] Button Automatic Injection
-  // When an approval work card is selected (or clicked), the user MUST click the inner [작성] button
-  // to open the draft form. If the inner write button click is missing, inject it automatically!
-  const cardSelectIdx = optimizedActions.findIndex((a, idx) => {
-    if (a.type !== "click") return false;
-    const d = (a.description || "").toLowerCase();
-    const s = (a.selector || "").toLowerCase();
-    return (
-      (d.includes("카드") || d.includes("양식") || d.includes("결재업무")) &&
-      (d.includes("선택") || d.includes("클릭")) &&
-      !d.includes("대버튼") &&
-      !d.includes("사이드바") &&
-      !d.includes("snb") &&
-      (s.includes("app_work_box") || s.includes("aw_li") || s.includes("work_list") || d.includes("회의록") || d.includes("지출결의서") || d.includes("경비정산"))
-    );
-  });
-
-  if (cardSelectIdx !== -1) {
-    const hasCardWriteBtnAfter = optimizedActions.some((a, idx) => {
-      if (a.type !== "click") return false;
-      const d = (a.description || "").toLowerCase();
-      const s = (a.selector || "").toLowerCase();
-      return (
-        idx > cardSelectIdx &&
-        idx <= cardSelectIdx + 3 &&
-        (d.includes("카드 내") || d.includes("양식 내") || d.includes("소형") || s.includes("btn_write") || d.includes("작성 버튼"))
-      );
-    });
-
-    if (!hasCardWriteBtnAfter) {
-      let insertIdx = cardSelectIdx + 1;
-      if (insertIdx < optimizedActions.length && optimizedActions[insertIdx].type === "wait") {
-        insertIdx++;
-      }
-      optimizedActions.splice(
-        insertIdx,
-        0,
-        {
-          type: "click",
-          description: "선택된 결재업무 카드 내부의 [작성] 버튼 클릭하여 기안 작성 화면 오픈",
-          selector: "ul.aw_ul li.aw_li button.btn_write:visible, .app_work_box button:has-text('작성'):visible, .app_work_box button.btn_write:visible, #eapWorkSelect_workList button.btn_write:visible, li.aw_li button:has-text('작성'):visible, button.btn_write:not(._header_writeBtn):not(#header *):not(.gw_header *):not(#snb *):not(.workset_btn *):not(.gm_reg *):visible",
-        },
-        {
-          type: "wait",
-          description: "기안서 작성 폼 로딩 및 에디터 렌더링 대기",
-          ms: 3500,
-        }
-      );
-      changes.push(`[보강] 전자결재 양식 카드 선택 후 내부 [작성] 버튼 클릭 및 폼 로딩 대기 액션 자동 주입`);
-      fixedActionsCount++;
-    }
-  } else {
-    // AI가 검색 실행 후 카드 선택 및 [작성] 버튼 클릭 단계를 건너뛰고 바로 제목 입력으로 넘어간 경우 자동 복구
-    const searchIdx = optimizedActions.findIndex((a) => {
-      const d = (a.description || "").toLowerCase();
-      const s = (a.selector || "").toLowerCase();
-      return (
-        (d.includes("결재업무") || d.includes("양식") || d.includes("회의록") || d.includes("지출결의서")) &&
-        (d.includes("검색") && (a.type === "click" || s.includes("srchbtn") || s.includes("btn_srch")))
-      );
-    });
-
-    const titleIdx = optimizedActions.findIndex((a) => {
-      const d = (a.description || "").toLowerCase();
-      const s = (a.selector || "").toLowerCase();
-      return (
-        a.type === "type" &&
-        (d.includes("제목") || s.includes("subject") || s.includes("title"))
-      );
-    });
-
-    if (searchIdx !== -1 && titleIdx !== -1 && searchIdx < titleIdx) {
-      let insertIdx = searchIdx + 1;
-      if (insertIdx < optimizedActions.length && optimizedActions[insertIdx].type === "wait") {
-        insertIdx++;
-      }
-      optimizedActions.splice(
-        insertIdx,
-        0,
-        {
-          type: "click",
-          description: "검색된 회의록 결재업무 카드 선택",
-          selector: "ul.aw_ul li.aw_li:first-child .app_work_box, ul.aw_ul li.aw_li:first-child .info_div, li.aw_li:first-child .app_work_box, .app_work_box:visible, .app_work_list li:first-child a",
-        },
-        {
-          type: "wait",
-          description: "결재업무 카드 선택 상태 대기",
-          ms: 1200,
-        },
-        {
-          type: "click",
-          description: "선택된 결재업무 카드 내부의 [작성] 버튼 클릭하여 기안 작성 화면 오픈",
-          selector: "ul.aw_ul li.aw_li button.btn_write:visible, .app_work_box button:has-text('작성'):visible, .app_work_box button.btn_write:visible, #eapWorkSelect_workList button.btn_write:visible, li.aw_li button:has-text('작성'):visible, button.btn_write:not(._header_writeBtn):not(#header *):not(.gw_header *):not(#snb *):not(.workset_btn *):not(.gm_reg *):visible",
-        },
-        {
-          type: "wait",
-          description: "기안서 작성 폼 로딩 및 에디터 렌더링 대기",
-          ms: 3500,
-        }
-      );
-      changes.push(`[보강] 양식 검색 후 누락된 양식 카드 선택 및 [작성] 버튼 클릭 액션 자동 주입`);
-      fixedActionsCount += 2;
-    }
-  }
-
-  // Post-pass cleanup:
-  // 1) Remove accidental layout wrapper clicks (e.g. div#eapHeader_option) and their immediate wait
-  // 2) Deduplicate consecutive card [작성] clicks (e.g. when a previous failed run inserted a duplicate card write action)
-  // 3) Remove bogus unrecorded topMenu_logon / duplicate logout clicks injected after an eyedropper-recorded logout click
+  // Post-pass cleanup: merge consecutive wait actions
   const finalActions: BrowsePlanAction[] = [];
-  let lastWasCardWrite = false;
-  let lastWasLogoutClick = false;
 
   for (let i = 0; i < optimizedActions.length; i++) {
     const act = optimizedActions[i];
-    const sel = (act.selector || "").trim();
     const desc = (act.description || "").trim();
-
-    if (
-      act.type === "click" &&
-      (sel.startsWith("div#eapHeader_option") || desc.includes("도움말 전체기간 검색 초기화"))
-    ) {
-      removedActionsCount++;
-      changes.push(`[정제] 불필요한 상단 헤더 래퍼(div#eapHeader_option) 오클릭 제거: "${desc}"`);
-      if (i + 1 < optimizedActions.length && optimizedActions[i + 1].type === "wait") {
-        i++; // skip trailing wait too
-      }
-      continue;
-    }
-
-    const isLogoutClick =
-      act.type === "click" &&
-      (sel.includes("btn_logout") ||
-        sel.includes("goLogout") ||
-        sel.includes("topMenu_logon") ||
-        desc.includes("로그아웃"));
-
-    if (isLogoutClick) {
-      if (lastWasLogoutClick || (!act.recordedByEyedropper && sel.includes("topMenu_logon"))) {
-        removedActionsCount++;
-        changes.push(`[정제] 로그아웃 직후 중복/오류 삽입된 로그아웃 버튼 클릭 액션 제거: "${desc}"`);
-        if (i + 1 < optimizedActions.length && optimizedActions[i + 1].type === "wait") {
-          i++; // skip trailing wait too
-        }
-        continue;
-      }
-      lastWasLogoutClick = true;
-    } else if (act.type !== "wait") {
-      lastWasLogoutClick = false;
-    }
-
-    const isCardWrite =
-      act.type === "click" &&
-      (sel.includes("li.aw_li button.btn_write") ||
-        sel.includes(".app_work_box button.btn_write") ||
-        desc === "'작성' 버튼 클릭" ||
-        desc.includes("작성 버튼 클릭"));
-
-    if (isCardWrite) {
-      if (lastWasCardWrite) {
-        removedActionsCount++;
-        changes.push(`[정제] 중복 삽입된 결재양식 [작성] 버튼 클릭 액션 제거: "${desc}"`);
-        if (i + 1 < optimizedActions.length && optimizedActions[i + 1].type === "wait") {
-          i++; // skip trailing wait too
-        }
-        continue;
-      }
-      lastWasCardWrite = true;
-    } else if (act.type !== "wait") {
-      lastWasCardWrite = false;
-    }
 
     if (
       act.type === "wait" &&

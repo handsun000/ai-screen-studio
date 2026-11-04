@@ -1,0 +1,13 @@
+{
+  "hostKey": "gwdev.bc.ac.kr",
+  "originUrl": "https://gw.bc.ac.kr/ekp/main/home/homGwMain",
+  "siteName": "부천대학교",
+  "manualBadge": "그룹웨어 사용 매뉴얼",
+  "tagline": "",
+  "primaryColor": "#FF9600",
+  "secondaryColor": "#D67200",
+  "accentColor": "#FFC01C",
+  "logoUrl": "/assets/sites/gw.bc.ac.kr/logo.png",
+  "heroThumbUrl": "/assets/sites/gw.bc.ac.kr/hero.png",
+  "createdAt": "2026-10-31T11:43:57.743Z"
+}

@@ -1,0 +1,1477 @@
+{
+  "totalDurationFrames": 20074,
+  "rawDurationFrames": 19385,
+  "fps": 60,
+  "defaultZoom": 1,
+  "segments": [
+    {
+      "momentId": 1,
+      "startFrame": 1020,
+      "endFrame": 1077,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1363,
+        "y": 86
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1363, 86)"
+    },
+    {
+      "momentId": 3,
+      "startFrame": 1198,
+      "endFrame": 1255,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 715,
+        "y": 331
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (715, 331)"
+    },
+    {
+      "momentId": 4,
+      "startFrame": 1635,
+      "endFrame": 2664,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 100,
+        "y": 280
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (82, 248) + Click at (81, 290) + Click at (94, 327) + Click at (92, 361) + Click at (92, 398) + Click at (75, 324) + Click at (126, 162)"
+    },
+    {
+      "momentId": 18,
+      "startFrame": 2782,
+      "endFrame": 3368,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1062,
+        "y": 358
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (937, 505) + Click at (852, 210) + typing: 학사제도 및 교육과정 개편 프로젝트 + Click at (1271, 303)"
+    },
+    {
+      "momentId": 26,
+      "startFrame": 3501,
+      "endFrame": 4266,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 758,
+        "y": 430
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (581, 338) + Click at (631, 371) + Click at (616, 432) + Click at (911, 322) + Click at (934, 537)"
+    },
+    {
+      "momentId": 36,
+      "startFrame": 4423,
+      "endFrame": 5021,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 936,
+        "y": 384
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1280, 354) + Click at (593, 334) + Click at (606, 367) + Click at (618, 433)"
+    },
+    {
+      "momentId": 44,
+      "startFrame": 5137,
+      "endFrame": 6172,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 875,
+        "y": 424
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (831, 297) + Click at (933, 550) + typing: 김병훈 + Click at (817, 441) + typing: 학과별 교육과정 개편안 수합 및 학칙 개정안 마련을 위 + Click at (837, 528)"
+    },
+    {
+      "momentId": 56,
+      "startFrame": 6251,
+      "endFrame": 7902,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 918,
+        "y": 634
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (799, 752) + Click at (945, 525) + Click at (1090, 567) + Click at (1090, 567) + Click at (1090, 567) + Click at (1046, 719) + Click at (775, 581) + Click at (1000, 580) + Click at (910, 722) + Click at (853, 768) + Click at (746, 501) + Click at (775, 622)"
+    },
+    {
+      "momentId": 79,
+      "startFrame": 7929,
+      "endFrame": 8039,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1042,
+        "y": 522
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (935, 382) + Click at (1149, 662)"
+    },
+    {
+      "momentId": 82,
+      "startFrame": 8205,
+      "endFrame": 8262,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 922,
+        "y": 797
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (922, 797)"
+    },
+    {
+      "momentId": 84,
+      "startFrame": 8376,
+      "endFrame": 8636,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 912,
+        "y": 236
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (947, 151) + Click at (877, 321)"
+    },
+    {
+      "momentId": 88,
+      "startFrame": 8748,
+      "endFrame": 8805,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1509,
+        "y": 343
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1509, 343)"
+    },
+    {
+      "momentId": 90,
+      "startFrame": 9063,
+      "endFrame": 9505,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 965,
+        "y": 303
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Typing: 학과별 교육과정 개편 요구사항 수합 및 분석 + Click at (1121, 278) + Click at (809, 425)"
+    },
+    {
+      "momentId": 96,
+      "startFrame": 9622,
+      "endFrame": 9679,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 928,
+        "y": 708
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (928, 708)"
+    },
+    {
+      "momentId": 98,
+      "startFrame": 9828,
+      "endFrame": 10700,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1560,
+        "y": 408
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1657, 297) + Click at (1491, 520) + Click at (1643, 363) + Click at (1655, 401) + Click at (1615, 497) + Click at (1471, 412) + Click at (1462, 476)"
+    },
+    {
+      "momentId": 112,
+      "startFrame": 10817,
+      "endFrame": 11175,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1228,
+        "y": 810
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Typing: 각 학과별 개편 의견서를 수합하여 결과 보고서 초안을  + Click at (1243, 899)"
+    },
+    {
+      "momentId": 116,
+      "startFrame": 11692,
+      "endFrame": 11749,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1901,
+        "y": 23
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1901, 23)"
+    },
+    {
+      "momentId": 118,
+      "startFrame": 11886,
+      "endFrame": 11943,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 914,
+        "y": 420
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (914, 420)"
+    },
+    {
+      "momentId": 120,
+      "startFrame": 12052,
+      "endFrame": 12109,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1854,
+        "y": 631
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1854, 631)"
+    },
+    {
+      "momentId": 122,
+      "startFrame": 12203,
+      "endFrame": 12636,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1023,
+        "y": 304
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Typing: 학과별 개편 의견서 취합표 작성 + Click at (1114, 272) + Click at (932, 430)"
+    },
+    {
+      "momentId": 128,
+      "startFrame": 12760,
+      "endFrame": 12817,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 911,
+        "y": 702
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (911, 702)"
+    },
+    {
+      "momentId": 130,
+      "startFrame": 12977,
+      "endFrame": 13551,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1572,
+        "y": 395
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1651, 285) + Click at (1483, 505) + Click at (1649, 327) + Click at (1660, 379) + Click at (1619, 444)"
+    },
+    {
+      "momentId": 140,
+      "startFrame": 13629,
+      "endFrame": 13686,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1231,
+        "y": 911
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1231, 911)"
+    },
+    {
+      "momentId": 142,
+      "startFrame": 13823,
+      "endFrame": 14056,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1743,
+        "y": 181
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1906, 24) + Click at (1580, 338)"
+    },
+    {
+      "momentId": 146,
+      "startFrame": 14170,
+      "endFrame": 14227,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1021,
+        "y": 425
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1021, 425)"
+    },
+    {
+      "momentId": 148,
+      "startFrame": 14332,
+      "endFrame": 14389,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 776,
+        "y": 68
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (776, 68)"
+    },
+    {
+      "momentId": 152,
+      "startFrame": 14717,
+      "endFrame": 14774,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1834,
+        "y": 215
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1834, 215)"
+    },
+    {
+      "momentId": 154,
+      "startFrame": 14865,
+      "endFrame": 15052,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1029,
+        "y": 522
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (909, 544) + Click at (935, 382) + Click at (1149, 662)"
+    },
+    {
+      "momentId": 158,
+      "startFrame": 15218,
+      "endFrame": 15747,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1022,
+        "y": 679
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1277, 835) + Typing: 학과별 취합 1차 완료하여 중간 산출물 파일을 첨부합니 + Click at (768, 569)"
+    },
+    {
+      "momentId": 164,
+      "startFrame": 15861,
+      "endFrame": 16268,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 904,
+        "y": 522
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (660, 390) + Click at (935, 382) + Click at (1149, 662) + Click at (927, 620)"
+    },
+    {
+      "momentId": 170,
+      "startFrame": 16419,
+      "endFrame": 16476,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1829,
+        "y": 588
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1829, 588)"
+    },
+    {
+      "momentId": 172,
+      "startFrame": 16612,
+      "endFrame": 16669,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1899,
+        "y": 23
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1899, 23)"
+    },
+    {
+      "momentId": 174,
+      "startFrame": 16782,
+      "endFrame": 17177,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 730,
+        "y": 342
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (523, 217) + Click at (937, 432) + Click at (927, 466)"
+    },
+    {
+      "momentId": 181,
+      "startFrame": 17575,
+      "endFrame": 17632,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1175,
+        "y": 355
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1175, 355)"
+    },
+    {
+      "momentId": 183,
+      "startFrame": 17759,
+      "endFrame": 17816,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 652,
+        "y": 220
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (652, 220)"
+    },
+    {
+      "momentId": 185,
+      "startFrame": 17936,
+      "endFrame": 18954,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 198,
+        "y": 288
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (60, 437) + Click at (337, 138) + Click at (92, 258) + Click at (94, 294) + Click at (89, 329) + Click at (90, 357) + Click at (76, 326)"
+    },
+    {
+      "momentId": 199,
+      "startFrame": 19076,
+      "endFrame": 19163,
+      "speed": 1,
+      "zoom": 1.18,
+      "zoomTarget": {
+        "x": 1054,
+        "y": 295
+      },
+      "easeInFrames": 18,
+      "easeOutFrames": 20,
+      "description": "Click at (1054, 295)"
+    }
+  ],
+  "narration": {
+    "slug": "project",
+    "style": "manual",
+    "voice": "ko-KR-SunHiNeural",
+    "pitch": "+0Hz",
+    "rate": "+5%",
+    "enabled": true,
+    "showSubtitles": true,
+    "showIntroToc": true,
+    "introToc": {
+      "enabled": true,
+      "badge": "프로젝트 관리 매뉴얼",
+      "title": "프로젝트 생성 및 일감·진척도 관리 가이드",
+      "summary": "협업 프로젝트 개설부터 일감 배정 및 일정 관리 방법을 안내합니다.",
+      "items": [
+        {
+          "title": "프로젝트 메뉴 및 현황 조회",
+          "description": "프로젝트 메뉴의 주요 구성과 종합·업무 현황 확인 방법을 안내합니다."
+        },
+        {
+          "title": "신규 프로젝트 개설 및 설정",
+          "description": "참여자 권한 부여, 기한 설정 및 작업 규칙 등 프로젝트 생성 절차를 소개합니다."
+        },
+        {
+          "title": "상·하위 일감 등록 및 진척 관리",
+          "description": "세부 일감 배정, 하위 일감 추가 및 산출물·진척도 업데이트 방법을 안내합니다."
+        },
+        {
+          "title": "간트차트 및 활동 이력 확인",
+          "description": "간트차트를 통한 일정 시각화와 첨부파일·활동로그 통합 조회 기능을 소개합니다."
+        }
+      ],
+      "siteBrand": {
+        "hostKey": "gw.bc.ac.kr",
+        "originUrl": "https://gw.bc.ac.kr/ekp/main/home/homGwMain",
+        "siteName": "부천대학교",
+        "manualBadge": "그룹웨어 사용 매뉴얼",
+        "tagline": "",
+        "primaryColor": "#FF9600",
+        "secondaryColor": "#D67200",
+        "accentColor": "#FFC01C",
+        "logoUrl": "/assets/sites/gw.bc.ac.kr/logo.png",
+        "heroThumbUrl": "/assets/sites/gw.bc.ac.kr/hero.png",
+        "createdAt": "2026-10-31T11:43:57.743Z"
+      }
+    },
+    "siteBrand": {
+      "hostKey": "gw.bc.ac.kr",
+      "originUrl": "https://gw.bc.ac.kr/ekp/main/home/homGwMain",
+      "siteName": "부천대학교",
+      "manualBadge": "그룹웨어 사용 매뉴얼",
+      "tagline": "",
+      "primaryColor": "#FF9600",
+      "secondaryColor": "#D67200",
+      "accentColor": "#FFC01C",
+      "logoUrl": "/assets/sites/gw.bc.ac.kr/logo.png",
+      "heroThumbUrl": "/assets/sites/gw.bc.ac.kr/hero.png",
+      "createdAt": "2026-10-31T11:43:57.743Z"
+    },
+    "introBakedIntoVideo": true,
+    "bakedIntroDurationMs": 13848,
+    "_bakedSlideSig": "{\"layoutVersion\":\"contents-only-v2\",\"badge\":\"프로젝트 관리 매뉴얼\",\"title\":\"프로젝트 생성 및 일감·진척도 관리 가이드\",\"summary\":\"협업 프로젝트 개설부터 일감 배정 및 일정 관리 방법을 안내합니다.\",\"items\":[{\"title\":\"프로젝트 메뉴 및 현황 조회\",\"description\":\"프로젝트 메뉴의 주요 구성과 종합·업무 현황 확인 방법을 안내합니다.\"},{\"title\":\"신규 프로젝트 개설 및 설정\",\"description\":\"참여자 권한 부여, 기한 설정 및 작업 규칙 등 프로젝트 생성 절차를 소개합니다.\"},{\"title\":\"상·하위 일감 등록 및 진척 관리\",\"description\":\"세부 일감 배정, 하위 일감 추가 및 산출물·진척도 업데이트 방법을 안내합니다.\"},{\"title\":\"간트차트 및 활동 이력 확인\",\"description\":\"간트차트를 통한 일정 시각화와 첨부파일·활동로그 통합 조회 기능을 소개합니다.\"}],\"hostKey\":\"gw.bc.ac.kr\",\"primaryColor\":\"#FF9600\",\"cue0Text\":\"프로젝트 메뉴는 부서 간 협업 과제와 세부 일감, 일정을 체계적으로 통합 관리하는 협업 도구입니다. 신규 프로젝트 개설부터 일감 등록 및 진척도 관리 방법을 안내합니다.\",\"cue0Sig\":\"ko-KR-SunHiNeural|+5%|+0Hz|프로젝트 메뉴는 부서 간 협업 과제와 세부 일감, 일정을 체계적으로 통합 관리하는 협업 도구입니다. 신규 프로젝트 개설부터 일감 등록 및 진척도 관리 방법을 안내합니다.\",\"introDurationMs\":13848}",
+    "updatedAt": "2026-11-03T08:52:47.462Z",
+    "cues": [
+      {
+        "videoStartMs": 200,
+        "startMs": 200,
+        "endMs": 13448,
+        "text": "프로젝트 메뉴는 부서 간 협업 과제와 세부 일감, 일정을 체계적으로 통합 관리하는 협업 도구입니다. 신규 프로젝트 개설부터 일감 등록 및 진척도 관리 방법을 안내합니다.",
+        "isIntro": true,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-01.mp3",
+        "audioDurationMs": 13248,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|프로젝트 메뉴는 부서 간 협업 과제와 세부 일감, 일정을 체계적으로 통합 관리하는 협업 도구입니다. 신규 프로젝트 개설부터 일감 등록 및 진척도 관리 방법을 안내합니다.",
+        "id": 1,
+        "videoEndMs": 16800,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 200,
+        "compEndMs": 13448
+      },
+      {
+        "videoStartMs": 16800,
+        "startMs": 16800,
+        "endMs": 24024,
+        "text": "포탈 전체메뉴에서 부서 간 협업 과제의 일정과 업무를 통합 관리하는 프로젝트 메뉴로 이동합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-02.mp3",
+        "audioDurationMs": 7224,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|포탈 전체메뉴에서 부서 간 협업 과제의 일정과 업무를 통합 관리하는 프로젝트 메뉴로 이동합니다.",
+        "id": 2,
+        "videoEndMs": 27000,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 16800,
+        "compEndMs": 24024
+      },
+      {
+        "videoStartMs": 27000,
+        "startMs": 27000,
+        "endMs": 35688,
+        "text": "좌측 메뉴에서 전체 진행 추이를 요약해 주는 종합 현황과 담당 일감·이슈를 모아 보는 각 현황 메뉴를 확인할 수 있습니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-03.mp3",
+        "audioDurationMs": 8688,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|좌측 메뉴에서 전체 진행 추이를 요약해 주는 종합 현황과 담당 일감·이슈를 모아 보는 각 현황 메뉴를 확인할 수 있습니다.",
+        "id": 3,
+        "videoEndMs": 43300,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 27000,
+        "compEndMs": 35688
+      },
+      {
+        "videoStartMs": 43300,
+        "startMs": 43300,
+        "endMs": 50668,
+        "text": "새로운 협업 과제를 개설하기 위해 새 프로젝트 생성 창을 열고 상태와 프로젝트명을 입력합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-04.mp3",
+        "audioDurationMs": 7368,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|새로운 협업 과제를 개설하기 위해 새 프로젝트 생성 창을 열고 상태와 프로젝트명을 입력합니다.",
+        "id": 4,
+        "videoEndMs": 58100,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 43300,
+        "compEndMs": 50668
+      },
+      {
+        "videoStartMs": 58100,
+        "startMs": 58100,
+        "endMs": 64820,
+        "text": "조직도에서 프로젝트를 총괄 운영할 관리자를 선택하여 설정 및 수정 권한을 부여합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-05.mp3",
+        "audioDurationMs": 6720,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|조직도에서 프로젝트를 총괄 운영할 관리자를 선택하여 설정 및 수정 권한을 부여합니다.",
+        "id": 5,
+        "videoEndMs": 73500,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 58100,
+        "compEndMs": 64820
+      },
+      {
+        "videoStartMs": 73500,
+        "startMs": 73500,
+        "endMs": 80412,
+        "text": "이어서 프로젝트의 실무 일감을 배정받아 함께 수행할 담당자를 조직도에서 선택해 등록합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-06.mp3",
+        "audioDurationMs": 6912,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|이어서 프로젝트의 실무 일감을 배정받아 함께 수행할 담당자를 조직도에서 선택해 등록합니다.",
+        "id": 6,
+        "videoEndMs": 91400,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 73500,
+        "compEndMs": 80412
+      },
+      {
+        "videoStartMs": 91400,
+        "startMs": 91400,
+        "endMs": 98384,
+        "text": "진행 현황을 열람할 공유자를 추가한 뒤 프로젝트의 목적과 세부 내용을 설명란에 입력합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-07.mp3",
+        "audioDurationMs": 6984,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|진행 현황을 열람할 공유자를 추가한 뒤 프로젝트의 목적과 세부 내용을 설명란에 입력합니다.",
+        "id": 7,
+        "videoEndMs": 104000,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 91400,
+        "compEndMs": 98384
+      },
+      {
+        "videoStartMs": 104000,
+        "startMs": 104000,
+        "endMs": 110096,
+        "text": "프로젝트 수행 기간을 명확히 관리할 수 있도록 시작일과 완료 기한을 지정합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-08.mp3",
+        "audioDurationMs": 6096,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|프로젝트 수행 기간을 명확히 관리할 수 있도록 시작일과 완료 기한을 지정합니다.",
+        "id": 8,
+        "videoEndMs": 119500,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 104000,
+        "compEndMs": 110096
+      },
+      {
+        "videoStartMs": 119500,
+        "startMs": 119500,
+        "endMs": 128428,
+        "text": "기존 일감을 신규 프로젝트와 연결할 수 있으며 작업시간 기록 방식, 진척도 입력 규칙, 일감 유형을 설정합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-09.mp3",
+        "audioDurationMs": 8928,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|기존 일감을 신규 프로젝트와 연결할 수 있으며 작업시간 기록 방식, 진척도 입력 규칙, 일감 유형을 설정합니다.",
+        "id": 9,
+        "videoEndMs": 132000,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 119500,
+        "compEndMs": 128428
+      },
+      {
+        "videoStartMs": 132000,
+        "startMs": 132000,
+        "endMs": 139512,
+        "text": "프로젝트 기본 계획서 등 참고 파일을 첨부한 뒤 생성 버튼을 눌러 신규 프로젝트 개설을 완료합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-10.mp3",
+        "audioDurationMs": 7512,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|프로젝트 기본 계획서 등 참고 파일을 첨부한 뒤 생성 버튼을 눌러 신규 프로젝트 개설을 완료합니다.",
+        "id": 10,
+        "videoEndMs": 142800,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 132000,
+        "compEndMs": 139512
+      },
+      {
+        "videoStartMs": 142800,
+        "startMs": 142800,
+        "endMs": 149496,
+        "text": "개설된 프로젝트로 이동하여 수행해야 할 세부 업무 단위인 신규 일감 등록 화면을 엽니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-11.mp3",
+        "audioDurationMs": 6696,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|개설된 프로젝트로 이동하여 수행해야 할 세부 업무 단위인 신규 일감 등록 화면을 엽니다.",
+        "id": 11,
+        "videoEndMs": 150900,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 142800,
+        "compEndMs": 149496
+      },
+      {
+        "videoStartMs": 150900,
+        "startMs": 150900,
+        "endMs": 157932,
+        "text": "수행할 일감의 제목을 입력하고 프로젝트 참여자 중에서 해당 업무를 전담할 담당자를 지정합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-12.mp3",
+        "audioDurationMs": 7032,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|수행할 일감의 제목을 입력하고 프로젝트 참여자 중에서 해당 업무를 전담할 담당자를 지정합니다.",
+        "id": 12,
+        "videoEndMs": 163700,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 150900,
+        "compEndMs": 157932
+      },
+      {
+        "videoStartMs": 163700,
+        "startMs": 163700,
+        "endMs": 170444,
+        "text": "일감의 일정 지연을 예방하고 진척을 관리하기 위해 시작일과 완료 기한을 지정합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-13.mp3",
+        "audioDurationMs": 6744,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|일감의 일정 지연을 예방하고 진척을 관리하기 위해 시작일과 완료 기한을 지정합니다.",
+        "id": 13,
+        "videoEndMs": 174500,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 163700,
+        "compEndMs": 170444
+      },
+      {
+        "videoStartMs": 174500,
+        "startMs": 174500,
+        "endMs": 182780,
+        "text": "업무의 중요도에 맞춰 우선순위를 높음으로 변경하고 담당자가 수행할 세부 요청 내용을 본문에 작성합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-14.mp3",
+        "audioDurationMs": 8280,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|업무의 중요도에 맞춰 우선순위를 높음으로 변경하고 담당자가 수행할 세부 요청 내용을 본문에 작성합니다.",
+        "id": 14,
+        "videoEndMs": 185200,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 174500,
+        "compEndMs": 182780
+      },
+      {
+        "videoStartMs": 185200,
+        "startMs": 185200,
+        "endMs": 190528,
+        "text": "작성한 내용을 저장하여 프로젝트의 기본 일감 등록을 완료합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-15.mp3",
+        "audioDurationMs": 5328,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|작성한 내용을 저장하여 프로젝트의 기본 일감 등록을 완료합니다.",
+        "id": 15,
+        "videoEndMs": 198000,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 185200,
+        "compEndMs": 190528
+      },
+      {
+        "videoStartMs": 198000,
+        "startMs": 198000,
+        "endMs": 205824,
+        "text": "등록된 상위 일감을 선택한 뒤 세부 실행 단계를 나누어 관리하기 위해 하위 일감 추가 버튼을 클릭합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-16.mp3",
+        "audioDurationMs": 7824,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|등록된 상위 일감을 선택한 뒤 세부 실행 단계를 나누어 관리하기 위해 하위 일감 추가 버튼을 클릭합니다.",
+        "id": 16,
+        "videoEndMs": 203300,
+        "autoHoldMs": 2704,
+        "effectiveDeltaMs": 2704,
+        "playbackRate": 1,
+        "compStartMs": 198000,
+        "compEndMs": 205824
+      },
+      {
+        "videoStartMs": 203300,
+        "startMs": 206000,
+        "endMs": 212600,
+        "text": "하위 일감의 제목을 입력하고 해당 세부 작업을 실제로 수행할 실무 담당자를 지정합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-17.mp3",
+        "audioDurationMs": 6600,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|하위 일감의 제목을 입력하고 해당 세부 작업을 실제로 수행할 실무 담당자를 지정합니다.",
+        "id": 17,
+        "videoEndMs": 216100,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 206000,
+        "compEndMs": 212600
+      },
+      {
+        "videoStartMs": 216100,
+        "startMs": 218800,
+        "endMs": 224704,
+        "text": "상위 일감의 일정 범위 내에서 하위 일감의 시작일과 완료 기한을 설정합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-18.mp3",
+        "audioDurationMs": 5904,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|상위 일감의 일정 범위 내에서 하위 일감의 시작일과 완료 기한을 설정합니다.",
+        "id": 18,
+        "videoEndMs": 227000,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 218800,
+        "compEndMs": 224704
+      },
+      {
+        "videoStartMs": 227000,
+        "startMs": 229700,
+        "endMs": 233348,
+        "text": "설정한 하위 일감을 저장하여 등록합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-19.mp3",
+        "audioDurationMs": 3648,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|설정한 하위 일감을 저장하여 등록합니다.",
+        "id": 19,
+        "videoEndMs": 233200,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 229700,
+        "compEndMs": 233348
+      },
+      {
+        "videoStartMs": 233200,
+        "startMs": 235900,
+        "endMs": 241444,
+        "text": "트리보기 기능으로 상·하위 일감의 계층 구조를 한눈에 파악할 수 있습니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-20.mp3",
+        "audioDurationMs": 5544,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|트리보기 기능으로 상·하위 일감의 계층 구조를 한눈에 파악할 수 있습니다.",
+        "id": 20,
+        "videoEndMs": 236000,
+        "autoHoldMs": 2924,
+        "effectiveDeltaMs": 2924,
+        "playbackRate": 1,
+        "compStartMs": 235900,
+        "compEndMs": 241444
+      },
+      {
+        "videoStartMs": 236000,
+        "startMs": 241617,
+        "endMs": 248145,
+        "text": "업무 진행에 따른 최신 현황을 반영하기 위해 일감을 선택하고 수정 화면으로 진입합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-21.mp3",
+        "audioDurationMs": 6528,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|업무 진행에 따른 최신 현황을 반영하기 위해 일감을 선택하고 수정 화면으로 진입합니다.",
+        "id": 21,
+        "videoEndMs": 241400,
+        "autoHoldMs": 1308,
+        "effectiveDeltaMs": 1308,
+        "playbackRate": 1,
+        "compStartMs": 241617,
+        "compEndMs": 248145
+      },
+      {
+        "videoStartMs": 241400,
+        "startMs": 248317,
+        "endMs": 255445,
+        "text": "슬라이더나 선택 상자를 조절하여 현재까지의 업무 달성도를 나타내는 진척도를 업데이트합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-22.mp3",
+        "audioDurationMs": 7128,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|슬라이더나 선택 상자를 조절하여 현재까지의 업무 달성도를 나타내는 진척도를 업데이트합니다.",
+        "id": 22,
+        "videoEndMs": 247700,
+        "autoHoldMs": 1008,
+        "effectiveDeltaMs": 1008,
+        "playbackRate": 1,
+        "compStartMs": 248317,
+        "compEndMs": 255445
+      },
+      {
+        "videoStartMs": 247700,
+        "startMs": 255617,
+        "endMs": 262457,
+        "text": "업무 수행에 따른 결과 문서 파일을 첨부하고 저장하여 변경된 진척 현황을 반영합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-23.mp3",
+        "audioDurationMs": 6840,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|업무 수행에 따른 결과 문서 파일을 첨부하고 저장하여 변경된 진척 현황을 반영합니다.",
+        "id": 23,
+        "videoEndMs": 256800,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 255617,
+        "compEndMs": 262457
+      },
+      {
+        "videoStartMs": 256800,
+        "startMs": 264717,
+        "endMs": 274245,
+        "text": "협업 참여자들과 진행 상황을 공유하기 위해 댓글로 보고 내용을 작성하고 파일 첨부를 하여 일감 내 의견 및 자료 공유를 할 수 있습니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-24.mp3",
+        "audioDurationMs": 9528,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|협업 참여자들과 진행 상황을 공유하기 위해 댓글로 보고 내용을 작성하고 파일 첨부를 하여 일감 내 의견 및 자료 공유를 할 수 있습니다.",
+        "id": 24,
+        "videoEndMs": 276700,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 264717,
+        "compEndMs": 274245
+      },
+      {
+        "videoStartMs": 276700,
+        "startMs": 284617,
+        "endMs": 291361,
+        "text": "간트차트 탭은 프로젝트의 전체 일감 일정과 선후 관계를 타임라인 막대로 시각화해 줍니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-25.mp3",
+        "audioDurationMs": 6744,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|간트차트 탭은 프로젝트의 전체 일감 일정과 선후 관계를 타임라인 막대로 시각화해 줍니다.",
+        "id": 25,
+        "videoEndMs": 282300,
+        "autoHoldMs": 1324,
+        "effectiveDeltaMs": 1324,
+        "playbackRate": 1,
+        "compStartMs": 284617,
+        "compEndMs": 291361
+      },
+      {
+        "videoStartMs": 282300,
+        "startMs": 291533,
+        "endMs": 298661,
+        "text": "간트차트에서 상·하위 일감별 일정 범위와 현재 진척도 달성 현황을 직관적으로 확인합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-26.mp3",
+        "audioDurationMs": 7128,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|간트차트에서 상·하위 일감별 일정 범위와 현재 진척도 달성 현황을 직관적으로 확인합니다.",
+        "id": 26,
+        "videoEndMs": 290100,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 291533,
+        "compEndMs": 298661
+      },
+      {
+        "videoStartMs": 290100,
+        "startMs": 299333,
+        "endMs": 307109,
+        "text": "조회 기준을 주간 또는 월간 단위로 전환하여 프로젝트의 단기 및 중장기 일정을 폭넓게 확인할 수 있습니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-27.mp3",
+        "audioDurationMs": 7776,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|조회 기준을 주간 또는 월간 단위로 전환하여 프로젝트의 단기 및 중장기 일정을 폭넓게 확인할 수 있습니다.",
+        "id": 27,
+        "videoEndMs": 295800,
+        "autoHoldMs": 2256,
+        "effectiveDeltaMs": 2256,
+        "playbackRate": 1,
+        "compStartMs": 299333,
+        "compEndMs": 307109
+      },
+      {
+        "videoStartMs": 295800,
+        "startMs": 307283,
+        "endMs": 314243,
+        "text": "산출물을 모아 보는 일감 첨부파일 탭과 변경 이력을 기록하는 활동로그를 확인할 수 있습니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-28.mp3",
+        "audioDurationMs": 6960,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|산출물을 모아 보는 일감 첨부파일 탭과 변경 이력을 기록하는 활동로그를 확인할 수 있습니다.",
+        "id": 28,
+        "videoEndMs": 306700,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 307283,
+        "compEndMs": 314243
+      },
+      {
+        "videoStartMs": 306700,
+        "startMs": 318183,
+        "endMs": 326847,
+        "text": "업무 현황과 내 프로젝트, 내 일감 메뉴를 통해 등록된 과제와 진척 내역이 정상 반영되었는지 최종 점검합니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-29.mp3",
+        "audioDurationMs": 8664,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|업무 현황과 내 프로젝트, 내 일감 메뉴를 통해 등록된 과제와 진척 내역이 정상 반영되었는지 최종 점검합니다.",
+        "id": 29,
+        "videoEndMs": 317900,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 318183,
+        "compEndMs": 326847
+      },
+      {
+        "videoStartMs": 317900,
+        "startMs": 329383,
+        "endMs": 333943,
+        "text": "추가 관리 메뉴를 열어 프로젝트 상태를 관리할 수 있습니다.",
+        "isIntro": false,
+        "extraHoldMs": 0,
+        "audioFile": "narration/project/cue-30.mp3",
+        "audioDurationMs": 4560,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|추가 관리 메뉴를 열어 프로젝트 상태를 관리할 수 있습니다.",
+        "id": 30,
+        "videoEndMs": 323081,
+        "autoHoldMs": 0,
+        "effectiveDeltaMs": 0,
+        "playbackRate": 1,
+        "compStartMs": 329383,
+        "compEndMs": 333943
+      }
+    ]
+  },
+  "timeRegions": [
+    {
+      "videoStartFrame": 0,
+      "videoEndFrame": 12,
+      "compStartFrame": 0,
+      "compEndFrame": 12,
+      "speed": 1
+    },
+    {
+      "videoStartFrame": 12,
+      "videoEndFrame": 1008,
+      "compStartFrame": 12,
+      "compEndFrame": 1008,
+      "speed": 1,
+      "cueId": 1
+    },
+    {
+      "videoStartFrame": 1008,
+      "videoEndFrame": 1620,
+      "compStartFrame": 1008,
+      "compEndFrame": 1620,
+      "speed": 1,
+      "cueId": 2
+    },
+    {
+      "videoStartFrame": 1620,
+      "videoEndFrame": 2598,
+      "compStartFrame": 1620,
+      "compEndFrame": 2598,
+      "speed": 1,
+      "cueId": 3
+    },
+    {
+      "videoStartFrame": 2598,
+      "videoEndFrame": 3486,
+      "compStartFrame": 2598,
+      "compEndFrame": 3486,
+      "speed": 1,
+      "cueId": 4
+    },
+    {
+      "videoStartFrame": 3486,
+      "videoEndFrame": 4410,
+      "compStartFrame": 3486,
+      "compEndFrame": 4410,
+      "speed": 1,
+      "cueId": 5
+    },
+    {
+      "videoStartFrame": 4410,
+      "videoEndFrame": 5484,
+      "compStartFrame": 4410,
+      "compEndFrame": 5484,
+      "speed": 1,
+      "cueId": 6
+    },
+    {
+      "videoStartFrame": 5484,
+      "videoEndFrame": 6240,
+      "compStartFrame": 5484,
+      "compEndFrame": 6240,
+      "speed": 1,
+      "cueId": 7
+    },
+    {
+      "videoStartFrame": 6240,
+      "videoEndFrame": 7170,
+      "compStartFrame": 6240,
+      "compEndFrame": 7170,
+      "speed": 1,
+      "cueId": 8
+    },
+    {
+      "videoStartFrame": 7170,
+      "videoEndFrame": 7920,
+      "compStartFrame": 7170,
+      "compEndFrame": 7920,
+      "speed": 1,
+      "cueId": 9
+    },
+    {
+      "videoStartFrame": 7920,
+      "videoEndFrame": 8568,
+      "compStartFrame": 7920,
+      "compEndFrame": 8568,
+      "speed": 1,
+      "cueId": 10
+    },
+    {
+      "videoStartFrame": 8568,
+      "videoEndFrame": 9054,
+      "compStartFrame": 8568,
+      "compEndFrame": 9054,
+      "speed": 1,
+      "cueId": 11
+    },
+    {
+      "videoStartFrame": 9054,
+      "videoEndFrame": 9822,
+      "compStartFrame": 9054,
+      "compEndFrame": 9822,
+      "speed": 1,
+      "cueId": 12
+    },
+    {
+      "videoStartFrame": 9822,
+      "videoEndFrame": 10470,
+      "compStartFrame": 9822,
+      "compEndFrame": 10470,
+      "speed": 1,
+      "cueId": 13
+    },
+    {
+      "videoStartFrame": 10470,
+      "videoEndFrame": 11112,
+      "compStartFrame": 10470,
+      "compEndFrame": 11112,
+      "speed": 1,
+      "cueId": 14
+    },
+    {
+      "videoStartFrame": 11112,
+      "videoEndFrame": 11880,
+      "compStartFrame": 11112,
+      "compEndFrame": 11880,
+      "speed": 1,
+      "cueId": 15
+    },
+    {
+      "videoStartFrame": 11880,
+      "videoEndFrame": 12166,
+      "compStartFrame": 11880,
+      "compEndFrame": 12166,
+      "speed": 1,
+      "cueId": 16
+    },
+    {
+      "videoStartFrame": 12166,
+      "videoEndFrame": 12171,
+      "compStartFrame": 12166,
+      "compEndFrame": 12333,
+      "speed": 0.02994,
+      "cueId": 16
+    },
+    {
+      "videoStartFrame": 12171,
+      "videoEndFrame": 12198,
+      "compStartFrame": 12333,
+      "compEndFrame": 12360,
+      "speed": 1,
+      "cueId": 16
+    },
+    {
+      "videoStartFrame": 12198,
+      "videoEndFrame": 12966,
+      "compStartFrame": 12360,
+      "compEndFrame": 13128,
+      "speed": 1,
+      "cueId": 17
+    },
+    {
+      "videoStartFrame": 12966,
+      "videoEndFrame": 13620,
+      "compStartFrame": 13128,
+      "compEndFrame": 13782,
+      "speed": 1,
+      "cueId": 18
+    },
+    {
+      "videoStartFrame": 13620,
+      "videoEndFrame": 13992,
+      "compStartFrame": 13782,
+      "compEndFrame": 14154,
+      "speed": 1,
+      "cueId": 19
+    },
+    {
+      "videoStartFrame": 13992,
+      "videoEndFrame": 14128,
+      "compStartFrame": 14154,
+      "compEndFrame": 14290,
+      "speed": 1,
+      "cueId": 20
+    },
+    {
+      "videoStartFrame": 14128,
+      "videoEndFrame": 14133,
+      "compStartFrame": 14290,
+      "compEndFrame": 14470,
+      "speed": 0.02778,
+      "cueId": 20
+    },
+    {
+      "videoStartFrame": 14133,
+      "videoEndFrame": 14160,
+      "compStartFrame": 14470,
+      "compEndFrame": 14497,
+      "speed": 1,
+      "cueId": 20
+    },
+    {
+      "videoStartFrame": 14160,
+      "videoEndFrame": 14452,
+      "compStartFrame": 14497,
+      "compEndFrame": 14789,
+      "speed": 1,
+      "cueId": 21
+    },
+    {
+      "videoStartFrame": 14452,
+      "videoEndFrame": 14457,
+      "compStartFrame": 14789,
+      "compEndFrame": 14872,
+      "speed": 0.06024,
+      "cueId": 21
+    },
+    {
+      "videoStartFrame": 14457,
+      "videoEndFrame": 14484,
+      "compStartFrame": 14872,
+      "compEndFrame": 14899,
+      "speed": 1,
+      "cueId": 21
+    },
+    {
+      "videoStartFrame": 14484,
+      "videoEndFrame": 14830,
+      "compStartFrame": 14899,
+      "compEndFrame": 15245,
+      "speed": 1,
+      "cueId": 22
+    },
+    {
+      "videoStartFrame": 14830,
+      "videoEndFrame": 14835,
+      "compStartFrame": 15245,
+      "compEndFrame": 15310,
+      "speed": 0.07692,
+      "cueId": 22
+    },
+    {
+      "videoStartFrame": 14835,
+      "videoEndFrame": 14862,
+      "compStartFrame": 15310,
+      "compEndFrame": 15337,
+      "speed": 1,
+      "cueId": 22
+    },
+    {
+      "videoStartFrame": 14862,
+      "videoEndFrame": 15408,
+      "compStartFrame": 15337,
+      "compEndFrame": 15883,
+      "speed": 1,
+      "cueId": 23
+    },
+    {
+      "videoStartFrame": 15408,
+      "videoEndFrame": 16602,
+      "compStartFrame": 15883,
+      "compEndFrame": 17077,
+      "speed": 1,
+      "cueId": 24
+    },
+    {
+      "videoStartFrame": 16602,
+      "videoEndFrame": 16906,
+      "compStartFrame": 17077,
+      "compEndFrame": 17381,
+      "speed": 1,
+      "cueId": 25
+    },
+    {
+      "videoStartFrame": 16906,
+      "videoEndFrame": 16911,
+      "compStartFrame": 17381,
+      "compEndFrame": 17465,
+      "speed": 0.05952,
+      "cueId": 25
+    },
+    {
+      "videoStartFrame": 16911,
+      "videoEndFrame": 16938,
+      "compStartFrame": 17465,
+      "compEndFrame": 17492,
+      "speed": 1,
+      "cueId": 25
+    },
+    {
+      "videoStartFrame": 16938,
+      "videoEndFrame": 17406,
+      "compStartFrame": 17492,
+      "compEndFrame": 17960,
+      "speed": 1,
+      "cueId": 26
+    },
+    {
+      "videoStartFrame": 17406,
+      "videoEndFrame": 17716,
+      "compStartFrame": 17960,
+      "compEndFrame": 18270,
+      "speed": 1,
+      "cueId": 27
+    },
+    {
+      "videoStartFrame": 17716,
+      "videoEndFrame": 17721,
+      "compStartFrame": 18270,
+      "compEndFrame": 18410,
+      "speed": 0.03571,
+      "cueId": 27
+    },
+    {
+      "videoStartFrame": 17721,
+      "videoEndFrame": 17748,
+      "compStartFrame": 18410,
+      "compEndFrame": 18437,
+      "speed": 1,
+      "cueId": 27
+    },
+    {
+      "videoStartFrame": 17748,
+      "videoEndFrame": 18402,
+      "compStartFrame": 18437,
+      "compEndFrame": 19091,
+      "speed": 1,
+      "cueId": 28
+    },
+    {
+      "videoStartFrame": 18402,
+      "videoEndFrame": 19074,
+      "compStartFrame": 19091,
+      "compEndFrame": 19763,
+      "speed": 1,
+      "cueId": 29
+    },
+    {
+      "videoStartFrame": 19074,
+      "videoEndFrame": 19385,
+      "compStartFrame": 19763,
+      "compEndFrame": 20074,
+      "speed": 1,
+      "cueId": 30
+    }
+  ]
+}

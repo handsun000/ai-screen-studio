@@ -1,0 +1,2263 @@
+{
+  "metadata": {
+    "url": "https://gw.bc.ac.kr/ekp/main/home/homGwMain",
+    "viewportWidth": 1920,
+    "viewportHeight": 944,
+    "totalDurationMs": 323081,
+    "recordingStart": "2026-11-02T06:25:38.602Z",
+    "calibratedToVideoDurationMs": 323081
+  },
+  "moments": [
+    {
+      "id": 1,
+      "type": "click",
+      "timestamp": 17005,
+      "description": "'포탈 전체메뉴' 버튼 클릭",
+      "cursor": {
+        "x": 1363,
+        "y": 86
+      },
+      "target": {
+        "x": 1339,
+        "y": 60,
+        "width": 45,
+        "height": 45
+      }
+    },
+    {
+      "id": 2,
+      "type": "wait",
+      "timestamp": 18300,
+      "description": "'포탈 전체메뉴' 버튼 반응 대기"
+    },
+    {
+      "id": 3,
+      "type": "click",
+      "timestamp": 19975,
+      "description": "'프로젝트' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 715,
+        "y": 331
+      },
+      "target": {
+        "x": 677,
+        "y": 317,
+        "width": 177,
+        "height": 30
+      }
+    },
+    {
+      "id": 4,
+      "type": "click",
+      "timestamp": 27257,
+      "description": "'종합 현황' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 82,
+        "y": 248
+      },
+      "target": {
+        "x": 58,
+        "y": 242,
+        "width": 55,
+        "height": 24
+      }
+    },
+    {
+      "id": 5,
+      "type": "wait",
+      "timestamp": 28588,
+      "description": "'종합 현황' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 6,
+      "type": "click",
+      "timestamp": 30123,
+      "description": "'업무 현황' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 81,
+        "y": 290
+      },
+      "target": {
+        "x": 58,
+        "y": 276,
+        "width": 55,
+        "height": 24
+      }
+    },
+    {
+      "id": 7,
+      "type": "wait",
+      "timestamp": 31226,
+      "description": "'업무 현황' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 8,
+      "type": "click",
+      "timestamp": 32702,
+      "description": "'내 프로젝트' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 94,
+        "y": 327
+      },
+      "target": {
+        "x": 58,
+        "y": 310,
+        "width": 68,
+        "height": 24
+      }
+    },
+    {
+      "id": 9,
+      "type": "wait",
+      "timestamp": 33887,
+      "description": "'내 프로젝트' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 10,
+      "type": "click",
+      "timestamp": 35375,
+      "description": "'내 일감' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 92,
+        "y": 361
+      },
+      "target": {
+        "x": 58,
+        "y": 344,
+        "width": 43,
+        "height": 24
+      }
+    },
+    {
+      "id": 11,
+      "type": "wait",
+      "timestamp": 36551,
+      "description": "'내 일감' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 12,
+      "type": "click",
+      "timestamp": 37985,
+      "description": "'내 이슈' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 92,
+        "y": 398
+      },
+      "target": {
+        "x": 58,
+        "y": 378,
+        "width": 43,
+        "height": 24
+      }
+    },
+    {
+      "id": 13,
+      "type": "wait",
+      "timestamp": 39255,
+      "description": "'내 이슈' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 14,
+      "type": "click",
+      "timestamp": 40755,
+      "description": "'내 프로젝트' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 75,
+        "y": 324
+      },
+      "target": {
+        "x": 58,
+        "y": 310,
+        "width": 68,
+        "height": 24
+      }
+    },
+    {
+      "id": 15,
+      "type": "wait",
+      "timestamp": 41954,
+      "description": "'내 프로젝트' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 16,
+      "type": "click",
+      "timestamp": 43453,
+      "description": "'프로젝트 추가' 버튼 클릭",
+      "cursor": {
+        "x": 126,
+        "y": 162
+      },
+      "target": {
+        "x": 20,
+        "y": 124,
+        "width": 219,
+        "height": 47
+      }
+    },
+    {
+      "id": 17,
+      "type": "wait",
+      "timestamp": 44758,
+      "description": "'프로젝트 추가' 버튼 반응 대기"
+    },
+    {
+      "id": 18,
+      "type": "click",
+      "timestamp": 46366,
+      "description": "[프로젝트 추가 팝업] '새 프로젝트 생성' 버튼 클릭",
+      "cursor": {
+        "x": 937,
+        "y": 505
+      },
+      "target": {
+        "x": 888,
+        "y": 483,
+        "width": 130,
+        "height": 32
+      }
+    },
+    {
+      "id": 19,
+      "type": "wait",
+      "timestamp": 47611,
+      "description": "[프로젝트 추가 팝업] '새 프로젝트 생성' 버튼 반응 대기"
+    },
+    {
+      "id": 20,
+      "type": "click",
+      "timestamp": 49155,
+      "description": "[프로젝트 추가 팝업] '진행' 버튼 클릭",
+      "cursor": {
+        "x": 852,
+        "y": 210
+      },
+      "target": {
+        "x": 812,
+        "y": 187,
+        "width": 70,
+        "height": 32
+      }
+    },
+    {
+      "id": 21,
+      "type": "wait",
+      "timestamp": 50296,
+      "description": "[프로젝트 추가 팝업] '진행' 버튼 반응 대기"
+    },
+    {
+      "id": 22,
+      "type": "type",
+      "timestamp": 51758,
+      "description": "[프로젝트 추가 팝업] '한국어' 입력창에 '학사제도 및 교육과정 개편 프로젝트' 입력",
+      "cursor": {
+        "x": 779,
+        "y": 269
+      },
+      "target": {
+        "x": 739,
+        "y": 236,
+        "width": 360,
+        "height": 32
+      },
+      "keys": "학사제도 및 교육과정 개편 프로젝트"
+    },
+    {
+      "id": 23,
+      "type": "wait",
+      "timestamp": 53679,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 24,
+      "type": "click",
+      "timestamp": 55178,
+      "description": "[프로젝트 추가 팝업] '선택' 버튼 클릭",
+      "cursor": {
+        "x": 1271,
+        "y": 303
+      },
+      "target": {
+        "x": 1261,
+        "y": 285,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "id": 25,
+      "type": "wait",
+      "timestamp": 56771,
+      "description": "[프로젝트 추가 팝업] '선택' 버튼 반응 대기"
+    },
+    {
+      "id": 26,
+      "type": "click",
+      "timestamp": 58353,
+      "description": "[관리자 팝업] 트리 '부서' 항목 클릭",
+      "cursor": {
+        "x": 581,
+        "y": 338
+      },
+      "target": {
+        "x": 575,
+        "y": 324,
+        "width": 30,
+        "height": 24
+      }
+    },
+    {
+      "id": 27,
+      "type": "wait",
+      "timestamp": 59715,
+      "description": "[관리자 팝업] 트리 '부서' 항목 반응 대기"
+    },
+    {
+      "id": 28,
+      "type": "click",
+      "timestamp": 61325,
+      "description": "[관리자 팝업] 트리 '대학본부' 항목 클릭",
+      "cursor": {
+        "x": 631,
+        "y": 371
+      },
+      "target": {
+        "x": 583,
+        "y": 358,
+        "width": 54,
+        "height": 24
+      }
+    },
+    {
+      "id": 29,
+      "type": "wait",
+      "timestamp": 62907,
+      "description": "[관리자 팝업] 트리 '대학본부' 항목 반응 대기"
+    },
+    {
+      "id": 30,
+      "type": "click",
+      "timestamp": 64470,
+      "description": "[관리자 팝업] 트리 '사무처' 항목 클릭",
+      "cursor": {
+        "x": 616,
+        "y": 432
+      },
+      "target": {
+        "x": 591,
+        "y": 426,
+        "width": 42,
+        "height": 24
+      }
+    },
+    {
+      "id": 31,
+      "type": "wait",
+      "timestamp": 65725,
+      "description": "[관리자 팝업] 트리 '사무처' 항목 반응 대기"
+    },
+    {
+      "id": 32,
+      "type": "click",
+      "timestamp": 67316,
+      "description": "[관리자 팝업] '임시계정(전임) 전임교원 정보보안센터' 요소 클릭",
+      "cursor": {
+        "x": 911,
+        "y": 322
+      },
+      "target": {
+        "x": 874,
+        "y": 270,
+        "width": 88,
+        "height": 94
+      }
+    },
+    {
+      "id": 33,
+      "type": "wait",
+      "timestamp": 68610,
+      "description": "[관리자 팝업] '임시계정(전임) 전임교원 정보보안센터' 요소 반응 대기"
+    },
+    {
+      "id": 34,
+      "type": "click",
+      "timestamp": 70145,
+      "description": "[관리자 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 934,
+        "y": 537
+      },
+      "target": {
+        "x": 898,
+        "y": 525,
+        "width": 60,
+        "height": 34
+      }
+    },
+    {
+      "id": 35,
+      "type": "wait",
+      "timestamp": 71547,
+      "description": "[관리자 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 36,
+      "type": "click",
+      "timestamp": 73709,
+      "description": "[프로젝트 추가 팝업] '선택' 버튼 클릭",
+      "cursor": {
+        "x": 1280,
+        "y": 354
+      },
+      "target": {
+        "x": 1261,
+        "y": 334,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "id": 37,
+      "type": "wait",
+      "timestamp": 75108,
+      "description": "[프로젝트 추가 팝업] '선택' 버튼 반응 대기"
+    },
+    {
+      "id": 38,
+      "type": "click",
+      "timestamp": 76668,
+      "description": "[담당자 팝업] 트리 '부서' 항목 클릭",
+      "cursor": {
+        "x": 593,
+        "y": 334
+      },
+      "target": {
+        "x": 575,
+        "y": 324,
+        "width": 30,
+        "height": 24
+      }
+    },
+    {
+      "id": 39,
+      "type": "wait",
+      "timestamp": 78187,
+      "description": "[담당자 팝업] 트리 '부서' 항목 반응 대기"
+    },
+    {
+      "id": 40,
+      "type": "click",
+      "timestamp": 79743,
+      "description": "[담당자 팝업] 트리 '대학본부' 항목 클릭",
+      "cursor": {
+        "x": 606,
+        "y": 367
+      },
+      "target": {
+        "x": 583,
+        "y": 358,
+        "width": 54,
+        "height": 24
+      }
+    },
+    {
+      "id": 41,
+      "type": "wait",
+      "timestamp": 81223,
+      "description": "[담당자 팝업] 트리 '대학본부' 항목 반응 대기"
+    },
+    {
+      "id": 42,
+      "type": "click",
+      "timestamp": 82730,
+      "description": "[담당자 팝업] 트리 '사무처' 항목 클릭",
+      "cursor": {
+        "x": 618,
+        "y": 433
+      },
+      "target": {
+        "x": 591,
+        "y": 426,
+        "width": 42,
+        "height": 24
+      }
+    },
+    {
+      "id": 43,
+      "type": "wait",
+      "timestamp": 84015,
+      "description": "[담당자 팝업] 트리 '사무처' 항목 반응 대기"
+    },
+    {
+      "id": 44,
+      "type": "click",
+      "timestamp": 85609,
+      "description": "[담당자 팝업] '김병훈 담당 사무처' 요소 클릭",
+      "cursor": {
+        "x": 831,
+        "y": 297
+      },
+      "target": {
+        "x": 781,
+        "y": 268,
+        "width": 88,
+        "height": 94
+      }
+    },
+    {
+      "id": 45,
+      "type": "wait",
+      "timestamp": 86820,
+      "description": "[담당자 팝업] '김병훈 담당 사무처' 요소 반응 대기"
+    },
+    {
+      "id": 46,
+      "type": "click",
+      "timestamp": 88350,
+      "description": "[담당자 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 933,
+        "y": 550
+      },
+      "target": {
+        "x": 898,
+        "y": 525,
+        "width": 60,
+        "height": 34
+      }
+    },
+    {
+      "id": 47,
+      "type": "wait",
+      "timestamp": 89597,
+      "description": "[담당자 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 48,
+      "type": "type",
+      "timestamp": 91672,
+      "description": "[프로젝트 추가 팝업] '입력란' 입력창에 '김병훈' 입력",
+      "cursor": {
+        "x": 842,
+        "y": 408
+      },
+      "target": {
+        "x": 741,
+        "y": 387,
+        "width": 20,
+        "height": 23
+      },
+      "keys": "김병훈"
+    },
+    {
+      "id": 49,
+      "type": "wait",
+      "timestamp": 92762,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 50,
+      "type": "click",
+      "timestamp": 94131,
+      "description": "'김병훈 담당(사무처)' 요소 클릭",
+      "cursor": {
+        "x": 817,
+        "y": 441
+      },
+      "target": {
+        "x": 744,
+        "y": 423,
+        "width": 508,
+        "height": 27
+      }
+    },
+    {
+      "id": 51,
+      "type": "wait",
+      "timestamp": 95486,
+      "description": "'김병훈 담당(사무처)' 요소 반응 대기"
+    },
+    {
+      "id": 52,
+      "type": "type",
+      "timestamp": 97084,
+      "description": "[프로젝트 추가 팝업] 'prjInfoerForm_desc' 입력창에 '학과별 교육과정 개편안 수합 및 학칙 개정안 마련을 위한 협업 프로젝트입니다.' 입력",
+      "cursor": {
+        "x": 832,
+        "y": 496
+      },
+      "target": {
+        "x": 739,
+        "y": 432,
+        "width": 554,
+        "height": 60
+      },
+      "keys": "학과별 교육과정 개편안 수합 및 학칙 개정안 마련을 위한 협업 프로젝트입니다."
+    },
+    {
+      "id": 53,
+      "type": "wait",
+      "timestamp": 100369,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 54,
+      "type": "click",
+      "timestamp": 101914,
+      "description": "[프로젝트 추가 팝업] 'yyyy-mm-dd' 입력창 클릭",
+      "cursor": {
+        "x": 837,
+        "y": 528
+      },
+      "target": {
+        "x": 739,
+        "y": 509,
+        "width": 115,
+        "height": 32
+      }
+    },
+    {
+      "id": 55,
+      "type": "wait",
+      "timestamp": 103256,
+      "description": "[프로젝트 추가 팝업] 'yyyy-mm-dd' 입력창 반응 대기"
+    },
+    {
+      "id": 56,
+      "type": "click",
+      "timestamp": 104180,
+      "description": "'30' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 799,
+        "y": 752
+      },
+      "target": {
+        "x": 788,
+        "y": 744,
+        "width": 27,
+        "height": 27
+      }
+    },
+    {
+      "id": 57,
+      "type": "wait",
+      "timestamp": 105431,
+      "description": "'30' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 58,
+      "type": "click",
+      "timestamp": 106342,
+      "description": "[프로젝트 추가 팝업] 'yyyy-mm-dd' 입력창 클릭",
+      "cursor": {
+        "x": 945,
+        "y": 525
+      },
+      "target": {
+        "x": 858,
+        "y": 509,
+        "width": 115,
+        "height": 32
+      }
+    },
+    {
+      "id": 59,
+      "type": "wait",
+      "timestamp": 107578,
+      "description": "[프로젝트 추가 팝업] 'yyyy-mm-dd' 입력창 반응 대기"
+    },
+    {
+      "id": 60,
+      "type": "click",
+      "timestamp": 108469,
+      "description": "'다음달' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1090,
+        "y": 567
+      },
+      "target": {
+        "x": 1074,
+        "y": 558,
+        "width": 26,
+        "height": 26
+      }
+    },
+    {
+      "id": 61,
+      "type": "wait",
+      "timestamp": 109773,
+      "description": "'다음달' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 62,
+      "type": "click",
+      "timestamp": 110582,
+      "description": "'다음달' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1090,
+        "y": 567
+      },
+      "target": {
+        "x": 1074,
+        "y": 558,
+        "width": 26,
+        "height": 26
+      }
+    },
+    {
+      "id": 63,
+      "type": "wait",
+      "timestamp": 111792,
+      "description": "'다음달' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 64,
+      "type": "click",
+      "timestamp": 112683,
+      "description": "'다음달' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1090,
+        "y": 567
+      },
+      "target": {
+        "x": 1074,
+        "y": 558,
+        "width": 26,
+        "height": 26
+      }
+    },
+    {
+      "id": 65,
+      "type": "wait",
+      "timestamp": 113858,
+      "description": "'다음달' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 66,
+      "type": "click",
+      "timestamp": 114736,
+      "description": "'26' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1046,
+        "y": 719
+      },
+      "target": {
+        "x": 1039,
+        "y": 713,
+        "width": 27,
+        "height": 27
+      }
+    },
+    {
+      "id": 67,
+      "type": "wait",
+      "timestamp": 115945,
+      "description": "'26' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 68,
+      "type": "click",
+      "timestamp": 116730,
+      "description": "[프로젝트 추가 팝업] '일감선택' 버튼 클릭",
+      "cursor": {
+        "x": 775,
+        "y": 581
+      },
+      "target": {
+        "x": 739,
+        "y": 558,
+        "width": 70,
+        "height": 32
+      }
+    },
+    {
+      "id": 69,
+      "type": "wait",
+      "timestamp": 117941,
+      "description": "[프로젝트 추가 팝업] '일감선택' 버튼 반응 대기"
+    },
+    {
+      "id": 70,
+      "type": "click",
+      "timestamp": 119671,
+      "description": "[일감 선택 팝업] '닫기' 버튼 클릭",
+      "cursor": {
+        "x": 1000,
+        "y": 580
+      },
+      "target": {
+        "x": 955,
+        "y": 564,
+        "width": 56,
+        "height": 36
+      }
+    },
+    {
+      "id": 71,
+      "type": "wait",
+      "timestamp": 120953,
+      "description": "[일감 선택 팝업] '닫기' 버튼 반응 대기"
+    },
+    {
+      "id": 72,
+      "type": "click",
+      "timestamp": 122488,
+      "description": "[프로젝트 추가 팝업] '버튼 방식' 요소 클릭",
+      "cursor": {
+        "x": 910,
+        "y": 722
+      },
+      "target": {
+        "x": 880,
+        "y": 710,
+        "width": 94,
+        "height": 26
+      }
+    },
+    {
+      "id": 73,
+      "type": "wait",
+      "timestamp": 123781,
+      "description": "[프로젝트 추가 팝업] '버튼 방식' 요소 반응 대기"
+    },
+    {
+      "id": 74,
+      "type": "click",
+      "timestamp": 125375,
+      "description": "[프로젝트 추가 팝업] '진척도 이전 값 보다 낮은 값 허용' 요소 클릭",
+      "cursor": {
+        "x": 853,
+        "y": 768
+      },
+      "target": {
+        "x": 739,
+        "y": 753,
+        "width": 215,
+        "height": 20
+      }
+    },
+    {
+      "id": 75,
+      "type": "wait",
+      "timestamp": 126633,
+      "description": "[프로젝트 추가 팝업] '진척도 이전 값 보다 낮은 값 허용' 요소 반응 대기"
+    },
+    {
+      "id": 76,
+      "type": "click",
+      "timestamp": 128266,
+      "description": "[프로젝트 추가 팝업] '할일' 요소 클릭",
+      "cursor": {
+        "x": 746,
+        "y": 501
+      },
+      "target": {
+        "x": 739,
+        "y": 487,
+        "width": 65,
+        "height": 26
+      }
+    },
+    {
+      "id": 77,
+      "type": "wait",
+      "timestamp": 129483,
+      "description": "[프로젝트 추가 팝업] '할일' 요소 반응 대기"
+    },
+    {
+      "id": 78,
+      "type": "upload",
+      "timestamp": 130932,
+      "description": "[프로젝트 추가 팝업] '내 PC' 버튼에 '프로젝트.pdf' 첨부",
+      "cursor": {
+        "x": 775,
+        "y": 622
+      },
+      "target": {
+        "x": 739,
+        "y": 606,
+        "width": 73,
+        "height": 32
+      }
+    },
+    {
+      "id": 79,
+      "type": "click",
+      "timestamp": 132151,
+      "cursor": {
+        "x": 935,
+        "y": 382
+      },
+      "target": {
+        "x": 795,
+        "y": 365,
+        "width": 497,
+        "height": 35
+      },
+      "description": "[파일 선택 팝업] '프로젝트.pdf' 파일 선택"
+    },
+    {
+      "id": 80,
+      "type": "click",
+      "timestamp": 133036,
+      "cursor": {
+        "x": 1149,
+        "y": 662
+      },
+      "target": {
+        "x": 1106,
+        "y": 649,
+        "width": 86,
+        "height": 26
+      },
+      "description": "[파일 선택 팝업] '열기(O)' 버튼 클릭"
+    },
+    {
+      "id": 81,
+      "type": "wait",
+      "timestamp": 134789,
+      "description": "첨부 파일 업로드 및 목록 반영 대기"
+    },
+    {
+      "id": 82,
+      "type": "click",
+      "timestamp": 136752,
+      "description": "[프로젝트 추가 팝업] '프로젝트 생성' 버튼 클릭",
+      "cursor": {
+        "x": 922,
+        "y": 797
+      },
+      "target": {
+        "x": 868,
+        "y": 786,
+        "width": 111,
+        "height": 36
+      }
+    },
+    {
+      "id": 83,
+      "type": "wait",
+      "timestamp": 138017,
+      "description": "[프로젝트 추가 팝업] '프로젝트 생성' 버튼 반응 대기"
+    },
+    {
+      "id": 84,
+      "type": "click",
+      "timestamp": 139603,
+      "description": "[알림 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 947,
+        "y": 151
+      },
+      "target": {
+        "x": 910,
+        "y": 120,
+        "width": 100,
+        "height": 40
+      }
+    },
+    {
+      "id": 85,
+      "type": "wait",
+      "timestamp": 140801,
+      "description": "[알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 86,
+      "type": "click",
+      "timestamp": 142987,
+      "description": "'학사제도 및 교육과정 개편 프로젝트' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 877,
+        "y": 321
+      },
+      "target": {
+        "x": 747,
+        "y": 305,
+        "width": 269,
+        "height": 27
+      }
+    },
+    {
+      "id": 87,
+      "type": "wait",
+      "timestamp": 144320,
+      "description": "'학사제도 및 교육과정 개편 프로젝트' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 88,
+      "type": "click",
+      "timestamp": 145801,
+      "description": "'등록' 버튼 클릭",
+      "cursor": {
+        "x": 1509,
+        "y": 343
+      },
+      "target": {
+        "x": 1462,
+        "y": 316,
+        "width": 66,
+        "height": 36
+      }
+    },
+    {
+      "id": 89,
+      "type": "wait",
+      "timestamp": 146948,
+      "description": "'등록' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 90,
+      "type": "type",
+      "timestamp": 151050,
+      "description": "'제목을 입력하세요' 입력창에 '학과별 교육과정 개편 요구사항 수합 및 분석' 입력",
+      "cursor": {
+        "x": 979,
+        "y": 181
+      },
+      "target": {
+        "x": 792,
+        "y": 144,
+        "width": 1083,
+        "height": 41
+      },
+      "keys": "학과별 교육과정 개편 요구사항 수합 및 분석"
+    },
+    {
+      "id": 91,
+      "type": "wait",
+      "timestamp": 153245,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 92,
+      "type": "click",
+      "timestamp": 154650,
+      "description": "[담당자] '담당자' 버튼 클릭",
+      "cursor": {
+        "x": 1121,
+        "y": 278
+      },
+      "target": {
+        "x": 1100,
+        "y": 260,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "id": 93,
+      "type": "wait",
+      "timestamp": 155864,
+      "description": "[담당자] '담당자' 버튼 반응 대기"
+    },
+    {
+      "id": 94,
+      "type": "click",
+      "timestamp": 157459,
+      "description": "[담당자 팝업] '임시계정(전임) 전임교원 정보보안센터' 요소 클릭",
+      "cursor": {
+        "x": 809,
+        "y": 425
+      },
+      "target": {
+        "x": 781,
+        "y": 381,
+        "width": 88,
+        "height": 94
+      }
+    },
+    {
+      "id": 95,
+      "type": "wait",
+      "timestamp": 158798,
+      "description": "[담당자 팝업] '임시계정(전임) 전임교원 정보보안센터' 요소 반응 대기"
+    },
+    {
+      "id": 96,
+      "type": "click",
+      "timestamp": 160364,
+      "description": "[담당자 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 928,
+        "y": 708
+      },
+      "target": {
+        "x": 896,
+        "y": 677,
+        "width": 56,
+        "height": 36
+      }
+    },
+    {
+      "id": 97,
+      "type": "wait",
+      "timestamp": 161700,
+      "description": "[담당자 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 98,
+      "type": "click",
+      "timestamp": 163803,
+      "description": "[담당자] 'yyyy-mm-dd' 입력창 클릭",
+      "cursor": {
+        "x": 1657,
+        "y": 297
+      },
+      "target": {
+        "x": 1429,
+        "y": 273,
+        "width": 240,
+        "height": 32
+      }
+    },
+    {
+      "id": 99,
+      "type": "wait",
+      "timestamp": 165059,
+      "description": "[담당자] 'yyyy-mm-dd' 입력창 반응 대기"
+    },
+    {
+      "id": 100,
+      "type": "click",
+      "timestamp": 166134,
+      "description": "'30' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1491,
+        "y": 520
+      },
+      "target": {
+        "x": 1478,
+        "y": 508,
+        "width": 27,
+        "height": 27
+      }
+    },
+    {
+      "id": 101,
+      "type": "wait",
+      "timestamp": 167437,
+      "description": "'30' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 102,
+      "type": "click",
+      "timestamp": 168144,
+      "description": "[요청자] 'yyyy-mm-dd' 입력창 클릭",
+      "cursor": {
+        "x": 1643,
+        "y": 363
+      },
+      "target": {
+        "x": 1429,
+        "y": 342,
+        "width": 240,
+        "height": 32
+      }
+    },
+    {
+      "id": 103,
+      "type": "wait",
+      "timestamp": 169591,
+      "description": "[요청자] 'yyyy-mm-dd' 입력창 반응 대기"
+    },
+    {
+      "id": 104,
+      "type": "click",
+      "timestamp": 170406,
+      "description": "'다음달' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1655,
+        "y": 401
+      },
+      "target": {
+        "x": 1645,
+        "y": 391,
+        "width": 26,
+        "height": 26
+      }
+    },
+    {
+      "id": 105,
+      "type": "wait",
+      "timestamp": 171601,
+      "description": "'다음달' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 106,
+      "type": "click",
+      "timestamp": 172512,
+      "description": "'13' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1615,
+        "y": 497
+      },
+      "target": {
+        "x": 1610,
+        "y": 484,
+        "width": 27,
+        "height": 27
+      }
+    },
+    {
+      "id": 107,
+      "type": "wait",
+      "timestamp": 173747,
+      "description": "'13' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 108,
+      "type": "click",
+      "timestamp": 174660,
+      "description": "[배정시간] '보통' 버튼 클릭",
+      "cursor": {
+        "x": 1471,
+        "y": 412
+      },
+      "target": {
+        "x": 1429,
+        "y": 398,
+        "width": 73,
+        "height": 32
+      }
+    },
+    {
+      "id": 109,
+      "type": "wait",
+      "timestamp": 175885,
+      "description": "[배정시간] '보통' 버튼 반응 대기"
+    },
+    {
+      "id": 110,
+      "type": "click",
+      "timestamp": 177390,
+      "description": "[배정시간] '높음' 요소 클릭",
+      "cursor": {
+        "x": 1462,
+        "y": 476
+      },
+      "target": {
+        "x": 1430,
+        "y": 468,
+        "width": 60,
+        "height": 30
+      }
+    },
+    {
+      "id": 111,
+      "type": "wait",
+      "timestamp": 178655,
+      "description": "[배정시간] '높음' 요소 반응 대기"
+    },
+    {
+      "id": 112,
+      "type": "type",
+      "timestamp": 180280,
+      "description": "'에디터 본문' 입력 영역에 '각 학과별 개편 의견서를 수합하여 결과 보고서 초안을 작성해 주세요.' 입력",
+      "cursor": {
+        "x": 1214,
+        "y": 720
+      },
+      "target": {
+        "x": 801,
+        "y": 617,
+        "width": 1025,
+        "height": 24
+      },
+      "keys": "각 학과별 개편 의견서를 수합하여 결과 보고서 초안을 작성해 주세요."
+    },
+    {
+      "id": 113,
+      "type": "wait",
+      "timestamp": 183689,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 114,
+      "type": "click",
+      "timestamp": 185303,
+      "description": "'저장' 버튼 클릭",
+      "cursor": {
+        "x": 1243,
+        "y": 899
+      },
+      "target": {
+        "x": 1203,
+        "y": 881,
+        "width": 56,
+        "height": 36
+      }
+    },
+    {
+      "id": 115,
+      "type": "wait",
+      "timestamp": 186789,
+      "description": "'저장' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 116,
+      "type": "click",
+      "timestamp": 194871,
+      "description": "'닫기' 버튼 클릭",
+      "cursor": {
+        "x": 1901,
+        "y": 23
+      },
+      "target": {
+        "x": 1891,
+        "y": 12,
+        "width": 17,
+        "height": 17
+      }
+    },
+    {
+      "id": 117,
+      "type": "wait",
+      "timestamp": 196249,
+      "description": "'닫기' 버튼 반응 대기"
+    },
+    {
+      "id": 118,
+      "type": "click",
+      "timestamp": 198105,
+      "description": "'학과별 교육과정 개편 요구사항 수합 및 ' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 914,
+        "y": 420
+      },
+      "target": {
+        "x": 837,
+        "y": 411,
+        "width": 255,
+        "height": 20
+      }
+    },
+    {
+      "id": 119,
+      "type": "wait",
+      "timestamp": 199349,
+      "description": "'학과별 교육과정 개편 요구사항 수합 및 ' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 120,
+      "type": "click",
+      "timestamp": 200861,
+      "description": "'추가' 버튼 클릭",
+      "cursor": {
+        "x": 1854,
+        "y": 631
+      },
+      "target": {
+        "x": 1809,
+        "y": 613,
+        "width": 66,
+        "height": 28
+      }
+    },
+    {
+      "id": 121,
+      "type": "wait",
+      "timestamp": 202004,
+      "description": "'추가' 버튼 반응 대기"
+    },
+    {
+      "id": 122,
+      "type": "type",
+      "timestamp": 203387,
+      "description": "'제목을 입력하세요' 입력창에 '학과별 개편 의견서 취합표 작성' 입력",
+      "cursor": {
+        "x": 981,
+        "y": 179
+      },
+      "target": {
+        "x": 792,
+        "y": 144,
+        "width": 1083,
+        "height": 41
+      },
+      "keys": "학과별 개편 의견서 취합표 작성"
+    },
+    {
+      "id": 123,
+      "type": "wait",
+      "timestamp": 205196,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 124,
+      "type": "click",
+      "timestamp": 206553,
+      "description": "[담당자] '담당자' 버튼 클릭",
+      "cursor": {
+        "x": 1114,
+        "y": 272
+      },
+      "target": {
+        "x": 1100,
+        "y": 260,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "id": 125,
+      "type": "wait",
+      "timestamp": 207899,
+      "description": "[담당자] '담당자' 버튼 반응 대기"
+    },
+    {
+      "id": 126,
+      "type": "click",
+      "timestamp": 209652,
+      "description": "[담당자 팝업] '김병훈 담당 사무처' 요소 클릭",
+      "cursor": {
+        "x": 932,
+        "y": 430
+      },
+      "target": {
+        "x": 874,
+        "y": 381,
+        "width": 88,
+        "height": 94
+      }
+    },
+    {
+      "id": 127,
+      "type": "wait",
+      "timestamp": 210983,
+      "description": "[담당자 팝업] '김병훈 담당 사무처' 요소 반응 대기"
+    },
+    {
+      "id": 128,
+      "type": "click",
+      "timestamp": 212659,
+      "description": "[담당자 팝업] '확인' 버튼 클릭",
+      "cursor": {
+        "x": 911,
+        "y": 702
+      },
+      "target": {
+        "x": 896,
+        "y": 677,
+        "width": 56,
+        "height": 36
+      }
+    },
+    {
+      "id": 129,
+      "type": "wait",
+      "timestamp": 214115,
+      "description": "[담당자 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 130,
+      "type": "click",
+      "timestamp": 216280,
+      "description": "[담당자] 'yyyy-mm-dd' 입력창 클릭",
+      "cursor": {
+        "x": 1651,
+        "y": 285
+      },
+      "target": {
+        "x": 1429,
+        "y": 260,
+        "width": 240,
+        "height": 32
+      }
+    },
+    {
+      "id": 131,
+      "type": "wait",
+      "timestamp": 217525,
+      "description": "[담당자] 'yyyy-mm-dd' 입력창 반응 대기"
+    },
+    {
+      "id": 132,
+      "type": "click",
+      "timestamp": 218580,
+      "description": "'30' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1483,
+        "y": 505
+      },
+      "target": {
+        "x": 1478,
+        "y": 495,
+        "width": 27,
+        "height": 27
+      }
+    },
+    {
+      "id": 133,
+      "type": "wait",
+      "timestamp": 219827,
+      "description": "'30' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 134,
+      "type": "click",
+      "timestamp": 220677,
+      "description": "[요청자] 'yyyy-mm-dd' 입력창 클릭",
+      "cursor": {
+        "x": 1649,
+        "y": 327
+      },
+      "target": {
+        "x": 1429,
+        "y": 317,
+        "width": 240,
+        "height": 32
+      }
+    },
+    {
+      "id": 135,
+      "type": "wait",
+      "timestamp": 221932,
+      "description": "[요청자] 'yyyy-mm-dd' 입력창 반응 대기"
+    },
+    {
+      "id": 136,
+      "type": "click",
+      "timestamp": 222722,
+      "description": "'다음달' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1660,
+        "y": 379
+      },
+      "target": {
+        "x": 1645,
+        "y": 366,
+        "width": 26,
+        "height": 26
+      }
+    },
+    {
+      "id": 137,
+      "type": "wait",
+      "timestamp": 224047,
+      "description": "'다음달' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 138,
+      "type": "click",
+      "timestamp": 224903,
+      "description": "'6' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1619,
+        "y": 444
+      },
+      "target": {
+        "x": 1610,
+        "y": 428,
+        "width": 27,
+        "height": 27
+      }
+    },
+    {
+      "id": 139,
+      "type": "wait",
+      "timestamp": 226221,
+      "description": "'6' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 140,
+      "type": "click",
+      "timestamp": 227149,
+      "description": "'저장' 버튼 클릭",
+      "cursor": {
+        "x": 1231,
+        "y": 911
+      },
+      "target": {
+        "x": 1203,
+        "y": 881,
+        "width": 56,
+        "height": 36
+      }
+    },
+    {
+      "id": 141,
+      "type": "wait",
+      "timestamp": 228305,
+      "description": "'저장' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 142,
+      "type": "click",
+      "timestamp": 230382,
+      "description": "'닫기' 버튼 클릭",
+      "cursor": {
+        "x": 1906,
+        "y": 24
+      },
+      "target": {
+        "x": 1891,
+        "y": 12,
+        "width": 17,
+        "height": 17
+      }
+    },
+    {
+      "id": 143,
+      "type": "wait",
+      "timestamp": 231857,
+      "description": "'닫기' 버튼 반응 대기"
+    },
+    {
+      "id": 144,
+      "type": "click",
+      "timestamp": 233316,
+      "description": "'트리보기' 버튼 클릭",
+      "cursor": {
+        "x": 1580,
+        "y": 338
+      },
+      "target": {
+        "x": 1531,
+        "y": 316,
+        "width": 92,
+        "height": 36
+      }
+    },
+    {
+      "id": 145,
+      "type": "wait",
+      "timestamp": 234603,
+      "description": "'트리보기' 버튼 반응 대기"
+    },
+    {
+      "id": 146,
+      "type": "click",
+      "timestamp": 236171,
+      "description": "'학과별 교육과정 개편 요구사항 수합 및 ' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 1021,
+        "y": 425
+      },
+      "target": {
+        "x": 841,
+        "y": 411,
+        "width": 255,
+        "height": 20
+      }
+    },
+    {
+      "id": 147,
+      "type": "wait",
+      "timestamp": 237418,
+      "description": "'학과별 교육과정 개편 요구사항 수합 및 ' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 148,
+      "type": "click",
+      "timestamp": 238869,
+      "description": "'수정' 버튼 클릭",
+      "cursor": {
+        "x": 776,
+        "y": 68
+      },
+      "target": {
+        "x": 752,
+        "y": 52,
+        "width": 48,
+        "height": 30
+      }
+    },
+    {
+      "id": 149,
+      "type": "wait",
+      "timestamp": 240036,
+      "description": "'수정' 버튼 반응 대기"
+    },
+    {
+      "id": 150,
+      "type": "dragAndDrop",
+      "timestamp": 241559,
+      "description": "a 요소을(를) #prjTaskUpdateForm_slider (div)으로 드래그 앤 드롭",
+      "cursor": {
+        "x": 1724,
+        "y": 217
+      },
+      "dragFrom": {
+        "x": 1724,
+        "y": 217
+      },
+      "dragTo": {
+        "x": 1779,
+        "y": 215
+      },
+      "target": {
+        "x": 1722,
+        "y": 204,
+        "width": 8,
+        "height": 18
+      }
+    },
+    {
+      "id": 151,
+      "type": "wait",
+      "timestamp": 243528,
+      "description": "드래그 앤 드롭 반영 대기"
+    },
+    {
+      "id": 152,
+      "type": "click",
+      "timestamp": 245282,
+      "description": "'0% 5% 10% 15% 20% 25% ' 요소에서 '80%' 선택",
+      "cursor": {
+        "x": 1834,
+        "y": 215
+      },
+      "target": {
+        "x": 1810,
+        "y": 197,
+        "width": 65,
+        "height": 32
+      }
+    },
+    {
+      "id": 153,
+      "type": "wait",
+      "timestamp": 246351,
+      "description": "'0% 5% 10% 15% 20% 25% ' 요소에서 '80%' 선택 반응 대기"
+    },
+    {
+      "id": 154,
+      "type": "upload",
+      "timestamp": 247745,
+      "description": "'내 PC' 버튼에 '프로젝트.pdf' 첨부",
+      "cursor": {
+        "x": 909,
+        "y": 544
+      },
+      "target": {
+        "x": 872,
+        "y": 528,
+        "width": 73,
+        "height": 32
+      }
+    },
+    {
+      "id": 155,
+      "type": "click",
+      "timestamp": 248979,
+      "cursor": {
+        "x": 935,
+        "y": 382
+      },
+      "target": {
+        "x": 795,
+        "y": 365,
+        "width": 497,
+        "height": 35
+      },
+      "description": "[파일 선택 팝업] '프로젝트.pdf' 파일 선택"
+    },
+    {
+      "id": 156,
+      "type": "click",
+      "timestamp": 249914,
+      "cursor": {
+        "x": 1149,
+        "y": 662
+      },
+      "target": {
+        "x": 1106,
+        "y": 649,
+        "width": 86,
+        "height": 26
+      },
+      "description": "[파일 선택 팝업] '열기(O)' 버튼 클릭"
+    },
+    {
+      "id": 157,
+      "type": "wait",
+      "timestamp": 251652,
+      "description": "첨부 파일 업로드 및 목록 반영 대기"
+    },
+    {
+      "id": 158,
+      "type": "click",
+      "timestamp": 253625,
+      "description": "'저장' 버튼 클릭",
+      "cursor": {
+        "x": 1277,
+        "y": 835
+      },
+      "target": {
+        "x": 1260,
+        "y": 822,
+        "width": 52,
+        "height": 30
+      }
+    },
+    {
+      "id": 159,
+      "type": "wait",
+      "timestamp": 254777,
+      "description": "'저장' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 160,
+      "type": "type",
+      "timestamp": 256965,
+      "description": "'에디터 본문' 입력 영역에 '학과별 취합 1차 완료하여 중간 산출물 파일을 첨부합니다.' 입력",
+      "cursor": {
+        "x": 801,
+        "y": 523
+      },
+      "target": {
+        "x": 754,
+        "y": 500,
+        "width": 1119,
+        "height": 39
+      },
+      "keys": "학과별 취합 1차 완료하여 중간 산출물 파일을 첨부합니다."
+    },
+    {
+      "id": 161,
+      "type": "wait",
+      "timestamp": 259858,
+      "description": "입력 텍스트 확인 여유 대기"
+    },
+    {
+      "id": 162,
+      "type": "click",
+      "timestamp": 261494,
+      "description": "'첨부' 버튼 클릭",
+      "cursor": {
+        "x": 768,
+        "y": 569
+      },
+      "target": {
+        "x": 762,
+        "y": 547,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "id": 163,
+      "type": "wait",
+      "timestamp": 262831,
+      "description": "'첨부' 버튼 반응 대기"
+    },
+    {
+      "id": 164,
+      "type": "upload",
+      "timestamp": 264357,
+      "description": "[파일 첨부 팝업] '내 PC' 버튼에 '중간 산출물.pdf' 첨부",
+      "cursor": {
+        "x": 660,
+        "y": 390
+      },
+      "target": {
+        "x": 624,
+        "y": 374,
+        "width": 73,
+        "height": 32
+      }
+    },
+    {
+      "id": 165,
+      "type": "click",
+      "timestamp": 265577,
+      "cursor": {
+        "x": 935,
+        "y": 382
+      },
+      "target": {
+        "x": 795,
+        "y": 365,
+        "width": 497,
+        "height": 35
+      },
+      "description": "[파일 선택 팝업] '중간 산출물.pdf' 파일 선택"
+    },
+    {
+      "id": 166,
+      "type": "click",
+      "timestamp": 266412,
+      "cursor": {
+        "x": 1149,
+        "y": 662
+      },
+      "target": {
+        "x": 1106,
+        "y": 649,
+        "width": 86,
+        "height": 26
+      },
+      "description": "[파일 선택 팝업] '열기(O)' 버튼 클릭"
+    },
+    {
+      "id": 167,
+      "type": "wait",
+      "timestamp": 268128,
+      "description": "첨부 파일 업로드 및 목록 반영 대기"
+    },
+    {
+      "id": 168,
+      "type": "click",
+      "timestamp": 270181,
+      "description": "[파일 첨부 팝업] '저장' 버튼 클릭",
+      "cursor": {
+        "x": 927,
+        "y": 620
+      },
+      "target": {
+        "x": 902,
+        "y": 602,
+        "width": 56,
+        "height": 36
+      }
+    },
+    {
+      "id": 169,
+      "type": "wait",
+      "timestamp": 271357,
+      "description": "[파일 첨부 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 170,
+      "type": "click",
+      "timestamp": 273643,
+      "description": "'등록' 버튼 클릭",
+      "cursor": {
+        "x": 1829,
+        "y": 588
+      },
+      "target": {
+        "x": 1801,
+        "y": 580,
+        "width": 60,
+        "height": 32
+      }
+    },
+    {
+      "id": 171,
+      "type": "wait",
+      "timestamp": 274784,
+      "description": "'등록' 버튼 클릭 후 화면/팝업 전환 대기"
+    },
+    {
+      "id": 172,
+      "type": "click",
+      "timestamp": 276859,
+      "description": "'닫기' 버튼 클릭",
+      "cursor": {
+        "x": 1899,
+        "y": 23
+      },
+      "target": {
+        "x": 1891,
+        "y": 12,
+        "width": 17,
+        "height": 17
+      }
+    },
+    {
+      "id": 173,
+      "type": "wait",
+      "timestamp": 278257,
+      "description": "'닫기' 버튼 반응 대기"
+    },
+    {
+      "id": 174,
+      "type": "click",
+      "timestamp": 279692,
+      "description": "'간트차트' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 523,
+        "y": 217
+      },
+      "target": {
+        "x": 435,
+        "y": 201,
+        "width": 146,
+        "height": 40
+      }
+    },
+    {
+      "id": 175,
+      "type": "wait",
+      "timestamp": 280931,
+      "description": "'간트차트' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 176,
+      "type": "click",
+      "timestamp": 282431,
+      "description": "'80%' 요소 클릭",
+      "cursor": {
+        "x": 937,
+        "y": 432
+      },
+      "target": {
+        "x": 826,
+        "y": 415,
+        "width": 148,
+        "height": 32
+      }
+    },
+    {
+      "id": 177,
+      "type": "wait",
+      "timestamp": 283837,
+      "description": "'80%' 요소 반응 대기"
+    },
+    {
+      "id": 178,
+      "type": "click",
+      "timestamp": 285333,
+      "description": "'80%' 요소 클릭",
+      "cursor": {
+        "x": 927,
+        "y": 466
+      },
+      "target": {
+        "x": 826,
+        "y": 449,
+        "width": 148,
+        "height": 32
+      }
+    },
+    {
+      "id": 179,
+      "type": "wait",
+      "timestamp": 286723,
+      "description": "'80%' 요소 반응 대기"
+    },
+    {
+      "id": 180,
+      "type": "wait",
+      "timestamp": 291228,
+      "description": "'주간' 버튼 반응 대기"
+    },
+    {
+      "id": 181,
+      "type": "click",
+      "timestamp": 292921,
+      "description": "'월간' 버튼 클릭",
+      "cursor": {
+        "x": 1175,
+        "y": 355
+      },
+      "target": {
+        "x": 1135,
+        "y": 336,
+        "width": 96,
+        "height": 28
+      }
+    },
+    {
+      "id": 182,
+      "type": "wait",
+      "timestamp": 294362,
+      "description": "'월간' 버튼 반응 대기"
+    },
+    {
+      "id": 183,
+      "type": "click",
+      "timestamp": 295990,
+      "description": "'일감 첨부파일' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 652,
+        "y": 220
+      },
+      "target": {
+        "x": 580,
+        "y": 201,
+        "width": 146,
+        "height": 40
+      }
+    },
+    {
+      "id": 184,
+      "type": "wait",
+      "timestamp": 297429,
+      "description": "'일감 첨부파일' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 185,
+      "type": "click",
+      "timestamp": 298937,
+      "description": "'활동로그' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 60,
+        "y": 437
+      },
+      "target": {
+        "x": 0,
+        "y": 429,
+        "width": 259,
+        "height": 36
+      }
+    },
+    {
+      "id": 186,
+      "type": "wait",
+      "timestamp": 300071,
+      "description": "'활동로그' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 187,
+      "type": "click",
+      "timestamp": 301521,
+      "description": "'프로젝트' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 337,
+        "y": 138
+      },
+      "target": {
+        "x": 318,
+        "y": 127,
+        "width": 63,
+        "height": 25
+      }
+    },
+    {
+      "id": 188,
+      "type": "wait",
+      "timestamp": 302717,
+      "description": "'프로젝트' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 189,
+      "type": "click",
+      "timestamp": 304310,
+      "description": "'종합 현황' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 92,
+        "y": 258
+      },
+      "target": {
+        "x": 58,
+        "y": 242,
+        "width": 55,
+        "height": 24
+      }
+    },
+    {
+      "id": 190,
+      "type": "wait",
+      "timestamp": 305507,
+      "description": "'종합 현황' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 191,
+      "type": "click",
+      "timestamp": 306958,
+      "description": "'업무 현황' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 94,
+        "y": 294
+      },
+      "target": {
+        "x": 58,
+        "y": 276,
+        "width": 55,
+        "height": 24
+      }
+    },
+    {
+      "id": 192,
+      "type": "wait",
+      "timestamp": 308130,
+      "description": "'업무 현황' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 193,
+      "type": "click",
+      "timestamp": 309585,
+      "description": "'내 프로젝트' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 89,
+        "y": 329
+      },
+      "target": {
+        "x": 58,
+        "y": 310,
+        "width": 68,
+        "height": 24
+      }
+    },
+    {
+      "id": 194,
+      "type": "wait",
+      "timestamp": 310802,
+      "description": "'내 프로젝트' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 195,
+      "type": "click",
+      "timestamp": 312268,
+      "description": "'내 일감' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 90,
+        "y": 357
+      },
+      "target": {
+        "x": 58,
+        "y": 344,
+        "width": 43,
+        "height": 24
+      }
+    },
+    {
+      "id": 196,
+      "type": "wait",
+      "timestamp": 313397,
+      "description": "'내 일감' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 197,
+      "type": "click",
+      "timestamp": 314944,
+      "description": "'내 프로젝트' 메뉴/링크 클릭",
+      "cursor": {
+        "x": 76,
+        "y": 326
+      },
+      "target": {
+        "x": 58,
+        "y": 310,
+        "width": 68,
+        "height": 24
+      }
+    },
+    {
+      "id": 198,
+      "type": "wait",
+      "timestamp": 316263,
+      "description": "'내 프로젝트' 메뉴/링크 반응 대기"
+    },
+    {
+      "id": 199,
+      "type": "click",
+      "timestamp": 317939,
+      "description": "'메뉴' 버튼 클릭",
+      "cursor": {
+        "x": 1054,
+        "y": 295
+      },
+      "target": {
+        "x": 1040,
+        "y": 272,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "id": 200,
+      "type": "wait",
+      "timestamp": 319136,
+      "description": "'메뉴' 버튼 반응 대기"
+    },
+    {
+      "id": 201,
+      "type": "wait",
+      "timestamp": 320155,
+      "description": "최종 시연 결과 화면 클로즈업 확인 대기"
+    }
+  ]
+}
