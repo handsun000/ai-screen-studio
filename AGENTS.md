@@ -30,7 +30,7 @@ graph LR
 | 구분 | 파일 경로 | 역할 |
 | :--- | :--- | :--- |
 | **대시보드 서버/UI** | `scripts/dashboard-server.ts`, `dashboard/index.html`, `dashboard/style.css`, `dashboard/app.js` | 시나리오 관리/삭제, API/CLI 전환, 스포이드 감지, 대본/타임라인/컷 편집, 백그라운드 렌더링 제어 |
-| **통합 AI 실행 엔진** | `src/services/aiClient.ts`, `src/services/configManager.ts`, `src/services/aiUsageTracker.ts` | **API 모드**(`@google/genai`) 및 **CLI 모드**(`agy` / `claude` / `gemini` CLI `stdin` 스트리밍) 통합 실행 및 사용량 추적 |
+| **통합 AI 실행 엔진** | `src/services/aiClient.ts`, `src/services/configManager.ts`, `src/services/aiUsageTracker.ts` | **API 모드**(`@google/genai`) 및 **CLI 모드**(`agy` / `naoncode` / `claude` / `gemini` / `codex` / `ollama` / `copilot` CLI) 통합 실행 및 사용량 추적 |
 | **동작 감지(스포이드)** | `src/services/actionRecorderService.ts` | 실시간 브라우저에서 `click`, `rightclick`, `hover`, `dragAndDrop`, `type`, `selectOption`, `upload`, `windowBounds`/`viewport`, `targetHtml` 포착 |
 | **AI 플래너 & 정제기** | `src/services/geminiPlanner.ts`, `src/services/groupwareCatalog.ts`, `src/services/planSanitizer.ts` | 자연어 시나리오 생성, 셀렉터 정규화, `targetHtml` 기반 고유 속성/텍스트 보강, 중복/오탐 이벤트 정리 |
 | **브라우저 녹화 & 치유** | `scripts/record.ts`, `src/services/elementSelfHealer.ts` | Playwright 시나리오 재생, 창 크기/위치 1:1 동기화, 멀티창(`pageStack`)/모달/트리/드래그/업로드 제어 및 실시간 DOM 자가 치유 |
@@ -71,7 +71,7 @@ graph LR
 ### 원칙 4. 통합 AI 실행 엔진 (`API 모드 / CLI 모드`) 및 실시간 자가 치유 (`aiClient.ts`, `elementSelfHealer.ts`)
 1. **API 모드(`api`) & 로컬 CLI 모드(`cli`) 이원화 지원**:
    - 대시보드 상단 헤더(`[🔌 API | 💻 CLI]`), 나레이션 툴바, `#pill-ai` 모달에서 실행 모드를 즉시 전환할 수 있으며 `.env`(`AI_MODE`, `AI_CLI_PROVIDER`, `AI_CLI_MODEL`)에 영속화됩니다.
-   - **CLI 모드(`cli`)**: PC에 로그인된 `Antigravity CLI (agy.exe --input-format stream-json --output-format stream-json -p=)` 또는 `Claude Code CLI (claude.exe -p --output-format json)`에 `stdin` 파이프로 프롬프트를 전달하여 명령줄 길이 제한 없이 대본 생성·시나리오 생성·실시간 자가 치유를 수행합니다(API 키 불필요 · 요금 ₩0).
+   - **CLI 모드(`cli`)**: PC에 로그인된 `Antigravity CLI (agy.exe)`, `NAON CODE CLI (naoncode acp JSON-RPC)`, `Claude Code CLI (claude.exe)`, `Gemini CLI`, `Codex CLI`, `Ollama`, `Copilot CLI`에 `stdin` 파이프로 프롬프트를 전달하여 명령줄 길이 제한 없이 대본 생성·시나리오 생성·실시간 자가 치유를 수행합니다(API 키 불필요 · 요금 ₩0).
 2. **무추측 원칙 (Zero-Guessing Policy) 및 단일 패스 자가 치유 완료 (강제 재녹화 생략)**:
    - `LiveDOMCandidate` 목록에 없는 가상 ID를 추측하지 않으며, 녹화 중 자가 치유가 발생하면 치유된 셀렉터를 `browse-plan.json`에 즉시 영구 반영하고 **재녹화(2-Pass) 없이 현재 녹화본으로 즉시 후가공을 완료**합니다(탐색 대기 구간은 대시보드 `✂️ 구간 잘라내기`로 편집 가능).
 
@@ -99,6 +99,9 @@ graph LR
 2. **대시보드 서버 에이전트 직접 실행 절대 금지**: `npm run dashboard`나 `scripts/dashboard-server.ts`는 항상 사용자가 직접 실행합니다.
 3. **엔진/정제기 버그 우회용 `browse-plan.json` 임시방편 조작 금지**: 반드시 `actionRecorderService.ts`, `planSanitizer.ts`, `scripts/record.ts` 로직을 수정합니다.
 4. **백그라운드 데몬 실행 금지 (`IsDaemon: false`)** 및 **프레임 단위 시각 검증**: 녹화/렌더링 테스트 후 프레임을 추출해 눈으로 확인하고 임시 이미지는 즉시 삭제합니다.
+5. **교차 파일 정합성 1:1 대조 및 실데이터·상호작용 검증 의무화 (No Syntax-Only Blind Reporting)**:
+   - 다중 파일(`index.html` ↔ `style.css` ↔ `app.js` ↔ `dashboard-server.ts` ↔ `src/services/*`) 수정이나 컨텍스트 요약 직후에는 절대로 기억에 의존해 코드를 이어 쓰지 않으며, 반드시 `read_file`로 양쪽 파일의 **CSS 클래스명, DOM `id`/`data-*`(`dataset`) 속성명, API 요청/응답 키(`req.body`), 실제 JSON 스키마(`moments.moments`, `narration.cues`)**를 1:1로 전수 대조합니다.
+   - 단순히 `tsc --noEmit`이나 `node -c` 문법 검사만 통과한 상태로 "완료" 보고하는 것을 **엄격히 금지**합니다. 완료 보고 전 반드시 **실제 시나리오 데이터(`data/<slug>/`)를 주입한 실행 테스트 및 클릭/시간 동기화(`updateVideoPlaybackSync` 등) 상호작용 시뮬레이션**까지 검증한 뒤 실측 결과를 보고합니다.
 
 ---
 
@@ -112,35 +115,26 @@ npx tsx scripts/record.ts <slug> --headed
 # 2. 줌/팬 편집 플랜 단독 재생성
 python scripts/build-edit-plan.py data/<slug>/
 
-# 3. TypeScript 전체 타입 검사 및 프론트엔드 문법 검사
+# 3. TypeScript 전체 타입 검사, 프론트엔드 문법 검사 및 통합 헬스체크
 npx tsc --noEmit
 node -c dashboard/app.js
+npm run doctor
+npm run doctor:fix
 ```
 
 ---
 
 ## 5. 현재 프로젝트 상태 및 다음 세션 인수인계 (Handoff Status)
 
-* **현재 완료 상태**:
-  1. 스포이드 1:1 정밀 캡처(`verifyAndRankCandidatesInLiveDom`, 트리/형제 문맥 스코핑, 자식 핑거프린팅, 리치 에디터 템플릿 보존, `<select>` `selectOption`, 파일 업로드 `upload`, 우클릭 `rightclick`, 커스텀 스크롤바 오탐 차단, 창 크기/위치 `windowBounds` 동기화, HUD 자동 회피) 및 플랜 정제기(`planSanitizer.ts`) 구축 완료.
-  2. 멀티창 팝업(`pageStack`) 보존, 모달 닫힘 자동 감지(`waitForModalToCloseIfTriggered`), 초반 로그인 시연 보존, 동적 생성 항목 텍스트 우선 매칭 완료 (`taskboard` 324모멘트 / 442.4초 전 구간 자가 치유 0건 클린 녹화 검증 완료).
-  3. **대시보드 `🔌 API 모드 / 💻 CLI 모드` 원클릭 전환 시스템 (`src/services/aiClient.ts`)** 구축 완료 (`Antigravity CLI` · `Claude Code CLI` · `Gemini CLI` `stdin` 스트리밍 연동).
-  4. 시나리오별 완전 격리 백그라운드 렌더링(`renderRunner.ts`), 비간섭 플로팅 도크(`#background-render-dock`), `30fps/60fps` 선택, 구간 잘라내기(`✂️`)/챕터 합치기(`🔗`)/시나리오 삭제(`🗑️`) 완료.
-  5. **전수조사 안정화 패치 및 병합 오프닝 슬라이드 고도화 완료**:
-     - 병합 시나리오(`first` 등) 대본 저장 시 앞단 2장(표지 + 통합목차) 고속 재합성(`fastApplyMergedScenarioNarration`), `"안녕하십니까."` 하드코딩 제거, 챕터 전환 브릿지 안내 멘트 자동 삽입 완료.
-     - `gw.bc.ac.kr` / `gwdev.bc.ac.kr` 정품 오렌지 테마(`#FF9600`) 및 로고 동기화, 전 시나리오 `compStartMs`/`compEndMs` 무결성 보장, 대본 저장 API 최신 상태 반환, 컷 편집/복원 시 `rendered.base.mp4` 캐시 정합성 패치 완료.
-
-* **🚀 다음 세션 연속 작업 리스트 (1번부터 순서대로 진행 후 매 단계 사용자에게 보고)**:
-  - **[1번] 병합 시나리오 전 구간 본문 대본 재합성 & 동적 챕터 바로가기 탭 (하드코딩 금지)**:
-    - `slideVideoComposer.ts`의 `fastApplyMergedScenarioNarration()`에서 앞 2장뿐만 아니라 본문 대본(`cues[2..N]`) 수정 시에도 전체 병합 영상의 해당 타임스탬프 오디오에 새 TTS 음성이 즉시 반영되도록 개선 + `[🔄 원본 챕터로 병합본 재빌드]` 버튼 제공.
-    - 대본 편집기 상단에 병합 시나리오의 `mergedFromSlugs`, `introToc.items`, 챕터별 `isIntro` 구간을 런타임에 동적으로 읽어(특정 시나리오명 하드코딩 절대 금지) 챕터 바로가기 탭을 생성하고, 클릭 시 해당 챕터 대본 스크롤 및 영상 위치로 즉시 이동.
-  - **[2번] 시나리오 라이브러리 도메인별 그룹화 및 도메인 필터링**:
-    - `scenarioManager.ts` 및 `dashboard/app.js`에서 시나리오별 도메인/사이트 브랜드(`bc.ac.kr`, `naonsoft.com` 등)를 추출해 도메인별 필터 칩 및 접기/펼치기 그룹 헤더(로고·테마 컬러 표시)로 분류 출력 (`_site_brands`, `_uploads` 등 시스템 폴더 제외).
-  - **[3번] 멀티트랙 타임라인 분리 + `Ctrl + 마우스 휠` 확대/축소 + 타임라인 ↔ 대본 양방향 점프**:
-    - 단일 바(`#timeline-visual-bar`)에 겹쳐 있던 요소들을 **① 시간 눈금자(Ruler) / ② 🔍 줌 & ⏸ 홀드 트랙 / ③ 🎯 클릭·동작 마커 트랙 / ④ 🎙️ AI 대본 트랙** 4단 레인으로 분리.
-    - `Ctrl + 마우스 휠` (및 배율 버튼 `1x~20x`)로 커서 기준 타임라인 확대/축소 및 가로 스크롤 지원(확대 시 대본 블록 내부에 텍스트 표시).
-    - 타임라인의 `🎙️ 대본 블록` 클릭 시 영상 시점 이동과 동시에 하단 `🎙️ AI 나레이션 대본` 탭의 해당 대본 줄로 자동 스크롤·하이라이트·포커스 이동 (양방향 연동).
-  - **[4번] 사이트 브랜드(테마 색상·로고·기관명) 상위 도메인 자동 상속 및 대시보드 설정 UI**
-  - **[5번] 플레이어 상태 배지 명확화 및 미반영 대본 알림 배너**
-  - **[6번] 디스크 용량 최적화 (하드링크 적용 및 임시/캐시 파일 원클릭 정리)**
-  - **[7번] 통합 헬스체크(`npm run doctor`) 스크립트 추가**
+* **현재 완료 상태 ([1번]~[7번] 전수 완료)**:
+  1. 스포이드 1:1 정밀 캡처(`verifyAndRankCandidatesInLiveDom`, 트리/형제 스코핑, 자식 핑거프린팅, 에디터 템플릿 보존, `selectOption`, `upload`, `rightclick`, 스크롤바 오탐 차단, `windowBounds`, HUD 회피) 및 `planSanitizer.ts` 구축 완료.
+  2. 멀티창 팝업(`pageStack`) 보존, 모달 닫힘 감지(`waitForModalToCloseIfTriggered`), 로그인 시연 보존, 동적 항목 텍스트 우선 매칭 완료 (`taskboard` 324모멘트 자가 치유 0건 검증 완료).
+  3. **대시보드 `🔌 API 모드 / 💻 CLI 모드` 원클릭 전환 시스템 (`src/services/aiClient.ts`)** 구축 완료 (`Antigravity CLI` · `NAON CODE CLI (naoncode)` · `Claude Code CLI` · `Gemini CLI` · `Codex` · `Ollama` · `Copilot` 연동).
+  4. 시나리오별 완전 격리 백그라운드 렌더링(`renderRunner.ts`), 플로팅 도크(`#background-render-dock`), `30fps/60fps` 선택, 구간 잘라내기(`✂️`)/챕터 합치기(`🔗`)/시나리오 삭제(`🗑️`) 완료.
+  5. **[1번] 병합 시나리오 전 구간 재합성 & 동적 챕터 바로가기 탭 (`#narration-chapter-tabs-bar`)** 완료.
+  6. **[2번] 시나리오 라이브러리 도메인별 그룹화 및 도메인 필터링 (`#scenario-domain-chips`)** 완료.
+  7. **[3번] 4단 멀티트랙 타임라인 분리 + `Ctrl + 마우스 휠` 확대/축소 + 타임라인 ↔ 대본 양방향 점프 + 오프닝 슬라이드 타임스탬프 싱크 정밀 보정** 완료.
+  8. **[4번] 사이트 브랜드(테마 색상·로고·기관명) 상위 도메인 자동 상속 및 대시보드 설정 UI (`#narration-site-brand-bar`)** 완료.
+  9. **[5번] 플레이어 상태 배지 명확화 및 미반영 대본 알림 배너 (`#narration-unapplied-banner`)** 완료.
+  10. **[6번] 디스크 용량 최적화 (`storageOptimizerService.ts`, NTFS 하드링크 중복 제거 및 원클릭 정리 드로어 `#storage-optimizer-drawer`)** 완료 (약 1.07GB 물리 용량 즉시 절감).
+  11. **[7번] 통합 헬스체크 (`npm run doctor` / `npm run doctor:fix`, `scripts/doctor.ts`)** 구축 완료.

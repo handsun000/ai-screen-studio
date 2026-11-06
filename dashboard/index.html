@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261031_v3">
+  <link rel="stylesheet" href="style.css?v=20261105_v5">
 </head>
 <body>
   <div class="app-container">
@@ -159,17 +159,16 @@
                   <select id="editor-scenario-select" class="editor-scenario-select" title="저장된 시나리오를 즉시 편집기로 불러옵니다">
                     <option value="">📂 기존 시나리오 빠른 불러오기...</option>
                   </select>
-                </div>
-                <div class="editor-sub-row">
                   <p class="card-sub" id="plan-slug-badge">시나리오 미선택</p>
                   <div class="plan-stats-pills" id="plan-stats-pills"></div>
                 </div>
               </div>
               <div class="editor-header-actions">
                 <button class="btn btn-sm btn-outline active-toggle" id="btn-toggle-compact-waits" type="button" title="대기(WAIT) 단계를 한 줄로 간소화하여 핵심 클릭/입력 단계의 가독성을 높입니다">
-                  ⏳ 대기(WAIT) 간소화
+                  ⏳ 대기 간소화
                 </button>
                 <button class="btn btn-sm btn-secondary" id="btn-add-action" title="플랜 맨 끝에 새 액션 추가">+ 액션 추가</button>
+                <button class="btn btn-sm btn-outline" id="btn-clear-plan" type="button" title="현재 편집 중인 액션 목록을 모두 비우고 새 플랜으로 초기화합니다">🗑️ 비우기</button>
                 <button class="btn btn-sm btn-outline" id="btn-save-plan">💾 플랜 저장</button>
                 <button class="btn btn-sm btn-success btn-glow" id="btn-run-pipeline" title="현재 브라우징 플랜으로 자동 브라우저 녹화를 실행합니다">
                   🎥 브라우저 녹화 실행
@@ -207,13 +206,62 @@
                 <span class="count-badge" id="scenarios-count">0개</span>
               </div>
               <div class="scenario-lib-header-right">
+                <button type="button" class="btn-toggle-storage" id="btn-toggle-storage-drawer" title="하드링크 중복 제거 및 임시·캐시·고아 파일 원클릭 디스크 용량 최적화">
+                  🧹 용량
+                </button>
                 <button type="button" class="btn-toggle-merge" id="btn-toggle-merge-drawer" title="렌더링된 여러 챕터 영상을 순서대로 하나로 합칩니다">
-                  🔗 영상 합치기
+                  🔗 합치기
                 </button>
                 <button type="button" class="btn-collapse-sidebar" id="btn-collapse-library" title="시나리오 라이브러리 패널 접기">
-                  ◀ 접기
+                  ◀
                 </button>
               </div>
+            </div>
+
+            <!-- Collapsible Disk Storage Optimizer Drawer -->
+            <div class="storage-optimizer-drawer hidden" id="storage-optimizer-drawer">
+              <div class="storage-drawer-header">
+                <span class="storage-drawer-title">🧹 디스크 용량 진단 &amp; 원클릭 최적화</span>
+                <span class="storage-reclaim-badge" id="storage-reclaim-badge">계산 중...</span>
+              </div>
+              <div class="storage-stats-summary" id="storage-stats-summary">
+                디스크 사용량을 분석하고 있습니다...
+              </div>
+              <div class="storage-options-list">
+                <label class="storage-opt-row" title="동일한 비디오(output ↔ data ↔ public)와 오디오 파일을 NTFS 하드링크로 연결하여 데이터 손실 없이 물리 용량을 즉시 절감합니다.">
+                  <span class="storage-opt-left">
+                    <input type="checkbox" id="chk-storage-hardlinks" checked />
+                    <span>🔗 중복 MP4/MP3 하드링크 통합 <small>(데이터 손실 0%)</small></span>
+                  </span>
+                  <span class="storage-opt-size" id="storage-size-hardlinks">0 MB</span>
+                </label>
+                <label class="storage-opt-row" title="합성 완료 후 남은 임시 슬라이드 조각, 번들러 중복 비디오 캐시, 대용량 임시 .zip 파일 등을 정리합니다.">
+                  <span class="storage-opt-left">
+                    <input type="checkbox" id="chk-storage-temp" checked />
+                    <span>🗑️ 임시 슬라이드·번들 캐시·압축본 정리</span>
+                  </span>
+                  <span class="storage-opt-size" id="storage-size-temp">0 MB</span>
+                </label>
+                <label class="storage-opt-row" title="시나리오 폴더(data/<slug>)는 삭제되었으나 output/ 또는 public/에 남아 있는 고아 비디오/음성 파일을 정리합니다.">
+                  <span class="storage-opt-left">
+                    <input type="checkbox" id="chk-storage-orphan" checked />
+                    <span>🧹 삭제된 시나리오의 고아 산출물 정리</span>
+                  </span>
+                  <span class="storage-opt-size" id="storage-size-orphan">0 MB</span>
+                </label>
+                <label class="storage-opt-row" title="구간 잘라내기 실행 취소용 백업(.undo.mp4 / .orig.mp4)을 정리합니다. (순수 본문 재합성용 recording.body.mp4는 안전하게 보존됩니다)">
+                  <span class="storage-opt-left">
+                    <input type="checkbox" id="chk-storage-undo" />
+                    <span>✂️ 구간 편집 이전 백업(.undo/.orig) 정리 <small>(선택)</small></span>
+                  </span>
+                  <span class="storage-opt-size" id="storage-size-undo">0 MB</span>
+                </label>
+              </div>
+              <div class="storage-drawer-btn-row">
+                <button type="button" class="btn btn-sm btn-outline" id="btn-refresh-storage-stats">🔄 다시 계산</button>
+                <button type="button" class="btn btn-sm btn-primary btn-glow" id="btn-execute-storage-cleanup">⚡ 선택한 항목 즉시 최적화</button>
+              </div>
+              <div class="storage-cleanup-result hidden" id="storage-cleanup-result"></div>
             </div>
 
             <!-- Collapsible Rendered Video Chapter Merger Drawer -->
@@ -249,6 +297,7 @@
                 <button type="button" class="scenario-filter-chip" data-filter="recorded">📹 녹화완료</button>
                 <button type="button" class="scenario-filter-chip" data-filter="eyedropper">💧 스포이드</button>
               </div>
+              <div class="scenario-domain-chips hidden" id="scenario-domain-chips"></div>
             </div>
 
             <div class="scenarios-container" id="scenario-cards-container">
@@ -273,29 +322,35 @@
                 <div class="player-meta-pills" id="player-meta">시나리오를 선택해주세요</div>
               </div>
               <div class="player-actions">
+                <button type="button" class="btn btn-sm btn-outline active" id="btn-toggle-studio-layout" title="좌우 와이드 분할 뷰(영상·타임라인 좌측 + 대본·모멘트 우측 전체높이) / 상하 기본 뷰 전환">
+                  ◫ 와이드 뷰
+                </button>
                 <button class="btn btn-sm btn-outline" id="btn-re-record" title="브라우징 플랜 편집기(탭 1)에서 이 시나리오의 액션을 확인·수정합니다">
                   ✏️ 플랜 편집
                 </button>
                 <button class="btn btn-sm btn-secondary" id="btn-direct-rerecord" title="이 시나리오를 현재 설정으로 즉시 다시 녹화합니다">
-                  🎥 즉시 재녹화
+                  🎥 재녹화
                 </button>
                 <div class="render-action-group" title="최종 MP4 렌더링 프레임 레이트(FPS) 선택 및 백그라운드 렌더링 실행">
                   <select id="render-fps-select" class="render-fps-select" title="렌더링 프레임 레이트 선택 (기본 30fps 고속 · 60fps 고품질)">
-                    <option value="30" selected>⚡ 30fps (고속)</option>
-                    <option value="60">✨ 60fps (고품질)</option>
+                    <option value="30" selected>⚡ 30fps</option>
+                    <option value="60">✨ 60fps</option>
                   </select>
                   <button class="btn btn-sm btn-success btn-glow" id="btn-player-render" title="다른 시나리오 녹화·편집과 간섭 없이 백그라운드에서 최종 MP4 비디오를 렌더링합니다">
-                    🎞️ 최종 MP4 렌더링
+                    🎞️ MP4 렌더링
                   </button>
                 </div>
                 <a class="btn btn-sm btn-download hidden" id="btn-download-video" download title="완성된 최종 MP4 비디오 다운로드">
-                  💾 최종 MP4 다운로드
+                  💾 다운로드
                 </a>
               </div>
             </div>
 
-            <!-- Unified Cinema Video Stage + Interactive Timeline Dock -->
-            <div class="video-stage-wrapper">
+            <!-- Side-by-Side Wide Studio Split Container (Left: 16:9 Video + Timeline | Right: Full-Height Script/Moments Deck) -->
+            <div class="player-studio-split" id="player-studio-split">
+              <div class="studio-split-left" id="studio-split-left">
+                <!-- Unified Cinema Video Stage + Interactive Timeline Dock -->
+                <div class="video-stage-wrapper">
               <!-- Video Player Mode & Playback Controls Bar -->
               <div class="video-mode-container" id="video-mode-container">
                 <div class="video-mode-switch">
@@ -333,23 +388,51 @@
               <div class="timeline-visual-section">
                 <div class="timeline-header">
                   <div class="timeline-title-left">
-                    <h3>🎬 인터랙티브 타임라인 트랙</h3>
-                    <span class="timeline-hint">바 또는 마커를 클릭하면 해당 시점으로 즉시 이동합니다</span>
+                    <h3>🎬 인터랙티브 멀티트랙 타임라인</h3>
+                    <span class="timeline-hint">트랙·마커 클릭 시 시점 이동 · 🎙️대본 블록 클릭 시 대본 줄로 점프 · Ctrl+마우스 휠 확대/축소</span>
                   </div>
-                  <span id="timeline-stats">0 Segments, 0 Clicks</span>
+                  <div class="timeline-header-right">
+                    <div class="timeline-zoom-controls" id="timeline-zoom-controls" title="타임라인 가로 배율 조절 (Ctrl + 마우스 휠로도 커서 위치 기준 확대/축소 가능)">
+                      <button type="button" class="btn-timeline-zoom" id="btn-timeline-zoom-out" title="타임라인 축소 (-)">➖</button>
+                      <button type="button" class="btn-timeline-zoom-preset active" data-zoom="1">1x</button>
+                      <button type="button" class="btn-timeline-zoom-preset" data-zoom="2">2x</button>
+                      <button type="button" class="btn-timeline-zoom-preset" data-zoom="5">5x</button>
+                      <button type="button" class="btn-timeline-zoom-preset" data-zoom="10">10x</button>
+                      <button type="button" class="btn-timeline-zoom-preset" data-zoom="20">20x</button>
+                      <button type="button" class="btn-timeline-zoom" id="btn-timeline-zoom-in" title="타임라인 확대 (+)">➕</button>
+                      <span class="timeline-zoom-badge" id="timeline-zoom-badge">1x</span>
+                    </div>
+                    <span id="timeline-stats">0 Segments, 0 Clicks</span>
+                    <button type="button" class="btn-timeline-cut-toggle" id="btn-toggle-cut-editor" title="불필요한 영상 구간 잘라내기 바 열기/닫기 (타임라인에서 Shift+드래그로도 선택 가능)">
+                      ✂️ 구간 자르기
+                    </button>
+                  </div>
                 </div>
-                <div class="timeline-bar-wrapper" id="timeline-bar-wrapper" title="클릭하여 해당 시점으로 비디오 이동">
-                  <div class="timeline-bar" id="timeline-visual-bar"></div>
-                  <div class="timeline-cut-selection hidden" id="timeline-cut-selection"></div>
-                  <div class="timeline-playhead" id="timeline-playhead" style="left: 0%;"></div>
+                <div class="timeline-multitrack-shell" id="timeline-bar-wrapper">
+                  <div class="timeline-track-labels" aria-hidden="true">
+                    <div class="timeline-track-label-row label-ruler" title="시간 눈금자 (초/분)">⏱️ 시간</div>
+                    <div class="timeline-track-label-row label-zoom" title="카메라 줌 확대 구간 및 화면 홀드/단축 구간">🔍 줌·홀드</div>
+                    <div class="timeline-track-label-row label-moments" title="브라우저 클릭·입력·선택 동작 마커">🎯 동작</div>
+                    <div class="timeline-track-label-row label-narration" title="AI 나레이션 대본 구간 (클릭 시 하단 대본 줄로 이동)">🎙️ 대본</div>
+                  </div>
+                  <div class="timeline-scroll-viewport" id="timeline-scroll-viewport" title="클릭하여 해당 시점으로 이동 · Shift+드래그로 잘라낼 구간 선택 · Ctrl+마우스 휠로 확대/축소">
+                    <div class="timeline-tracks-stage" id="timeline-visual-bar" style="width: 100%;">
+                      <div class="timeline-lane lane-ruler" id="timeline-track-ruler"></div>
+                      <div class="timeline-lane lane-zoom" id="timeline-track-zoom"></div>
+                      <div class="timeline-lane lane-moments" id="timeline-track-moments"></div>
+                      <div class="timeline-lane lane-narration" id="timeline-track-narration"></div>
+                      <div class="timeline-cut-selection hidden" id="timeline-cut-selection"></div>
+                      <div class="timeline-playhead" id="timeline-playhead" style="left: 0%;"></div>
+                    </div>
+                  </div>
                 </div>
-                <div class="timeline-legend">
-                  <span class="legend-item"><span class="legend-dot zoom-dot"></span> 카메라 줌 구간 (Zoom In/Out)</span>
-                  <span class="legend-item"><span class="legend-dot click-dot"></span> 동작/클릭 마커 (클릭 시 이동)</span>
-                  <span class="legend-item"><span class="legend-dot narration-dot"></span> AI 나레이션 음성 구간</span>
-                  <span class="legend-item"><span class="legend-dot hold-dot"></span> 구간 늘리기(홀드)/단축</span>
+                <div class="timeline-legend hidden">
+                  <span class="legend-item"><span class="legend-dot zoom-dot"></span> 카메라 줌</span>
+                  <span class="legend-item"><span class="legend-dot hold-dot"></span> 구간 홀드/단축</span>
+                  <span class="legend-item"><span class="legend-dot click-dot"></span> 동작 마커 (클릭 이동)</span>
+                  <span class="legend-item"><span class="legend-dot narration-dot"></span> AI 대본 (클릭 점프)</span>
                 </div>
-                <div class="video-cut-editor-bar" id="video-cut-editor-bar">
+                <div class="video-cut-editor-bar hidden" id="video-cut-editor-bar">
                   <div class="cut-editor-left">
                     <span class="cut-editor-label" title="타임라인에서 Shift+드래그하거나 아래 버튼으로 시작~끝 지점을 지정해 불필요한 구간을 삭제합니다">✂️ 구간 잘라내기</span>
                     <button type="button" class="btn-cut-mark" id="btn-set-cut-in" title="현재 비디오 재생 위치를 잘라낼 시작점(In)으로 지정합니다">[ 시작점 현위치</button>
@@ -372,24 +455,32 @@
               </div>
             </div>
 
-            <!-- Studio Workspace Sub-Tabs (Moments / Narration TTS / Raw JSON) -->
-            <div class="studio-deck">
+                <!-- Unapplied Narration / Outdated Rendered MP4 Notification Banner -->
+                <div class="narration-unapplied-banner hidden" id="narration-unapplied-banner"></div>
+              </div>
+
+              <!-- Draggable Vertical Splitter Handle (Double-click to reset to default width) -->
+              <div class="studio-split-resizer" id="studio-split-resizer" title="드래그하여 좌측 영상·타임라인과 우측 대본·모멘트 영역의 폭 비율을 조절합니다 (더블클릭 시 기본 비율 복원)"></div>
+
+              <div class="studio-split-right" id="studio-split-right">
+                <!-- Studio Workspace Sub-Tabs (Moments / Narration TTS / Raw JSON) -->
+                <div class="studio-deck">
               <div class="studio-subtabs-bar">
-                <button type="button" class="studio-subtab-btn active" data-subtab="subtab-moments">
-                  🎯 동작 모멘트 &amp; 단계별 이동
+                <button type="button" class="studio-subtab-btn" data-subtab="subtab-moments">
+                  🎯 동작 모멘트
                   <span class="subtab-count" id="subtab-moments-count">0</span>
                 </button>
-                <button type="button" class="studio-subtab-btn" data-subtab="subtab-narration">
-                  🎙️ AI 나레이션 대본 &amp; 음성 합성 (TTS)
+                <button type="button" class="studio-subtab-btn active" data-subtab="subtab-narration">
+                  🎙️ AI 나레이션 대본
                   <span class="subtab-count" id="narration-status-badge">대본 없음</span>
                 </button>
                 <button type="button" class="studio-subtab-btn" data-subtab="subtab-json">
-                  🔍 원본 데이터 (JSON 뷰어)
+                  🔍 JSON
                 </button>
               </div>
 
               <!-- SUB-TAB 1: Recorded Moments & Step-by-Step Jump Cards -->
-              <div class="studio-subtab-pane active" id="subtab-moments">
+              <div class="studio-subtab-pane" id="subtab-moments">
                 <div class="moments-step-grid" id="moments-step-list">
                   <div class="studio-empty-box">
                     녹화된 모멘트 데이터가 없습니다. 시나리오를 선택하거나 녹화를 실행하면 단계별 타임스탬프 카드가 표시됩니다.
@@ -398,50 +489,23 @@
               </div>
 
               <!-- SUB-TAB 2: AI Narration Script & TTS Studio -->
-              <div class="studio-subtab-pane" id="subtab-narration">
+              <div class="studio-subtab-pane active" id="subtab-narration">
                 <div class="narration-studio-section">
                   <div class="narration-toolbar">
                     <div class="narration-toolbar-primary">
                       <div class="narration-toolbar-left">
-                        <select id="narration-style-select" class="narration-select narration-style-select" title="AI 대본 말투(화법)와 음성 억양 스타일을 선택합니다">
-                          <option value="manual" selected>📘 말투: 정석 매뉴얼형 (~합니다)</option>
-                          <option value="friendly">😊 말투: 친절한 가이드형 (~해 볼게요)</option>
-                          <option value="presentation">🎙️ 말투: 시연 발표형 (~보시겠습니다)</option>
-                          <option value="compact">⚡ 말투: 핵심 브리핑형 (간결체)</option>
-                        </select>
-                        <select id="narration-voice-select" class="narration-select" title="한국어 신경망(Neural) 성우 선택">
-                          <option value="ko-KR-SunHiNeural">👩 성우: 선희 (여성 · 추천)</option>
-                          <option value="ko-KR-InJoonNeural">👨 성우: 인준 (남성)</option>
-                          <option value="ko-KR-HyunsuMultilingualNeural">🧑 성우: 현수 (남성 다국어)</option>
-                        </select>
-                        <select id="narration-rate-select" class="narration-select" title="말하기 속도">
-                          <option value="+0%">속도 기본 (+0%)</option>
-                          <option value="+5%" selected>속도 자연스럽게 (+5%)</option>
-                          <option value="+12%">속도 약간 빠르게 (+12%)</option>
-                          <option value="+20%">속도 빠르게 (+20%)</option>
-                        </select>
-                        <select id="narration-pitch-select" class="narration-select" title="음성 높낮이/톤(억양) 미세 조절">
-                          <option value="+0Hz" selected>톤 기본 (+0Hz)</option>
-                          <option value="+4Hz">톤 밝고 경쾌 (+4Hz)</option>
-                          <option value="+2Hz">톤 또렷하게 (+2Hz)</option>
-                          <option value="-3Hz">톤 차분한 중저음 (-3Hz)</option>
-                          <option value="-6Hz">톤 무게감 저음 (-6Hz)</option>
-                        </select>
-                        <label class="narration-check-pill">
-                          <input type="checkbox" id="narration-enabled-toggle" checked>
-                          <span>🔊 음성</span>
-                        </label>
-                        <label class="narration-check-pill">
-                          <input type="checkbox" id="narration-subtitle-toggle" checked>
-                          <span>💬 자막</span>
-                        </label>
-                        <label class="narration-check-pill" title="오프닝 내레이션 구간 동안 매뉴얼 제목·특징·단계별 목차(표제 | 내용) 화면을 표시합니다">
-                          <input type="checkbox" id="narration-toc-toggle" checked>
-                          <span>📑 목차</span>
-                        </label>
+                        <button type="button" class="btn btn-sm btn-outline narration-drawer-btn" id="btn-toggle-voice-options" title="말투·성우·속도·톤 및 음성/자막/목차 표시 설정 열기/닫기">
+                          🎛️ 음성·자막 <span class="drawer-btn-meta" id="voice-options-summary-text">선희 · +5%</span> ▾
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline narration-drawer-btn" id="btn-toggle-intro-toc-drawer" title="영상 앞단 오프닝 목차(Contents) 슬라이드 제목·항목 편집 열기/닫기">
+                          📑 오프닝 목차 ▾
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline narration-drawer-btn" id="btn-toggle-brand-drawer" title="사이트 브랜드(기관명·테마 컬러·로고) 설정 열기/닫기">
+                          🎨 브랜드 ▾
+                        </button>
                       </div>
                       <div class="narration-toolbar-actions">
-                        <div class="ai-mode-seg-toggle" id="narration-ai-mode-toggle" title="AI 대본 생성 시 사용할 실행 모드 전환 (API 모드 vs 로컬 CLI 모드)">
+                        <div class="ai-mode-seg-toggle hidden" id="narration-ai-mode-toggle" title="AI 대본 생성 시 사용할 실행 모드 전환 (API 모드 vs 로컬 CLI 모드)">
                           <button type="button" class="ai-mode-seg-btn active" data-ai-mode="api" title="API 모드 (.env의 GEMINI_API_KEY로 직접 호출)">🔌 API</button>
                           <button type="button" class="ai-mode-seg-btn" data-ai-mode="cli" title="CLI 모드 (로컬 로그인 Antigravity/Claude CLI 호출 · API 요금 ₩0)">💻 CLI</button>
                         </div>
@@ -449,19 +513,61 @@
                           🎬 오프닝 추가
                         </button>
                         <button type="button" class="btn btn-sm btn-secondary" id="btn-add-narration-cue" title="현재 비디오 재생 위치(일시정지 시점)에 맞춰 새 대본 구간을 끼워 넣습니다">
-                          ➕ 현재 시점 추가
+                          ➕ 시점 추가
                         </button>
                         <button type="button" class="btn btn-sm btn-primary btn-glow" id="btn-generate-narration" title="선택한 말투 스타일과 시나리오 주제 오프닝·매뉴얼 목차를 포함하여 AI 대본 및 음성을 자동 생성합니다">
-                          ✨ AI 대본 생성 &amp; 음성 합성
+                          ✨ AI 대본 생성
                         </button>
                         <button type="button" class="btn btn-sm btn-success" id="btn-save-narration">
-                          💾 대본 저장 &amp; 재합성
+                          💾 저장 &amp; 재합성
                         </button>
                       </div>
                     </div>
+
+                    <!-- Collapsible Voice, Tone & Display Options Drawer -->
+                    <div class="narration-voice-options-drawer hidden" id="narration-voice-options-drawer">
+                      <select id="narration-style-select" class="narration-select narration-style-select" title="AI 대본 말투(화법)와 음성 억양 스타일을 선택합니다">
+                        <option value="manual" selected>📘 말투: 정석 매뉴얼형 (~합니다)</option>
+                        <option value="friendly">😊 말투: 친절한 가이드형 (~해 볼게요)</option>
+                        <option value="presentation">🎙️ 말투: 시연 발표형 (~보시겠습니다)</option>
+                        <option value="compact">⚡ 말투: 핵심 브리핑형 (간결체)</option>
+                      </select>
+                      <select id="narration-voice-select" class="narration-select" title="한국어 신경망(Neural) 성우 선택">
+                        <option value="ko-KR-SunHiNeural">👩 성우: 선희 (여성 · 추천)</option>
+                        <option value="ko-KR-InJoonNeural">👨 성우: 인준 (남성)</option>
+                        <option value="ko-KR-HyunsuMultilingualNeural">🧑 성우: 현수 (남성 다국어)</option>
+                      </select>
+                      <select id="narration-rate-select" class="narration-select" title="말하기 속도">
+                        <option value="+0%">속도 기본 (+0%)</option>
+                        <option value="+5%" selected>속도 자연스럽게 (+5%)</option>
+                        <option value="+12%">속도 약간 빠르게 (+12%)</option>
+                        <option value="+20%">속도 빠르게 (+20%)</option>
+                      </select>
+                      <select id="narration-pitch-select" class="narration-select" title="음성 높낮이/톤(억양) 미세 조절">
+                        <option value="+0Hz" selected>톤 기본 (+0Hz)</option>
+                        <option value="+4Hz">톤 밝고 경쾌 (+4Hz)</option>
+                        <option value="+2Hz">톤 또렷하게 (+2Hz)</option>
+                        <option value="-3Hz">톤 차분한 중저음 (-3Hz)</option>
+                        <option value="-6Hz">톤 무게감 저음 (-6Hz)</option>
+                      </select>
+                      <label class="narration-check-pill">
+                        <input type="checkbox" id="narration-enabled-toggle" checked>
+                        <span>🔊 음성</span>
+                      </label>
+                      <label class="narration-check-pill">
+                        <input type="checkbox" id="narration-subtitle-toggle" checked>
+                        <span>💬 자막</span>
+                      </label>
+                      <label class="narration-check-pill" title="오프닝 내레이션 구간 동안 매뉴얼 제목·특징·단계별 목차(표제 | 내용) 화면을 표시합니다">
+                        <input type="checkbox" id="narration-toc-toggle" checked>
+                        <span>📑 목차</span>
+                      </label>
+                    </div>
                   </div>
 
+                  <div id="narration-site-brand-bar" class="narration-site-brand-bar hidden"></div>
                   <div id="narration-intro-toc-editor" class="narration-intro-toc-editor hidden"></div>
+                  <div id="narration-chapter-tabs-bar" class="narration-chapter-tabs-bar hidden"></div>
 
                   <div id="narration-cues-container" class="narration-cues-list">
                     <div class="studio-empty-box">
@@ -483,6 +589,8 @@
                   </div>
                   <pre class="json-viewer" id="json-viewer-content">JSON 데이터 없음</pre>
                 </div>
+              </div>
+            </div>
               </div>
             </div>
           </div>

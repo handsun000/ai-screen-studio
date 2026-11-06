@@ -3,13 +3,13 @@
     {
       "id": 1,
       "type": "wait",
-      "timestamp": 21413,
+      "timestamp": 46113,
       "description": "[챕터 1: login] 초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기"
     },
     {
       "id": 2,
       "type": "type",
-      "timestamp": 23163,
+      "timestamp": 47863,
       "description": "[챕터 1: login] 'ID' 입력창에 'test_prof_two' 입력",
       "cursor": {
         "x": 875,
@@ -26,13 +26,13 @@
     {
       "id": 3,
       "type": "wait",
-      "timestamp": 24413,
+      "timestamp": 49113,
       "description": "[챕터 1: login] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 4,
       "type": "type",
-      "timestamp": 25629,
+      "timestamp": 50329,
       "description": "[챕터 1: login] 'PASSWORD' 입력창에 'tkancjDkagh01@)' 입력",
       "cursor": {
         "x": 868,
@@ -49,13 +49,13 @@
     {
       "id": 5,
       "type": "wait",
-      "timestamp": 26979,
+      "timestamp": 51679,
       "description": "[챕터 1: login] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 6,
       "type": "click",
-      "timestamp": 28329,
+      "timestamp": 53029,
       "description": "[챕터 1: login] 'Login' 버튼 클릭",
       "cursor": {
         "x": 1017,
@@ -71,13 +71,13 @@
     {
       "id": 7,
       "type": "wait",
-      "timestamp": 30979,
+      "timestamp": 55679,
       "description": "[챕터 1: login] 'Login' 버튼 반응 대기"
     },
     {
       "id": 8,
       "type": "click",
-      "timestamp": 32446,
+      "timestamp": 57146,
       "description": "[챕터 1: login] '설치프로그램' 메뉴/링크 클릭",
       "cursor": {
         "x": 1559,
@@ -93,13 +93,13 @@
     {
       "id": 9,
       "type": "wait",
-      "timestamp": 33529,
+      "timestamp": 58229,
       "description": "[챕터 1: login] '설치프로그램' 메뉴/링크 반응 대기"
     },
     {
       "id": 10,
       "type": "click",
-      "timestamp": 34896,
+      "timestamp": 59596,
       "description": "[챕터 1: login] [설치프로그램 팝업] 'Windows' 메뉴/링크 클릭",
       "cursor": {
         "x": 1065,
@@ -115,13 +115,13 @@
     {
       "id": 11,
       "type": "wait",
-      "timestamp": 37046,
+      "timestamp": 61746,
       "description": "[챕터 1: login] [설치프로그램 팝업] 'Windows' 메뉴/링크 반응 대기"
     },
     {
       "id": 12,
       "type": "click",
-      "timestamp": 38446,
+      "timestamp": 63146,
       "description": "[챕터 1: login] [설치프로그램 팝업] button 요소 클릭",
       "cursor": {
         "x": 1133,
@@ -137,13 +137,13 @@
     {
       "id": 13,
       "type": "wait",
-      "timestamp": 39546,
+      "timestamp": 64246,
       "description": "[챕터 1: login] [설치프로그램 팝업] button 요소 반응 대기"
     },
     {
       "id": 14,
       "type": "click",
-      "timestamp": 40913,
+      "timestamp": 65613,
       "description": "[챕터 1: login] '결재' 메뉴/링크 클릭",
       "cursor": {
         "x": 500,
@@ -159,13 +159,13 @@
     {
       "id": 15,
       "type": "wait",
-      "timestamp": 42013,
+      "timestamp": 66713,
       "description": "[챕터 1: login] '결재' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 16,
       "type": "click",
-      "timestamp": 43979,
+      "timestamp": 68679,
       "description": "[챕터 1: login] '전자우편' 메뉴/링크 클릭",
       "cursor": {
         "x": 708,
@@ -181,13 +181,13 @@
     {
       "id": 17,
       "type": "wait",
-      "timestamp": 45079,
+      "timestamp": 69779,
       "description": "[챕터 1: login] '전자우편' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 18,
       "type": "click",
-      "timestamp": 47063,
+      "timestamp": 71763,
       "description": "[챕터 1: login] '2026년도 디지털미디어디자인학과 제47' 메뉴/링크 클릭",
       "cursor": {
         "x": 538,
@@ -203,13 +203,13 @@
     {
       "id": 19,
       "type": "wait",
-      "timestamp": 48146,
+      "timestamp": 72846,
       "description": "[챕터 1: login] '2026년도 디지털미디어디자인학과 제47' 메뉴/링크 반응 대기"
     },
     {
       "id": 20,
       "type": "click",
-      "timestamp": 49663,
+      "timestamp": 74363,
       "description": "[챕터 1: login] '공지사항' 메뉴/링크 클릭",
       "cursor": {
         "x": 772,
@@ -225,13 +225,13 @@
     {
       "id": 21,
       "type": "wait",
-      "timestamp": 50696,
+      "timestamp": 75396,
       "description": "[챕터 1: login] '공지사항' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 22,
       "type": "click",
-      "timestamp": 57629,
+      "timestamp": 82329,
       "description": "[챕터 1: login] '기록물철' 메뉴/링크 클릭",
       "cursor": {
         "x": 923,
@@ -247,13 +247,13 @@
     {
       "id": 23,
       "type": "wait",
-      "timestamp": 58896,
+      "timestamp": 83596,
       "description": "[챕터 1: login] '기록물철' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 24,
       "type": "click",
-      "timestamp": 67046,
+      "timestamp": 91746,
       "description": "[챕터 1: login] '일정관리' 메뉴/링크 클릭",
       "cursor": {
         "x": 1059,
@@ -269,13 +269,13 @@
     {
       "id": 25,
       "type": "wait",
-      "timestamp": 69329,
+      "timestamp": 94029,
       "description": "[챕터 1: login] '일정관리' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 26,
       "type": "click",
-      "timestamp": 71279,
+      "timestamp": 95979,
       "description": "[챕터 1: login] '위키' 메뉴/링크 클릭",
       "cursor": {
         "x": 1139,
@@ -291,13 +291,13 @@
     {
       "id": 27,
       "type": "wait",
-      "timestamp": 72413,
+      "timestamp": 97113,
       "description": "[챕터 1: login] '위키' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 28,
       "type": "click",
-      "timestamp": 74413,
+      "timestamp": 99113,
       "description": "[챕터 1: login] '포탈 전체메뉴' 버튼 클릭",
       "cursor": {
         "x": 1364,
@@ -313,13 +313,13 @@
     {
       "id": 29,
       "type": "wait",
-      "timestamp": 75479,
+      "timestamp": 100179,
       "description": "[챕터 1: login] '포탈 전체메뉴' 버튼 반응 대기"
     },
     {
       "id": 30,
       "type": "click",
-      "timestamp": 76996,
+      "timestamp": 101696,
       "description": "[챕터 1: login] '스마트워크' 메뉴/링크 클릭",
       "cursor": {
         "x": 1120,
@@ -335,13 +335,13 @@
     {
       "id": 31,
       "type": "wait",
-      "timestamp": 78113,
+      "timestamp": 102813,
       "description": "[챕터 1: login] '스마트워크' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 32,
       "type": "click",
-      "timestamp": 80029,
+      "timestamp": 104729,
       "description": "[챕터 1: login] '포탈 전체메뉴' 버튼 클릭",
       "cursor": {
         "x": 1379,
@@ -357,13 +357,13 @@
     {
       "id": 33,
       "type": "wait",
-      "timestamp": 81163,
+      "timestamp": 105863,
       "description": "[챕터 1: login] '포탈 전체메뉴' 버튼 반응 대기"
     },
     {
       "id": 34,
       "type": "click",
-      "timestamp": 82513,
+      "timestamp": 107213,
       "description": "[챕터 1: login] '태스크보드' 메뉴/링크 클릭",
       "cursor": {
         "x": 962,
@@ -379,13 +379,13 @@
     {
       "id": 35,
       "type": "wait",
-      "timestamp": 83646,
+      "timestamp": 108346,
       "description": "[챕터 1: login] '태스크보드' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 36,
       "type": "click",
-      "timestamp": 85596,
+      "timestamp": 110296,
       "description": "[챕터 1: login] '포탈 전체메뉴' 버튼 클릭",
       "cursor": {
         "x": 1370,
@@ -401,13 +401,13 @@
     {
       "id": 37,
       "type": "wait",
-      "timestamp": 86713,
+      "timestamp": 111413,
       "description": "[챕터 1: login] '포탈 전체메뉴' 버튼 반응 대기"
     },
     {
       "id": 38,
       "type": "click",
-      "timestamp": 88096,
+      "timestamp": 112796,
       "description": "[챕터 1: login] '문서관리' 메뉴/링크 클릭",
       "cursor": {
         "x": 543,
@@ -423,13 +423,13 @@
     {
       "id": 39,
       "type": "wait",
-      "timestamp": 89179,
+      "timestamp": 113879,
       "description": "[챕터 1: login] '문서관리' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 40,
       "type": "click",
-      "timestamp": 92696,
+      "timestamp": 117396,
       "description": "[챕터 1: login] '사용자매뉴얼.20.모바일.pptx' 메뉴/링크 클릭",
       "cursor": {
         "x": 583,
@@ -445,13 +445,13 @@
     {
       "id": 41,
       "type": "wait",
-      "timestamp": 93746,
+      "timestamp": 118446,
       "description": "[챕터 1: login] '사용자매뉴얼.20.모바일.pptx' 메뉴/링크 반응 대기"
     },
     {
       "id": 42,
       "type": "click",
-      "timestamp": 97413,
+      "timestamp": 122113,
       "description": "[챕터 1: login] '포탈 전체메뉴' 버튼 클릭",
       "cursor": {
         "x": 1363,
@@ -467,13 +467,13 @@
     {
       "id": 43,
       "type": "wait",
-      "timestamp": 98546,
+      "timestamp": 123246,
       "description": "[챕터 1: login] '포탈 전체메뉴' 버튼 반응 대기"
     },
     {
       "id": 44,
       "type": "click",
-      "timestamp": 99946,
+      "timestamp": 124646,
       "description": "[챕터 1: login] 'AI Chat' 메뉴/링크 클릭",
       "cursor": {
         "x": 717,
@@ -489,13 +489,13 @@
     {
       "id": 45,
       "type": "wait",
-      "timestamp": 101113,
+      "timestamp": 125813,
       "description": "[챕터 1: login] 'AI Chat' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 46,
       "type": "click",
-      "timestamp": 103346,
+      "timestamp": 128046,
       "description": "[챕터 1: login] 'AI Chat' 버튼 클릭",
       "cursor": {
         "x": 1686,
@@ -511,13 +511,13 @@
     {
       "id": 47,
       "type": "wait",
-      "timestamp": 104313,
+      "timestamp": 129013,
       "description": "[챕터 1: login] 'AI Chat' 버튼 반응 대기"
     },
     {
       "id": 48,
       "type": "click",
-      "timestamp": 105879,
+      "timestamp": 130579,
       "description": "[챕터 1: login] '닫기' 버튼 클릭",
       "cursor": {
         "x": 1896,
@@ -533,13 +533,13 @@
     {
       "id": 49,
       "type": "wait",
-      "timestamp": 106913,
+      "timestamp": 131613,
       "description": "[챕터 1: login] '닫기' 버튼 반응 대기"
     },
     {
       "id": 50,
       "type": "click",
-      "timestamp": 108396,
+      "timestamp": 133096,
       "description": "[챕터 1: login] '3' 버튼 클릭",
       "cursor": {
         "x": 1704,
@@ -555,13 +555,13 @@
     {
       "id": 51,
       "type": "wait",
-      "timestamp": 109396,
+      "timestamp": 134096,
       "description": "[챕터 1: login] '3' 버튼 반응 대기"
     },
     {
       "id": 52,
       "type": "click",
-      "timestamp": 111346,
+      "timestamp": 136046,
       "description": "[챕터 1: login] '조회' 버튼 클릭",
       "cursor": {
         "x": 1563,
@@ -577,19 +577,19 @@
     {
       "id": 53,
       "type": "wait",
-      "timestamp": 112429,
+      "timestamp": 137129,
       "description": "[챕터 1: login] '조회' 버튼 반응 대기"
     },
     {
       "id": 54,
       "type": "wait",
-      "timestamp": 113429,
+      "timestamp": 138129,
       "description": "[챕터 1: login] 최종 시연 결과 화면 클로즈업 확인 대기"
     },
     {
       "id": 55,
       "type": "click",
-      "timestamp": 131979,
+      "timestamp": 156679,
       "description": "[챕터 2: msg] '메신저' 버튼 클릭",
       "cursor": {
         "x": 1634,
@@ -605,13 +605,13 @@
     {
       "id": 56,
       "type": "wait",
-      "timestamp": 133096,
+      "timestamp": 157796,
       "description": "[챕터 2: msg] '메신저' 버튼 반응 대기"
     },
     {
       "id": 57,
       "type": "rightclick",
-      "timestamp": 138779,
+      "timestamp": 163479,
       "description": "[챕터 2: msg] '김병훈 담당 내선 0126' 요소 우클릭",
       "cursor": {
         "x": 1910,
@@ -627,13 +627,13 @@
     {
       "id": 58,
       "type": "wait",
-      "timestamp": 139912,
+      "timestamp": 164612,
       "description": "[챕터 2: msg] 우클릭 컨텍스트 메뉴 표시 대기"
     },
     {
       "id": 59,
       "type": "click",
-      "timestamp": 144829,
+      "timestamp": 169529,
       "description": "[챕터 2: msg] '대화하기' 요소 클릭",
       "cursor": {
         "x": 1751,
@@ -649,13 +649,13 @@
     {
       "id": 60,
       "type": "wait",
-      "timestamp": 145912,
+      "timestamp": 170612,
       "description": "[챕터 2: msg] '대화하기' 요소 반응 대기"
     },
     {
       "id": 61,
       "type": "click",
-      "timestamp": 149479,
+      "timestamp": 174179,
       "description": "[챕터 2: msg] '뒤로' 버튼 클릭",
       "cursor": {
         "x": 1588,
@@ -671,13 +671,13 @@
     {
       "id": 62,
       "type": "wait",
-      "timestamp": 150646,
+      "timestamp": 175346,
       "description": "[챕터 2: msg] '뒤로' 버튼 반응 대기"
     },
     {
       "id": 63,
       "type": "click",
-      "timestamp": 152062,
+      "timestamp": 176762,
       "description": "[챕터 2: msg] '검색' 버튼 클릭",
       "cursor": {
         "x": 1867,
@@ -693,13 +693,13 @@
     {
       "id": 64,
       "type": "wait",
-      "timestamp": 153262,
+      "timestamp": 177962,
       "description": "[챕터 2: msg] '검색' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 65,
       "type": "type",
-      "timestamp": 155212,
+      "timestamp": 179912,
       "description": "[챕터 2: msg] '검색어' 입력창에 '김병훈' 입력",
       "cursor": {
         "x": 1763,
@@ -716,13 +716,13 @@
     {
       "id": 66,
       "type": "wait",
-      "timestamp": 156046,
+      "timestamp": 180746,
       "description": "[챕터 2: msg] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 67,
       "type": "click",
-      "timestamp": 157412,
+      "timestamp": 182112,
       "description": "[챕터 2: msg] '검색' 버튼 클릭",
       "cursor": {
         "x": 1856,
@@ -738,13 +738,13 @@
     {
       "id": 68,
       "type": "wait",
-      "timestamp": 158512,
+      "timestamp": 183212,
       "description": "[챕터 2: msg] '검색' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 69,
       "type": "rightclick",
-      "timestamp": 160579,
+      "timestamp": 185279,
       "description": "[챕터 2: msg] '김병훈 담당 대학본부 > 사무처 내선 0' 요소 우클릭",
       "cursor": {
         "x": 1892,
@@ -760,13 +760,13 @@
     {
       "id": 70,
       "type": "wait",
-      "timestamp": 161679,
+      "timestamp": 186379,
       "description": "[챕터 2: msg] 우클릭 컨텍스트 메뉴 표시 대기"
     },
     {
       "id": 71,
       "type": "click",
-      "timestamp": 164296,
+      "timestamp": 188996,
       "description": "[챕터 2: msg] '대화하기' 요소 클릭",
       "cursor": {
         "x": 1795,
@@ -782,7 +782,7 @@
     {
       "id": 72,
       "type": "click",
-      "timestamp": 166212,
+      "timestamp": 190912,
       "description": "[챕터 2: msg] '뒤로' 버튼 클릭",
       "cursor": {
         "x": 1585,
@@ -798,13 +798,13 @@
     {
       "id": 73,
       "type": "wait",
-      "timestamp": 167362,
+      "timestamp": 192062,
       "description": "[챕터 2: msg] '뒤로' 버튼 반응 대기"
     },
     {
       "id": 74,
       "type": "click",
-      "timestamp": 168779,
+      "timestamp": 193479,
       "description": "[챕터 2: msg] '마이리스트' 메뉴/링크 클릭",
       "cursor": {
         "x": 1594,
@@ -820,13 +820,13 @@
     {
       "id": 75,
       "type": "wait",
-      "timestamp": 169946,
+      "timestamp": 194646,
       "description": "[챕터 2: msg] '마이리스트' 메뉴/링크 반응 대기"
     },
     {
       "id": 76,
       "type": "click",
-      "timestamp": 172329,
+      "timestamp": 197029,
       "description": "[챕터 2: msg] '정렬' 버튼 클릭",
       "cursor": {
         "x": 1898,
@@ -842,13 +842,13 @@
     {
       "id": 77,
       "type": "wait",
-      "timestamp": 173462,
+      "timestamp": 198162,
       "description": "[챕터 2: msg] '정렬' 버튼 반응 대기"
     },
     {
       "id": 78,
       "type": "click",
-      "timestamp": 174912,
+      "timestamp": 199612,
       "description": "[챕터 2: msg] '마이리스트 관리' 메뉴/링크 클릭",
       "cursor": {
         "x": 1824,
@@ -864,13 +864,13 @@
     {
       "id": 79,
       "type": "wait",
-      "timestamp": 176046,
+      "timestamp": 200746,
       "description": "[챕터 2: msg] '마이리스트 관리' 메뉴/링크 반응 대기"
     },
     {
       "id": 80,
       "type": "click",
-      "timestamp": 178479,
+      "timestamp": 203179,
       "description": "[챕터 2: msg] '폴더 추가' 버튼 클릭",
       "cursor": {
         "x": 1074,
@@ -886,13 +886,13 @@
     {
       "id": 81,
       "type": "wait",
-      "timestamp": 179579,
+      "timestamp": 204279,
       "description": "[챕터 2: msg] '폴더 추가' 버튼 반응 대기"
     },
     {
       "id": 82,
       "type": "type",
-      "timestamp": 180846,
+      "timestamp": 205546,
       "description": "[챕터 2: msg] [폴더 이름 팝업] '폴더 이름' 입력창에 '사무처' 입력",
       "cursor": {
         "x": 935,
@@ -909,13 +909,13 @@
     {
       "id": 83,
       "type": "wait",
-      "timestamp": 181646,
+      "timestamp": 206346,
       "description": "[챕터 2: msg] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 84,
       "type": "click",
-      "timestamp": 182929,
+      "timestamp": 207629,
       "description": "[챕터 2: msg] [폴더 이름 팝업] '저장' 버튼 클릭",
       "cursor": {
         "x": 940,
@@ -931,13 +931,13 @@
     {
       "id": 85,
       "type": "wait",
-      "timestamp": 185046,
+      "timestamp": 209746,
       "description": "[챕터 2: msg] [폴더 이름 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 86,
       "type": "click",
-      "timestamp": 186129,
+      "timestamp": 210829,
       "description": "[챕터 2: msg] [알림 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 966,
@@ -953,13 +953,13 @@
     {
       "id": 87,
       "type": "wait",
-      "timestamp": 187546,
+      "timestamp": 212246,
       "description": "[챕터 2: msg] [알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 88,
       "type": "click",
-      "timestamp": 189546,
+      "timestamp": 214246,
       "description": "[챕터 2: msg] 트리 '부서' 항목 클릭",
       "cursor": {
         "x": 129,
@@ -975,13 +975,13 @@
     {
       "id": 89,
       "type": "wait",
-      "timestamp": 190646,
+      "timestamp": 215346,
       "description": "[챕터 2: msg] 트리 '부서' 항목 반응 대기"
     },
     {
       "id": 90,
       "type": "click",
-      "timestamp": 192012,
+      "timestamp": 216712,
       "description": "[챕터 2: msg] 트리 '대학본부' 항목 클릭",
       "cursor": {
         "x": 167,
@@ -997,13 +997,13 @@
     {
       "id": 91,
       "type": "wait",
-      "timestamp": 193112,
+      "timestamp": 217812,
       "description": "[챕터 2: msg] 트리 '대학본부' 항목 반응 대기"
     },
     {
       "id": 92,
       "type": "click",
-      "timestamp": 194512,
+      "timestamp": 219212,
       "description": "[챕터 2: msg] 트리 '사무처' 항목 클릭",
       "cursor": {
         "x": 155,
@@ -1019,13 +1019,13 @@
     {
       "id": 93,
       "type": "wait",
-      "timestamp": 195612,
+      "timestamp": 220312,
       "description": "[챕터 2: msg] 트리 '사무처' 항목 반응 대기"
     },
     {
       "id": 94,
       "type": "click",
-      "timestamp": 196979,
+      "timestamp": 221679,
       "description": "[챕터 2: msg] 트리 '김병훈 담당' 체크박스 클릭",
       "cursor": {
         "x": 96,
@@ -1041,13 +1041,13 @@
     {
       "id": 95,
       "type": "wait",
-      "timestamp": 198062,
+      "timestamp": 222762,
       "description": "[챕터 2: msg] 트리 '김병훈 담당' 체크박스 반응 대기"
     },
     {
       "id": 96,
       "type": "click",
-      "timestamp": 199446,
+      "timestamp": 224146,
       "description": "[챕터 2: msg] 트리 '사무처' 체크박스 클릭",
       "cursor": {
         "x": 1085,
@@ -1063,13 +1063,13 @@
     {
       "id": 97,
       "type": "wait",
-      "timestamp": 200512,
+      "timestamp": 225212,
       "description": "[챕터 2: msg] 트리 '사무처' 체크박스 반응 대기"
     },
     {
       "id": 98,
       "type": "click",
-      "timestamp": 201896,
+      "timestamp": 226596,
       "description": "[챕터 2: msg] '추가' 버튼 클릭",
       "cursor": {
         "x": 963,
@@ -1085,13 +1085,13 @@
     {
       "id": 99,
       "type": "wait",
-      "timestamp": 202962,
+      "timestamp": 227662,
       "description": "[챕터 2: msg] '추가' 버튼 반응 대기"
     },
     {
       "id": 100,
       "type": "click",
-      "timestamp": 204362,
+      "timestamp": 229062,
       "description": "[챕터 2: msg] [알림 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 963,
@@ -1107,7 +1107,7 @@
     {
       "id": 101,
       "type": "rightclick",
-      "timestamp": 208796,
+      "timestamp": 233496,
       "description": "[챕터 2: msg] '김병훈 담당 내선 0126' 요소 우클릭",
       "cursor": {
         "x": 1849,
@@ -1123,13 +1123,13 @@
     {
       "id": 102,
       "type": "wait",
-      "timestamp": 209879,
+      "timestamp": 234579,
       "description": "[챕터 2: msg] 우클릭 컨텍스트 메뉴 표시 대기"
     },
     {
       "id": 103,
       "type": "click",
-      "timestamp": 212662,
+      "timestamp": 237362,
       "description": "[챕터 2: msg] '대화하기' 요소 클릭",
       "cursor": {
         "x": 1773,
@@ -1145,13 +1145,13 @@
     {
       "id": 104,
       "type": "wait",
-      "timestamp": 213812,
+      "timestamp": 238512,
       "description": "[챕터 2: msg] '대화하기' 요소 반응 대기"
     },
     {
       "id": 105,
       "type": "type",
-      "timestamp": 217296,
+      "timestamp": 241996,
       "description": "[챕터 2: msg] '에디터 본문' 입력 영역에 '담당자님 안녕하세요, 요청하신 자료드립니다.' 입력",
       "cursor": {
         "x": 1635,
@@ -1168,13 +1168,13 @@
     {
       "id": 106,
       "type": "wait",
-      "timestamp": 219346,
+      "timestamp": 244046,
       "description": "[챕터 2: msg] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 107,
       "type": "upload",
-      "timestamp": 222329,
+      "timestamp": 247029,
       "description": "[챕터 2: msg] '첨부' 버튼에 '자료.pdf' 첨부",
       "cursor": {
         "x": 1662,
@@ -1190,7 +1190,7 @@
     {
       "id": 108,
       "type": "click",
-      "timestamp": 223479,
+      "timestamp": 248179,
       "cursor": {
         "x": 935,
         "y": 382
@@ -1206,7 +1206,7 @@
     {
       "id": 109,
       "type": "click",
-      "timestamp": 224346,
+      "timestamp": 249046,
       "cursor": {
         "x": 1149,
         "y": 662
@@ -1222,19 +1222,19 @@
     {
       "id": 110,
       "type": "wait",
-      "timestamp": 226029,
+      "timestamp": 250729,
       "description": "[챕터 2: msg] 첨부 파일 업로드 및 목록 반영 대기"
     },
     {
       "id": 111,
       "type": "wait",
-      "timestamp": 228796,
+      "timestamp": 253496,
       "description": "[챕터 2: msg] [파일 첨부 팝업] '1개 전송' 버튼 반응 대기"
     },
     {
       "id": 112,
       "type": "click",
-      "timestamp": 230229,
+      "timestamp": 254929,
       "description": "[챕터 2: msg] '이모티콘' 버튼 클릭",
       "cursor": {
         "x": 1629,
@@ -1250,13 +1250,13 @@
     {
       "id": 113,
       "type": "wait",
-      "timestamp": 231412,
+      "timestamp": 256112,
       "description": "[챕터 2: msg] '이모티콘' 버튼 반응 대기"
     },
     {
       "id": 114,
       "type": "click",
-      "timestamp": 232796,
+      "timestamp": 257496,
       "description": "[챕터 2: msg] '알겠습니다' 메뉴/링크 클릭",
       "cursor": {
         "x": 1625,
@@ -1272,13 +1272,13 @@
     {
       "id": 115,
       "type": "wait",
-      "timestamp": 233962,
+      "timestamp": 258662,
       "description": "[챕터 2: msg] '알겠습니다' 메뉴/링크 반응 대기"
     },
     {
       "id": 116,
       "type": "click",
-      "timestamp": 235562,
+      "timestamp": 260262,
       "description": "[챕터 2: msg] '보내기' 버튼 클릭",
       "cursor": {
         "x": 1890,
@@ -1294,13 +1294,13 @@
     {
       "id": 117,
       "type": "wait",
-      "timestamp": 236562,
+      "timestamp": 261262,
       "description": "[챕터 2: msg] '보내기' 버튼 반응 대기"
     },
     {
       "id": 118,
       "type": "click",
-      "timestamp": 241029,
+      "timestamp": 265729,
       "description": "[챕터 2: msg] '뒤로' 버튼 클릭",
       "cursor": {
         "x": 1585,
@@ -1316,13 +1316,13 @@
     {
       "id": 119,
       "type": "wait",
-      "timestamp": 242162,
+      "timestamp": 266862,
       "description": "[챕터 2: msg] '뒤로' 버튼 반응 대기"
     },
     {
       "id": 120,
       "type": "click",
-      "timestamp": 243596,
+      "timestamp": 268296,
       "description": "[챕터 2: msg] '대화' 메뉴/링크 클릭",
       "cursor": {
         "x": 1693,
@@ -1338,13 +1338,13 @@
     {
       "id": 121,
       "type": "wait",
-      "timestamp": 244696,
+      "timestamp": 269396,
       "description": "[챕터 2: msg] '대화' 메뉴/링크 반응 대기"
     },
     {
       "id": 122,
       "type": "click",
-      "timestamp": 246112,
+      "timestamp": 270812,
       "description": "[챕터 2: msg] '마이리스트' 메뉴/링크 클릭",
       "cursor": {
         "x": 1591,
@@ -1360,13 +1360,13 @@
     {
       "id": 123,
       "type": "wait",
-      "timestamp": 247229,
+      "timestamp": 271929,
       "description": "[챕터 2: msg] '마이리스트' 메뉴/링크 반응 대기"
     },
     {
       "id": 124,
       "type": "click",
-      "timestamp": 248662,
+      "timestamp": 273362,
       "description": "[챕터 2: msg] '정렬' 버튼 클릭",
       "cursor": {
         "x": 1890,
@@ -1382,13 +1382,13 @@
     {
       "id": 125,
       "type": "wait",
-      "timestamp": 249762,
+      "timestamp": 274462,
       "description": "[챕터 2: msg] '정렬' 버튼 반응 대기"
     },
     {
       "id": 126,
       "type": "click",
-      "timestamp": 251212,
+      "timestamp": 275912,
       "description": "[챕터 2: msg] '마이리스트 관리' 메뉴/링크 클릭",
       "cursor": {
         "x": 1839,
@@ -1404,13 +1404,13 @@
     {
       "id": 127,
       "type": "wait",
-      "timestamp": 252312,
+      "timestamp": 277012,
       "description": "[챕터 2: msg] '마이리스트 관리' 메뉴/링크 반응 대기"
     },
     {
       "id": 128,
       "type": "click",
-      "timestamp": 253546,
+      "timestamp": 278246,
       "description": "[챕터 2: msg] 트리 '사무처' 체크박스 클릭",
       "cursor": {
         "x": 1092,
@@ -1426,13 +1426,13 @@
     {
       "id": 129,
       "type": "wait",
-      "timestamp": 254779,
+      "timestamp": 279479,
       "description": "[챕터 2: msg] 트리 '사무처' 체크박스 반응 대기"
     },
     {
       "id": 130,
       "type": "click",
-      "timestamp": 256079,
+      "timestamp": 280779,
       "description": "[챕터 2: msg] '삭제' 버튼 클릭",
       "cursor": {
         "x": 1126,
@@ -1448,13 +1448,13 @@
     {
       "id": 131,
       "type": "wait",
-      "timestamp": 257246,
+      "timestamp": 281946,
       "description": "[챕터 2: msg] '삭제' 버튼 반응 대기"
     },
     {
       "id": 132,
       "type": "click",
-      "timestamp": 258512,
+      "timestamp": 283212,
       "description": "[챕터 2: msg] [알림 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 907,
@@ -1470,13 +1470,13 @@
     {
       "id": 133,
       "type": "wait",
-      "timestamp": 260062,
+      "timestamp": 284762,
       "description": "[챕터 2: msg] [알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 134,
       "type": "click",
-      "timestamp": 262046,
+      "timestamp": 286746,
       "description": "[챕터 2: msg] [알림 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 968,
@@ -1492,13 +1492,13 @@
     {
       "id": 135,
       "type": "wait",
-      "timestamp": 263479,
+      "timestamp": 288179,
       "description": "[챕터 2: msg] [알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 136,
       "type": "click",
-      "timestamp": 264829,
+      "timestamp": 289529,
       "description": "[챕터 2: msg] '메신저' 버튼 클릭",
       "cursor": {
         "x": 1630,
@@ -1514,13 +1514,13 @@
     {
       "id": 137,
       "type": "wait",
-      "timestamp": 265946,
+      "timestamp": 290646,
       "description": "[챕터 2: msg] '메신저' 버튼 반응 대기"
     },
     {
       "id": 138,
       "type": "click",
-      "timestamp": 282645,
+      "timestamp": 307345,
       "description": "[챕터 3: document] '포탈 전체메뉴' 버튼 클릭",
       "cursor": {
         "x": 1354,
@@ -1536,13 +1536,13 @@
     {
       "id": 139,
       "type": "wait",
-      "timestamp": 283695,
+      "timestamp": 308395,
       "description": "[챕터 3: document] '포탈 전체메뉴' 버튼 반응 대기"
     },
     {
       "id": 140,
       "type": "click",
-      "timestamp": 285045,
+      "timestamp": 309745,
       "description": "[챕터 3: document] '문서관리' 메뉴/링크 클릭",
       "cursor": {
         "x": 524,
@@ -1558,13 +1558,13 @@
     {
       "id": 141,
       "type": "wait",
-      "timestamp": 286162,
+      "timestamp": 310862,
       "description": "[챕터 3: document] '문서관리' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 142,
       "type": "click",
-      "timestamp": 288162,
+      "timestamp": 312862,
       "description": "[챕터 3: document] '사용자매뉴얼.20.모바일.pptx' 메뉴/링크 클릭",
       "cursor": {
         "x": 562,
@@ -1580,13 +1580,13 @@
     {
       "id": 143,
       "type": "wait",
-      "timestamp": 289245,
+      "timestamp": 313945,
       "description": "[챕터 3: document] '사용자매뉴얼.20.모바일.pptx' 메뉴/링크 반응 대기"
     },
     {
       "id": 144,
       "type": "click",
-      "timestamp": 293029,
+      "timestamp": 317729,
       "description": "[챕터 3: document] '분류' 메뉴/링크 클릭",
       "cursor": {
         "x": 101,
@@ -1602,13 +1602,13 @@
     {
       "id": 145,
       "type": "wait",
-      "timestamp": 294095,
+      "timestamp": 318795,
       "description": "[챕터 3: document] '분류' 메뉴/링크 반응 대기"
     },
     {
       "id": 146,
       "type": "click",
-      "timestamp": 295495,
+      "timestamp": 320195,
       "description": "[챕터 3: document] 트리 '1차분류' 항목 클릭",
       "cursor": {
         "x": 91,
@@ -1624,13 +1624,13 @@
     {
       "id": 147,
       "type": "wait",
-      "timestamp": 296662,
+      "timestamp": 321362,
       "description": "[챕터 3: document] 트리 '1차분류' 항목 반응 대기"
     },
     {
       "id": 148,
       "type": "click",
-      "timestamp": 298012,
+      "timestamp": 322712,
       "description": "[챕터 3: document] 트리 'BULRS(콘텐츠)' 항목 클릭",
       "cursor": {
         "x": 135,
@@ -1646,13 +1646,13 @@
     {
       "id": 149,
       "type": "wait",
-      "timestamp": 299145,
+      "timestamp": 323845,
       "description": "[챕터 3: document] 트리 'BULRS(콘텐츠)' 항목 반응 대기"
     },
     {
       "id": 150,
       "type": "click",
-      "timestamp": 300679,
+      "timestamp": 325379,
       "description": "[챕터 3: document] '조직' 메뉴/링크 클릭",
       "cursor": {
         "x": 161,
@@ -1668,13 +1668,13 @@
     {
       "id": 151,
       "type": "wait",
-      "timestamp": 301795,
+      "timestamp": 326495,
       "description": "[챕터 3: document] '조직' 메뉴/링크 반응 대기"
     },
     {
       "id": 152,
       "type": "click",
-      "timestamp": 303162,
+      "timestamp": 327862,
       "description": "[챕터 3: document] 트리 '정보보안센터' 항목 클릭",
       "cursor": {
         "x": 123,
@@ -1690,13 +1690,13 @@
     {
       "id": 153,
       "type": "wait",
-      "timestamp": 304279,
+      "timestamp": 328979,
       "description": "[챕터 3: document] 트리 '정보보안센터' 항목 반응 대기"
     },
     {
       "id": 154,
       "type": "click",
-      "timestamp": 305645,
+      "timestamp": 330345,
       "description": "[챕터 3: document] '사용자매뉴얼.20.모바일.pptx' 메뉴/링크 클릭",
       "cursor": {
         "x": 520,
@@ -1712,13 +1712,13 @@
     {
       "id": 155,
       "type": "wait",
-      "timestamp": 306762,
+      "timestamp": 331462,
       "description": "[챕터 3: document] '사용자매뉴얼.20.모바일.pptx' 메뉴/링크 반응 대기"
     },
     {
       "id": 156,
       "type": "click",
-      "timestamp": 308862,
+      "timestamp": 333562,
       "description": "[챕터 3: document] '사용자매뉴얼.19.메신저.pptx' 메뉴/링크 클릭",
       "cursor": {
         "x": 641,
@@ -1734,13 +1734,13 @@
     {
       "id": 157,
       "type": "wait",
-      "timestamp": 309895,
+      "timestamp": 334595,
       "description": "[챕터 3: document] '사용자매뉴얼.19.메신저.pptx' 메뉴/링크 반응 대기"
     },
     {
       "id": 158,
       "type": "click",
-      "timestamp": 311295,
+      "timestamp": 335995,
       "description": "[챕터 3: document] '내 문서' 메뉴/링크 클릭",
       "cursor": {
         "x": 217,
@@ -1756,13 +1756,13 @@
     {
       "id": 159,
       "type": "wait",
-      "timestamp": 312379,
+      "timestamp": 337079,
       "description": "[챕터 3: document] '내 문서' 메뉴/링크 반응 대기"
     },
     {
       "id": 160,
       "type": "click",
-      "timestamp": 314129,
+      "timestamp": 338829,
       "description": "[챕터 3: document] '문서함' 메뉴/링크 클릭",
       "cursor": {
         "x": 48,
@@ -1778,13 +1778,13 @@
     {
       "id": 161,
       "type": "wait",
-      "timestamp": 315162,
+      "timestamp": 339862,
       "description": "[챕터 3: document] '문서함' 메뉴/링크 반응 대기"
     },
     {
       "id": 162,
       "type": "click",
-      "timestamp": 316562,
+      "timestamp": 341262,
       "description": "[챕터 3: document] 트리 '사무처' 항목 클릭",
       "cursor": {
         "x": 92,
@@ -1800,13 +1800,13 @@
     {
       "id": 163,
       "type": "wait",
-      "timestamp": 317679,
+      "timestamp": 342379,
       "description": "[챕터 3: document] 트리 '사무처' 항목 반응 대기"
     },
     {
       "id": 164,
       "type": "click",
-      "timestamp": 319062,
+      "timestamp": 343762,
       "description": "[챕터 3: document] 트리 '정보보안센터' 항목 클릭",
       "cursor": {
         "x": 110,
@@ -1822,13 +1822,13 @@
     {
       "id": 165,
       "type": "wait",
-      "timestamp": 320179,
+      "timestamp": 344879,
       "description": "[챕터 3: document] 트리 '정보보안센터' 항목 반응 대기"
     },
     {
       "id": 166,
       "type": "click",
-      "timestamp": 321562,
+      "timestamp": 346262,
       "description": "[챕터 3: document] 트리 '그룹웨어 매뉴얼' 항목 클릭",
       "cursor": {
         "x": 115,
@@ -1844,13 +1844,13 @@
     {
       "id": 167,
       "type": "wait",
-      "timestamp": 322662,
+      "timestamp": 347362,
       "description": "[챕터 3: document] 트리 '그룹웨어 매뉴얼' 항목 반응 대기"
     },
     {
       "id": 168,
       "type": "click",
-      "timestamp": 324045,
+      "timestamp": 348745,
       "description": "[챕터 3: document] '문서 등록' 버튼 클릭",
       "cursor": {
         "x": 65,
@@ -1866,13 +1866,13 @@
     {
       "id": 169,
       "type": "wait",
-      "timestamp": 325129,
+      "timestamp": 349829,
       "description": "[챕터 3: document] '문서 등록' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 170,
       "type": "click",
-      "timestamp": 331329,
+      "timestamp": 356029,
       "description": "[챕터 3: document] [문서분류] '1차 분류선택 1차분류 BULRS(콘텐츠' 요소에서 '1차분류' 선택",
       "cursor": {
         "x": 591,
@@ -1888,13 +1888,13 @@
     {
       "id": 171,
       "type": "wait",
-      "timestamp": 332379,
+      "timestamp": 357079,
       "description": "[챕터 3: document] [문서분류] '1차 분류선택 1차분류 BULRS(콘텐츠' 요소에서 '1차분류' 선택 반응 대기"
     },
     {
       "id": 172,
       "type": "click",
-      "timestamp": 333795,
+      "timestamp": 358495,
       "description": "[챕터 3: document] [문서분류] '2차 분류선택 1-1차분류 1-2차분류 ' 요소에서 '1-1차분류' 선택",
       "cursor": {
         "x": 731,
@@ -1910,13 +1910,13 @@
     {
       "id": 173,
       "type": "wait",
-      "timestamp": 334812,
+      "timestamp": 359512,
       "description": "[챕터 3: document] [문서분류] '2차 분류선택 1-1차분류 1-2차분류 ' 요소에서 '1-1차분류' 선택 반응 대기"
     },
     {
       "id": 174,
       "type": "click",
-      "timestamp": 336229,
+      "timestamp": 360929,
       "description": "[챕터 3: document] [문서분류] '3차 분류선택 1-1-1차분류 1-1-2' 요소에서 '1-1-1차분류' 선택",
       "cursor": {
         "x": 862,
@@ -1932,13 +1932,13 @@
     {
       "id": 175,
       "type": "wait",
-      "timestamp": 337262,
+      "timestamp": 361962,
       "description": "[챕터 3: document] [문서분류] '3차 분류선택 1-1-1차분류 1-1-2' 요소에서 '1-1-1차분류' 선택 반응 대기"
     },
     {
       "id": 176,
       "type": "click",
-      "timestamp": 338679,
+      "timestamp": 363379,
       "description": "[챕터 3: document] [문서분류] '분류추가' 버튼 클릭",
       "cursor": {
         "x": 971,
@@ -1954,13 +1954,13 @@
     {
       "id": 177,
       "type": "wait",
-      "timestamp": 339729,
+      "timestamp": 364429,
       "description": "[챕터 3: document] [문서분류] '분류추가' 버튼 반응 대기"
     },
     {
       "id": 178,
       "type": "click",
-      "timestamp": 341145,
+      "timestamp": 365845,
       "description": "[챕터 3: document] [문서분류] '삭제' 버튼 클릭",
       "cursor": {
         "x": 971,
@@ -1976,13 +1976,13 @@
     {
       "id": 179,
       "type": "wait",
-      "timestamp": 342229,
+      "timestamp": 366929,
       "description": "[챕터 3: document] [문서분류] '삭제' 버튼 반응 대기"
     },
     {
       "id": 180,
       "type": "click",
-      "timestamp": 343612,
+      "timestamp": 368312,
       "description": "[챕터 3: document] [개별권한] '개별권한 설정' 버튼 클릭",
       "cursor": {
         "x": 560,
@@ -1998,13 +1998,13 @@
     {
       "id": 181,
       "type": "wait",
-      "timestamp": 344679,
+      "timestamp": 369379,
       "description": "[챕터 3: document] [개별권한] '개별권한 설정' 버튼 반응 대기"
     },
     {
       "id": 182,
       "type": "click",
-      "timestamp": 346112,
+      "timestamp": 370812,
       "description": "[챕터 3: document] [개별권한 팝업] '읽기/쓰기만 설정' 요소 클릭",
       "cursor": {
         "x": 873,
@@ -2020,13 +2020,13 @@
     {
       "id": 183,
       "type": "wait",
-      "timestamp": 347229,
+      "timestamp": 371929,
       "description": "[챕터 3: document] [개별권한 팝업] '읽기/쓰기만 설정' 요소 반응 대기"
     },
     {
       "id": 184,
       "type": "click",
-      "timestamp": 348662,
+      "timestamp": 373362,
       "description": "[챕터 3: document] [개별권한 팝업] '추가' 버튼 클릭",
       "cursor": {
         "x": 814,
@@ -2042,13 +2042,13 @@
     {
       "id": 185,
       "type": "wait",
-      "timestamp": 349745,
+      "timestamp": 374445,
       "description": "[챕터 3: document] [개별권한 팝업] '추가' 버튼 반응 대기"
     },
     {
       "id": 186,
       "type": "click",
-      "timestamp": 351212,
+      "timestamp": 375912,
       "description": "[챕터 3: document] [개별권한 팝업] 트리 '부서' 항목 클릭",
       "cursor": {
         "x": 612,
@@ -2064,13 +2064,13 @@
     {
       "id": 187,
       "type": "wait",
-      "timestamp": 352329,
+      "timestamp": 377029,
       "description": "[챕터 3: document] [개별권한 팝업] 트리 '부서' 항목 반응 대기"
     },
     {
       "id": 188,
       "type": "click",
-      "timestamp": 353779,
+      "timestamp": 378479,
       "description": "[챕터 3: document] [개별권한 팝업] 트리 '대학본부' 항목 클릭",
       "cursor": {
         "x": 630,
@@ -2086,13 +2086,13 @@
     {
       "id": 189,
       "type": "wait",
-      "timestamp": 354929,
+      "timestamp": 379629,
       "description": "[챕터 3: document] [개별권한 팝업] 트리 '대학본부' 항목 반응 대기"
     },
     {
       "id": 190,
       "type": "click",
-      "timestamp": 356312,
+      "timestamp": 381012,
       "description": "[챕터 3: document] [개별권한 팝업] 트리 '사무처' 항목 클릭",
       "cursor": {
         "x": 637,
@@ -2108,13 +2108,13 @@
     {
       "id": 191,
       "type": "wait",
-      "timestamp": 357445,
+      "timestamp": 382145,
       "description": "[챕터 3: document] [개별권한 팝업] 트리 '사무처' 항목 반응 대기"
     },
     {
       "id": 192,
       "type": "click",
-      "timestamp": 358945,
+      "timestamp": 383645,
       "description": "[챕터 3: document] [개별권한 팝업] '김병훈 담당 정보보안센터' 요소 클릭",
       "cursor": {
         "x": 915,
@@ -2130,13 +2130,13 @@
     {
       "id": 193,
       "type": "wait",
-      "timestamp": 360062,
+      "timestamp": 384762,
       "description": "[챕터 3: document] [개별권한 팝업] '김병훈 담당 정보보안센터' 요소 반응 대기"
     },
     {
       "id": 194,
       "type": "click",
-      "timestamp": 361629,
+      "timestamp": 386329,
       "description": "[챕터 3: document] [개별권한 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 938,
@@ -2152,13 +2152,13 @@
     {
       "id": 195,
       "type": "wait",
-      "timestamp": 362612,
+      "timestamp": 387312,
       "description": "[챕터 3: document] [개별권한 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 196,
       "type": "click",
-      "timestamp": 364629,
+      "timestamp": 389329,
       "description": "[챕터 3: document] [개별권한 팝업] '조회' 버튼 클릭",
       "cursor": {
         "x": 980,
@@ -2174,13 +2174,13 @@
     {
       "id": 197,
       "type": "wait",
-      "timestamp": 365729,
+      "timestamp": 390429,
       "description": "[챕터 3: document] [개별권한 팝업] '조회' 버튼 반응 대기"
     },
     {
       "id": 198,
       "type": "click",
-      "timestamp": 367212,
+      "timestamp": 391912,
       "description": "[챕터 3: document] [개별권한 팝업] '조회 < 인쇄 < 저장' 요소 클릭",
       "cursor": {
         "x": 1024,
@@ -2196,13 +2196,13 @@
     {
       "id": 199,
       "type": "wait",
-      "timestamp": 368262,
+      "timestamp": 392962,
       "description": "[챕터 3: document] [개별권한 팝업] '조회 < 인쇄 < 저장' 요소 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 200,
       "type": "click",
-      "timestamp": 370279,
+      "timestamp": 394979,
       "description": "[챕터 3: document] [개별권한 팝업] '발송' 버튼 클릭",
       "cursor": {
         "x": 1005,
@@ -2218,13 +2218,13 @@
     {
       "id": 201,
       "type": "wait",
-      "timestamp": 371362,
+      "timestamp": 396062,
       "description": "[챕터 3: document] [개별권한 팝업] '발송' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 202,
       "type": "click",
-      "timestamp": 373429,
+      "timestamp": 398129,
       "description": "[챕터 3: document] [개별권한 팝업] '조회 < 인쇄 < 저장 < 발송 < 수정' 요소 클릭",
       "cursor": {
         "x": 1027,
@@ -2240,13 +2240,13 @@
     {
       "id": 203,
       "type": "wait",
-      "timestamp": 374479,
+      "timestamp": 399179,
       "description": "[챕터 3: document] [개별권한 팝업] '조회 < 인쇄 < 저장 < 발송 < 수정' 요소 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 204,
       "type": "click",
-      "timestamp": 376479,
+      "timestamp": 401179,
       "description": "[챕터 3: document] [개별권한 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 921,
@@ -2262,13 +2262,13 @@
     {
       "id": 205,
       "type": "wait",
-      "timestamp": 377579,
+      "timestamp": 402279,
       "description": "[챕터 3: document] [개별권한 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 206,
       "type": "type",
-      "timestamp": 379462,
+      "timestamp": 404162,
       "description": "[챕터 3: document] [제목] 'atclWrite_subject' 입력창에 '2026학년도 학사운영 및 업무편람' 입력",
       "cursor": {
         "x": 630,
@@ -2285,13 +2285,13 @@
     {
       "id": 207,
       "type": "wait",
-      "timestamp": 381012,
+      "timestamp": 405712,
       "description": "[챕터 3: document] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 208,
       "type": "type",
-      "timestamp": 382212,
+      "timestamp": 406912,
       "description": "[챕터 3: document] '에디터 본문' 입력 영역에 '2026학년도 학사운영 및 업무편람 자료입니다.' 입력",
       "cursor": {
         "x": 768,
@@ -2308,13 +2308,13 @@
     {
       "id": 209,
       "type": "wait",
-      "timestamp": 384262,
+      "timestamp": 408962,
       "description": "[챕터 3: document] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 210,
       "type": "upload",
-      "timestamp": 386495,
+      "timestamp": 411195,
       "description": "[챕터 3: document] '내 PC' 버튼에 '자료.pdf' 첨부",
       "cursor": {
         "x": 531,
@@ -2330,7 +2330,7 @@
     {
       "id": 211,
       "type": "click",
-      "timestamp": 387679,
+      "timestamp": 412379,
       "cursor": {
         "x": 935,
         "y": 382
@@ -2346,7 +2346,7 @@
     {
       "id": 212,
       "type": "click",
-      "timestamp": 388512,
+      "timestamp": 413212,
       "cursor": {
         "x": 1149,
         "y": 662
@@ -2362,13 +2362,13 @@
     {
       "id": 213,
       "type": "wait",
-      "timestamp": 390112,
+      "timestamp": 414812,
       "description": "[챕터 3: document] 첨부 파일 업로드 및 목록 반영 대기"
     },
     {
       "id": 214,
       "type": "click",
-      "timestamp": 391912,
+      "timestamp": 416612,
       "description": "[챕터 3: document] [관련문서] '문서 선택' 버튼 클릭",
       "cursor": {
         "x": 529,
@@ -2384,13 +2384,13 @@
     {
       "id": 215,
       "type": "wait",
-      "timestamp": 392995,
+      "timestamp": 417695,
       "description": "[챕터 3: document] [관련문서] '문서 선택' 버튼 반응 대기"
     },
     {
       "id": 216,
       "type": "click",
-      "timestamp": 394462,
+      "timestamp": 419162,
       "description": "[챕터 3: document] [문서 선택 팝업] 트리 '사무처' 항목 클릭",
       "cursor": {
         "x": 585,
@@ -2406,13 +2406,13 @@
     {
       "id": 217,
       "type": "wait",
-      "timestamp": 395562,
+      "timestamp": 420262,
       "description": "[챕터 3: document] [문서 선택 팝업] 트리 '사무처' 항목 반응 대기"
     },
     {
       "id": 218,
       "type": "click",
-      "timestamp": 397012,
+      "timestamp": 421712,
       "description": "[챕터 3: document] [문서 선택 팝업] '[그룹웨어 매뉴얼] 사용자매뉴얼.20.모' 체크박스 클릭",
       "cursor": {
         "x": 735,
@@ -2428,13 +2428,13 @@
     {
       "id": 219,
       "type": "wait",
-      "timestamp": 398095,
+      "timestamp": 422795,
       "description": "[챕터 3: document] [문서 선택 팝업] '[그룹웨어 매뉴얼] 사용자매뉴얼.20.모' 체크박스 반응 대기"
     },
     {
       "id": 220,
       "type": "click",
-      "timestamp": 399579,
+      "timestamp": 424279,
       "description": "[챕터 3: document] [문서 선택 팝업] '첨부' 버튼 클릭",
       "cursor": {
         "x": 921,
@@ -2450,13 +2450,13 @@
     {
       "id": 221,
       "type": "wait",
-      "timestamp": 400629,
+      "timestamp": 425329,
       "description": "[챕터 3: document] [문서 선택 팝업] '첨부' 버튼 반응 대기"
     },
     {
       "id": 222,
       "type": "click",
-      "timestamp": 401979,
+      "timestamp": 426679,
       "description": "[챕터 3: document] '저장' 버튼 클릭",
       "cursor": {
         "x": 982,
@@ -2472,13 +2472,13 @@
     {
       "id": 223,
       "type": "wait",
-      "timestamp": 403212,
+      "timestamp": 427912,
       "description": "[챕터 3: document] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 224,
       "type": "click",
-      "timestamp": 405279,
+      "timestamp": 429979,
       "description": "[챕터 3: document] [알림 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 886,
@@ -2494,13 +2494,13 @@
     {
       "id": 225,
       "type": "wait",
-      "timestamp": 406362,
+      "timestamp": 431062,
       "description": "[챕터 3: document] [알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 226,
       "type": "click",
-      "timestamp": 409579,
+      "timestamp": 434279,
       "description": "[챕터 3: document] '2026학년도 학사운영 및 업무편람' 메뉴/링크 클릭",
       "cursor": {
         "x": 424,
@@ -2516,13 +2516,13 @@
     {
       "id": 227,
       "type": "wait",
-      "timestamp": 410629,
+      "timestamp": 435329,
       "description": "[챕터 3: document] '2026학년도 학사운영 및 업무편람' 메뉴/링크 반응 대기"
     },
     {
       "id": 228,
       "type": "click",
-      "timestamp": 412029,
+      "timestamp": 436729,
       "description": "[챕터 3: document] '이 문서를' 버튼 클릭",
       "cursor": {
         "x": 1149,
@@ -2538,13 +2538,13 @@
     {
       "id": 229,
       "type": "wait",
-      "timestamp": 413112,
+      "timestamp": 437812,
       "description": "[챕터 3: document] '이 문서를' 버튼 반응 대기"
     },
     {
       "id": 230,
       "type": "click",
-      "timestamp": 417729,
+      "timestamp": 442429,
       "description": "[챕터 3: document] '분류변경' 버튼 클릭",
       "cursor": {
         "x": 1095,
@@ -2560,13 +2560,13 @@
     {
       "id": 231,
       "type": "wait",
-      "timestamp": 418845,
+      "timestamp": 443545,
       "description": "[챕터 3: document] '분류변경' 버튼 반응 대기"
     },
     {
       "id": 232,
       "type": "click",
-      "timestamp": 420329,
+      "timestamp": 445029,
       "description": "[챕터 3: document] '2차 분류선택 1-1차분류 1-2차분류 ' 요소에서 '1-2차분류' 선택",
       "cursor": {
         "x": 1099,
@@ -2582,13 +2582,13 @@
     {
       "id": 233,
       "type": "wait",
-      "timestamp": 421362,
+      "timestamp": 446062,
       "description": "[챕터 3: document] '2차 분류선택 1-1차분류 1-2차분류 ' 요소에서 '1-2차분류' 선택 반응 대기"
     },
     {
       "id": 234,
       "type": "click",
-      "timestamp": 422829,
+      "timestamp": 447529,
       "description": "[챕터 3: document] '3차 분류선택 1-2-1차분류 1-2-2' 요소에서 '1-2-3차분류' 선택",
       "cursor": {
         "x": 1239,
@@ -2604,13 +2604,13 @@
     {
       "id": 235,
       "type": "wait",
-      "timestamp": 423829,
+      "timestamp": 448529,
       "description": "[챕터 3: document] '3차 분류선택 1-2-1차분류 1-2-2' 요소에서 '1-2-3차분류' 선택 반응 대기"
     },
     {
       "id": 236,
       "type": "click",
-      "timestamp": 425329,
+      "timestamp": 450029,
       "description": "[챕터 3: document] '저장' 버튼 클릭",
       "cursor": {
         "x": 1408,
@@ -2626,13 +2626,13 @@
     {
       "id": 237,
       "type": "wait",
-      "timestamp": 426412,
+      "timestamp": 451112,
       "description": "[챕터 3: document] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 238,
       "type": "click",
-      "timestamp": 428445,
+      "timestamp": 453145,
       "description": "[챕터 3: document] '개정' 버튼 클릭",
       "cursor": {
         "x": 952,
@@ -2648,13 +2648,13 @@
     {
       "id": 239,
       "type": "wait",
-      "timestamp": 429562,
+      "timestamp": 454262,
       "description": "[챕터 3: document] '개정' 버튼 반응 대기"
     },
     {
       "id": 240,
       "type": "type",
-      "timestamp": 430895,
+      "timestamp": 455595,
       "description": "[챕터 3: document] [반출 팝업] 'atclView_outOpinion' 입력창에 '자료변경' 입력",
       "cursor": {
         "x": 937,
@@ -2671,13 +2671,13 @@
     {
       "id": 241,
       "type": "wait",
-      "timestamp": 431762,
+      "timestamp": 456462,
       "description": "[챕터 3: document] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 242,
       "type": "click",
-      "timestamp": 433079,
+      "timestamp": 457779,
       "description": "[챕터 3: document] [반출 팝업] '저장' 버튼 클릭",
       "cursor": {
         "x": 918,
@@ -2693,13 +2693,13 @@
     {
       "id": 243,
       "type": "wait",
-      "timestamp": 434212,
+      "timestamp": 458912,
       "description": "[챕터 3: document] [반출 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 244,
       "type": "click",
-      "timestamp": 436312,
+      "timestamp": 461012,
       "description": "[챕터 3: document] [알림 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 916,
@@ -2715,13 +2715,13 @@
     {
       "id": 245,
       "type": "wait",
-      "timestamp": 437379,
+      "timestamp": 462079,
       "description": "[챕터 3: document] [알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 246,
       "type": "click",
-      "timestamp": 439395,
+      "timestamp": 464095,
       "description": "[챕터 3: document] [파일첨부] '삭제' 버튼 클릭",
       "cursor": {
         "x": 1776,
@@ -2737,13 +2737,13 @@
     {
       "id": 247,
       "type": "wait",
-      "timestamp": 440429,
+      "timestamp": 465129,
       "description": "[챕터 3: document] [파일첨부] '삭제' 버튼 반응 대기"
     },
     {
       "id": 248,
       "type": "upload",
-      "timestamp": 441795,
+      "timestamp": 466495,
       "description": "[챕터 3: document] '내 PC' 버튼에 '자료.pdf' 첨부",
       "cursor": {
         "x": 531,
@@ -2759,7 +2759,7 @@
     {
       "id": 249,
       "type": "click",
-      "timestamp": 443012,
+      "timestamp": 467712,
       "cursor": {
         "x": 935,
         "y": 382
@@ -2775,7 +2775,7 @@
     {
       "id": 250,
       "type": "click",
-      "timestamp": 443812,
+      "timestamp": 468512,
       "cursor": {
         "x": 1149,
         "y": 662
@@ -2791,13 +2791,13 @@
     {
       "id": 251,
       "type": "wait",
-      "timestamp": 445395,
+      "timestamp": 470095,
       "description": "[챕터 3: document] 첨부 파일 업로드 및 목록 반영 대기"
     },
     {
       "id": 252,
       "type": "click",
-      "timestamp": 447345,
+      "timestamp": 472045,
       "description": "[챕터 3: document] '반입' 버튼 클릭",
       "cursor": {
         "x": 963,
@@ -2813,13 +2813,13 @@
     {
       "id": 253,
       "type": "wait",
-      "timestamp": 448395,
+      "timestamp": 473095,
       "description": "[챕터 3: document] '반입' 버튼 반응 대기"
     },
     {
       "id": 254,
       "type": "click",
-      "timestamp": 454579,
+      "timestamp": 479279,
       "description": "[챕터 3: document] '버전보기' 버튼 클릭",
       "cursor": {
         "x": 1180,
@@ -2835,13 +2835,13 @@
     {
       "id": 255,
       "type": "wait",
-      "timestamp": 455645,
+      "timestamp": 480345,
       "description": "[챕터 3: document] '버전보기' 버튼 반응 대기"
     },
     {
       "id": 256,
       "type": "click",
-      "timestamp": 457045,
+      "timestamp": 481745,
       "description": "[챕터 3: document] '반출사유' 버튼 클릭",
       "cursor": {
         "x": 1784,
@@ -2857,13 +2857,13 @@
     {
       "id": 257,
       "type": "wait",
-      "timestamp": 458162,
+      "timestamp": 482862,
       "description": "[챕터 3: document] '반출사유' 버튼 반응 대기"
     },
     {
       "id": 258,
       "type": "click",
-      "timestamp": 459595,
+      "timestamp": 484295,
       "description": "[챕터 3: document] [반출사유 팝업] '닫기' 버튼 클릭",
       "cursor": {
         "x": 951,
@@ -2879,13 +2879,13 @@
     {
       "id": 259,
       "type": "wait",
-      "timestamp": 460712,
+      "timestamp": 485412,
       "description": "[챕터 3: document] [반출사유 팝업] '닫기' 버튼 반응 대기"
     },
     {
       "id": 260,
       "type": "click",
-      "timestamp": 463512,
+      "timestamp": 488212,
       "description": "[챕터 3: document] '삭제' 버튼 클릭",
       "cursor": {
         "x": 1001,
@@ -2901,13 +2901,13 @@
     {
       "id": 261,
       "type": "wait",
-      "timestamp": 464612,
+      "timestamp": 489312,
       "description": "[챕터 3: document] '삭제' 버튼 반응 대기"
     },
     {
       "id": 262,
       "type": "click",
-      "timestamp": 466062,
+      "timestamp": 490762,
       "description": "[챕터 3: document] [알림 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 915,
@@ -2923,13 +2923,13 @@
     {
       "id": 263,
       "type": "wait",
-      "timestamp": 467162,
+      "timestamp": 491862,
       "description": "[챕터 3: document] [알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 264,
       "type": "click",
-      "timestamp": 469195,
+      "timestamp": 493895,
       "description": "[챕터 3: document] [알림 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 965,
@@ -2945,13 +2945,13 @@
     {
       "id": 265,
       "type": "wait",
-      "timestamp": 470312,
+      "timestamp": 495012,
       "description": "[챕터 3: document] [알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 266,
       "type": "click",
-      "timestamp": 472312,
+      "timestamp": 497012,
       "description": "[챕터 3: document] 트리 '최근문서함' 항목 클릭",
       "cursor": {
         "x": 84,
@@ -2967,13 +2967,13 @@
     {
       "id": 267,
       "type": "wait",
-      "timestamp": 473395,
+      "timestamp": 498095,
       "description": "[챕터 3: document] 트리 '최근문서함' 항목 반응 대기"
     },
     {
       "id": 268,
       "type": "type",
-      "timestamp": 474679,
+      "timestamp": 499379,
       "description": "[챕터 3: document] '검색어' 입력창에 '사용자매뉴얼' 입력",
       "cursor": {
         "x": 1663,
@@ -2990,13 +2990,13 @@
     {
       "id": 269,
       "type": "wait",
-      "timestamp": 475662,
+      "timestamp": 500362,
       "description": "[챕터 3: document] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 270,
       "type": "click",
-      "timestamp": 476945,
+      "timestamp": 501645,
       "description": "[챕터 3: document] '검색' 버튼 클릭",
       "cursor": {
         "x": 1766,
@@ -3012,13 +3012,13 @@
     {
       "id": 271,
       "type": "wait",
-      "timestamp": 478012,
+      "timestamp": 502712,
       "description": "[챕터 3: document] '검색' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 272,
       "type": "click",
-      "timestamp": 480012,
+      "timestamp": 504712,
       "description": "[챕터 3: document] '전체기간' 버튼 클릭",
       "cursor": {
         "x": 1434,
@@ -3034,13 +3034,13 @@
     {
       "id": 273,
       "type": "wait",
-      "timestamp": 481095,
+      "timestamp": 505795,
       "description": "[챕터 3: document] '전체기간' 버튼 반응 대기"
     },
     {
       "id": 274,
       "type": "click",
-      "timestamp": 482462,
+      "timestamp": 507162,
       "description": "[챕터 3: document] '일부포함/등록일순' 버튼 클릭",
       "cursor": {
         "x": 1510,
@@ -3056,13 +3056,13 @@
     {
       "id": 275,
       "type": "wait",
-      "timestamp": 483545,
+      "timestamp": 508245,
       "description": "[챕터 3: document] '일부포함/등록일순' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 276,
       "type": "click",
-      "timestamp": 487895,
+      "timestamp": 512595,
       "description": "[챕터 3: document] '모두포함' 버튼 클릭",
       "cursor": {
         "x": 1516,
@@ -3078,13 +3078,13 @@
     {
       "id": 277,
       "type": "wait",
-      "timestamp": 488962,
+      "timestamp": 513662,
       "description": "[챕터 3: document] '모두포함' 버튼 반응 대기"
     },
     {
       "id": 278,
       "type": "click",
-      "timestamp": 490362,
+      "timestamp": 515062,
       "description": "[챕터 3: document] '검색어' 입력창 클릭",
       "cursor": {
         "x": 1714,
@@ -3100,13 +3100,13 @@
     {
       "id": 279,
       "type": "wait",
-      "timestamp": 491445,
+      "timestamp": 516145,
       "description": "[챕터 3: document] '검색어' 입력창 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 280,
       "type": "click",
-      "timestamp": 493479,
+      "timestamp": 518179,
       "description": "[챕터 3: document] '검색' 버튼 클릭",
       "cursor": {
         "x": 1766,
@@ -3122,13 +3122,13 @@
     {
       "id": 281,
       "type": "wait",
-      "timestamp": 494579,
+      "timestamp": 519279,
       "description": "[챕터 3: document] '검색' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 282,
       "type": "click",
-      "timestamp": 496712,
+      "timestamp": 521412,
       "description": "[챕터 3: document] '일부포함/등록일순' 버튼 클릭",
       "cursor": {
         "x": 1517,
@@ -3144,13 +3144,13 @@
     {
       "id": 283,
       "type": "wait",
-      "timestamp": 497779,
+      "timestamp": 522479,
       "description": "[챕터 3: document] '일부포함/등록일순' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 284,
       "type": "click",
-      "timestamp": 499762,
+      "timestamp": 524462,
       "description": "[챕터 3: document] '정확히 일치' 버튼 클릭",
       "cursor": {
         "x": 1535,
@@ -3166,13 +3166,13 @@
     {
       "id": 285,
       "type": "wait",
-      "timestamp": 500829,
+      "timestamp": 525529,
       "description": "[챕터 3: document] '정확히 일치' 버튼 반응 대기"
     },
     {
       "id": 286,
       "type": "type",
-      "timestamp": 502095,
+      "timestamp": 526795,
       "description": "[챕터 3: document] '검색어' 입력창에 '사용자매뉴얼.20.모바일.pptx' 입력",
       "cursor": {
         "x": 1727,
@@ -3189,13 +3189,13 @@
     {
       "id": 287,
       "type": "wait",
-      "timestamp": 503695,
+      "timestamp": 528395,
       "description": "[챕터 3: document] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 288,
       "type": "click",
-      "timestamp": 504962,
+      "timestamp": 529662,
       "description": "[챕터 3: document] '검색' 버튼 클릭",
       "cursor": {
         "x": 1774,
@@ -3211,13 +3211,13 @@
     {
       "id": 289,
       "type": "wait",
-      "timestamp": 506062,
+      "timestamp": 530762,
       "description": "[챕터 3: document] '검색' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 290,
       "type": "click",
-      "timestamp": 508045,
+      "timestamp": 532745,
       "description": "[챕터 3: document] '사용자매뉴얼.20.모바일.pptx' 메뉴/링크 클릭",
       "cursor": {
         "x": 583,
@@ -3233,25 +3233,25 @@
     {
       "id": 291,
       "type": "wait",
-      "timestamp": 509129,
+      "timestamp": 533829,
       "description": "[챕터 3: document] '사용자매뉴얼.20.모바일.pptx' 메뉴/링크 반응 대기"
     },
     {
       "id": 292,
       "type": "wait",
-      "timestamp": 510145,
+      "timestamp": 534845,
       "description": "[챕터 3: document] 최종 시연 결과 화면 클로즈업 확인 대기"
     },
     {
       "id": 293,
       "type": "wait",
-      "timestamp": 527229,
+      "timestamp": 551929,
       "description": "[챕터 4: taskboard] 초기 그룹웨어 메인 화면 렌더링 및 상태 안정화 대기"
     },
     {
       "id": 294,
       "type": "click",
-      "timestamp": 529895,
+      "timestamp": 554595,
       "description": "[챕터 4: taskboard] '포탈 전체메뉴' 버튼 클릭",
       "cursor": {
         "x": 1367,
@@ -3267,13 +3267,13 @@
     {
       "id": 295,
       "type": "wait",
-      "timestamp": 530962,
+      "timestamp": 555662,
       "description": "[챕터 4: taskboard] '포탈 전체메뉴' 버튼 반응 대기"
     },
     {
       "id": 296,
       "type": "click",
-      "timestamp": 532329,
+      "timestamp": 557029,
       "description": "[챕터 4: taskboard] '태스크보드' 메뉴/링크 클릭",
       "cursor": {
         "x": 967,
@@ -3289,13 +3289,13 @@
     {
       "id": 297,
       "type": "wait",
-      "timestamp": 533445,
+      "timestamp": 558145,
       "description": "[챕터 4: taskboard] '태스크보드' 메뉴/링크 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 298,
       "type": "click",
-      "timestamp": 535395,
+      "timestamp": 560095,
       "description": "[챕터 4: taskboard] '태양 할일 > 할일' 메뉴/링크 클릭",
       "cursor": {
         "x": 332,
@@ -3311,13 +3311,13 @@
     {
       "id": 299,
       "type": "wait",
-      "timestamp": 536479,
+      "timestamp": 561179,
       "description": "[챕터 4: taskboard] '태양 할일 > 할일' 메뉴/링크 반응 대기"
     },
     {
       "id": 300,
       "type": "click",
-      "timestamp": 537879,
+      "timestamp": 562579,
       "description": "[챕터 4: taskboard] '모든 보드' 메뉴/링크 클릭",
       "cursor": {
         "x": 77,
@@ -3333,13 +3333,13 @@
     {
       "id": 301,
       "type": "wait",
-      "timestamp": 538979,
+      "timestamp": 563679,
       "description": "[챕터 4: taskboard] '모든 보드' 메뉴/링크 반응 대기"
     },
     {
       "id": 302,
       "type": "click",
-      "timestamp": 540379,
+      "timestamp": 565079,
       "description": "[챕터 4: taskboard] '태양 할일 임시계정(전임) 전임교원(정보' 메뉴/링크 클릭",
       "cursor": {
         "x": 781,
@@ -3355,13 +3355,13 @@
     {
       "id": 303,
       "type": "wait",
-      "timestamp": 541462,
+      "timestamp": 566162,
       "description": "[챕터 4: taskboard] '태양 할일 임시계정(전임) 전임교원(정보' 메뉴/링크 반응 대기"
     },
     {
       "id": 304,
       "type": "click",
-      "timestamp": 542879,
+      "timestamp": 567579,
       "description": "[챕터 4: taskboard] '나의 보드' 메뉴/링크 클릭",
       "cursor": {
         "x": 90,
@@ -3377,13 +3377,13 @@
     {
       "id": 305,
       "type": "wait",
-      "timestamp": 543979,
+      "timestamp": 568679,
       "description": "[챕터 4: taskboard] '나의 보드' 메뉴/링크 반응 대기"
     },
     {
       "id": 306,
       "type": "click",
-      "timestamp": 545395,
+      "timestamp": 570095,
       "description": "[챕터 4: taskboard] '태양 할일 50% 1/2' 메뉴/링크 클릭",
       "cursor": {
         "x": 436,
@@ -3399,13 +3399,13 @@
     {
       "id": 307,
       "type": "wait",
-      "timestamp": 546479,
+      "timestamp": 571179,
       "description": "[챕터 4: taskboard] '태양 할일 50% 1/2' 메뉴/링크 반응 대기"
     },
     {
       "id": 308,
       "type": "click",
-      "timestamp": 547895,
+      "timestamp": 572595,
       "description": "[챕터 4: taskboard] '공유 보드' 메뉴/링크 클릭",
       "cursor": {
         "x": 86,
@@ -3421,13 +3421,13 @@
     {
       "id": 309,
       "type": "wait",
-      "timestamp": 548979,
+      "timestamp": 573679,
       "description": "[챕터 4: taskboard] '공유 보드' 메뉴/링크 반응 대기"
     },
     {
       "id": 310,
       "type": "click",
-      "timestamp": 550345,
+      "timestamp": 575045,
       "description": "[챕터 4: taskboard] '대학' 메뉴/링크 클릭",
       "cursor": {
         "x": 61,
@@ -3443,13 +3443,13 @@
     {
       "id": 311,
       "type": "wait",
-      "timestamp": 551445,
+      "timestamp": 576145,
       "description": "[챕터 4: taskboard] '대학' 메뉴/링크 반응 대기"
     },
     {
       "id": 312,
       "type": "click",
-      "timestamp": 552779,
+      "timestamp": 577479,
       "description": "[챕터 4: taskboard] '스페이스' 메뉴/링크 클릭",
       "cursor": {
         "x": 94,
@@ -3465,13 +3465,13 @@
     {
       "id": 313,
       "type": "wait",
-      "timestamp": 553912,
+      "timestamp": 578612,
       "description": "[챕터 4: taskboard] '스페이스' 메뉴/링크 반응 대기"
     },
     {
       "id": 314,
       "type": "click",
-      "timestamp": 555295,
+      "timestamp": 579995,
       "description": "[챕터 4: taskboard] '나의 보드' 메뉴/링크 클릭",
       "cursor": {
         "x": 93,
@@ -3487,13 +3487,13 @@
     {
       "id": 315,
       "type": "wait",
-      "timestamp": 556379,
+      "timestamp": 581079,
       "description": "[챕터 4: taskboard] '나의 보드' 메뉴/링크 반응 대기"
     },
     {
       "id": 316,
       "type": "click",
-      "timestamp": 557762,
+      "timestamp": 582462,
       "description": "[챕터 4: taskboard] '보드 추가' 버튼 클릭",
       "cursor": {
         "x": 407,
@@ -3509,13 +3509,13 @@
     {
       "id": 317,
       "type": "wait",
-      "timestamp": 558862,
+      "timestamp": 583562,
       "description": "[챕터 4: taskboard] '보드 추가' 버튼 반응 대기"
     },
     {
       "id": 318,
       "type": "type",
-      "timestamp": 560145,
+      "timestamp": 584845,
       "description": "[챕터 4: taskboard] [보드 추가 팝업] '보드 타이틀을 입력하세요.' 입력창에 '공동업무 보드' 입력",
       "cursor": {
         "x": 945,
@@ -3532,13 +3532,13 @@
     {
       "id": 319,
       "type": "wait",
-      "timestamp": 561212,
+      "timestamp": 585912,
       "description": "[챕터 4: taskboard] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 320,
       "type": "type",
-      "timestamp": 562479,
+      "timestamp": 587179,
       "description": "[챕터 4: taskboard] [보드 추가 팝업] '보드 설명을 입력하세요.' 입력창에 '부서원 간 협조 업무의 진행 상태를 실시간으로 공유하는 보드입니다.' 입력",
       "cursor": {
         "x": 945,
@@ -3555,13 +3555,13 @@
     {
       "id": 321,
       "type": "wait",
-      "timestamp": 564862,
+      "timestamp": 589562,
       "description": "[챕터 4: taskboard] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 322,
       "type": "click",
-      "timestamp": 566212,
+      "timestamp": 590912,
       "description": "[챕터 4: taskboard] [보드 추가 팝업] '디자인' 메뉴/링크 클릭",
       "cursor": {
         "x": 987,
@@ -3577,13 +3577,13 @@
     {
       "id": 323,
       "type": "wait",
-      "timestamp": 567312,
+      "timestamp": 592012,
       "description": "[챕터 4: taskboard] [보드 추가 팝업] '디자인' 메뉴/링크 반응 대기"
     },
     {
       "id": 324,
       "type": "click",
-      "timestamp": 568745,
+      "timestamp": 593445,
       "description": "[챕터 4: taskboard] [보드 추가 팝업] 'SKIN9' 요소 클릭",
       "cursor": {
         "x": 940,
@@ -3599,13 +3599,13 @@
     {
       "id": 325,
       "type": "wait",
-      "timestamp": 569845,
+      "timestamp": 594545,
       "description": "[챕터 4: taskboard] [보드 추가 팝업] 'SKIN9' 요소 반응 대기"
     },
     {
       "id": 326,
       "type": "click",
-      "timestamp": 571295,
+      "timestamp": 595995,
       "description": "[챕터 4: taskboard] [보드 추가 팝업] 'BG5' 요소 클릭",
       "cursor": {
         "x": 1038,
@@ -3621,13 +3621,13 @@
     {
       "id": 327,
       "type": "wait",
-      "timestamp": 572395,
+      "timestamp": 597095,
       "description": "[챕터 4: taskboard] [보드 추가 팝업] 'BG5' 요소 반응 대기"
     },
     {
       "id": 328,
       "type": "click",
-      "timestamp": 573795,
+      "timestamp": 598495,
       "description": "[챕터 4: taskboard] [보드 추가 팝업] '설정' 메뉴/링크 클릭",
       "cursor": {
         "x": 1087,
@@ -3643,13 +3643,13 @@
     {
       "id": 329,
       "type": "wait",
-      "timestamp": 574895,
+      "timestamp": 599595,
       "description": "[챕터 4: taskboard] [보드 추가 팝업] '설정' 메뉴/링크 반응 대기"
     },
     {
       "id": 330,
       "type": "click",
-      "timestamp": 576329,
+      "timestamp": 601029,
       "description": "[챕터 4: taskboard] [보드 추가 팝업] '멤버' 메뉴/링크 클릭",
       "cursor": {
         "x": 808,
@@ -3665,13 +3665,13 @@
     {
       "id": 331,
       "type": "wait",
-      "timestamp": 577395,
+      "timestamp": 602095,
       "description": "[챕터 4: taskboard] [보드 추가 팝업] '멤버' 메뉴/링크 반응 대기"
     },
     {
       "id": 332,
       "type": "click",
-      "timestamp": 578812,
+      "timestamp": 603512,
       "description": "[챕터 4: taskboard] [보드 추가 팝업] '추가' 버튼 클릭",
       "cursor": {
         "x": 777,
@@ -3687,13 +3687,13 @@
     {
       "id": 333,
       "type": "wait",
-      "timestamp": 579912,
+      "timestamp": 604612,
       "description": "[챕터 4: taskboard] [보드 추가 팝업] '추가' 버튼 반응 대기"
     },
     {
       "id": 334,
       "type": "click",
-      "timestamp": 581329,
+      "timestamp": 606029,
       "description": "[챕터 4: taskboard] [공유자 설정 팝업] '부서' 요소 클릭",
       "cursor": {
         "x": 625,
@@ -3709,13 +3709,13 @@
     {
       "id": 335,
       "type": "wait",
-      "timestamp": 582479,
+      "timestamp": 607179,
       "description": "[챕터 4: taskboard] [공유자 설정 팝업] '부서' 요소 반응 대기"
     },
     {
       "id": 336,
       "type": "click",
-      "timestamp": 583929,
+      "timestamp": 608629,
       "description": "[챕터 4: taskboard] [공유자 설정 팝업] 트리 '대학본부' 항목 클릭",
       "cursor": {
         "x": 635,
@@ -3731,13 +3731,13 @@
     {
       "id": 337,
       "type": "wait",
-      "timestamp": 585062,
+      "timestamp": 609762,
       "description": "[챕터 4: taskboard] [공유자 설정 팝업] 트리 '대학본부' 항목 반응 대기"
     },
     {
       "id": 338,
       "type": "click",
-      "timestamp": 586545,
+      "timestamp": 611245,
       "description": "[챕터 4: taskboard] [공유자 설정 팝업] 트리 '사무처' 항목 클릭",
       "cursor": {
         "x": 634,
@@ -3753,13 +3753,13 @@
     {
       "id": 339,
       "type": "wait",
-      "timestamp": 587612,
+      "timestamp": 612312,
       "description": "[챕터 4: taskboard] [공유자 설정 팝업] 트리 '사무처' 항목 반응 대기"
     },
     {
       "id": 340,
       "type": "click",
-      "timestamp": 589129,
+      "timestamp": 613829,
       "description": "[챕터 4: taskboard] [공유자 설정 팝업] '김병훈 담당 사무처' 요소 클릭",
       "cursor": {
         "x": 810,
@@ -3775,13 +3775,13 @@
     {
       "id": 341,
       "type": "wait",
-      "timestamp": 590262,
+      "timestamp": 614962,
       "description": "[챕터 4: taskboard] [공유자 설정 팝업] '김병훈 담당 사무처' 요소 반응 대기"
     },
     {
       "id": 342,
       "type": "click",
-      "timestamp": 591745,
+      "timestamp": 616445,
       "description": "[챕터 4: taskboard] [공유자 설정 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 926,
@@ -3797,13 +3797,13 @@
     {
       "id": 343,
       "type": "wait",
-      "timestamp": 592829,
+      "timestamp": 617529,
       "description": "[챕터 4: taskboard] [공유자 설정 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 344,
       "type": "click",
-      "timestamp": 594862,
+      "timestamp": 619562,
       "description": "[챕터 4: taskboard] [보드 추가 팝업] '저장' 버튼 클릭",
       "cursor": {
         "x": 937,
@@ -3819,13 +3819,13 @@
     {
       "id": 345,
       "type": "wait",
-      "timestamp": 595945,
+      "timestamp": 620645,
       "description": "[챕터 4: taskboard] [보드 추가 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 346,
       "type": "click",
-      "timestamp": 597929,
+      "timestamp": 622629,
       "description": "[챕터 4: taskboard] '공동업무 보드 0% 0/0' 메뉴/링크 클릭",
       "cursor": {
         "x": 391,
@@ -3841,13 +3841,13 @@
     {
       "id": 347,
       "type": "wait",
-      "timestamp": 598995,
+      "timestamp": 623695,
       "description": "[챕터 4: taskboard] '공동업무 보드 0% 0/0' 메뉴/링크 반응 대기"
     },
     {
       "id": 348,
       "type": "click",
-      "timestamp": 600362,
+      "timestamp": 625062,
       "description": "[챕터 4: taskboard] '설정' 버튼 클릭",
       "cursor": {
         "x": 1431,
@@ -3863,13 +3863,13 @@
     {
       "id": 349,
       "type": "wait",
-      "timestamp": 601462,
+      "timestamp": 626162,
       "description": "[챕터 4: taskboard] '설정' 버튼 반응 대기"
     },
     {
       "id": 350,
       "type": "click",
-      "timestamp": 602912,
+      "timestamp": 627612,
       "description": "[챕터 4: taskboard] [할일그룹 설정 팝업] '삭제' 버튼 클릭",
       "cursor": {
         "x": 961,
@@ -3885,13 +3885,13 @@
     {
       "id": 351,
       "type": "wait",
-      "timestamp": 603979,
+      "timestamp": 628679,
       "description": "[챕터 4: taskboard] [할일그룹 설정 팝업] '삭제' 버튼 반응 대기"
     },
     {
       "id": 352,
       "type": "click",
-      "timestamp": 606245,
+      "timestamp": 630945,
       "description": "[챕터 4: taskboard] '설정' 버튼 클릭",
       "cursor": {
         "x": 1430,
@@ -3907,13 +3907,13 @@
     {
       "id": 353,
       "type": "wait",
-      "timestamp": 607329,
+      "timestamp": 632029,
       "description": "[챕터 4: taskboard] '설정' 버튼 반응 대기"
     },
     {
       "id": 354,
       "type": "type",
-      "timestamp": 608645,
+      "timestamp": 633345,
       "description": "[챕터 4: taskboard] [할일그룹 설정 팝업] '그룹명' 입력창에 '이슈' 입력",
       "cursor": {
         "x": 894,
@@ -3930,13 +3930,13 @@
     {
       "id": 355,
       "type": "wait",
-      "timestamp": 609479,
+      "timestamp": 634179,
       "description": "[챕터 4: taskboard] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 356,
       "type": "click",
-      "timestamp": 610795,
+      "timestamp": 635495,
       "description": "[챕터 4: taskboard] [할일그룹 설정 팝업] '#ca4f58' 요소 클릭",
       "cursor": {
         "x": 900,
@@ -3952,13 +3952,13 @@
     {
       "id": 357,
       "type": "wait",
-      "timestamp": 611912,
+      "timestamp": 636612,
       "description": "[챕터 4: taskboard] [할일그룹 설정 팝업] '#ca4f58' 요소 반응 대기"
     },
     {
       "id": 358,
       "type": "click",
-      "timestamp": 612879,
+      "timestamp": 637579,
       "description": "[챕터 4: taskboard] [할일그룹 설정 팝업] 'ICON18' 요소 클릭",
       "cursor": {
         "x": 1068,
@@ -3974,13 +3974,13 @@
     {
       "id": 359,
       "type": "wait",
-      "timestamp": 613995,
+      "timestamp": 638695,
       "description": "[챕터 4: taskboard] [할일그룹 설정 팝업] 'ICON18' 요소 반응 대기"
     },
     {
       "id": 360,
       "type": "click",
-      "timestamp": 615012,
+      "timestamp": 639712,
       "description": "[챕터 4: taskboard] [할일그룹 설정 팝업] '저장' 버튼 클릭",
       "cursor": {
         "x": 907,
@@ -3996,13 +3996,13 @@
     {
       "id": 361,
       "type": "wait",
-      "timestamp": 616095,
+      "timestamp": 640795,
       "description": "[챕터 4: taskboard] [할일그룹 설정 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 362,
       "type": "click",
-      "timestamp": 617579,
+      "timestamp": 642279,
       "description": "[챕터 4: taskboard] '그룹 추가' 버튼 클릭",
       "cursor": {
         "x": 1476,
@@ -4018,13 +4018,13 @@
     {
       "id": 363,
       "type": "wait",
-      "timestamp": 618645,
+      "timestamp": 643345,
       "description": "[챕터 4: taskboard] '그룹 추가' 버튼 반응 대기"
     },
     {
       "id": 364,
       "type": "type",
-      "timestamp": 619979,
+      "timestamp": 644679,
       "description": "[챕터 4: taskboard] [할일그룹 추가 팝업] '그룹명' 입력창에 '취소' 입력",
       "cursor": {
         "x": 969,
@@ -4041,13 +4041,13 @@
     {
       "id": 365,
       "type": "wait",
-      "timestamp": 620762,
+      "timestamp": 645462,
       "description": "[챕터 4: taskboard] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 366,
       "type": "click",
-      "timestamp": 622079,
+      "timestamp": 646779,
       "description": "[챕터 4: taskboard] [할일그룹 추가 팝업] '#8889e2' 요소 클릭",
       "cursor": {
         "x": 1023,
@@ -4063,13 +4063,13 @@
     {
       "id": 367,
       "type": "wait",
-      "timestamp": 623179,
+      "timestamp": 647879,
       "description": "[챕터 4: taskboard] [할일그룹 추가 팝업] '#8889e2' 요소 반응 대기"
     },
     {
       "id": 368,
       "type": "click",
-      "timestamp": 624179,
+      "timestamp": 648879,
       "description": "[챕터 4: taskboard] [할일그룹 추가 팝업] '저장' 버튼 클릭",
       "cursor": {
         "x": 936,
@@ -4085,13 +4085,13 @@
     {
       "id": 369,
       "type": "wait",
-      "timestamp": 625262,
+      "timestamp": 649962,
       "description": "[챕터 4: taskboard] [할일그룹 추가 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 370,
       "type": "click",
-      "timestamp": 626745,
+      "timestamp": 651445,
       "description": "[챕터 4: taskboard] '할일 추가' 버튼 클릭",
       "cursor": {
         "x": 512,
@@ -4107,13 +4107,13 @@
     {
       "id": 371,
       "type": "wait",
-      "timestamp": 627829,
+      "timestamp": 652529,
       "description": "[챕터 4: taskboard] '할일 추가' 버튼 반응 대기"
     },
     {
       "id": 372,
       "type": "type",
-      "timestamp": 629079,
+      "timestamp": 653779,
       "description": "[챕터 4: taskboard] '제목을 입력하세요.' 입력창에 '교과목 시간표 최종 점검' 입력",
       "cursor": {
         "x": 390,
@@ -4130,13 +4130,13 @@
     {
       "id": 373,
       "type": "wait",
-      "timestamp": 631079,
+      "timestamp": 655779,
       "description": "[챕터 4: taskboard] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 374,
       "type": "click",
-      "timestamp": 632379,
+      "timestamp": 657079,
       "description": "[챕터 4: taskboard] '교과목 시간표 최종 점검' 요소 클릭",
       "cursor": {
         "x": 476,
@@ -4152,13 +4152,13 @@
     {
       "id": 375,
       "type": "wait",
-      "timestamp": 633429,
+      "timestamp": 658129,
       "description": "[챕터 4: taskboard] '교과목 시간표 최종 점검' 요소 반응 대기"
     },
     {
       "id": 376,
       "type": "click",
-      "timestamp": 634879,
+      "timestamp": 659579,
       "description": "[챕터 4: taskboard] '교과목 시간표 최종 점검' 요소 클릭",
       "cursor": {
         "x": 426,
@@ -4174,13 +4174,13 @@
     {
       "id": 377,
       "type": "wait",
-      "timestamp": 635979,
+      "timestamp": 660679,
       "description": "[챕터 4: taskboard] '교과목 시간표 최종 점검' 요소 반응 대기"
     },
     {
       "id": 378,
       "type": "click",
-      "timestamp": 637395,
+      "timestamp": 662095,
       "description": "[챕터 4: taskboard] [담당자] '선택' 버튼 클릭",
       "cursor": {
         "x": 733,
@@ -4196,13 +4196,13 @@
     {
       "id": 379,
       "type": "wait",
-      "timestamp": 638495,
+      "timestamp": 663195,
       "description": "[챕터 4: taskboard] [담당자] '선택' 버튼 반응 대기"
     },
     {
       "id": 380,
       "type": "click",
-      "timestamp": 639929,
+      "timestamp": 664629,
       "description": "[챕터 4: taskboard] [할일 배정 팝업] '임 임시계정(전임) 전임교원(정보보안센터' 요소 클릭",
       "cursor": {
         "x": 941,
@@ -4218,13 +4218,13 @@
     {
       "id": 381,
       "type": "wait",
-      "timestamp": 641012,
+      "timestamp": 665712,
       "description": "[챕터 4: taskboard] [할일 배정 팝업] '임 임시계정(전임) 전임교원(정보보안센터' 요소 반응 대기"
     },
     {
       "id": 382,
       "type": "click",
-      "timestamp": 642445,
+      "timestamp": 667145,
       "description": "[챕터 4: taskboard] [할일 배정 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 926,
@@ -4240,13 +4240,13 @@
     {
       "id": 383,
       "type": "wait",
-      "timestamp": 643529,
+      "timestamp": 668229,
       "description": "[챕터 4: taskboard] [할일 배정 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 384,
       "type": "click",
-      "timestamp": 645545,
+      "timestamp": 670245,
       "description": "[챕터 4: taskboard] [기한] #aglTaskView_periodSetupBtn (button) 클릭",
       "cursor": {
         "x": 727,
@@ -4262,13 +4262,13 @@
     {
       "id": 385,
       "type": "wait",
-      "timestamp": 646612,
+      "timestamp": 671312,
       "description": "[챕터 4: taskboard] [기한] #aglTaskView_periodSetupBtn (button) 반응 대기"
     },
     {
       "id": 386,
       "type": "click",
-      "timestamp": 648195,
+      "timestamp": 672895,
       "description": "[챕터 4: taskboard] '3' 메뉴/링크 클릭",
       "cursor": {
         "x": 787,
@@ -4284,13 +4284,13 @@
     {
       "id": 387,
       "type": "wait",
-      "timestamp": 649162,
+      "timestamp": 673862,
       "description": "[챕터 4: taskboard] '3' 메뉴/링크 반응 대기"
     },
     {
       "id": 388,
       "type": "click",
-      "timestamp": 650629,
+      "timestamp": 675329,
       "description": "[챕터 4: taskboard] [기한] '확인' 버튼 클릭",
       "cursor": {
         "x": 827,
@@ -4306,13 +4306,13 @@
     {
       "id": 389,
       "type": "wait",
-      "timestamp": 651679,
+      "timestamp": 676379,
       "description": "[챕터 4: taskboard] [기한] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 390,
       "type": "click",
-      "timestamp": 653679,
+      "timestamp": 678379,
       "description": "[챕터 4: taskboard] '내용 편집' 버튼 클릭",
       "cursor": {
         "x": 678,
@@ -4328,13 +4328,13 @@
     {
       "id": 391,
       "type": "wait",
-      "timestamp": 657529,
+      "timestamp": 682229,
       "description": "[챕터 4: taskboard] '내용 편집' 버튼 반응 대기"
     },
     {
       "id": 392,
       "type": "type",
-      "timestamp": 659012,
+      "timestamp": 683712,
       "description": "[챕터 4: taskboard] '에디터 본문' 입력 영역에 '교과목 시간표 최종 점검하겠습니다.' 입력",
       "cursor": {
         "x": 817,
@@ -4351,13 +4351,13 @@
     {
       "id": 393,
       "type": "wait",
-      "timestamp": 660795,
+      "timestamp": 685495,
       "description": "[챕터 4: taskboard] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 394,
       "type": "click",
-      "timestamp": 662129,
+      "timestamp": 686829,
       "description": "[챕터 4: taskboard] '저장' 버튼 클릭",
       "cursor": {
         "x": 1171,
@@ -4373,13 +4373,13 @@
     {
       "id": 395,
       "type": "wait",
-      "timestamp": 663195,
+      "timestamp": 687895,
       "description": "[챕터 4: taskboard] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 396,
       "type": "click",
-      "timestamp": 665195,
+      "timestamp": 689895,
       "description": "[챕터 4: taskboard] '라벨 추가' 버튼 클릭",
       "cursor": {
         "x": 1243,
@@ -4395,13 +4395,13 @@
     {
       "id": 397,
       "type": "wait",
-      "timestamp": 666295,
+      "timestamp": 690995,
       "description": "[챕터 4: taskboard] '라벨 추가' 버튼 반응 대기"
     },
     {
       "id": 398,
       "type": "click",
-      "timestamp": 667862,
+      "timestamp": 692562,
       "description": "[챕터 4: taskboard] [라벨 선택 팝업] '수정' 버튼 클릭",
       "cursor": {
         "x": 1077,
@@ -4417,13 +4417,13 @@
     {
       "id": 399,
       "type": "wait",
-      "timestamp": 668979,
+      "timestamp": 693679,
       "description": "[챕터 4: taskboard] [라벨 선택 팝업] '수정' 버튼 반응 대기"
     },
     {
       "id": 400,
       "type": "click",
-      "timestamp": 670029,
+      "timestamp": 694729,
       "description": "[챕터 4: taskboard] [라벨 정보 팝업] '삭제' 버튼 클릭",
       "cursor": {
         "x": 973,
@@ -4439,13 +4439,13 @@
     {
       "id": 401,
       "type": "wait",
-      "timestamp": 671145,
+      "timestamp": 695845,
       "description": "[챕터 4: taskboard] [라벨 정보 팝업] '삭제' 버튼 반응 대기"
     },
     {
       "id": 402,
       "type": "click",
-      "timestamp": 672212,
+      "timestamp": 696912,
       "description": "[챕터 4: taskboard] [알림 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 916,
@@ -4461,13 +4461,13 @@
     {
       "id": 403,
       "type": "wait",
-      "timestamp": 673312,
+      "timestamp": 698012,
       "description": "[챕터 4: taskboard] [알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 404,
       "type": "click",
-      "timestamp": 674379,
+      "timestamp": 699079,
       "description": "[챕터 4: taskboard] [라벨 선택 팝업] '라벨 추가' 버튼 클릭",
       "cursor": {
         "x": 882,
@@ -4483,13 +4483,13 @@
     {
       "id": 405,
       "type": "wait",
-      "timestamp": 675479,
+      "timestamp": 700179,
       "description": "[챕터 4: taskboard] [라벨 선택 팝업] '라벨 추가' 버튼 반응 대기"
     },
     {
       "id": 406,
       "type": "type",
-      "timestamp": 676412,
+      "timestamp": 701112,
       "description": "[챕터 4: taskboard] [라벨 정보 팝업] '라벨 이름' 입력창에 '점검' 입력",
       "cursor": {
         "x": 943,
@@ -4506,13 +4506,13 @@
     {
       "id": 407,
       "type": "wait",
-      "timestamp": 677195,
+      "timestamp": 701895,
       "description": "[챕터 4: taskboard] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 408,
       "type": "click",
-      "timestamp": 678579,
+      "timestamp": 703279,
       "description": "[챕터 4: taskboard] [라벨 정보 팝업] '빨강' 요소 클릭",
       "cursor": {
         "x": 967,
@@ -4528,13 +4528,13 @@
     {
       "id": 409,
       "type": "wait",
-      "timestamp": 679679,
+      "timestamp": 704379,
       "description": "[챕터 4: taskboard] [라벨 정보 팝업] '빨강' 요소 반응 대기"
     },
     {
       "id": 410,
       "type": "click",
-      "timestamp": 680745,
+      "timestamp": 705445,
       "description": "[챕터 4: taskboard] [라벨 정보 팝업] '저장' 버튼 클릭",
       "cursor": {
         "x": 931,
@@ -4550,13 +4550,13 @@
     {
       "id": 411,
       "type": "wait",
-      "timestamp": 681812,
+      "timestamp": 706512,
       "description": "[챕터 4: taskboard] [라벨 정보 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 412,
       "type": "click",
-      "timestamp": 683445,
+      "timestamp": 708145,
       "description": "[챕터 4: taskboard] [라벨 선택 팝업] '점검' 요소 클릭",
       "cursor": {
         "x": 919,
@@ -4572,13 +4572,13 @@
     {
       "id": 413,
       "type": "wait",
-      "timestamp": 684545,
+      "timestamp": 709245,
       "description": "[챕터 4: taskboard] [라벨 선택 팝업] '점검' 요소 반응 대기"
     },
     {
       "id": 414,
       "type": "click",
-      "timestamp": 685662,
+      "timestamp": 710362,
       "description": "[챕터 4: taskboard] [라벨 선택 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 921,
@@ -4594,13 +4594,13 @@
     {
       "id": 415,
       "type": "wait",
-      "timestamp": 686729,
+      "timestamp": 711429,
       "description": "[챕터 4: taskboard] [라벨 선택 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 416,
       "type": "click",
-      "timestamp": 688262,
+      "timestamp": 712962,
       "description": "[챕터 4: taskboard] '부가 기능' 버튼 클릭",
       "cursor": {
         "x": 1272,
@@ -4616,13 +4616,13 @@
     {
       "id": 417,
       "type": "wait",
-      "timestamp": 689345,
+      "timestamp": 714045,
       "description": "[챕터 4: taskboard] '부가 기능' 버튼 반응 대기"
     },
     {
       "id": 418,
       "type": "click",
-      "timestamp": 690762,
+      "timestamp": 715462,
       "description": "[챕터 4: taskboard] '체크 리스트 추가' 메뉴/링크 클릭",
       "cursor": {
         "x": 1247,
@@ -4638,13 +4638,13 @@
     {
       "id": 419,
       "type": "wait",
-      "timestamp": 691879,
+      "timestamp": 716579,
       "description": "[챕터 4: taskboard] '체크 리스트 추가' 메뉴/링크 반응 대기"
     },
     {
       "id": 420,
       "type": "type",
-      "timestamp": 695229,
+      "timestamp": 719929,
       "description": "[챕터 4: taskboard] '체크 리스트를 입력하세요.' 입력창에 '항목 1번' 입력 후 엔터(Enter)",
       "cursor": {
         "x": 1158,
@@ -4661,13 +4661,13 @@
     {
       "id": 421,
       "type": "wait",
-      "timestamp": 696862,
+      "timestamp": 721562,
       "description": "[챕터 4: taskboard] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 422,
       "type": "type",
-      "timestamp": 698029,
+      "timestamp": 722729,
       "description": "[챕터 4: taskboard] '체크 리스트를 입력하세요.' 입력창에 '항목 2번' 입력 후 엔터(Enter)",
       "cursor": {
         "x": 681,
@@ -4684,13 +4684,13 @@
     {
       "id": 423,
       "type": "wait",
-      "timestamp": 699662,
+      "timestamp": 724362,
       "description": "[챕터 4: taskboard] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 424,
       "type": "type",
-      "timestamp": 700829,
+      "timestamp": 725529,
       "description": "[챕터 4: taskboard] '체크 리스트를 입력하세요.' 입력창에 '항목 3번' 입력",
       "cursor": {
         "x": 681,
@@ -4707,13 +4707,13 @@
     {
       "id": 425,
       "type": "wait",
-      "timestamp": 702445,
+      "timestamp": 727145,
       "description": "[챕터 4: taskboard] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 426,
       "type": "click",
-      "timestamp": 703912,
+      "timestamp": 728612,
       "description": "[챕터 4: taskboard] '부가 기능' 버튼 클릭",
       "cursor": {
         "x": 1269,
@@ -4729,13 +4729,13 @@
     {
       "id": 427,
       "type": "wait",
-      "timestamp": 705012,
+      "timestamp": 729712,
       "description": "[챕터 4: taskboard] '부가 기능' 버튼 반응 대기"
     },
     {
       "id": 428,
       "type": "click",
-      "timestamp": 706462,
+      "timestamp": 731162,
       "description": "[챕터 4: taskboard] '첨부파일 추가' 메뉴/링크 클릭",
       "cursor": {
         "x": 1213,
@@ -4751,13 +4751,13 @@
     {
       "id": 429,
       "type": "wait",
-      "timestamp": 707545,
+      "timestamp": 732245,
       "description": "[챕터 4: taskboard] '첨부파일 추가' 메뉴/링크 반응 대기"
     },
     {
       "id": 430,
       "type": "upload",
-      "timestamp": 708962,
+      "timestamp": 733662,
       "description": "[챕터 4: taskboard] [파일 첨부 팝업] '내 PC' 버튼에 '자료.pdf' 첨부",
       "cursor": {
         "x": 660,
@@ -4773,7 +4773,7 @@
     {
       "id": 431,
       "type": "click",
-      "timestamp": 710129,
+      "timestamp": 734829,
       "cursor": {
         "x": 935,
         "y": 382
@@ -4789,7 +4789,7 @@
     {
       "id": 432,
       "type": "click",
-      "timestamp": 710995,
+      "timestamp": 735695,
       "cursor": {
         "x": 1149,
         "y": 662
@@ -4805,13 +4805,13 @@
     {
       "id": 433,
       "type": "wait",
-      "timestamp": 712612,
+      "timestamp": 737312,
       "description": "[챕터 4: taskboard] 첨부 파일 업로드 및 목록 반영 대기"
     },
     {
       "id": 434,
       "type": "click",
-      "timestamp": 714145,
+      "timestamp": 738845,
       "description": "[챕터 4: taskboard] [파일 첨부 팝업] '저장' 버튼 클릭",
       "cursor": {
         "x": 924,
@@ -4827,13 +4827,13 @@
     {
       "id": 435,
       "type": "wait",
-      "timestamp": 715262,
+      "timestamp": 739962,
       "description": "[챕터 4: taskboard] [파일 첨부 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 436,
       "type": "click",
-      "timestamp": 718295,
+      "timestamp": 742995,
       "description": "[챕터 4: taskboard] '활동 내역' 메뉴/링크 클릭",
       "cursor": {
         "x": 846,
@@ -4849,13 +4849,13 @@
     {
       "id": 437,
       "type": "wait",
-      "timestamp": 719362,
+      "timestamp": 744062,
       "description": "[챕터 4: taskboard] '활동 내역' 메뉴/링크 반응 대기"
     },
     {
       "id": 438,
       "type": "click",
-      "timestamp": 720762,
+      "timestamp": 745462,
       "description": "[챕터 4: taskboard] '닫기' 버튼 클릭",
       "cursor": {
         "x": 1287,
@@ -4871,13 +4871,13 @@
     {
       "id": 439,
       "type": "wait",
-      "timestamp": 721895,
+      "timestamp": 746595,
       "description": "[챕터 4: taskboard] '닫기' 버튼 반응 대기"
     },
     {
       "id": 440,
       "type": "click",
-      "timestamp": 723512,
+      "timestamp": 748212,
       "description": "[챕터 4: taskboard] '할일 등록' 버튼 클릭",
       "cursor": {
         "x": 133,
@@ -4893,13 +4893,13 @@
     {
       "id": 441,
       "type": "wait",
-      "timestamp": 724612,
+      "timestamp": 749312,
       "description": "[챕터 4: taskboard] '할일 등록' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 442,
       "type": "type",
-      "timestamp": 726529,
+      "timestamp": 751229,
       "description": "[챕터 4: taskboard] '제목을 입력하세요.' 입력창에 '복무 규정 개정안 안내문 배포' 입력",
       "cursor": {
         "x": 724,
@@ -4916,13 +4916,13 @@
     {
       "id": 443,
       "type": "wait",
-      "timestamp": 727945,
+      "timestamp": 752645,
       "description": "[챕터 4: taskboard] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 444,
       "type": "click",
-      "timestamp": 732012,
+      "timestamp": 756712,
       "description": "[챕터 4: taskboard] [보드] '선택' 버튼 클릭",
       "cursor": {
         "x": 1252,
@@ -4938,13 +4938,13 @@
     {
       "id": 445,
       "type": "wait",
-      "timestamp": 733112,
+      "timestamp": 757812,
       "description": "[챕터 4: taskboard] [보드] '선택' 버튼 반응 대기"
     },
     {
       "id": 446,
       "type": "click",
-      "timestamp": 734545,
+      "timestamp": 759245,
       "description": "[챕터 4: taskboard] [보드 선택 팝업] '공동업무 보드' 요소 클릭",
       "cursor": {
         "x": 887,
@@ -4960,13 +4960,13 @@
     {
       "id": 447,
       "type": "wait",
-      "timestamp": 735679,
+      "timestamp": 760379,
       "description": "[챕터 4: taskboard] [보드 선택 팝업] '공동업무 보드' 요소 반응 대기"
     },
     {
       "id": 448,
       "type": "click",
-      "timestamp": 737095,
+      "timestamp": 761795,
       "description": "[챕터 4: taskboard] [그룹] '- 그룹 선택 - 할일 진행 해결 이슈 ' 요소에서 '진행' 선택",
       "cursor": {
         "x": 1217,
@@ -4982,13 +4982,13 @@
     {
       "id": 449,
       "type": "wait",
-      "timestamp": 738145,
+      "timestamp": 762845,
       "description": "[챕터 4: taskboard] [그룹] '- 그룹 선택 - 할일 진행 해결 이슈 ' 요소에서 '진행' 선택 반응 대기"
     },
     {
       "id": 450,
       "type": "click",
-      "timestamp": 739529,
+      "timestamp": 764229,
       "description": "[챕터 4: taskboard] [담당자] '선택' 버튼 클릭",
       "cursor": {
         "x": 735,
@@ -5004,13 +5004,13 @@
     {
       "id": 451,
       "type": "wait",
-      "timestamp": 740612,
+      "timestamp": 765312,
       "description": "[챕터 4: taskboard] [담당자] '선택' 버튼 반응 대기"
     },
     {
       "id": 452,
       "type": "click",
-      "timestamp": 742045,
+      "timestamp": 766745,
       "description": "[챕터 4: taskboard] [할일 배정 팝업] '김 김병훈 담당(사무처)' 요소 클릭",
       "cursor": {
         "x": 870,
@@ -5026,13 +5026,13 @@
     {
       "id": 453,
       "type": "wait",
-      "timestamp": 743129,
+      "timestamp": 767829,
       "description": "[챕터 4: taskboard] [할일 배정 팝업] '김 김병훈 담당(사무처)' 요소 반응 대기"
     },
     {
       "id": 454,
       "type": "click",
-      "timestamp": 744562,
+      "timestamp": 769262,
       "description": "[챕터 4: taskboard] [할일 배정 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 921,
@@ -5048,13 +5048,13 @@
     {
       "id": 455,
       "type": "wait",
-      "timestamp": 745645,
+      "timestamp": 770345,
       "description": "[챕터 4: taskboard] [할일 배정 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 456,
       "type": "click",
-      "timestamp": 747645,
+      "timestamp": 772345,
       "description": "[챕터 4: taskboard] [기한] #aglTaskReg_periodSetupBtn (button) 클릭",
       "cursor": {
         "x": 740,
@@ -5070,13 +5070,13 @@
     {
       "id": 457,
       "type": "wait",
-      "timestamp": 748745,
+      "timestamp": 773445,
       "description": "[챕터 4: taskboard] [기한] #aglTaskReg_periodSetupBtn (button) 반응 대기"
     },
     {
       "id": 458,
       "type": "click",
-      "timestamp": 750229,
+      "timestamp": 774929,
       "description": "[챕터 4: taskboard] '3' 메뉴/링크 클릭",
       "cursor": {
         "x": 812,
@@ -5092,13 +5092,13 @@
     {
       "id": 459,
       "type": "wait",
-      "timestamp": 751312,
+      "timestamp": 776012,
       "description": "[챕터 4: taskboard] '3' 메뉴/링크 반응 대기"
     },
     {
       "id": 460,
       "type": "click",
-      "timestamp": 752295,
+      "timestamp": 776995,
       "description": "[챕터 4: taskboard] [기한] '종일' 요소 클릭",
       "cursor": {
         "x": 751,
@@ -5114,13 +5114,13 @@
     {
       "id": 461,
       "type": "wait",
-      "timestamp": 753379,
+      "timestamp": 778079,
       "description": "[챕터 4: taskboard] [기한] '종일' 요소 반응 대기"
     },
     {
       "id": 462,
       "type": "click",
-      "timestamp": 754345,
+      "timestamp": 779045,
       "description": "[챕터 4: taskboard] [기한] 'hh:mm' 입력창 클릭",
       "cursor": {
         "x": 844,
@@ -5136,13 +5136,13 @@
     {
       "id": 463,
       "type": "wait",
-      "timestamp": 755429,
+      "timestamp": 780129,
       "description": "[챕터 4: taskboard] [기한] 'hh:mm' 입력창 반응 대기"
     },
     {
       "id": 464,
       "type": "click",
-      "timestamp": 756479,
+      "timestamp": 781179,
       "description": "[챕터 4: taskboard] '19:00' 요소 클릭",
       "cursor": {
         "x": 844,
@@ -5158,13 +5158,13 @@
     {
       "id": 465,
       "type": "wait",
-      "timestamp": 757579,
+      "timestamp": 782279,
       "description": "[챕터 4: taskboard] '19:00' 요소 반응 대기"
     },
     {
       "id": 466,
       "type": "click",
-      "timestamp": 758645,
+      "timestamp": 783345,
       "description": "[챕터 4: taskboard] [기한] '확인' 버튼 클릭",
       "cursor": {
         "x": 820,
@@ -5180,13 +5180,13 @@
     {
       "id": 467,
       "type": "wait",
-      "timestamp": 759662,
+      "timestamp": 784362,
       "description": "[챕터 4: taskboard] [기한] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 468,
       "type": "type",
-      "timestamp": 761145,
+      "timestamp": 785845,
       "description": "[챕터 4: taskboard] '에디터 본문' 입력 영역에 '복무 규정 개정안 안내문 배포하겠습니다.' 입력",
       "cursor": {
         "x": 884,
@@ -5203,13 +5203,13 @@
     {
       "id": 469,
       "type": "wait",
-      "timestamp": 763062,
+      "timestamp": 787762,
       "description": "[챕터 4: taskboard] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 470,
       "type": "click",
-      "timestamp": 764362,
+      "timestamp": 789062,
       "description": "[챕터 4: taskboard] '저장' 버튼 클릭",
       "cursor": {
         "x": 929,
@@ -5225,13 +5225,13 @@
     {
       "id": 471,
       "type": "wait",
-      "timestamp": 765579,
+      "timestamp": 790279,
       "description": "[챕터 4: taskboard] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 472,
       "type": "click",
-      "timestamp": 767679,
+      "timestamp": 792379,
       "description": "[챕터 4: taskboard] [알림 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 933,
@@ -5247,13 +5247,13 @@
     {
       "id": 473,
       "type": "wait",
-      "timestamp": 768712,
+      "timestamp": 793412,
       "description": "[챕터 4: taskboard] [알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 474,
       "type": "click",
-      "timestamp": 770712,
+      "timestamp": 795412,
       "description": "[챕터 4: taskboard] '복무 규정 개정안 안내문 배포 11-03' 요소 클릭",
       "cursor": {
         "x": 693,
@@ -5269,13 +5269,13 @@
     {
       "id": 475,
       "type": "wait",
-      "timestamp": 771795,
+      "timestamp": 796495,
       "description": "[챕터 4: taskboard] '복무 규정 개정안 안내문 배포 11-03' 요소 반응 대기"
     },
     {
       "id": 476,
       "type": "click",
-      "timestamp": 773145,
+      "timestamp": 797845,
       "description": "[챕터 4: taskboard] '라벨 추가' 버튼 클릭",
       "cursor": {
         "x": 1238,
@@ -5291,13 +5291,13 @@
     {
       "id": 477,
       "type": "wait",
-      "timestamp": 774245,
+      "timestamp": 798945,
       "description": "[챕터 4: taskboard] '라벨 추가' 버튼 반응 대기"
     },
     {
       "id": 478,
       "type": "click",
-      "timestamp": 775729,
+      "timestamp": 800429,
       "description": "[챕터 4: taskboard] [라벨 선택 팝업] '배포' 요소 클릭",
       "cursor": {
         "x": 917,
@@ -5313,13 +5313,13 @@
     {
       "id": 479,
       "type": "wait",
-      "timestamp": 776812,
+      "timestamp": 801512,
       "description": "[챕터 4: taskboard] [라벨 선택 팝업] '배포' 요소 반응 대기"
     },
     {
       "id": 480,
       "type": "click",
-      "timestamp": 778029,
+      "timestamp": 802729,
       "description": "[챕터 4: taskboard] [라벨 선택 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 937,
@@ -5335,13 +5335,13 @@
     {
       "id": 481,
       "type": "wait",
-      "timestamp": 778995,
+      "timestamp": 803695,
       "description": "[챕터 4: taskboard] [라벨 선택 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 482,
       "type": "click",
-      "timestamp": 780512,
+      "timestamp": 805212,
       "description": "[챕터 4: taskboard] '댓글 작성' 버튼 클릭",
       "cursor": {
         "x": 1230,
@@ -5357,13 +5357,13 @@
     {
       "id": 483,
       "type": "wait",
-      "timestamp": 781595,
+      "timestamp": 806295,
       "description": "[챕터 4: taskboard] '댓글 작성' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 484,
       "type": "type",
-      "timestamp": 783662,
+      "timestamp": 808362,
       "description": "[챕터 4: taskboard] '에디터 본문' 입력 영역에 '배포하겠습니다.' 입력",
       "cursor": {
         "x": 921,
@@ -5380,13 +5380,13 @@
     {
       "id": 485,
       "type": "wait",
-      "timestamp": 787812,
+      "timestamp": 812512,
       "description": "[챕터 4: taskboard] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 486,
       "type": "click",
-      "timestamp": 789112,
+      "timestamp": 813812,
       "description": "[챕터 4: taskboard] '저장' 버튼 클릭",
       "cursor": {
         "x": 940,
@@ -5402,13 +5402,13 @@
     {
       "id": 487,
       "type": "wait",
-      "timestamp": 790212,
+      "timestamp": 814912,
       "description": "[챕터 4: taskboard] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 488,
       "type": "click",
-      "timestamp": 792262,
+      "timestamp": 816962,
       "description": "[챕터 4: taskboard] '닫기' 버튼 클릭",
       "cursor": {
         "x": 1291,
@@ -5424,13 +5424,13 @@
     {
       "id": 489,
       "type": "wait",
-      "timestamp": 793329,
+      "timestamp": 818029,
       "description": "[챕터 4: taskboard] '닫기' 버튼 반응 대기"
     },
     {
       "id": 490,
       "type": "dragAndDrop",
-      "timestamp": 797429,
+      "timestamp": 822129,
       "description": "[챕터 4: taskboard] '배포 복무 규정 개정안 안내문 배포 11' 요소을(를) li 요소으로 드래그 앤 드롭",
       "cursor": {
         "x": 720,
@@ -5454,13 +5454,13 @@
     {
       "id": 491,
       "type": "wait",
-      "timestamp": 799112,
+      "timestamp": 823812,
       "description": "[챕터 4: taskboard] 드래그 앤 드롭 반영 대기"
     },
     {
       "id": 492,
       "type": "dragAndDrop",
-      "timestamp": 803379,
+      "timestamp": 828079,
       "description": "[챕터 4: taskboard] '점검 교과목 시간표 최종 점검 11-03' 요소을(를) li 요소으로 드래그 앤 드롭",
       "cursor": {
         "x": 415,
@@ -5484,13 +5484,13 @@
     {
       "id": 493,
       "type": "wait",
-      "timestamp": 804945,
+      "timestamp": 829645,
       "description": "[챕터 4: taskboard] 드래그 앤 드롭 반영 대기"
     },
     {
       "id": 494,
       "type": "click",
-      "timestamp": 806629,
+      "timestamp": 831329,
       "description": "[챕터 4: taskboard] '점검 교과목 시간표 최종 점검 11-03' 요소 클릭",
       "cursor": {
         "x": 1354,
@@ -5506,13 +5506,13 @@
     {
       "id": 495,
       "type": "wait",
-      "timestamp": 807695,
+      "timestamp": 832395,
       "description": "[챕터 4: taskboard] '점검 교과목 시간표 최종 점검 11-03' 요소 반응 대기"
     },
     {
       "id": 496,
       "type": "click",
-      "timestamp": 809079,
+      "timestamp": 833779,
       "description": "[챕터 4: taskboard] '메뉴' 버튼 클릭",
       "cursor": {
         "x": 1275,
@@ -5528,13 +5528,13 @@
     {
       "id": 497,
       "type": "wait",
-      "timestamp": 810162,
+      "timestamp": 834862,
       "description": "[챕터 4: taskboard] '메뉴' 버튼 반응 대기"
     },
     {
       "id": 498,
       "type": "click",
-      "timestamp": 811579,
+      "timestamp": 836279,
       "description": "[챕터 4: taskboard] '이동(댓글)' 메뉴/링크 클릭",
       "cursor": {
         "x": 1253,
@@ -5550,13 +5550,13 @@
     {
       "id": 499,
       "type": "wait",
-      "timestamp": 812679,
+      "timestamp": 837379,
       "description": "[챕터 4: taskboard] '이동(댓글)' 메뉴/링크 반응 대기"
     },
     {
       "id": 500,
       "type": "click",
-      "timestamp": 814145,
+      "timestamp": 838845,
       "description": "[챕터 4: taskboard] [알림 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 890,
@@ -5572,13 +5572,13 @@
     {
       "id": 501,
       "type": "wait",
-      "timestamp": 815229,
+      "timestamp": 839929,
       "description": "[챕터 4: taskboard] [알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 502,
       "type": "click",
-      "timestamp": 817262,
+      "timestamp": 841962,
       "description": "[챕터 4: taskboard] [보드 선택 팝업] '선택' 버튼 클릭",
       "cursor": {
         "x": 1111,
@@ -5594,13 +5594,13 @@
     {
       "id": 503,
       "type": "wait",
-      "timestamp": 818345,
+      "timestamp": 843045,
       "description": "[챕터 4: taskboard] [보드 선택 팝업] '선택' 버튼 반응 대기"
     },
     {
       "id": 504,
       "type": "click",
-      "timestamp": 819812,
+      "timestamp": 844512,
       "description": "[챕터 4: taskboard] [보드 선택 팝업] '공동업무 보드' 요소 클릭",
       "cursor": {
         "x": 861,
@@ -5616,13 +5616,13 @@
     {
       "id": 505,
       "type": "wait",
-      "timestamp": 820945,
+      "timestamp": 845645,
       "description": "[챕터 4: taskboard] [보드 선택 팝업] '공동업무 보드' 요소 반응 대기"
     },
     {
       "id": 506,
       "type": "click",
-      "timestamp": 822445,
+      "timestamp": 847145,
       "description": "[챕터 4: taskboard] [보드 선택 팝업] '- 그룹 선택 - 할일 진행 해결 이슈 ' 요소에서 '해결' 선택",
       "cursor": {
         "x": 1110,
@@ -5638,13 +5638,13 @@
     {
       "id": 507,
       "type": "wait",
-      "timestamp": 823445,
+      "timestamp": 848145,
       "description": "[챕터 4: taskboard] [보드 선택 팝업] '- 그룹 선택 - 할일 진행 해결 이슈 ' 요소에서 '해결' 선택 반응 대기"
     },
     {
       "id": 508,
       "type": "click",
-      "timestamp": 824945,
+      "timestamp": 849645,
       "description": "[챕터 4: taskboard] [보드 선택 팝업] '- 할일 선택 - 복무 규정 개정안 안내' 요소에서 '복무 규정 개정안 안내문 배포' 선택",
       "cursor": {
         "x": 929,
@@ -5660,13 +5660,13 @@
     {
       "id": 509,
       "type": "wait",
-      "timestamp": 825945,
+      "timestamp": 850645,
       "description": "[챕터 4: taskboard] [보드 선택 팝업] '- 할일 선택 - 복무 규정 개정안 안내' 요소에서 '복무 규정 개정안 안내문 배포' 선택 반응 대기"
     },
     {
       "id": 510,
       "type": "click",
-      "timestamp": 827429,
+      "timestamp": 852129,
       "description": "[챕터 4: taskboard] [보드 선택 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 932,
@@ -5682,13 +5682,13 @@
     {
       "id": 511,
       "type": "wait",
-      "timestamp": 828495,
+      "timestamp": 853195,
       "description": "[챕터 4: taskboard] [보드 선택 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 512,
       "type": "click",
-      "timestamp": 830562,
+      "timestamp": 855262,
       "description": "[챕터 4: taskboard] [알림 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 965,
@@ -5704,13 +5704,13 @@
     {
       "id": 513,
       "type": "wait",
-      "timestamp": 831629,
+      "timestamp": 856329,
       "description": "[챕터 4: taskboard] [알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 514,
       "type": "click",
-      "timestamp": 833645,
+      "timestamp": 858345,
       "description": "[챕터 4: taskboard] '배포 복무 규정 개정안 안내문 배포 11' 요소 클릭",
       "cursor": {
         "x": 1002,
@@ -5726,13 +5726,13 @@
     {
       "id": 515,
       "type": "wait",
-      "timestamp": 836795,
+      "timestamp": 861495,
       "description": "[챕터 4: taskboard] '배포 복무 규정 개정안 안내문 배포 11' 요소 반응 대기"
     },
     {
       "id": 516,
       "type": "click",
-      "timestamp": 838195,
+      "timestamp": 862895,
       "description": "[챕터 4: taskboard] '닫기' 버튼 클릭",
       "cursor": {
         "x": 1276,
@@ -5748,13 +5748,13 @@
     {
       "id": 517,
       "type": "wait",
-      "timestamp": 839279,
+      "timestamp": 863979,
       "description": "[챕터 4: taskboard] '닫기' 버튼 반응 대기"
     },
     {
       "id": 518,
       "type": "click",
-      "timestamp": 840629,
+      "timestamp": 865329,
       "description": "[챕터 4: taskboard] '공동업무 보드' 버튼 클릭",
       "cursor": {
         "x": 511,
@@ -5770,13 +5770,13 @@
     {
       "id": 519,
       "type": "wait",
-      "timestamp": 841745,
+      "timestamp": 866445,
       "description": "[챕터 4: taskboard] '공동업무 보드' 버튼 반응 대기"
     },
     {
       "id": 520,
       "type": "click",
-      "timestamp": 843129,
+      "timestamp": 867829,
       "description": "[챕터 4: taskboard] '삭제함' 메뉴/링크 클릭",
       "cursor": {
         "x": 481,
@@ -5792,13 +5792,13 @@
     {
       "id": 521,
       "type": "wait",
-      "timestamp": 844229,
+      "timestamp": 868929,
       "description": "[챕터 4: taskboard] '삭제함' 메뉴/링크 반응 대기"
     },
     {
       "id": 522,
       "type": "click",
-      "timestamp": 845679,
+      "timestamp": 870379,
       "description": "[챕터 4: taskboard] [삭제함 팝업] button 요소 클릭",
       "cursor": {
         "x": 1168,
@@ -5814,13 +5814,13 @@
     {
       "id": 523,
       "type": "wait",
-      "timestamp": 846779,
+      "timestamp": 871479,
       "description": "[챕터 4: taskboard] [삭제함 팝업] button 요소 반응 대기"
     },
     {
       "id": 524,
       "type": "click",
-      "timestamp": 848245,
+      "timestamp": 872945,
       "description": "[챕터 4: taskboard] '배포 복무 규정 개정안 안내문 배포 11' 요소 클릭",
       "cursor": {
         "x": 1062,
@@ -5836,13 +5836,13 @@
     {
       "id": 525,
       "type": "wait",
-      "timestamp": 849345,
+      "timestamp": 874045,
       "description": "[챕터 4: taskboard] '배포 복무 규정 개정안 안내문 배포 11' 요소 반응 대기"
     },
     {
       "id": 526,
       "type": "click",
-      "timestamp": 850745,
+      "timestamp": 875445,
       "description": "[챕터 4: taskboard] '메뉴' 버튼 클릭",
       "cursor": {
         "x": 1268,
@@ -5858,13 +5858,13 @@
     {
       "id": 527,
       "type": "wait",
-      "timestamp": 851845,
+      "timestamp": 876545,
       "description": "[챕터 4: taskboard] '메뉴' 버튼 반응 대기"
     },
     {
       "id": 528,
       "type": "click",
-      "timestamp": 853295,
+      "timestamp": 877995,
       "description": "[챕터 4: taskboard] '보관' 메뉴/링크 클릭",
       "cursor": {
         "x": 1182,
@@ -5880,13 +5880,13 @@
     {
       "id": 529,
       "type": "wait",
-      "timestamp": 854362,
+      "timestamp": 879062,
       "description": "[챕터 4: taskboard] '보관' 메뉴/링크 반응 대기"
     },
     {
       "id": 530,
       "type": "click",
-      "timestamp": 855829,
+      "timestamp": 880529,
       "description": "[챕터 4: taskboard] [알림 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 923,
@@ -5902,13 +5902,13 @@
     {
       "id": 531,
       "type": "wait",
-      "timestamp": 856879,
+      "timestamp": 881579,
       "description": "[챕터 4: taskboard] [알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 532,
       "type": "click",
-      "timestamp": 858895,
+      "timestamp": 883595,
       "description": "[챕터 4: taskboard] '공동업무 보드' 버튼 클릭",
       "cursor": {
         "x": 457,
@@ -5924,13 +5924,13 @@
     {
       "id": 533,
       "type": "wait",
-      "timestamp": 859945,
+      "timestamp": 884645,
       "description": "[챕터 4: taskboard] '공동업무 보드' 버튼 반응 대기"
     },
     {
       "id": 534,
       "type": "click",
-      "timestamp": 861379,
+      "timestamp": 886079,
       "description": "[챕터 4: taskboard] '보관함' 메뉴/링크 클릭",
       "cursor": {
         "x": 478,
@@ -5946,13 +5946,13 @@
     {
       "id": 535,
       "type": "wait",
-      "timestamp": 862429,
+      "timestamp": 887129,
       "description": "[챕터 4: taskboard] '보관함' 메뉴/링크 반응 대기"
     },
     {
       "id": 536,
       "type": "click",
-      "timestamp": 863895,
+      "timestamp": 888595,
       "description": "[챕터 4: taskboard] [보관함 팝업] '복원' 버튼 클릭",
       "cursor": {
         "x": 1146,
@@ -5968,13 +5968,13 @@
     {
       "id": 537,
       "type": "wait",
-      "timestamp": 864962,
+      "timestamp": 889662,
       "description": "[챕터 4: taskboard] [보관함 팝업] '복원' 버튼 반응 대기"
     },
     {
       "id": 538,
       "type": "click",
-      "timestamp": 866395,
+      "timestamp": 891095,
       "description": "[챕터 4: taskboard] [알림 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 878,
@@ -5990,13 +5990,13 @@
     {
       "id": 539,
       "type": "wait",
-      "timestamp": 867479,
+      "timestamp": 892179,
       "description": "[챕터 4: taskboard] [알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 540,
       "type": "click",
-      "timestamp": 869529,
+      "timestamp": 894229,
       "description": "[챕터 4: taskboard] [알림 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 966,
@@ -6012,13 +6012,13 @@
     {
       "id": 541,
       "type": "wait",
-      "timestamp": 870629,
+      "timestamp": 895329,
       "description": "[챕터 4: taskboard] [알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 542,
       "type": "click",
-      "timestamp": 872629,
+      "timestamp": 897329,
       "description": "[챕터 4: taskboard] [보관함 팝업] button 요소 클릭",
       "cursor": {
         "x": 1177,
@@ -6034,13 +6034,13 @@
     {
       "id": 543,
       "type": "wait",
-      "timestamp": 873712,
+      "timestamp": 898412,
       "description": "[챕터 4: taskboard] [보관함 팝업] button 요소 반응 대기"
     },
     {
       "id": 544,
       "type": "click",
-      "timestamp": 875095,
+      "timestamp": 899795,
       "description": "[챕터 4: taskboard] '공동업무 보드' 버튼 클릭",
       "cursor": {
         "x": 498,
@@ -6056,13 +6056,13 @@
     {
       "id": 545,
       "type": "wait",
-      "timestamp": 876179,
+      "timestamp": 900879,
       "description": "[챕터 4: taskboard] '공동업무 보드' 버튼 반응 대기"
     },
     {
       "id": 546,
       "type": "click",
-      "timestamp": 877562,
+      "timestamp": 902262,
       "description": "[챕터 4: taskboard] '잠금' 메뉴/링크 클릭",
       "cursor": {
         "x": 501,
@@ -6078,13 +6078,13 @@
     {
       "id": 547,
       "type": "wait",
-      "timestamp": 878645,
+      "timestamp": 903345,
       "description": "[챕터 4: taskboard] '잠금' 메뉴/링크 반응 대기"
     },
     {
       "id": 548,
       "type": "click",
-      "timestamp": 880329,
+      "timestamp": 905029,
       "description": "[챕터 4: taskboard] [알림 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 942,
@@ -6100,13 +6100,13 @@
     {
       "id": 549,
       "type": "wait",
-      "timestamp": 881345,
+      "timestamp": 906045,
       "description": "[챕터 4: taskboard] [알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 550,
       "type": "click",
-      "timestamp": 883395,
+      "timestamp": 908095,
       "description": "[챕터 4: taskboard] '배포 복무 규정 개정안 안내문 배포 11' 요소 클릭",
       "cursor": {
         "x": 1089,
@@ -6122,13 +6122,13 @@
     {
       "id": 551,
       "type": "wait",
-      "timestamp": 884462,
+      "timestamp": 909162,
       "description": "[챕터 4: taskboard] '배포 복무 규정 개정안 안내문 배포 11' 요소 반응 대기"
     },
     {
       "id": 552,
       "type": "click",
-      "timestamp": 885912,
+      "timestamp": 910612,
       "description": "[챕터 4: taskboard] '메뉴' 버튼 클릭",
       "cursor": {
         "x": 1279,
@@ -6144,13 +6144,13 @@
     {
       "id": 553,
       "type": "wait",
-      "timestamp": 886945,
+      "timestamp": 911645,
       "description": "[챕터 4: taskboard] '메뉴' 버튼 반응 대기"
     },
     {
       "id": 554,
       "type": "click",
-      "timestamp": 888345,
+      "timestamp": 913045,
       "description": "[챕터 4: taskboard] '닫기' 버튼 클릭",
       "cursor": {
         "x": 1277,
@@ -6166,13 +6166,13 @@
     {
       "id": 555,
       "type": "wait",
-      "timestamp": 889445,
+      "timestamp": 914145,
       "description": "[챕터 4: taskboard] '닫기' 버튼 반응 대기"
     },
     {
       "id": 556,
       "type": "click",
-      "timestamp": 890829,
+      "timestamp": 915529,
       "description": "[챕터 4: taskboard] '나의 할일' 메뉴/링크 클릭",
       "cursor": {
         "x": 104,
@@ -6188,19 +6188,19 @@
     {
       "id": 557,
       "type": "wait",
-      "timestamp": 891912,
+      "timestamp": 916612,
       "description": "[챕터 4: taskboard] '나의 할일' 메뉴/링크 반응 대기"
     },
     {
       "id": 558,
       "type": "wait",
-      "timestamp": 892929,
+      "timestamp": 917629,
       "description": "[챕터 4: taskboard] 최종 시연 결과 화면 클로즈업 확인 대기"
     },
     {
       "id": 559,
       "type": "click",
-      "timestamp": 912329,
+      "timestamp": 937029,
       "description": "[챕터 5: project] '포탈 전체메뉴' 버튼 클릭",
       "cursor": {
         "x": 1363,
@@ -6216,13 +6216,13 @@
     {
       "id": 560,
       "type": "wait",
-      "timestamp": 913629,
+      "timestamp": 938329,
       "description": "[챕터 5: project] '포탈 전체메뉴' 버튼 반응 대기"
     },
     {
       "id": 561,
       "type": "click",
-      "timestamp": 915312,
+      "timestamp": 940012,
       "description": "[챕터 5: project] '프로젝트' 메뉴/링크 클릭",
       "cursor": {
         "x": 715,
@@ -6238,7 +6238,7 @@
     {
       "id": 562,
       "type": "click",
-      "timestamp": 922579,
+      "timestamp": 947279,
       "description": "[챕터 5: project] '종합 현황' 메뉴/링크 클릭",
       "cursor": {
         "x": 82,
@@ -6254,13 +6254,13 @@
     {
       "id": 563,
       "type": "wait",
-      "timestamp": 923912,
+      "timestamp": 948612,
       "description": "[챕터 5: project] '종합 현황' 메뉴/링크 반응 대기"
     },
     {
       "id": 564,
       "type": "click",
-      "timestamp": 925446,
+      "timestamp": 950146,
       "description": "[챕터 5: project] '업무 현황' 메뉴/링크 클릭",
       "cursor": {
         "x": 81,
@@ -6276,13 +6276,13 @@
     {
       "id": 565,
       "type": "wait",
-      "timestamp": 926562,
+      "timestamp": 951262,
       "description": "[챕터 5: project] '업무 현황' 메뉴/링크 반응 대기"
     },
     {
       "id": 566,
       "type": "click",
-      "timestamp": 928029,
+      "timestamp": 952729,
       "description": "[챕터 5: project] '내 프로젝트' 메뉴/링크 클릭",
       "cursor": {
         "x": 94,
@@ -6298,13 +6298,13 @@
     {
       "id": 567,
       "type": "wait",
-      "timestamp": 929212,
+      "timestamp": 953912,
       "description": "[챕터 5: project] '내 프로젝트' 메뉴/링크 반응 대기"
     },
     {
       "id": 568,
       "type": "click",
-      "timestamp": 930712,
+      "timestamp": 955412,
       "description": "[챕터 5: project] '내 일감' 메뉴/링크 클릭",
       "cursor": {
         "x": 92,
@@ -6320,13 +6320,13 @@
     {
       "id": 569,
       "type": "wait",
-      "timestamp": 931879,
+      "timestamp": 956579,
       "description": "[챕터 5: project] '내 일감' 메뉴/링크 반응 대기"
     },
     {
       "id": 570,
       "type": "click",
-      "timestamp": 933312,
+      "timestamp": 958012,
       "description": "[챕터 5: project] '내 이슈' 메뉴/링크 클릭",
       "cursor": {
         "x": 92,
@@ -6342,13 +6342,13 @@
     {
       "id": 571,
       "type": "wait",
-      "timestamp": 934579,
+      "timestamp": 959279,
       "description": "[챕터 5: project] '내 이슈' 메뉴/링크 반응 대기"
     },
     {
       "id": 572,
       "type": "click",
-      "timestamp": 936079,
+      "timestamp": 960779,
       "description": "[챕터 5: project] '내 프로젝트' 메뉴/링크 클릭",
       "cursor": {
         "x": 75,
@@ -6364,13 +6364,13 @@
     {
       "id": 573,
       "type": "wait",
-      "timestamp": 937279,
+      "timestamp": 961979,
       "description": "[챕터 5: project] '내 프로젝트' 메뉴/링크 반응 대기"
     },
     {
       "id": 574,
       "type": "click",
-      "timestamp": 938779,
+      "timestamp": 963479,
       "description": "[챕터 5: project] '프로젝트 추가' 버튼 클릭",
       "cursor": {
         "x": 126,
@@ -6386,13 +6386,13 @@
     {
       "id": 575,
       "type": "wait",
-      "timestamp": 940079,
+      "timestamp": 964779,
       "description": "[챕터 5: project] '프로젝트 추가' 버튼 반응 대기"
     },
     {
       "id": 576,
       "type": "click",
-      "timestamp": 941696,
+      "timestamp": 966396,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '새 프로젝트 생성' 버튼 클릭",
       "cursor": {
         "x": 937,
@@ -6408,13 +6408,13 @@
     {
       "id": 577,
       "type": "wait",
-      "timestamp": 942946,
+      "timestamp": 967646,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '새 프로젝트 생성' 버튼 반응 대기"
     },
     {
       "id": 578,
       "type": "click",
-      "timestamp": 944479,
+      "timestamp": 969179,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '진행' 버튼 클릭",
       "cursor": {
         "x": 852,
@@ -6430,13 +6430,13 @@
     {
       "id": 579,
       "type": "wait",
-      "timestamp": 945629,
+      "timestamp": 970329,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '진행' 버튼 반응 대기"
     },
     {
       "id": 580,
       "type": "type",
-      "timestamp": 947079,
+      "timestamp": 971779,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '한국어' 입력창에 '학사제도 및 교육과정 개편 프로젝트' 입력",
       "cursor": {
         "x": 779,
@@ -6453,13 +6453,13 @@
     {
       "id": 581,
       "type": "wait",
-      "timestamp": 949012,
+      "timestamp": 973712,
       "description": "[챕터 5: project] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 582,
       "type": "click",
-      "timestamp": 950512,
+      "timestamp": 975212,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '선택' 버튼 클릭",
       "cursor": {
         "x": 1271,
@@ -6475,13 +6475,13 @@
     {
       "id": 583,
       "type": "wait",
-      "timestamp": 952096,
+      "timestamp": 976796,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '선택' 버튼 반응 대기"
     },
     {
       "id": 584,
       "type": "click",
-      "timestamp": 953679,
+      "timestamp": 978379,
       "description": "[챕터 5: project] [관리자 팝업] 트리 '부서' 항목 클릭",
       "cursor": {
         "x": 581,
@@ -6497,13 +6497,13 @@
     {
       "id": 585,
       "type": "wait",
-      "timestamp": 955046,
+      "timestamp": 979746,
       "description": "[챕터 5: project] [관리자 팝업] 트리 '부서' 항목 반응 대기"
     },
     {
       "id": 586,
       "type": "click",
-      "timestamp": 956662,
+      "timestamp": 981362,
       "description": "[챕터 5: project] [관리자 팝업] 트리 '대학본부' 항목 클릭",
       "cursor": {
         "x": 631,
@@ -6519,13 +6519,13 @@
     {
       "id": 587,
       "type": "wait",
-      "timestamp": 958229,
+      "timestamp": 982929,
       "description": "[챕터 5: project] [관리자 팝업] 트리 '대학본부' 항목 반응 대기"
     },
     {
       "id": 588,
       "type": "click",
-      "timestamp": 959796,
+      "timestamp": 984496,
       "description": "[챕터 5: project] [관리자 팝업] 트리 '사무처' 항목 클릭",
       "cursor": {
         "x": 616,
@@ -6541,13 +6541,13 @@
     {
       "id": 589,
       "type": "wait",
-      "timestamp": 961046,
+      "timestamp": 985746,
       "description": "[챕터 5: project] [관리자 팝업] 트리 '사무처' 항목 반응 대기"
     },
     {
       "id": 590,
       "type": "click",
-      "timestamp": 962646,
+      "timestamp": 987346,
       "description": "[챕터 5: project] [관리자 팝업] '임시계정(전임) 전임교원 정보보안센터' 요소 클릭",
       "cursor": {
         "x": 911,
@@ -6563,13 +6563,13 @@
     {
       "id": 591,
       "type": "wait",
-      "timestamp": 963946,
+      "timestamp": 988646,
       "description": "[챕터 5: project] [관리자 팝업] '임시계정(전임) 전임교원 정보보안센터' 요소 반응 대기"
     },
     {
       "id": 592,
       "type": "click",
-      "timestamp": 965479,
+      "timestamp": 990179,
       "description": "[챕터 5: project] [관리자 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 934,
@@ -6585,13 +6585,13 @@
     {
       "id": 593,
       "type": "wait",
-      "timestamp": 966879,
+      "timestamp": 991579,
       "description": "[챕터 5: project] [관리자 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 594,
       "type": "click",
-      "timestamp": 969046,
+      "timestamp": 993746,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '선택' 버튼 클릭",
       "cursor": {
         "x": 1280,
@@ -6607,13 +6607,13 @@
     {
       "id": 595,
       "type": "wait",
-      "timestamp": 970429,
+      "timestamp": 995129,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '선택' 버튼 반응 대기"
     },
     {
       "id": 596,
       "type": "click",
-      "timestamp": 971996,
+      "timestamp": 996696,
       "description": "[챕터 5: project] [담당자 팝업] 트리 '부서' 항목 클릭",
       "cursor": {
         "x": 593,
@@ -6629,13 +6629,13 @@
     {
       "id": 597,
       "type": "wait",
-      "timestamp": 973512,
+      "timestamp": 998212,
       "description": "[챕터 5: project] [담당자 팝업] 트리 '부서' 항목 반응 대기"
     },
     {
       "id": 598,
       "type": "click",
-      "timestamp": 975079,
+      "timestamp": 999779,
       "description": "[챕터 5: project] [담당자 팝업] 트리 '대학본부' 항목 클릭",
       "cursor": {
         "x": 606,
@@ -6651,13 +6651,13 @@
     {
       "id": 599,
       "type": "wait",
-      "timestamp": 976546,
+      "timestamp": 1001246,
       "description": "[챕터 5: project] [담당자 팝업] 트리 '대학본부' 항목 반응 대기"
     },
     {
       "id": 600,
       "type": "click",
-      "timestamp": 978062,
+      "timestamp": 1002762,
       "description": "[챕터 5: project] [담당자 팝업] 트리 '사무처' 항목 클릭",
       "cursor": {
         "x": 618,
@@ -6673,13 +6673,13 @@
     {
       "id": 601,
       "type": "wait",
-      "timestamp": 979346,
+      "timestamp": 1004046,
       "description": "[챕터 5: project] [담당자 팝업] 트리 '사무처' 항목 반응 대기"
     },
     {
       "id": 602,
       "type": "click",
-      "timestamp": 980946,
+      "timestamp": 1005646,
       "description": "[챕터 5: project] [담당자 팝업] '김병훈 담당 사무처' 요소 클릭",
       "cursor": {
         "x": 831,
@@ -6695,13 +6695,13 @@
     {
       "id": 603,
       "type": "wait",
-      "timestamp": 982146,
+      "timestamp": 1006846,
       "description": "[챕터 5: project] [담당자 팝업] '김병훈 담당 사무처' 요소 반응 대기"
     },
     {
       "id": 604,
       "type": "click",
-      "timestamp": 983679,
+      "timestamp": 1008379,
       "description": "[챕터 5: project] [담당자 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 933,
@@ -6717,13 +6717,13 @@
     {
       "id": 605,
       "type": "wait",
-      "timestamp": 984929,
+      "timestamp": 1009629,
       "description": "[챕터 5: project] [담당자 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 606,
       "type": "type",
-      "timestamp": 986996,
+      "timestamp": 1011696,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '입력란' 입력창에 '김병훈' 입력",
       "cursor": {
         "x": 842,
@@ -6740,13 +6740,13 @@
     {
       "id": 607,
       "type": "wait",
-      "timestamp": 988096,
+      "timestamp": 1012796,
       "description": "[챕터 5: project] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 608,
       "type": "click",
-      "timestamp": 989462,
+      "timestamp": 1014162,
       "description": "[챕터 5: project] '김병훈 담당(사무처)' 요소 클릭",
       "cursor": {
         "x": 817,
@@ -6762,13 +6762,13 @@
     {
       "id": 609,
       "type": "wait",
-      "timestamp": 990812,
+      "timestamp": 1015512,
       "description": "[챕터 5: project] '김병훈 담당(사무처)' 요소 반응 대기"
     },
     {
       "id": 610,
       "type": "type",
-      "timestamp": 992412,
+      "timestamp": 1017112,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] 'prjInfoerForm_desc' 입력창에 '학과별 교육과정 개편안 수합 및 학칙 개정안 마련을 위한 협업 프로젝트입니다.' 입력",
       "cursor": {
         "x": 832,
@@ -6785,13 +6785,13 @@
     {
       "id": 611,
       "type": "wait",
-      "timestamp": 995696,
+      "timestamp": 1020396,
       "description": "[챕터 5: project] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 612,
       "type": "click",
-      "timestamp": 997246,
+      "timestamp": 1021946,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] 'yyyy-mm-dd' 입력창 클릭",
       "cursor": {
         "x": 837,
@@ -6807,13 +6807,13 @@
     {
       "id": 613,
       "type": "wait",
-      "timestamp": 998579,
+      "timestamp": 1023279,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] 'yyyy-mm-dd' 입력창 반응 대기"
     },
     {
       "id": 614,
       "type": "click",
-      "timestamp": 999512,
+      "timestamp": 1024212,
       "description": "[챕터 5: project] '30' 메뉴/링크 클릭",
       "cursor": {
         "x": 799,
@@ -6829,13 +6829,13 @@
     {
       "id": 615,
       "type": "wait",
-      "timestamp": 1000762,
+      "timestamp": 1025462,
       "description": "[챕터 5: project] '30' 메뉴/링크 반응 대기"
     },
     {
       "id": 616,
       "type": "click",
-      "timestamp": 1001679,
+      "timestamp": 1026379,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] 'yyyy-mm-dd' 입력창 클릭",
       "cursor": {
         "x": 945,
@@ -6851,13 +6851,13 @@
     {
       "id": 617,
       "type": "wait",
-      "timestamp": 1002912,
+      "timestamp": 1027612,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] 'yyyy-mm-dd' 입력창 반응 대기"
     },
     {
       "id": 618,
       "type": "click",
-      "timestamp": 1003796,
+      "timestamp": 1028496,
       "description": "[챕터 5: project] '다음달' 메뉴/링크 클릭",
       "cursor": {
         "x": 1090,
@@ -6873,13 +6873,13 @@
     {
       "id": 619,
       "type": "wait",
-      "timestamp": 1005096,
+      "timestamp": 1029796,
       "description": "[챕터 5: project] '다음달' 메뉴/링크 반응 대기"
     },
     {
       "id": 620,
       "type": "click",
-      "timestamp": 1005912,
+      "timestamp": 1030612,
       "description": "[챕터 5: project] '다음달' 메뉴/링크 클릭",
       "cursor": {
         "x": 1090,
@@ -6895,13 +6895,13 @@
     {
       "id": 621,
       "type": "wait",
-      "timestamp": 1007129,
+      "timestamp": 1031829,
       "description": "[챕터 5: project] '다음달' 메뉴/링크 반응 대기"
     },
     {
       "id": 622,
       "type": "click",
-      "timestamp": 1008012,
+      "timestamp": 1032712,
       "description": "[챕터 5: project] '다음달' 메뉴/링크 클릭",
       "cursor": {
         "x": 1090,
@@ -6917,13 +6917,13 @@
     {
       "id": 623,
       "type": "wait",
-      "timestamp": 1009179,
+      "timestamp": 1033879,
       "description": "[챕터 5: project] '다음달' 메뉴/링크 반응 대기"
     },
     {
       "id": 624,
       "type": "click",
-      "timestamp": 1010062,
+      "timestamp": 1034762,
       "description": "[챕터 5: project] '26' 메뉴/링크 클릭",
       "cursor": {
         "x": 1046,
@@ -6939,13 +6939,13 @@
     {
       "id": 625,
       "type": "wait",
-      "timestamp": 1011279,
+      "timestamp": 1035979,
       "description": "[챕터 5: project] '26' 메뉴/링크 반응 대기"
     },
     {
       "id": 626,
       "type": "click",
-      "timestamp": 1012062,
+      "timestamp": 1036762,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '일감선택' 버튼 클릭",
       "cursor": {
         "x": 775,
@@ -6961,13 +6961,13 @@
     {
       "id": 627,
       "type": "wait",
-      "timestamp": 1013262,
+      "timestamp": 1037962,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '일감선택' 버튼 반응 대기"
     },
     {
       "id": 628,
       "type": "click",
-      "timestamp": 1014996,
+      "timestamp": 1039696,
       "description": "[챕터 5: project] [일감 선택 팝업] '닫기' 버튼 클릭",
       "cursor": {
         "x": 1000,
@@ -6983,13 +6983,13 @@
     {
       "id": 629,
       "type": "wait",
-      "timestamp": 1016279,
+      "timestamp": 1040979,
       "description": "[챕터 5: project] [일감 선택 팝업] '닫기' 버튼 반응 대기"
     },
     {
       "id": 630,
       "type": "click",
-      "timestamp": 1017812,
+      "timestamp": 1042512,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '버튼 방식' 요소 클릭",
       "cursor": {
         "x": 910,
@@ -7005,13 +7005,13 @@
     {
       "id": 631,
       "type": "wait",
-      "timestamp": 1019112,
+      "timestamp": 1043812,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '버튼 방식' 요소 반응 대기"
     },
     {
       "id": 632,
       "type": "click",
-      "timestamp": 1020712,
+      "timestamp": 1045412,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '진척도 이전 값 보다 낮은 값 허용' 요소 클릭",
       "cursor": {
         "x": 853,
@@ -7027,13 +7027,13 @@
     {
       "id": 633,
       "type": "wait",
-      "timestamp": 1021962,
+      "timestamp": 1046662,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '진척도 이전 값 보다 낮은 값 허용' 요소 반응 대기"
     },
     {
       "id": 634,
       "type": "click",
-      "timestamp": 1023596,
+      "timestamp": 1048296,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '할일' 요소 클릭",
       "cursor": {
         "x": 746,
@@ -7049,13 +7049,13 @@
     {
       "id": 635,
       "type": "wait",
-      "timestamp": 1024812,
+      "timestamp": 1049512,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '할일' 요소 반응 대기"
     },
     {
       "id": 636,
       "type": "upload",
-      "timestamp": 1026262,
+      "timestamp": 1050962,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '내 PC' 버튼에 '프로젝트.pdf' 첨부",
       "cursor": {
         "x": 775,
@@ -7071,7 +7071,7 @@
     {
       "id": 637,
       "type": "click",
-      "timestamp": 1027479,
+      "timestamp": 1052179,
       "cursor": {
         "x": 935,
         "y": 382
@@ -7087,7 +7087,7 @@
     {
       "id": 638,
       "type": "click",
-      "timestamp": 1028362,
+      "timestamp": 1053062,
       "cursor": {
         "x": 1149,
         "y": 662
@@ -7103,13 +7103,13 @@
     {
       "id": 639,
       "type": "wait",
-      "timestamp": 1030112,
+      "timestamp": 1054812,
       "description": "[챕터 5: project] 첨부 파일 업로드 및 목록 반영 대기"
     },
     {
       "id": 640,
       "type": "click",
-      "timestamp": 1032079,
+      "timestamp": 1056779,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '프로젝트 생성' 버튼 클릭",
       "cursor": {
         "x": 922,
@@ -7125,13 +7125,13 @@
     {
       "id": 641,
       "type": "wait",
-      "timestamp": 1033346,
+      "timestamp": 1058046,
       "description": "[챕터 5: project] [프로젝트 추가 팝업] '프로젝트 생성' 버튼 반응 대기"
     },
     {
       "id": 642,
       "type": "click",
-      "timestamp": 1034929,
+      "timestamp": 1059629,
       "description": "[챕터 5: project] [알림 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 947,
@@ -7147,13 +7147,13 @@
     {
       "id": 643,
       "type": "wait",
-      "timestamp": 1036129,
+      "timestamp": 1060829,
       "description": "[챕터 5: project] [알림 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 644,
       "type": "click",
-      "timestamp": 1038312,
+      "timestamp": 1063012,
       "description": "[챕터 5: project] '학사제도 및 교육과정 개편 프로젝트' 메뉴/링크 클릭",
       "cursor": {
         "x": 877,
@@ -7169,13 +7169,13 @@
     {
       "id": 645,
       "type": "wait",
-      "timestamp": 1039646,
+      "timestamp": 1064346,
       "description": "[챕터 5: project] '학사제도 및 교육과정 개편 프로젝트' 메뉴/링크 반응 대기"
     },
     {
       "id": 646,
       "type": "click",
-      "timestamp": 1041129,
+      "timestamp": 1065829,
       "description": "[챕터 5: project] '등록' 버튼 클릭",
       "cursor": {
         "x": 1509,
@@ -7191,13 +7191,13 @@
     {
       "id": 647,
       "type": "wait",
-      "timestamp": 1042279,
+      "timestamp": 1066979,
       "description": "[챕터 5: project] '등록' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 648,
       "type": "type",
-      "timestamp": 1046379,
+      "timestamp": 1071079,
       "description": "[챕터 5: project] '제목을 입력하세요' 입력창에 '학과별 교육과정 개편 요구사항 수합 및 분석' 입력",
       "cursor": {
         "x": 979,
@@ -7214,13 +7214,13 @@
     {
       "id": 649,
       "type": "wait",
-      "timestamp": 1048579,
+      "timestamp": 1073279,
       "description": "[챕터 5: project] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 650,
       "type": "click",
-      "timestamp": 1049979,
+      "timestamp": 1074679,
       "description": "[챕터 5: project] [담당자] '담당자' 버튼 클릭",
       "cursor": {
         "x": 1121,
@@ -7236,13 +7236,13 @@
     {
       "id": 651,
       "type": "wait",
-      "timestamp": 1051196,
+      "timestamp": 1075896,
       "description": "[챕터 5: project] [담당자] '담당자' 버튼 반응 대기"
     },
     {
       "id": 652,
       "type": "click",
-      "timestamp": 1052796,
+      "timestamp": 1077496,
       "description": "[챕터 5: project] [담당자 팝업] '임시계정(전임) 전임교원 정보보안센터' 요소 클릭",
       "cursor": {
         "x": 809,
@@ -7258,13 +7258,13 @@
     {
       "id": 653,
       "type": "wait",
-      "timestamp": 1054129,
+      "timestamp": 1078829,
       "description": "[챕터 5: project] [담당자 팝업] '임시계정(전임) 전임교원 정보보안센터' 요소 반응 대기"
     },
     {
       "id": 654,
       "type": "click",
-      "timestamp": 1055696,
+      "timestamp": 1080396,
       "description": "[챕터 5: project] [담당자 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 928,
@@ -7280,13 +7280,13 @@
     {
       "id": 655,
       "type": "wait",
-      "timestamp": 1057029,
+      "timestamp": 1081729,
       "description": "[챕터 5: project] [담당자 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 656,
       "type": "click",
-      "timestamp": 1059129,
+      "timestamp": 1083829,
       "description": "[챕터 5: project] [담당자] 'yyyy-mm-dd' 입력창 클릭",
       "cursor": {
         "x": 1657,
@@ -7302,13 +7302,13 @@
     {
       "id": 657,
       "type": "wait",
-      "timestamp": 1060396,
+      "timestamp": 1085096,
       "description": "[챕터 5: project] [담당자] 'yyyy-mm-dd' 입력창 반응 대기"
     },
     {
       "id": 658,
       "type": "click",
-      "timestamp": 1061462,
+      "timestamp": 1086162,
       "description": "[챕터 5: project] '30' 메뉴/링크 클릭",
       "cursor": {
         "x": 1491,
@@ -7324,13 +7324,13 @@
     {
       "id": 659,
       "type": "wait",
-      "timestamp": 1062762,
+      "timestamp": 1087462,
       "description": "[챕터 5: project] '30' 메뉴/링크 반응 대기"
     },
     {
       "id": 660,
       "type": "click",
-      "timestamp": 1063479,
+      "timestamp": 1088179,
       "description": "[챕터 5: project] [요청자] 'yyyy-mm-dd' 입력창 클릭",
       "cursor": {
         "x": 1643,
@@ -7346,13 +7346,13 @@
     {
       "id": 661,
       "type": "wait",
-      "timestamp": 1064912,
+      "timestamp": 1089612,
       "description": "[챕터 5: project] [요청자] 'yyyy-mm-dd' 입력창 반응 대기"
     },
     {
       "id": 662,
       "type": "click",
-      "timestamp": 1065729,
+      "timestamp": 1090429,
       "description": "[챕터 5: project] '다음달' 메뉴/링크 클릭",
       "cursor": {
         "x": 1655,
@@ -7368,13 +7368,13 @@
     {
       "id": 663,
       "type": "wait",
-      "timestamp": 1066929,
+      "timestamp": 1091629,
       "description": "[챕터 5: project] '다음달' 메뉴/링크 반응 대기"
     },
     {
       "id": 664,
       "type": "click",
-      "timestamp": 1067846,
+      "timestamp": 1092546,
       "description": "[챕터 5: project] '13' 메뉴/링크 클릭",
       "cursor": {
         "x": 1615,
@@ -7390,13 +7390,13 @@
     {
       "id": 665,
       "type": "wait",
-      "timestamp": 1069079,
+      "timestamp": 1093779,
       "description": "[챕터 5: project] '13' 메뉴/링크 반응 대기"
     },
     {
       "id": 666,
       "type": "click",
-      "timestamp": 1069996,
+      "timestamp": 1094696,
       "description": "[챕터 5: project] [배정시간] '보통' 버튼 클릭",
       "cursor": {
         "x": 1471,
@@ -7412,13 +7412,13 @@
     {
       "id": 667,
       "type": "wait",
-      "timestamp": 1071212,
+      "timestamp": 1095912,
       "description": "[챕터 5: project] [배정시간] '보통' 버튼 반응 대기"
     },
     {
       "id": 668,
       "type": "click",
-      "timestamp": 1072712,
+      "timestamp": 1097412,
       "description": "[챕터 5: project] [배정시간] '높음' 요소 클릭",
       "cursor": {
         "x": 1462,
@@ -7434,13 +7434,13 @@
     {
       "id": 669,
       "type": "wait",
-      "timestamp": 1073979,
+      "timestamp": 1098679,
       "description": "[챕터 5: project] [배정시간] '높음' 요소 반응 대기"
     },
     {
       "id": 670,
       "type": "type",
-      "timestamp": 1075612,
+      "timestamp": 1100312,
       "description": "[챕터 5: project] '에디터 본문' 입력 영역에 '각 학과별 개편 의견서를 수합하여 결과 보고서 초안을 작성해 주세요.' 입력",
       "cursor": {
         "x": 1214,
@@ -7457,13 +7457,13 @@
     {
       "id": 671,
       "type": "wait",
-      "timestamp": 1079012,
+      "timestamp": 1103712,
       "description": "[챕터 5: project] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 672,
       "type": "click",
-      "timestamp": 1080629,
+      "timestamp": 1105329,
       "description": "[챕터 5: project] '저장' 버튼 클릭",
       "cursor": {
         "x": 1243,
@@ -7479,13 +7479,13 @@
     {
       "id": 673,
       "type": "wait",
-      "timestamp": 1082112,
+      "timestamp": 1106812,
       "description": "[챕터 5: project] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 674,
       "type": "click",
-      "timestamp": 1090196,
+      "timestamp": 1114896,
       "description": "[챕터 5: project] '닫기' 버튼 클릭",
       "cursor": {
         "x": 1901,
@@ -7501,13 +7501,13 @@
     {
       "id": 675,
       "type": "wait",
-      "timestamp": 1091579,
+      "timestamp": 1116279,
       "description": "[챕터 5: project] '닫기' 버튼 반응 대기"
     },
     {
       "id": 676,
       "type": "click",
-      "timestamp": 1093429,
+      "timestamp": 1118129,
       "description": "[챕터 5: project] '학과별 교육과정 개편 요구사항 수합 및 ' 메뉴/링크 클릭",
       "cursor": {
         "x": 914,
@@ -7523,13 +7523,13 @@
     {
       "id": 677,
       "type": "wait",
-      "timestamp": 1094679,
+      "timestamp": 1119379,
       "description": "[챕터 5: project] '학과별 교육과정 개편 요구사항 수합 및 ' 메뉴/링크 반응 대기"
     },
     {
       "id": 678,
       "type": "click",
-      "timestamp": 1096196,
+      "timestamp": 1120896,
       "description": "[챕터 5: project] '추가' 버튼 클릭",
       "cursor": {
         "x": 1854,
@@ -7545,13 +7545,13 @@
     {
       "id": 679,
       "type": "wait",
-      "timestamp": 1097329,
+      "timestamp": 1122029,
       "description": "[챕터 5: project] '추가' 버튼 반응 대기"
     },
     {
       "id": 680,
       "type": "type",
-      "timestamp": 1101412,
+      "timestamp": 1126112,
       "description": "[챕터 5: project] '제목을 입력하세요' 입력창에 '학과별 개편 의견서 취합표 작성' 입력",
       "cursor": {
         "x": 981,
@@ -7568,13 +7568,13 @@
     {
       "id": 681,
       "type": "wait",
-      "timestamp": 1103229,
+      "timestamp": 1127929,
       "description": "[챕터 5: project] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 682,
       "type": "click",
-      "timestamp": 1104579,
+      "timestamp": 1129279,
       "description": "[챕터 5: project] [담당자] '담당자' 버튼 클릭",
       "cursor": {
         "x": 1114,
@@ -7590,13 +7590,13 @@
     {
       "id": 683,
       "type": "wait",
-      "timestamp": 1105929,
+      "timestamp": 1130629,
       "description": "[챕터 5: project] [담당자] '담당자' 버튼 반응 대기"
     },
     {
       "id": 684,
       "type": "click",
-      "timestamp": 1107679,
+      "timestamp": 1132379,
       "description": "[챕터 5: project] [담당자 팝업] '김병훈 담당 사무처' 요소 클릭",
       "cursor": {
         "x": 932,
@@ -7612,13 +7612,13 @@
     {
       "id": 685,
       "type": "wait",
-      "timestamp": 1109012,
+      "timestamp": 1133712,
       "description": "[챕터 5: project] [담당자 팝업] '김병훈 담당 사무처' 요소 반응 대기"
     },
     {
       "id": 686,
       "type": "click",
-      "timestamp": 1110696,
+      "timestamp": 1135396,
       "description": "[챕터 5: project] [담당자 팝업] '확인' 버튼 클릭",
       "cursor": {
         "x": 911,
@@ -7634,13 +7634,13 @@
     {
       "id": 687,
       "type": "wait",
-      "timestamp": 1112146,
+      "timestamp": 1136846,
       "description": "[챕터 5: project] [담당자 팝업] '확인' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 688,
       "type": "click",
-      "timestamp": 1114312,
+      "timestamp": 1139012,
       "description": "[챕터 5: project] [담당자] 'yyyy-mm-dd' 입력창 클릭",
       "cursor": {
         "x": 1651,
@@ -7656,13 +7656,13 @@
     {
       "id": 689,
       "type": "wait",
-      "timestamp": 1115562,
+      "timestamp": 1140262,
       "description": "[챕터 5: project] [담당자] 'yyyy-mm-dd' 입력창 반응 대기"
     },
     {
       "id": 690,
       "type": "click",
-      "timestamp": 1116612,
+      "timestamp": 1141312,
       "description": "[챕터 5: project] '30' 메뉴/링크 클릭",
       "cursor": {
         "x": 1483,
@@ -7678,13 +7678,13 @@
     {
       "id": 691,
       "type": "wait",
-      "timestamp": 1117862,
+      "timestamp": 1142562,
       "description": "[챕터 5: project] '30' 메뉴/링크 반응 대기"
     },
     {
       "id": 692,
       "type": "click",
-      "timestamp": 1118712,
+      "timestamp": 1143412,
       "description": "[챕터 5: project] [요청자] 'yyyy-mm-dd' 입력창 클릭",
       "cursor": {
         "x": 1649,
@@ -7700,13 +7700,13 @@
     {
       "id": 693,
       "type": "wait",
-      "timestamp": 1119962,
+      "timestamp": 1144662,
       "description": "[챕터 5: project] [요청자] 'yyyy-mm-dd' 입력창 반응 대기"
     },
     {
       "id": 694,
       "type": "click",
-      "timestamp": 1120746,
+      "timestamp": 1145446,
       "description": "[챕터 5: project] '다음달' 메뉴/링크 클릭",
       "cursor": {
         "x": 1660,
@@ -7722,13 +7722,13 @@
     {
       "id": 695,
       "type": "wait",
-      "timestamp": 1122079,
+      "timestamp": 1146779,
       "description": "[챕터 5: project] '다음달' 메뉴/링크 반응 대기"
     },
     {
       "id": 696,
       "type": "click",
-      "timestamp": 1122929,
+      "timestamp": 1147629,
       "description": "[챕터 5: project] '6' 메뉴/링크 클릭",
       "cursor": {
         "x": 1619,
@@ -7744,13 +7744,13 @@
     {
       "id": 697,
       "type": "wait",
-      "timestamp": 1124246,
+      "timestamp": 1148946,
       "description": "[챕터 5: project] '6' 메뉴/링크 반응 대기"
     },
     {
       "id": 698,
       "type": "click",
-      "timestamp": 1125179,
+      "timestamp": 1149879,
       "description": "[챕터 5: project] '저장' 버튼 클릭",
       "cursor": {
         "x": 1231,
@@ -7766,13 +7766,13 @@
     {
       "id": 699,
       "type": "wait",
-      "timestamp": 1126329,
+      "timestamp": 1151029,
       "description": "[챕터 5: project] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 700,
       "type": "click",
-      "timestamp": 1128412,
+      "timestamp": 1153112,
       "description": "[챕터 5: project] '닫기' 버튼 클릭",
       "cursor": {
         "x": 1906,
@@ -7788,13 +7788,13 @@
     {
       "id": 701,
       "type": "wait",
-      "timestamp": 1129879,
+      "timestamp": 1154579,
       "description": "[챕터 5: project] '닫기' 버튼 반응 대기"
     },
     {
       "id": 702,
       "type": "click",
-      "timestamp": 1131346,
+      "timestamp": 1156046,
       "description": "[챕터 5: project] '트리보기' 버튼 클릭",
       "cursor": {
         "x": 1580,
@@ -7810,13 +7810,13 @@
     {
       "id": 703,
       "type": "wait",
-      "timestamp": 1132629,
+      "timestamp": 1157329,
       "description": "[챕터 5: project] '트리보기' 버튼 반응 대기"
     },
     {
       "id": 704,
       "type": "click",
-      "timestamp": 1137112,
+      "timestamp": 1161812,
       "description": "[챕터 5: project] '학과별 교육과정 개편 요구사항 수합 및 ' 메뉴/링크 클릭",
       "cursor": {
         "x": 1021,
@@ -7832,13 +7832,13 @@
     {
       "id": 705,
       "type": "wait",
-      "timestamp": 1138362,
+      "timestamp": 1163062,
       "description": "[챕터 5: project] '학과별 교육과정 개편 요구사항 수합 및 ' 메뉴/링크 반응 대기"
     },
     {
       "id": 706,
       "type": "click",
-      "timestamp": 1139812,
+      "timestamp": 1164512,
       "description": "[챕터 5: project] '수정' 버튼 클릭",
       "cursor": {
         "x": 776,
@@ -7854,13 +7854,13 @@
     {
       "id": 707,
       "type": "wait",
-      "timestamp": 1140979,
+      "timestamp": 1165679,
       "description": "[챕터 5: project] '수정' 버튼 반응 대기"
     },
     {
       "id": 708,
       "type": "dragAndDrop",
-      "timestamp": 1143812,
+      "timestamp": 1168512,
       "description": "[챕터 5: project] a 요소을(를) #prjTaskUpdateForm_slider (div)으로 드래그 앤 드롭",
       "cursor": {
         "x": 1724,
@@ -7884,13 +7884,13 @@
     {
       "id": 709,
       "type": "wait",
-      "timestamp": 1145779,
+      "timestamp": 1170479,
       "description": "[챕터 5: project] 드래그 앤 드롭 반영 대기"
     },
     {
       "id": 710,
       "type": "click",
-      "timestamp": 1147529,
+      "timestamp": 1172229,
       "description": "[챕터 5: project] '0% 5% 10% 15% 20% 25% ' 요소에서 '80%' 선택",
       "cursor": {
         "x": 1834,
@@ -7906,13 +7906,13 @@
     {
       "id": 711,
       "type": "wait",
-      "timestamp": 1148596,
+      "timestamp": 1173296,
       "description": "[챕터 5: project] '0% 5% 10% 15% 20% 25% ' 요소에서 '80%' 선택 반응 대기"
     },
     {
       "id": 712,
       "type": "upload",
-      "timestamp": 1150996,
+      "timestamp": 1175696,
       "description": "[챕터 5: project] '내 PC' 버튼에 '프로젝트.pdf' 첨부",
       "cursor": {
         "x": 909,
@@ -7928,7 +7928,7 @@
     {
       "id": 713,
       "type": "click",
-      "timestamp": 1152229,
+      "timestamp": 1176929,
       "cursor": {
         "x": 935,
         "y": 382
@@ -7944,7 +7944,7 @@
     {
       "id": 714,
       "type": "click",
-      "timestamp": 1153162,
+      "timestamp": 1177862,
       "cursor": {
         "x": 1149,
         "y": 662
@@ -7960,13 +7960,13 @@
     {
       "id": 715,
       "type": "wait",
-      "timestamp": 1154896,
+      "timestamp": 1179596,
       "description": "[챕터 5: project] 첨부 파일 업로드 및 목록 반영 대기"
     },
     {
       "id": 716,
       "type": "click",
-      "timestamp": 1156879,
+      "timestamp": 1181579,
       "description": "[챕터 5: project] '저장' 버튼 클릭",
       "cursor": {
         "x": 1277,
@@ -7982,13 +7982,13 @@
     {
       "id": 717,
       "type": "wait",
-      "timestamp": 1158029,
+      "timestamp": 1182729,
       "description": "[챕터 5: project] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 718,
       "type": "type",
-      "timestamp": 1160212,
+      "timestamp": 1184912,
       "description": "[챕터 5: project] '에디터 본문' 입력 영역에 '학과별 취합 1차 완료하여 중간 산출물 파일을 첨부합니다.' 입력",
       "cursor": {
         "x": 801,
@@ -8005,13 +8005,13 @@
     {
       "id": 719,
       "type": "wait",
-      "timestamp": 1163096,
+      "timestamp": 1187796,
       "description": "[챕터 5: project] 입력 텍스트 확인 여유 대기"
     },
     {
       "id": 720,
       "type": "click",
-      "timestamp": 1164746,
+      "timestamp": 1189446,
       "description": "[챕터 5: project] '첨부' 버튼 클릭",
       "cursor": {
         "x": 768,
@@ -8027,13 +8027,13 @@
     {
       "id": 721,
       "type": "wait",
-      "timestamp": 1166079,
+      "timestamp": 1190779,
       "description": "[챕터 5: project] '첨부' 버튼 반응 대기"
     },
     {
       "id": 722,
       "type": "upload",
-      "timestamp": 1167596,
+      "timestamp": 1192296,
       "description": "[챕터 5: project] [파일 첨부 팝업] '내 PC' 버튼에 '중간 산출물.pdf' 첨부",
       "cursor": {
         "x": 660,
@@ -8049,7 +8049,7 @@
     {
       "id": 723,
       "type": "click",
-      "timestamp": 1168829,
+      "timestamp": 1193529,
       "cursor": {
         "x": 935,
         "y": 382
@@ -8065,7 +8065,7 @@
     {
       "id": 724,
       "type": "click",
-      "timestamp": 1169662,
+      "timestamp": 1194362,
       "cursor": {
         "x": 1149,
         "y": 662
@@ -8081,13 +8081,13 @@
     {
       "id": 725,
       "type": "wait",
-      "timestamp": 1171379,
+      "timestamp": 1196079,
       "description": "[챕터 5: project] 첨부 파일 업로드 및 목록 반영 대기"
     },
     {
       "id": 726,
       "type": "click",
-      "timestamp": 1173429,
+      "timestamp": 1198129,
       "description": "[챕터 5: project] [파일 첨부 팝업] '저장' 버튼 클릭",
       "cursor": {
         "x": 927,
@@ -8103,13 +8103,13 @@
     {
       "id": 727,
       "type": "wait",
-      "timestamp": 1174596,
+      "timestamp": 1199296,
       "description": "[챕터 5: project] [파일 첨부 팝업] '저장' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 728,
       "type": "click",
-      "timestamp": 1176896,
+      "timestamp": 1201596,
       "description": "[챕터 5: project] '등록' 버튼 클릭",
       "cursor": {
         "x": 1829,
@@ -8125,13 +8125,13 @@
     {
       "id": 729,
       "type": "wait",
-      "timestamp": 1178029,
+      "timestamp": 1202729,
       "description": "[챕터 5: project] '등록' 버튼 클릭 후 화면/팝업 전환 대기"
     },
     {
       "id": 730,
       "type": "click",
-      "timestamp": 1180112,
+      "timestamp": 1204812,
       "description": "[챕터 5: project] '닫기' 버튼 클릭",
       "cursor": {
         "x": 1899,
@@ -8147,13 +8147,13 @@
     {
       "id": 731,
       "type": "wait",
-      "timestamp": 1181496,
+      "timestamp": 1206196,
       "description": "[챕터 5: project] '닫기' 버튼 반응 대기"
     },
     {
       "id": 732,
       "type": "click",
-      "timestamp": 1182946,
+      "timestamp": 1207646,
       "description": "[챕터 5: project] '간트차트' 메뉴/링크 클릭",
       "cursor": {
         "x": 523,
@@ -8169,13 +8169,13 @@
     {
       "id": 733,
       "type": "wait",
-      "timestamp": 1184179,
+      "timestamp": 1208879,
       "description": "[챕터 5: project] '간트차트' 메뉴/링크 반응 대기"
     },
     {
       "id": 734,
       "type": "click",
-      "timestamp": 1186996,
+      "timestamp": 1211696,
       "description": "[챕터 5: project] '80%' 요소 클릭",
       "cursor": {
         "x": 937,
@@ -8191,13 +8191,13 @@
     {
       "id": 735,
       "type": "wait",
-      "timestamp": 1188396,
+      "timestamp": 1213096,
       "description": "[챕터 5: project] '80%' 요소 반응 대기"
     },
     {
       "id": 736,
       "type": "click",
-      "timestamp": 1189896,
+      "timestamp": 1214596,
       "description": "[챕터 5: project] '80%' 요소 클릭",
       "cursor": {
         "x": 927,
@@ -8213,19 +8213,19 @@
     {
       "id": 737,
       "type": "wait",
-      "timestamp": 1191279,
+      "timestamp": 1215979,
       "description": "[챕터 5: project] '80%' 요소 반응 대기"
     },
     {
       "id": 738,
       "type": "wait",
-      "timestamp": 1195796,
+      "timestamp": 1220496,
       "description": "[챕터 5: project] '주간' 버튼 반응 대기"
     },
     {
       "id": 739,
       "type": "click",
-      "timestamp": 1197479,
+      "timestamp": 1222179,
       "description": "[챕터 5: project] '월간' 버튼 클릭",
       "cursor": {
         "x": 1175,
@@ -8241,13 +8241,13 @@
     {
       "id": 740,
       "type": "wait",
-      "timestamp": 1198929,
+      "timestamp": 1223629,
       "description": "[챕터 5: project] '월간' 버튼 반응 대기"
     },
     {
       "id": 741,
       "type": "click",
-      "timestamp": 1202796,
+      "timestamp": 1227496,
       "description": "[챕터 5: project] '일감 첨부파일' 메뉴/링크 클릭",
       "cursor": {
         "x": 652,
@@ -8263,13 +8263,13 @@
     {
       "id": 742,
       "type": "wait",
-      "timestamp": 1204246,
+      "timestamp": 1228946,
       "description": "[챕터 5: project] '일감 첨부파일' 메뉴/링크 반응 대기"
     },
     {
       "id": 743,
       "type": "click",
-      "timestamp": 1205746,
+      "timestamp": 1230446,
       "description": "[챕터 5: project] '활동로그' 메뉴/링크 클릭",
       "cursor": {
         "x": 60,
@@ -8285,13 +8285,13 @@
     {
       "id": 744,
       "type": "wait",
-      "timestamp": 1206879,
+      "timestamp": 1231579,
       "description": "[챕터 5: project] '활동로그' 메뉴/링크 반응 대기"
     },
     {
       "id": 745,
       "type": "click",
-      "timestamp": 1208329,
+      "timestamp": 1233029,
       "description": "[챕터 5: project] '프로젝트' 메뉴/링크 클릭",
       "cursor": {
         "x": 337,
@@ -8307,13 +8307,13 @@
     {
       "id": 746,
       "type": "wait",
-      "timestamp": 1209529,
+      "timestamp": 1234229,
       "description": "[챕터 5: project] '프로젝트' 메뉴/링크 반응 대기"
     },
     {
       "id": 747,
       "type": "click",
-      "timestamp": 1211129,
+      "timestamp": 1235829,
       "description": "[챕터 5: project] '종합 현황' 메뉴/링크 클릭",
       "cursor": {
         "x": 92,
@@ -8329,13 +8329,13 @@
     {
       "id": 748,
       "type": "wait",
-      "timestamp": 1212312,
+      "timestamp": 1237012,
       "description": "[챕터 5: project] '종합 현황' 메뉴/링크 반응 대기"
     },
     {
       "id": 749,
       "type": "click",
-      "timestamp": 1213762,
+      "timestamp": 1238462,
       "description": "[챕터 5: project] '업무 현황' 메뉴/링크 클릭",
       "cursor": {
         "x": 94,
@@ -8351,13 +8351,13 @@
     {
       "id": 750,
       "type": "wait",
-      "timestamp": 1214946,
+      "timestamp": 1239646,
       "description": "[챕터 5: project] '업무 현황' 메뉴/링크 반응 대기"
     },
     {
       "id": 751,
       "type": "click",
-      "timestamp": 1216396,
+      "timestamp": 1241096,
       "description": "[챕터 5: project] '내 프로젝트' 메뉴/링크 클릭",
       "cursor": {
         "x": 89,
@@ -8373,13 +8373,13 @@
     {
       "id": 752,
       "type": "wait",
-      "timestamp": 1217612,
+      "timestamp": 1242312,
       "description": "[챕터 5: project] '내 프로젝트' 메뉴/링크 반응 대기"
     },
     {
       "id": 753,
       "type": "click",
-      "timestamp": 1219079,
+      "timestamp": 1243779,
       "description": "[챕터 5: project] '내 일감' 메뉴/링크 클릭",
       "cursor": {
         "x": 90,
@@ -8395,13 +8395,13 @@
     {
       "id": 754,
       "type": "wait",
-      "timestamp": 1220212,
+      "timestamp": 1244912,
       "description": "[챕터 5: project] '내 일감' 메뉴/링크 반응 대기"
     },
     {
       "id": 755,
       "type": "click",
-      "timestamp": 1221762,
+      "timestamp": 1246462,
       "description": "[챕터 5: project] '내 프로젝트' 메뉴/링크 클릭",
       "cursor": {
         "x": 76,
@@ -8417,13 +8417,13 @@
     {
       "id": 756,
       "type": "wait",
-      "timestamp": 1223079,
+      "timestamp": 1247779,
       "description": "[챕터 5: project] '내 프로젝트' 메뉴/링크 반응 대기"
     },
     {
       "id": 757,
       "type": "click",
-      "timestamp": 1224746,
+      "timestamp": 1249446,
       "description": "[챕터 5: project] '메뉴' 버튼 클릭",
       "cursor": {
         "x": 1054,
@@ -8439,13 +8439,13 @@
     {
       "id": 758,
       "type": "wait",
-      "timestamp": 1225946,
+      "timestamp": 1250646,
       "description": "[챕터 5: project] '메뉴' 버튼 반응 대기"
     },
     {
       "id": 759,
       "type": "wait",
-      "timestamp": 1226962,
+      "timestamp": 1251662,
       "description": "[챕터 5: project] 최종 시연 결과 화면 클로즈업 확인 대기"
     }
   ],

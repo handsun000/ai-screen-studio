@@ -1294,6 +1294,9 @@ export function saveNarrationFile(slug: string, narration: NarrationFile): Narra
       }
     }
   }
+  if (Array.isArray((narration as any).mergedFromSlugs) && (narration as any).mergedFromSlugs.length > 0) {
+    delete (narration as any)._bakedSlideSig;
+  }
 
   let rawTotalMs = 15000;
   let fps = 60;
@@ -1382,7 +1385,16 @@ export function ensurePublicNarrationAssets(slug: string): void {
     fs.mkdirSync(destAudioDir, { recursive: true });
     for (const file of fs.readdirSync(srcAudioDir)) {
       if (file.endsWith(".mp3")) {
-        fs.copyFileSync(path.join(srcAudioDir, file), path.join(destAudioDir, file));
+        const srcMp3 = path.join(srcAudioDir, file);
+        const dstMp3 = path.join(destAudioDir, file);
+        try {
+          if (fs.existsSync(dstMp3)) fs.unlinkSync(dstMp3);
+          fs.linkSync(srcMp3, dstMp3);
+        } catch {
+          try {
+            fs.copyFileSync(srcMp3, dstMp3);
+          } catch {}
+        }
       }
     }
   }

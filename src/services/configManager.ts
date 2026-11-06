@@ -7,7 +7,7 @@ dotenv.config({ override: true });
 const ENV_FILE_PATH = path.resolve(__dirname, "..", "..", ".env");
 
 export type AiExecutionMode = "api" | "cli";
-export type AiCliProvider = "agy" | "claude" | "gemini";
+export type AiCliProvider = "agy" | "naoncode" | "claude" | "gemini" | "codex" | "ollama" | "copilot";
 
 export interface StudioConfig {
   targetProjectPath: string;
@@ -35,8 +35,12 @@ function normalizeAiMode(raw?: string): AiExecutionMode {
 
 function normalizeAiCliProvider(raw?: string): AiCliProvider {
   const v = String(raw || "").trim().toLowerCase();
+  if (v === "naoncode" || v === "nmscode") return "naoncode";
   if (v === "claude") return "claude";
   if (v === "gemini") return "gemini";
+  if (v === "codex") return "codex";
+  if (v === "ollama") return "ollama";
+  if (v === "copilot") return "copilot";
   return "agy";
 }
 

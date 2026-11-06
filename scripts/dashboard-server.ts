@@ -38,6 +38,7 @@ import {
   restoreVideoBackup,
   mergeRenderedVideos,
 } from "../src/services/videoEditorService";
+import { getStorageStats, optimizeStorage } from "../src/services/storageOptimizerService";
 import {
   generateNarrationScript,
   getNarration,
@@ -49,8 +50,14 @@ import {
   ensureRenderedBaseVideo,
   fastApplyNarrationToRenderedMp4,
 } from "../src/services/slideVideoComposer";
+import {
+  getBaseDomainFromHostKey,
+  listAllSiteBrands,
+  resolveSiteBrandForScenario,
+  updateSiteBrandForScenario,
+} from "../src/services/siteBrandService";
 import { getAiUsageSummary, resetAiUsageStore } from "../src/services/aiUsageTracker";
-import { detectAvailableClis, generateAiContent } from "../src/services/aiClient";
+import { detectAvailableClis, generateAiContent, getGeminiApiKeys } from "../src/services/aiClient";
 
 dotenv.config({ override: true });
 
@@ -69,7 +76,7 @@ app.use("/api", (_req: Request, res: Response, next) => {
 
 // 1. Health & Config Status API
 app.get("/api/status", (_req: Request, res: Response) => {
-  const apiKey = process.env.GEMINI_API_KEY || "";
+  const apiKey = getGeminiApiKeys()[0] || "";
   const config = getConfig();
   const analysis = analyzeProject(config.targetProjectPath);
 
@@ -107,7 +114,7 @@ app.get("/api/status", (_req: Request, res: Response) => {
 // 1-B. AI Token Usage, Cost & Execution Mode APIs
 app.get("/api/ai-usage", (_req: Request, res: Response) => {
   const config = getConfig();
-  const apiKey = process.env.GEMINI_API_KEY || "";
+  const apiKey = getGeminiApiKeys()[0] || "";
   res.json({
     ...getAiUsageSummary(),
     aiMode: config.aiMode,
@@ -160,6 +167,7 @@ app.post("/api/ai-mode/test", async (req: Request, res: Response) => {
       forceMode: aiMode,
       cliProviderOverride: aiCliProvider,
       cliModelOverride: aiCliModel,
+      disableCliFallback: true,
       timeoutMs: 30_000,
     });
     res.json({
@@ -904,6 +912,78 @@ app.get("/api/narration/audio/:slug/:filename", (req: Request, res: Response) =>
   fs.createReadStream(audioPath).pipe(res);
 });
 
+// 11-B. Site Brand (Theme Color, Logo, Institution Name, Base-Domain Inheritance) APIs
+app.get("/api/site-brands", (_req: Request, res: Response) => {
+  try {
+    res.json({ brands: listAllSiteBrands() });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/site-brands/:slug", (req: Request, res: Response) => {
+  try {
+    const slug = req.params.slug as string;
+    const brand = resolveSiteBrandForScenario(slug);
+    const baseDomain = getBaseDomainFromHostKey(brand.hostKey || brand.originUrl);
+    res.json({ brand, baseDomain });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/site-brands/:slug", async (req: Request, res: Response) => {
+  try {
+    const slug = req.params.slug as string;
+    const {
+      siteName,
+      manualBadge,
+      primaryColor,
+      secondaryColor,
+      accentColor,
+      propagateToBaseDomain,
+      bakeSlide,
+    } = req.body || {};
+
+    const updatedBrand = updateSiteBrandForScenario(slug, {
+      siteName,
+      manualBadge,
+      primaryColor,
+      secondaryColor,
+      accentColor,
+      propagateToBaseDomain: propagateToBaseDomain !== false,
+    });
+    const baseDomain = getBaseDomainFromHostKey(updatedBrand.hostKey || updatedBrand.originUrl);
+
+    let renderedVideoUpdated = false;
+    if (bakeSlide) {
+      await ensureRenderedBaseVideo(slug).catch(() => {});
+      await bakeOpeningSlideIntoRecording(slug, { force: true });
+      const fastRender = await fastApplyNarrationToRenderedMp4(slug).catch(() => ({ updated: false }));
+      renderedVideoUpdated = Boolean(fastRender.updated);
+    }
+
+    const updatedNarration = getNarration(slug);
+    const editPlanPath = path.join(DATA_DIR, slug, "edit-plan.json");
+    const momentsPath = path.join(DATA_DIR, slug, "moments.json");
+    const editPlan = fs.existsSync(editPlanPath) ? JSON.parse(fs.readFileSync(editPlanPath, "utf-8")) : undefined;
+    const moments = fs.existsSync(momentsPath) ? JSON.parse(fs.readFileSync(momentsPath, "utf-8")) : undefined;
+
+    res.json({
+      success: true,
+      brand: updatedBrand,
+      baseDomain,
+      narration: updatedNarration,
+      editPlan,
+      moments,
+      renderedVideoUpdated,
+    });
+  } catch (err: any) {
+    console.error("[Site Brand Update Error]", err);
+    res.status(500).json({ error: err.message || "사이트 브랜드 설정 저장 중 오류가 발생했습니다." });
+  }
+});
+
 // 12. Direct Video Cut & Undo/Restore APIs
 app.get("/api/video-edit/:slug/status", (req: Request, res: Response) => {
   try {
@@ -947,6 +1027,36 @@ app.post("/api/video-edit/merge", async (req: Request, res: Response) => {
   } catch (err: any) {
     console.error("[Video Merge Error]", err);
     res.status(400).json({ error: err.message || "렌더링된 영상 합치기 중 오류가 발생했습니다." });
+  }
+});
+
+// 14. Disk Storage Optimizer & One-Click Cleanup APIs
+app.get("/api/storage/stats", (_req: Request, res: Response) => {
+  try {
+    res.json({ stats: getStorageStats() });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "디스크 용량 분석 중 오류가 발생했습니다." });
+  }
+});
+
+app.post("/api/storage/cleanup", (req: Request, res: Response) => {
+  try {
+    const {
+      deduplicateHardlinks,
+      cleanTempFiles,
+      cleanOrphanOutputs,
+      cleanUndoBackups,
+    } = req.body || {};
+    const result = optimizeStorage({
+      deduplicateHardlinks: deduplicateHardlinks !== false,
+      cleanTempFiles: cleanTempFiles !== false,
+      cleanOrphanOutputs: cleanOrphanOutputs !== false,
+      cleanUndoBackups: Boolean(cleanUndoBackups),
+    });
+    res.json(result);
+  } catch (err: any) {
+    console.error("[Storage Cleanup Error]", err);
+    res.status(500).json({ error: err.message || "디스크 용량 최적화 중 오류가 발생했습니다." });
   }
 });
 

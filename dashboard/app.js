@@ -112,9 +112,20 @@ if (renderFpsSelect) {
   });
 }
 const timelineBarWrapper = document.getElementById("timeline-bar-wrapper");
+const timelineScrollViewport = document.getElementById("timeline-scroll-viewport");
 const timelineVisualBar = document.getElementById("timeline-visual-bar");
+const timelineTrackRuler = document.getElementById("timeline-track-ruler");
+const timelineTrackZoom = document.getElementById("timeline-track-zoom");
+const timelineTrackMoments = document.getElementById("timeline-track-moments");
+const timelineTrackNarration = document.getElementById("timeline-track-narration");
 const timelinePlayhead = document.getElementById("timeline-playhead");
 const timelineStats = document.getElementById("timeline-stats");
+const timelineZoomBadge = document.getElementById("timeline-zoom-badge");
+const btnTimelineZoomIn = document.getElementById("btn-timeline-zoom-in");
+const btnTimelineZoomOut = document.getElementById("btn-timeline-zoom-out");
+const timelineZoomPresetBtns = document.querySelectorAll(".btn-timeline-zoom-preset");
+let timelineZoomLevel = 1;
+let lastTimelineTotalMs = 0;
 const studioSubtabBtns = document.querySelectorAll(".studio-subtab-btn");
 const studioSubtabPanes = document.querySelectorAll(".studio-subtab-pane");
 const subtabMomentsCount = document.getElementById("subtab-moments-count");
@@ -142,6 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initSSE();
   fetchConfig();
   fetchStatus();
+  renderActionCards();
   fetchScenarios();
   bindEvents();
 });
@@ -520,9 +532,137 @@ async function openAiUsageModal() {
     const currentMode = usage.aiMode || latestAiStatusData.aiMode || "api";
     const currentCliProvider = usage.aiCliProvider || latestAiStatusData.aiCliProvider || "agy";
     const currentCliModel = usage.aiCliModel || latestAiStatusData.aiCliModel || "gemini-3.8-flash-low";
-    const availableClis = Array.isArray(usage.availableClis)
+    const rawClis = Array.isArray(usage.availableClis)
       ? usage.availableClis
       : latestAiStatusData.availableClis || [];
+
+    const fullCliCatalog = [
+      {
+        id: "agy",
+        name: "Antigravity CLI (agy)",
+        installed: true,
+        models: [
+          { id: "gemini-3.8-flash-low", label: "Gemini 3.8 Flash (Low · 초고속 추천)" },
+          { id: "gemini-3.8-flash-medium", label: "Gemini 3.8 Flash (Medium · 균형)" },
+          { id: "gemini-3.8-flash-high", label: "Gemini 3.8 Flash (High · 정밀)" },
+          { id: "gemini-4-argon-low", label: "Gemini 4 Argon (Low · 고속)" },
+          { id: "gemini-4-argon-medium", label: "Gemini 4 Argon (Medium · 고성능)" },
+          { id: "gemini-4-argon-high", label: "Gemini 4 Argon (High · 최고성능)" },
+          { id: "claude-sonnet-5-5-low", label: "Claude Sonnet 5.5 (Low)" },
+          { id: "claude-sonnet-5-5-medium", label: "Claude Sonnet 5.5 (Medium)" },
+          { id: "claude-sonnet-5-5-high", label: "Claude Sonnet 5.5 (High)" },
+          { id: "claude-opus-5-5-low", label: "Claude Opus 5.5 (Low)" },
+          { id: "claude-opus-5-5-medium", label: "Claude Opus 5.5 (Medium)" },
+          { id: "claude-opus-5-5-high", label: "Claude Opus 5.5 (High)" },
+          { id: "gpt-oss-120b-medium", label: "GPT-OSS 120B (Medium)" },
+        ],
+      },
+      {
+        id: "naoncode",
+        name: "NAON CODE CLI (naoncode)",
+        installed: true,
+        models: [
+          { id: "qwen3.8-27b", label: "Qwen 3.8 27B (NAON AI Gateway · 기본 추천)" },
+          { id: "qwen3.8-27b-NAON", label: "Qwen 3.8 27B NAON (사내 전용 게이트웨이)" },
+          { id: "qwen3.6:35b-NAON", label: "Qwen 3.6 35B NAON (사내 전용 게이트웨이)" },
+          { id: "qwen3.8-flash-openrouter", label: "Qwen 3.8 Flash (OpenRouter · 고속)" },
+          { id: "qwen3-30b-a3b", label: "Qwen 3 30B-A3B (NAON AI Gateway)" },
+          { id: "gemma-3-27b-it", label: "Gemma 3 27B IT (NAON AI Gateway)" },
+          { id: "deepseek-v4", label: "DeepSeek V4 (NAON AI Gateway · 추론)" },
+          { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash (NAON AI Gateway)" },
+          { id: "gemini-2.5-pro", label: "Gemini 2.5 Pro (NAON AI Gateway)" },
+          { id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6 (NAON AI Gateway)" },
+          { id: "gpt-5", label: "GPT-5 (NAON AI Gateway)" },
+        ],
+      },
+      {
+        id: "claude",
+        name: "Claude Code CLI (claude)",
+        installed: false,
+        models: [
+          { id: "default", label: "Claude 기본 모델 (Default)" },
+          { id: "sonnet", label: "Claude Sonnet (표준 · 추천)" },
+          { id: "haiku", label: "Claude Haiku (초고속)" },
+          { id: "opus", label: "Claude Opus (최고성능)" },
+          { id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6" },
+          { id: "claude-opus-4-6", label: "Claude Opus 4.6" },
+          { id: "claude-haiku-4-5", label: "Claude Haiku 4.5" },
+        ],
+      },
+      {
+        id: "gemini",
+        name: "Google Gemini CLI (gemini)",
+        installed: false,
+        models: [
+          { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash (고속 추천)" },
+          { id: "gemini-2.5-pro", label: "Gemini 2.5 Pro (고성능)" },
+          { id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite (초경량)" },
+          { id: "gemini-3-flash-preview", label: "Gemini 3 Flash Preview" },
+          { id: "gemini-3-pro-preview", label: "Gemini 3 Pro Preview" },
+        ],
+      },
+      {
+        id: "codex",
+        name: "OpenAI Codex CLI (codex)",
+        installed: false,
+        models: [
+          { id: "gpt-5-codex", label: "GPT-5 Codex (표준 추천)" },
+          { id: "gpt-5", label: "GPT-5 (고성능)" },
+          { id: "o4-mini", label: "o4-mini (초고속 추론)" },
+          { id: "o3", label: "o3 (심층 추론)" },
+        ],
+      },
+      {
+        id: "ollama",
+        name: "Ollama Local LLM (ollama)",
+        installed: false,
+        models: [
+          { id: "qwen3:8b", label: "Qwen 3 (8B · 로컬 추천)" },
+          { id: "gemma3:12b", label: "Gemma 3 (12B)" },
+          { id: "llama3.3:latest", label: "Llama 3.3 (Latest)" },
+          { id: "deepseek-r1:8b", label: "DeepSeek R1 (8B)" },
+        ],
+      },
+      {
+        id: "copilot",
+        name: "GitHub Copilot CLI (copilot)",
+        installed: false,
+        models: [
+          { id: "claude-sonnet-4.5", label: "Claude Sonnet 4.5 (Copilot)" },
+          { id: "gpt-5", label: "GPT-5 (Copilot)" },
+          { id: "gemini-2.5-pro", label: "Gemini 2.5 Pro (Copilot)" },
+        ],
+      },
+    ];
+
+    const mergedClis = fullCliCatalog.map((defItem) => {
+      const srv = rawClis.find((r) => r.id === defItem.id);
+      if (!srv) return defItem;
+      const mergedModels = [...(Array.isArray(srv.models) ? srv.models : [])];
+      const seenIds = new Set(mergedModels.map((m) => m.id));
+      for (const dm of defItem.models) {
+        if (!seenIds.has(dm.id)) {
+          seenIds.add(dm.id);
+          mergedModels.push(dm);
+        }
+      }
+      return {
+        ...defItem,
+        ...srv,
+        models: mergedModels,
+      };
+    });
+
+    for (const srv of rawClis) {
+      if (srv && srv.id && !mergedClis.some((m) => m.id === srv.id)) {
+        mergedClis.push(srv);
+      }
+    }
+
+    const availableClis = [
+      ...mergedClis.filter((c) => c.installed),
+      ...mergedClis.filter((c) => !c.installed),
+    ];
 
     const existing = document.querySelector(".fluent-dialog-overlay");
     if (existing) existing.remove();
@@ -547,7 +687,7 @@ async function openAiUsageModal() {
 
     const historyRowsHtml =
       history.length === 0
-        ? `<tr><td colspan="5" style="padding:24px 12px;text-align:center;color:var(--text-3);">아직 기록된 AI 호출 내역이 없습니다.<br><span style="font-size:11.5px;">(스포이드 동작 감지는 AI를 호출하지 않아 요금이 발생하지 않습니다.)</span></td></tr>`
+        ? `<tr><td colspan="5" style="padding:20px 12px;text-align:center;color:var(--text-3);">아직 기록된 AI 호출 내역이 없습니다.<br><span style="font-size:11.5px;">(스포이드 동작 감지는 AI를 호출하지 않아 요금이 발생하지 않습니다.)</span></td></tr>`
         : history
             .map((item) => {
               const dt = new Date(item.timestamp);
@@ -556,17 +696,20 @@ async function openAiUsageModal() {
                 : `${String(dt.getMonth() + 1).padStart(2, "0")}/${String(dt.getDate()).padStart(2, "0")} ${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}:${String(dt.getSeconds()).padStart(2, "0")}`;
               const isCliCall = item.mode === "cli" || String(item.model || "").startsWith("[CLI]");
               const costCellHtml = isCliCall
-                ? `<span style="color:var(--ok);font-weight:700;">₩0 (CLI 로그인)</span>`
-                : `₩${Number(item.costKrw || 0).toFixed(2)} <span style="color:var(--text-3);font-weight:400;">($${Number(item.costUsd || 0).toFixed(5)})</span>`;
+                ? `<span style="color:var(--ok);font-weight:700;" title="로컬 CLI 로그인 세션 호출 (API 요금 ₩0)">₩0 (CLI)</span>`
+                : `₩${Number(item.costKrw || 0).toFixed(2)} <span style="color:var(--text-3);font-weight:400;">($${Number(item.costUsd || 0).toFixed(4)})</span>`;
+              const totalTokStr = Number(item.totalTokens || 0).toLocaleString();
+              const promptTokStr = Number(item.promptTokens || 0).toLocaleString();
+              const outTokStr = Number(item.outputTokens || 0).toLocaleString();
               return `
                 <tr style="border-bottom:1px solid var(--stroke);">
-                  <td style="padding:7px 8px;color:var(--text-3);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap;">${timeStr}</td>
-                  <td style="padding:7px 8px;color:var(--text);font-weight:600;white-space:nowrap;">${item.feature}</td>
-                  <td style="padding:7px 8px;color:var(--text-2);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap;">${item.model}</td>
-                  <td style="padding:7px 8px;color:var(--text-2);font-family:var(--font-mono);font-size:11.5px;text-align:right;white-space:nowrap;" title="입력 ${Number(item.promptTokens || 0).toLocaleString()} / 출력 ${Number(item.outputTokens || 0).toLocaleString()}">
-                    ${Number(item.totalTokens || 0).toLocaleString()} <span style="color:var(--text-3);font-size:10.5px;">(${Number(item.promptTokens || 0).toLocaleString()}+${Number(item.outputTokens || 0).toLocaleString()})</span>
+                  <td style="padding:6px 8px;color:var(--text-3);font-family:var(--font-mono);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${timeStr}">${timeStr}</td>
+                  <td style="padding:6px 8px;color:var(--text);font-weight:600;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${item.feature}">${item.feature}</td>
+                  <td style="padding:6px 8px;color:var(--text-2);font-family:var(--font-mono);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${item.model}">${item.model}</td>
+                  <td style="padding:6px 8px;color:var(--text-2);font-family:var(--font-mono);font-size:11px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="총 ${totalTokStr} 토큰 (입력 ${promptTokStr} / 출력 ${outTokStr})">
+                    ${totalTokStr} <span style="color:var(--text-3);font-size:10px;">(${promptTokStr}+${outTokStr})</span>
                   </td>
-                  <td style="padding:7px 8px;color:var(--accent);font-family:var(--font-mono);font-size:11.5px;font-weight:600;text-align:right;white-space:nowrap;">
+                  <td style="padding:6px 8px;color:var(--accent);font-family:var(--font-mono);font-size:11px;font-weight:600;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                     ${costCellHtml}
                   </td>
                 </tr>`;
@@ -574,55 +717,55 @@ async function openAiUsageModal() {
             .join("");
 
     overlay.innerHTML = `
-      <div class="fluent-dialog-card" style="max-width:720px;" role="dialog" aria-modal="true">
-        <div class="fluent-dialog-header">
+      <div class="fluent-dialog-card ai-usage-modal-card" style="max-width:780px;width:94vw;" role="dialog" aria-modal="true">
+        <div class="fluent-dialog-header" style="padding:13px 20px 8px;">
           <div class="fluent-dialog-icon type-info">⚙️</div>
           <div class="fluent-dialog-title">AI 실행 모드 설정 (API 모드 / CLI 모드) 및 사용량</div>
           <button type="button" class="fluent-dialog-close" id="btn-close-ai-usage" title="닫기 (Esc)">✕</button>
         </div>
-        <div class="fluent-dialog-body" style="white-space:normal;padding-top:8px;">
+        <div class="fluent-dialog-body" style="white-space:normal;padding:4px 20px 14px;max-height:none;overflow:visible;">
           <div style="font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:6px;">
             1. AI 실행 엔진 방식 선택 (대본 생성 · 시나리오 생성 · 실시간 자가치유 공통 적용)
           </div>
-          <div class="ai-mode-card-grid">
-            <div class="ai-mode-option-card ${currentMode === "api" ? "selected-api" : ""}" id="card-select-api-mode">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                <span style="font-weight:700;font-size:13px;color:var(--text);">🔌 API 모드 (Google Gemini SDK)</span>
-                <span class="status-tag" style="background:${usage.geminiApiKeySet ? "var(--accent-soft)" : "var(--fail-soft)"};color:${usage.geminiApiKeySet ? "var(--accent)" : "var(--fail)"};">
+          <div class="ai-mode-card-grid" style="margin-bottom:10px;">
+            <div class="ai-mode-option-card ${currentMode === "api" ? "selected-api" : ""}" id="card-select-api-mode" style="padding:10px 13px;">
+              <div class="ai-mode-card-header-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:nowrap;white-space:nowrap;margin-bottom:4px;">
+                <span style="font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">🔌 API 모드 (Gemini SDK)</span>
+                <span class="status-tag" style="flex-shrink:0;white-space:nowrap;background:${usage.geminiApiKeySet ? "var(--accent-soft)" : "var(--fail-soft)"};color:${usage.geminiApiKeySet ? "var(--accent)" : "var(--fail)"};">
                   ${usage.geminiApiKeySet ? `Key: ${usage.geminiApiKeyPreview}` : "Key 미설정"}
                 </span>
               </div>
-              <div style="font-size:11.5px;color:var(--text-2);line-height:1.45;">
+              <div style="font-size:11.5px;color:var(--text-2);line-height:1.4;">
                 <code>.env</code>에 설정된 <code>GEMINI_API_KEY</code>로 직접 호출합니다. 응답 속도가 가장 빠르며 멀티모달 화면 이미지 분석을 지원합니다.
               </div>
             </div>
 
-            <div class="ai-mode-option-card ${currentMode === "cli" ? "selected-cli" : ""}" id="card-select-cli-mode">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                <span style="font-weight:700;font-size:13px;color:var(--text);">💻 CLI 모드 (로컬 로그인 AI CLI)</span>
-                <span class="status-tag" style="background:var(--ok-soft);color:var(--ok);">API 요금 ₩0</span>
+            <div class="ai-mode-option-card ${currentMode === "cli" ? "selected-cli" : ""}" id="card-select-cli-mode" style="padding:10px 13px;">
+              <div class="ai-mode-card-header-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:nowrap;white-space:nowrap;margin-bottom:4px;">
+                <span style="font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">💻 CLI 모드 (로컬 로그인 CLI)</span>
+                <span class="status-tag" style="flex-shrink:0;white-space:nowrap;background:var(--ok-soft);color:var(--ok);">API 요금 ₩0</span>
               </div>
-              <div style="font-size:11.5px;color:var(--text-2);line-height:1.45;">
-                PC에 로그인된 <strong>Antigravity CLI (agy)</strong> 또는 <strong>Claude CLI</strong>를 백그라운드로 호출합니다. 별도 API 키가 필요 없습니다.
+              <div style="font-size:11.5px;color:var(--text-2);line-height:1.4;">
+                PC에 설치된 <strong>Antigravity (agy)</strong> · <strong>NAON CODE (naoncode)</strong> · <strong>Claude</strong> · <strong>Gemini</strong> · <strong>Codex</strong> · <strong>Ollama</strong> · <strong>Copilot</strong> CLI를 호출합니다.
               </div>
             </div>
           </div>
 
-          <div id="modal-cli-settings-box" style="background:var(--layer);border:1px solid var(--stroke);border-radius:var(--r-card);padding:10px 12px;margin-bottom:14px;">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <span style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">💻 로컬 CLI 도구:</span>
-              <select id="modal-cli-provider-select" class="narration-select" style="flex:1;min-width:190px;">
+          <div id="modal-cli-settings-box" style="background:var(--layer);border:1px solid var(--stroke);border-radius:var(--r-card);padding:9px 12px;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;">
+              <span style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;flex-shrink:0;">💻 로컬 CLI 도구:</span>
+              <select id="modal-cli-provider-select" class="narration-select" style="flex:1 1 210px;min-width:0;">
                 ${cliProviderOptionsHtml}
               </select>
-              <span style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">모델:</span>
-              <select id="modal-cli-model-select" class="narration-select" style="flex:1;min-width:210px;">
+              <span style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;flex-shrink:0;">모델:</span>
+              <select id="modal-cli-model-select" class="narration-select" style="flex:1.15 1 240px;min-width:0;">
                 ${getModelsHtmlForProvider(currentCliProvider, currentCliModel)}
               </select>
-              <button type="button" class="btn btn-sm btn-outline" id="btn-test-ai-mode" style="white-space:nowrap;">
+              <button type="button" class="btn btn-sm btn-outline" id="btn-test-ai-mode" style="white-space:nowrap;flex-shrink:0;">
                 ⚡ 연결 테스트
               </button>
             </div>
-            <div id="modal-ai-test-result" style="font-size:11.5px;color:var(--text-3);margin-top:6px;font-family:var(--font-mono);">
+            <div id="modal-ai-test-result" style="font-size:11.5px;color:var(--text-3);margin-top:5px;font-family:var(--font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
               ※ 상단 헤더 우측의 <strong>[🔌 API | 💻 CLI]</strong> 스위치로도 언제든 1클릭 전환할 수 있습니다.
             </div>
           </div>
@@ -630,43 +773,50 @@ async function openAiUsageModal() {
           <div style="font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:6px;">
             2. 토큰 사용량 및 예상 API 요금 요약
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-            <div style="background:var(--layer);border:1px solid var(--stroke);border-radius:var(--r-card);padding:11px 14px;">
-              <div style="font-size:12px;color:var(--text-2);margin-bottom:4px;display:flex;justify-content:space-between;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div style="background:var(--layer);border:1px solid var(--stroke);border-radius:var(--r-card);padding:9px 13px;">
+              <div style="font-size:12px;color:var(--text-2);margin-bottom:3px;display:flex;justify-content:space-between;white-space:nowrap;">
                 <span>오늘 사용량 (${usage.todayKey || "오늘"})</span>
                 <span style="font-weight:600;color:var(--text);">${today.calls}회 호출</span>
               </div>
-              <div style="font-size:17px;font-weight:700;color:var(--accent);font-family:var(--font-mono);">
-                약 ₩${Number(today.costKrw || 0).toFixed(1)}원 <span style="font-size:12px;color:var(--text-2);font-weight:500;">($${Number(today.costUsd || 0).toFixed(4)})</span>
+              <div style="font-size:16px;font-weight:700;color:var(--accent);font-family:var(--font-mono);white-space:nowrap;">
+                약 ₩${Number(today.costKrw || 0).toFixed(1)}원 <span style="font-size:11.5px;color:var(--text-2);font-weight:500;">($${Number(today.costUsd || 0).toFixed(4)})</span>
               </div>
-              <div style="font-size:11.5px;color:var(--text-3);margin-top:4px;font-family:var(--font-mono);">
+              <div style="font-size:11px;color:var(--text-3);margin-top:3px;font-family:var(--font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                 총 ${Number(today.totalTokens || 0).toLocaleString()} 토큰 (입력 ${Number(today.promptTokens || 0).toLocaleString()} · 출력 ${Number(today.outputTokens || 0).toLocaleString()})
               </div>
             </div>
-            <div style="background:var(--layer);border:1px solid var(--stroke);border-radius:var(--r-card);padding:11px 14px;">
-              <div style="font-size:12px;color:var(--text-2);margin-bottom:4px;display:flex;justify-content:space-between;">
+            <div style="background:var(--layer);border:1px solid var(--stroke);border-radius:var(--r-card);padding:9px 13px;">
+              <div style="font-size:12px;color:var(--text-2);margin-bottom:3px;display:flex;justify-content:space-between;white-space:nowrap;">
                 <span>전체 누적 사용량</span>
                 <span style="font-weight:600;color:var(--text);">${total.calls}회 호출</span>
               </div>
-              <div style="font-size:17px;font-weight:700;color:var(--text);font-family:var(--font-mono);">
-                약 ₩${Number(total.costKrw || 0).toFixed(1)}원 <span style="font-size:12px;color:var(--text-2);font-weight:500;">($${Number(total.costUsd || 0).toFixed(4)})</span>
+              <div style="font-size:16px;font-weight:700;color:var(--text);font-family:var(--font-mono);white-space:nowrap;">
+                약 ₩${Number(total.costKrw || 0).toFixed(1)}원 <span style="font-size:11.5px;color:var(--text-2);font-weight:500;">($${Number(total.costUsd || 0).toFixed(4)})</span>
               </div>
-              <div style="font-size:11.5px;color:var(--text-3);margin-top:4px;font-family:var(--font-mono);">
+              <div style="font-size:11px;color:var(--text-3);margin-top:3px;font-family:var(--font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                 총 ${Number(total.totalTokens || 0).toLocaleString()} 토큰 (입력 ${Number(total.promptTokens || 0).toLocaleString()} · 출력 ${Number(total.outputTokens || 0).toLocaleString()})
               </div>
             </div>
           </div>
 
-          <div style="font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px;">최근 호출 상세 내역 (최대 30건)</div>
-          <div style="max-height:200px;overflow-y:auto;border:1px solid var(--stroke);border-radius:var(--r-ctl);background:var(--layer);">
-            <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:left;">
+          <div style="font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:5px;">최근 호출 상세 내역 (최대 30건)</div>
+          <div id="ai-usage-history-scroll" style="max-height:175px;overflow-y:auto;overflow-x:hidden;border:1px solid var(--stroke);border-radius:var(--r-ctl);background:var(--layer);">
+            <table class="ai-usage-history-table" style="width:100%;table-layout:fixed;border-collapse:collapse;font-size:11.5px;text-align:left;">
+              <colgroup>
+                <col style="width:14%;">
+                <col style="width:22%;">
+                <col style="width:31%;">
+                <col style="width:21%;">
+                <col style="width:12%;">
+              </colgroup>
               <thead>
-                <tr style="border-bottom:1px solid var(--stroke);background:var(--card);color:var(--text-2);font-size:11.5px;position:sticky;top:0;">
-                  <th style="padding:7px 8px;font-weight:600;">시각</th>
-                  <th style="padding:7px 8px;font-weight:600;">기능</th>
-                  <th style="padding:7px 8px;font-weight:600;">실행 모델</th>
-                  <th style="padding:7px 8px;font-weight:600;text-align:right;">토큰 (입력+출력)</th>
-                  <th style="padding:7px 8px;font-weight:600;text-align:right;">예상 요금</th>
+                <tr style="border-bottom:1px solid var(--stroke);background:var(--card);color:var(--text-2);font-size:11px;position:sticky;top:0;z-index:1;">
+                  <th style="padding:6px 8px;font-weight:600;white-space:nowrap;">시각</th>
+                  <th style="padding:6px 8px;font-weight:600;white-space:nowrap;">기능</th>
+                  <th style="padding:6px 8px;font-weight:600;white-space:nowrap;">실행 모델</th>
+                  <th style="padding:6px 8px;font-weight:600;text-align:right;white-space:nowrap;">토큰 (입력+출력)</th>
+                  <th style="padding:6px 8px;font-weight:600;text-align:right;white-space:nowrap;">예상 요금</th>
                 </tr>
               </thead>
               <tbody>
@@ -674,12 +824,12 @@ async function openAiUsageModal() {
               </tbody>
             </table>
           </div>
-          <div style="margin-top:8px;font-size:11.5px;color:var(--text-3);display:flex;justify-content:space-between;">
+          <div style="margin-top:6px;font-size:11px;color:var(--text-3);display:flex;justify-content:space-between;white-space:nowrap;gap:8px;">
             <span>※ API 모드: Google AI Studio 공식 단가($1 = ₩${usage.exchangeRateKrw || 1400}) 기준 추정치</span>
             <span>💻 CLI 모드 호출은 구독 세션을 사용하므로 API 요금이 ₩0원입니다.</span>
           </div>
         </div>
-        <div class="fluent-dialog-footer" style="justify-content:space-between;">
+        <div class="fluent-dialog-footer" style="justify-content:space-between;padding:10px 20px;">
           <button type="button" class="btn btn-secondary" id="btn-reset-ai-usage">내역 초기화</button>
           <button type="button" class="btn btn-primary" id="btn-ok-ai-usage">닫기</button>
         </div>
@@ -802,20 +952,30 @@ async function fetchScenarios() {
     const data = await res.json();
     allScenariosList = data.scenarios || [];
 
-    // Populate Tab 1 Quick Scenario Loader Dropdown
+    // Populate Tab 1 Quick Scenario Loader Dropdown (grouped by domain/site)
     if (editorScenarioSelect) {
       const prevVal = editorScenarioSelect.value || currentSlug || "";
       editorScenarioSelect.innerHTML = `<option value="">📂 기존 시나리오 빠른 불러오기 (${allScenariosList.length}개)...</option>`;
-      allScenariosList.forEach((s) => {
-        const opt = document.createElement("option");
-        opt.value = s.slug;
-        const shortFlow = s.flowSummary
-          ? s.flowSummary.length > 32
-            ? s.flowSummary.slice(0, 32) + "…"
-            : s.flowSummary
-          : `${s.actionsCount}단계`;
-        opt.textContent = `${s.slug} — ${shortFlow}`;
-        editorScenarioSelect.appendChild(opt);
+      const groupsForSelect = buildDomainSummaryGroups(allScenariosList);
+      groupsForSelect.forEach((g) => {
+        const optgroup = document.createElement("optgroup");
+        const groupLabel =
+          g.siteName && g.siteName !== g.domainKey
+            ? `🏢 ${g.siteName} (${g.domainKey}) — ${g.items.length}개`
+            : `🌐 ${g.domainKey} — ${g.items.length}개`;
+        optgroup.label = groupLabel;
+        g.items.forEach((s) => {
+          const opt = document.createElement("option");
+          opt.value = s.slug;
+          const shortFlow = s.flowSummary
+            ? s.flowSummary.length > 32
+              ? s.flowSummary.slice(0, 32) + "…"
+              : s.flowSummary
+            : `${s.actionsCount}단계`;
+          opt.textContent = `${s.slug} — ${shortFlow}`;
+          optgroup.appendChild(opt);
+        });
+        editorScenarioSelect.appendChild(optgroup);
       });
       if (prevVal) editorScenarioSelect.value = prevVal;
     }
@@ -841,18 +1001,119 @@ async function fetchScenarios() {
   }
 }
 
+let scenarioDomainFilter = "all";
+const collapsedDomainGroups = new Set(
+  (() => {
+    try {
+      const raw = localStorage.getItem("screen_demo_collapsed_domains");
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  })()
+);
+
+function saveCollapsedDomainGroups() {
+  try {
+    localStorage.setItem("screen_demo_collapsed_domains", JSON.stringify(Array.from(collapsedDomainGroups)));
+  } catch {}
+}
+
+function buildDomainSummaryGroups(list) {
+  const domainMap = new Map();
+  (list || []).forEach((s) => {
+    const domainKey = String(s.domainKey || "other").trim() || "other";
+    let g = domainMap.get(domainKey);
+    if (!g) {
+      g = {
+        domainKey,
+        hostKey: s.hostKey || domainKey,
+        siteName: s.siteName || domainKey,
+        primaryColor: s.primaryColor || "#0068FF",
+        logoUrl: s.logoUrl || "",
+        items: [],
+      };
+      domainMap.set(domainKey, g);
+    } else {
+      if ((!g.siteName || g.siteName === g.domainKey) && s.siteName && s.siteName !== domainKey) {
+        g.siteName = s.siteName;
+      }
+      if (!g.logoUrl && s.logoUrl) {
+        g.logoUrl = s.logoUrl;
+      }
+      if ((!g.primaryColor || g.primaryColor === "#0068FF") && s.primaryColor && s.primaryColor !== "#0068FF") {
+        g.primaryColor = s.primaryColor;
+      }
+    }
+    g.items.push(s);
+  });
+  return Array.from(domainMap.values());
+}
+
+function renderScenarioDomainChips() {
+  const chipsContainer = document.getElementById("scenario-domain-chips");
+  if (!chipsContainer) return;
+
+  const groups = buildDomainSummaryGroups(allScenariosList);
+  if (scenarioDomainFilter !== "all" && !groups.some((g) => g.domainKey === scenarioDomainFilter)) {
+    scenarioDomainFilter = "all";
+  }
+
+  if (groups.length === 0) {
+    chipsContainer.classList.add("hidden");
+    chipsContainer.innerHTML = "";
+    return;
+  }
+
+  chipsContainer.classList.remove("hidden");
+  const allChipHtml = `
+    <button type="button" class="scenario-domain-chip${scenarioDomainFilter === "all" ? " active" : ""}" data-domain="all" title="모든 도메인/사이트 시나리오 보기">
+      <span>🌐 전체</span>
+      <span class="domain-chip-count">(${allScenariosList.length})</span>
+    </button>
+  `;
+
+  const domainChipsHtml = groups
+    .map((g) => {
+      const isActive = scenarioDomainFilter === g.domainKey;
+      const label = g.siteName && g.siteName !== g.domainKey ? `${g.siteName}` : g.domainKey;
+      return `
+        <button type="button" class="scenario-domain-chip${isActive ? " active" : ""}" data-domain="${escapeHtmlAttr(g.domainKey)}" title="${escapeHtmlAttr(g.siteName)} (${escapeHtmlAttr(g.domainKey)}) 시나리오만 필터링">
+          <span class="domain-chip-dot" style="background:${escapeHtmlAttr(g.primaryColor || "#0068FF")};"></span>
+          <span>${escapeHtmlAttr(label)}</span>
+          <span class="domain-chip-count">(${g.items.length})</span>
+        </button>
+      `;
+    })
+    .join("");
+
+  chipsContainer.innerHTML = allChipHtml + domainChipsHtml;
+
+  chipsContainer.querySelectorAll(".scenario-domain-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      scenarioDomainFilter = chip.dataset.domain || "all";
+      renderScenarioList();
+    });
+  });
+}
+
 function renderScenarioList() {
   if (!scenarioCardsContainer) return;
+
+  renderScenarioDomainChips();
 
   const query = (scenarioSearchQuery || "").trim().toLowerCase();
   const filtered = allScenariosList.filter((s) => {
     if (scenarioFilterMode === "rendered" && !s.hasRenderedVideo) return false;
     if (scenarioFilterMode === "recorded" && !s.hasVideo) return false;
     if (scenarioFilterMode === "eyedropper" && !s.recordedByEyedropper) return false;
+    if (scenarioDomainFilter !== "all" && (s.domainKey || "other") !== scenarioDomainFilter) return false;
     if (query) {
       const slugMatch = (s.slug || "").toLowerCase().includes(query);
       const flowMatch = (s.flowSummary || "").toLowerCase().includes(query);
-      return slugMatch || flowMatch;
+      const siteMatch = (s.siteName || "").toLowerCase().includes(query);
+      const domainMatch = (s.domainKey || "").toLowerCase().includes(query);
+      return slugMatch || flowMatch || siteMatch || domainMatch;
     }
     return true;
   });
@@ -869,107 +1130,158 @@ function renderScenarioList() {
   if (filtered.length === 0) {
     scenarioCardsContainer.innerHTML = `
       <div class="studio-empty-box" style="margin-top: 12px;">
-        조건에 맞는 시나리오가 없습니다.<br>검색어나 필터 칩을 변경해보세요.
+        조건에 맞는 시나리오가 없습니다.<br>검색어나 필터/도메인 칩을 변경해보세요.
       </div>
     `;
+    renderMergeQueueUI();
     return;
   }
 
-  filtered.forEach((s) => {
-    const item = document.createElement("div");
-    item.className = "scenario-item";
-    item.dataset.slug = s.slug;
-    if (selectedScenario === s.slug) item.classList.add("selected");
+  const domainGroups = buildDomainSummaryGroups(filtered);
 
-    const isActivelyRendering =
-      activeRenderTask &&
-      (activeRenderTask.status === "running" || activeRenderTask.status === "queued") &&
-      activeRenderTask.slug === s.slug;
-    const isQueuedForRender =
-      !isActivelyRendering &&
-      Array.isArray(renderQueueList) &&
-      renderQueueList.some((q) => q && q.slug === s.slug);
+  domainGroups.forEach((group) => {
+    const groupEl = document.createElement("div");
+    const isCollapsed = collapsedDomainGroups.has(group.domainKey) && !query && scenarioDomainFilter === "all";
+    groupEl.className = `scenario-domain-group${isCollapsed ? " collapsed" : ""}`;
+    groupEl.dataset.domainGroup = group.domainKey;
 
-    const statusBadgeHtml = isActivelyRendering
-      ? `<span class="status-tag status-tag-rendering" data-render-badge="${escapeHtmlAttr(s.slug)}" title="백그라운드 최종 MP4 렌더링 진행 중 (${activeRenderTask.fps || 30}fps)">⏳ 렌더링 ${activeRenderTask.progress || 0}%</span>`
-      : isQueuedForRender
-      ? `<span class="status-tag status-tag-queued" data-render-badge="${escapeHtmlAttr(s.slug)}" title="백그라운드 렌더링 대기열 등록됨">🕒 대기 중</span>`
-      : s.hasRenderedVideo
-      ? '<span class="status-tag status-tag-rendered" title="줌/커서 합성 최종 MP4 완료">✨ 최종본</span>'
-      : s.hasVideo
-      ? '<span class="status-tag status-tag-raw" title="원본 브라우저 녹화 완료">📹 녹화됨</span>'
-      : '<span class="status-tag status-tag-empty">녹화 전</span>';
-
-    const mergedBadgeHtml =
-      Array.isArray(s.mergedFromSlugs) && s.mergedFromSlugs.length > 0
-        ? `<span class="status-tag status-tag-merged" title="병합된 챕터: ${escapeHtmlAttr(s.mergedFromSlugs.join(" + "))}">🔗 병합본</span>`
-        : "";
-
-    const queueIdx = videoMergeQueue.indexOf(s.slug);
-    const mergeBtnHtml =
-      s.hasRenderedVideo || s.hasVideo
-        ? `<button type="button" class="btn-card-merge ${queueIdx >= 0 ? "in-queue" : ""}" title="${
-            queueIdx >= 0
-              ? `현재 합치기 목록 #${queueIdx + 1}번에 담겨 있습니다 (클릭 시 해제)`
-              : "이 영상을 통합 목차(Master Contents) 슬라이드가 포함된 합치기 목록에 추가합니다"
-          }">${queueIdx >= 0 ? `✓ 합치기 #${queueIdx + 1}` : "🔗 합치기+"}</button>`
-        : "";
-
-    item.innerHTML = `
-      <div class="scenario-item-header">
-        <div class="scenario-title-stack">
-          <span class="scenario-topic-title" title="${escapeHtmlAttr(s.slug)}">${escapeHtmlAttr(s.slug)}</span>
-        </div>
-        <div class="scenario-badges-right">
-          ${mergedBadgeHtml}
-          ${s.recordedByEyedropper ? '<span class="status-tag status-tag-eye" title="스포이드 직접 시범 시나리오">💧</span>' : ""}
-          ${s.hasNarration ? '<span class="status-tag status-tag-tts" title="AI 나레이션 음성 합성됨">🎙️</span>' : ""}
-          ${statusBadgeHtml}
-        </div>
+    const headerEl = document.createElement("div");
+    headerEl.className = "scenario-domain-group-header";
+    headerEl.title = `클릭하여 '${group.siteName} (${group.domainKey})' 그룹 접기/펼치기`;
+    const hostDisplay = group.domainKey && group.domainKey !== group.siteName ? group.domainKey : "";
+    headerEl.innerHTML = `
+      <div class="domain-group-left">
+        <span class="domain-group-color-bar" style="background:${escapeHtmlAttr(group.primaryColor || "#0068FF")};"></span>
+        ${
+          group.logoUrl
+            ? `<img class="domain-group-logo" src="${escapeHtmlAttr(group.logoUrl)}" alt="${escapeHtmlAttr(group.siteName)}" onerror="this.style.display='none'" />`
+            : ""
+        }
+        <span class="domain-group-title">${escapeHtmlAttr(group.siteName)}</span>
+        ${hostDisplay ? `<span class="domain-group-host">${escapeHtmlAttr(hostDisplay)}</span>` : ""}
       </div>
-      <div class="scenario-flow-summary" title="${escapeHtmlAttr(s.flowSummary || "")}">
-        ${escapeHtmlAttr(s.flowSummary || "동작 설명이 등록되지 않은 시나리오입니다.")}
-      </div>
-      <div class="scenario-meta-row">
-        <div class="scenario-meta-stats">
-          <span>🎯 ${s.actionsCount}단계</span>
-          <span>🔍 줌 ${s.zoomSegmentsCount}구간</span>
-          ${s.durationSec ? `<span>⏱️ ${s.durationSec}s</span>` : ""}
-        </div>
-        <div class="scenario-card-actions-right">
-          ${mergeBtnHtml}
-          <button type="button" class="btn-card-edit" title="브라우징 플랜 편집기(탭 1)에서 이 시나리오 열기">✏️ 편집</button>
-          <button type="button" class="btn-card-delete" title="이 시나리오와 관련 녹화/렌더링 파일을 모두 삭제합니다">🗑️</button>
-        </div>
+      <div class="domain-group-right">
+        <span class="domain-group-count">${group.items.length}개</span>
+        <span class="domain-group-chevron">▼</span>
       </div>
     `;
 
-    const mergeBtn = item.querySelector(".btn-card-merge");
-    if (mergeBtn) {
-      mergeBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        toggleScenarioInMergeQueue(s.slug);
-      });
-    }
+    headerEl.addEventListener("click", () => {
+      const nowCollapsed = !groupEl.classList.contains("collapsed");
+      groupEl.classList.toggle("collapsed", nowCollapsed);
+      if (nowCollapsed) {
+        collapsedDomainGroups.add(group.domainKey);
+      } else {
+        collapsedDomainGroups.delete(group.domainKey);
+      }
+      saveCollapsedDomainGroups();
+    });
 
-    const editBtn = item.querySelector(".btn-card-edit");
-    if (editBtn) {
-      editBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        loadScenarioIntoEditor(s.slug, true);
-      });
-    }
+    const bodyEl = document.createElement("div");
+    bodyEl.className = "scenario-domain-group-body";
 
-    const deleteBtn = item.querySelector(".btn-card-delete");
-    if (deleteBtn) {
-      deleteBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        handleDeleteScenario(s.slug);
-      });
-    }
+    group.items.forEach((s) => {
+      const item = document.createElement("div");
+      item.className = "scenario-item";
+      item.dataset.slug = s.slug;
+      item.dataset.domainKey = s.domainKey || "other";
+      if (selectedScenario === s.slug) item.classList.add("selected");
 
-    item.addEventListener("click", () => selectScenario(s.slug));
-    scenarioCardsContainer.appendChild(item);
+      const isActivelyRendering =
+        activeRenderTask &&
+        (activeRenderTask.status === "running" || activeRenderTask.status === "queued") &&
+        activeRenderTask.slug === s.slug;
+      const isQueuedForRender =
+        !isActivelyRendering &&
+        Array.isArray(renderQueueList) &&
+        renderQueueList.some((q) => q && q.slug === s.slug);
+
+      const statusBadgeHtml = isActivelyRendering
+        ? `<span class="status-tag status-tag-rendering" data-render-badge="${escapeHtmlAttr(s.slug)}" title="백그라운드 최종 MP4 렌더링 진행 중 (${activeRenderTask.fps || 30}fps)">⏳ 렌더링 ${activeRenderTask.progress || 0}%</span>`
+        : isQueuedForRender
+        ? `<span class="status-tag status-tag-queued" data-render-badge="${escapeHtmlAttr(s.slug)}" title="백그라운드 렌더링 대기열 등록됨">🕒 대기 중</span>`
+        : s.hasRenderedVideo
+        ? '<span class="status-tag status-tag-rendered" title="줌/커서 합성 최종 MP4 완료">✨ 최종본</span>'
+        : s.hasVideo
+        ? '<span class="status-tag status-tag-raw" title="원본 브라우저 녹화 완료">📹 녹화됨</span>'
+        : '<span class="status-tag status-tag-empty">녹화 전</span>';
+
+      const mergedBadgeHtml =
+        Array.isArray(s.mergedFromSlugs) && s.mergedFromSlugs.length > 0
+          ? `<span class="status-tag status-tag-merged" title="병합된 챕터: ${escapeHtmlAttr(s.mergedFromSlugs.join(" + "))}">🔗 병합본</span>`
+          : "";
+
+      const queueIdx = videoMergeQueue.indexOf(s.slug);
+      if (queueIdx >= 0) item.classList.add("in-merge-queue");
+      const mergeBtnHtml =
+        s.hasRenderedVideo || s.hasVideo
+          ? `<button type="button" class="btn-card-merge ${queueIdx >= 0 ? "in-queue" : ""}" title="${
+              queueIdx >= 0
+                ? `현재 합치기 목록 #${queueIdx + 1}번에 담겨 있습니다 (클릭 시 해제)`
+                : "이 영상을 통합 목차(Master Contents) 슬라이드가 포함된 합치기 목록에 추가합니다"
+            }">${queueIdx >= 0 ? `✓ 합치기 #${queueIdx + 1}` : "🔗 합치기+"}</button>`
+          : "";
+
+      item.innerHTML = `
+        <div class="scenario-item-header">
+          <div class="scenario-title-stack">
+            <span class="scenario-topic-title" title="${escapeHtmlAttr(s.slug)}">${escapeHtmlAttr(s.slug)}</span>
+          </div>
+          <div class="scenario-badges-right">
+            ${mergedBadgeHtml}
+            ${s.recordedByEyedropper ? '<span class="status-tag status-tag-eye" title="스포이드 직접 시범 시나리오">💧</span>' : ""}
+            ${s.hasNarration ? '<span class="status-tag status-tag-tts" title="AI 나레이션 음성 합성됨">🎙️</span>' : ""}
+            ${statusBadgeHtml}
+          </div>
+        </div>
+        <div class="scenario-flow-summary" title="${escapeHtmlAttr(s.flowSummary || "")}">
+          ${escapeHtmlAttr(s.flowSummary || "동작 설명이 등록되지 않은 시나리오입니다.")}
+        </div>
+        <div class="scenario-meta-row">
+          <div class="scenario-meta-stats">
+            <span>🎯 ${s.actionsCount}단계</span>
+            <span>🔍 줌 ${s.zoomSegmentsCount}구간</span>
+            ${s.durationSec ? `<span>⏱️ ${s.durationSec}s</span>` : ""}
+          </div>
+          <div class="scenario-card-actions-right">
+            ${mergeBtnHtml}
+            <button type="button" class="btn-card-edit" title="브라우징 플랜 편집기(탭 1)에서 이 시나리오 열기">✏️ 편집</button>
+            <button type="button" class="btn-card-delete" title="이 시나리오와 관련 녹화/렌더링 파일을 모두 삭제합니다">🗑️</button>
+          </div>
+        </div>
+      `;
+
+      const mergeBtn = item.querySelector(".btn-card-merge");
+      if (mergeBtn) {
+        mergeBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggleScenarioInMergeQueue(s.slug);
+        });
+      }
+
+      const editBtn = item.querySelector(".btn-card-edit");
+      if (editBtn) {
+        editBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          loadScenarioIntoEditor(s.slug, true);
+        });
+      }
+
+      const deleteBtn = item.querySelector(".btn-card-delete");
+      if (deleteBtn) {
+        deleteBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          handleDeleteScenario(s.slug);
+        });
+      }
+
+      item.addEventListener("click", () => selectScenario(s.slug));
+      bodyEl.appendChild(item);
+    });
+
+    groupEl.appendChild(headerEl);
+    groupEl.appendChild(bodyEl);
+    scenarioCardsContainer.appendChild(groupEl);
   });
 
   renderMergeQueueUI();
@@ -1031,6 +1343,171 @@ async function handleDeleteScenario(slug) {
     }
   } catch (err) {
     alert(`❌ 시나리오 삭제 실패: ${err.message}`);
+  }
+}
+
+let latestStorageStats = null;
+
+function formatBytesToMbOrGb(bytes) {
+  const num = Number(bytes || 0);
+  if (num <= 0) return "0 MB";
+  const mb = num / (1024 * 1024);
+  if (mb >= 1024) {
+    return `${(mb / 1024).toFixed(2)} GB (${mb.toFixed(0)} MB)`;
+  }
+  return `${mb.toFixed(1)} MB`;
+}
+
+function updateSelectedStorageReclaimUI() {
+  if (!latestStorageStats) return;
+  const r = latestStorageStats.reclaimable || {};
+  const chkHardlinks = document.getElementById("chk-storage-hardlinks");
+  const chkTemp = document.getElementById("chk-storage-temp");
+  const chkOrphan = document.getElementById("chk-storage-orphan");
+  const chkUndo = document.getElementById("chk-storage-undo");
+  const badgeEl = document.getElementById("storage-reclaim-badge");
+  const execBtn = document.getElementById("btn-execute-storage-cleanup");
+
+  let selectedBytes = 0;
+  if (!chkHardlinks || chkHardlinks.checked) {
+    selectedBytes += Number(r.deduplicateHardlinks?.bytes || 0);
+  }
+  if (!chkTemp || chkTemp.checked) {
+    selectedBytes += Number(r.tempCacheFiles?.bytes || 0);
+  }
+  if (!chkOrphan || chkOrphan.checked) {
+    selectedBytes += Number(r.orphanOutputs?.bytes || 0);
+  }
+  if (chkUndo && chkUndo.checked) {
+    selectedBytes += Number(r.undoBackups?.bytes || 0);
+  }
+
+  if (badgeEl) {
+    badgeEl.textContent =
+      selectedBytes > 100 * 1024
+        ? `약 ${formatBytesToMbOrGb(selectedBytes)} 절감 가능`
+        : "✨ 최적화 완료됨";
+  }
+  if (execBtn) {
+    execBtn.disabled = selectedBytes <= 0;
+  }
+}
+
+async function loadStorageStats() {
+  const summaryEl = document.getElementById("storage-stats-summary");
+  const badgeEl = document.getElementById("storage-reclaim-badge");
+  try {
+    if (badgeEl) badgeEl.textContent = "분석 중...";
+    const res = await fetch("/api/storage/stats");
+    if (!res.ok) throw new Error("용량 조회 실패");
+    const data = await res.json();
+    const stats = data.stats;
+    if (!stats) return;
+    latestStorageStats = stats;
+
+    const r = stats.reclaimable || {};
+    const hlSizeEl = document.getElementById("storage-size-hardlinks");
+    const tmpSizeEl = document.getElementById("storage-size-temp");
+    const orpSizeEl = document.getElementById("storage-size-orphan");
+    const undoSizeEl = document.getElementById("storage-size-undo");
+    const toggleBtn = document.getElementById("btn-toggle-storage-drawer");
+
+    if (hlSizeEl) {
+      hlSizeEl.textContent = `${formatBytesToMbOrGb(r.deduplicateHardlinks?.bytes || 0)} (${r.deduplicateHardlinks?.count || 0}개)`;
+    }
+    if (tmpSizeEl) {
+      tmpSizeEl.textContent = `${formatBytesToMbOrGb(r.tempCacheFiles?.bytes || 0)} (${r.tempCacheFiles?.count || 0}개)`;
+    }
+    if (orpSizeEl) {
+      orpSizeEl.textContent = `${formatBytesToMbOrGb(r.orphanOutputs?.bytes || 0)} (${r.orphanOutputs?.count || 0}개)`;
+    }
+    if (undoSizeEl) {
+      undoSizeEl.textContent = `${formatBytesToMbOrGb(r.undoBackups?.bytes || 0)} (${r.undoBackups?.count || 0}개)`;
+    }
+
+    if (summaryEl) {
+      const savedText =
+        stats.hardlinkSavedBytes > 1024 * 1024
+          ? ` · 🔗 하드링크 절감 중: <strong>${formatBytesToMbOrGb(stats.hardlinkSavedBytes)}</strong>`
+          : "";
+      summaryEl.innerHTML = `실제 디스크 점유: <strong>${formatBytesToMbOrGb(stats.physicalTotalBytes)}</strong> <span style="opacity:0.8">(논리 합계: ${formatBytesToMbOrGb(stats.logicalTotalBytes)})</span>${savedText}`;
+    }
+
+    if (toggleBtn) {
+      const safeReclaimMb = (Number(r.totalBytes || 0) / (1024 * 1024)).toFixed(0);
+      toggleBtn.textContent =
+        Number(r.totalBytes || 0) > 10 * 1024 * 1024
+          ? `🧹 용량 (-${safeReclaimMb}MB)`
+          : "🧹 용량";
+    }
+
+    updateSelectedStorageReclaimUI();
+  } catch (err) {
+    if (summaryEl) {
+      summaryEl.textContent = `용량 분석 실패: ${err.message}`;
+    }
+  }
+}
+
+function toggleStorageDrawer(forceOpen = null) {
+  const drawer = document.getElementById("storage-optimizer-drawer");
+  const btn = document.getElementById("btn-toggle-storage-drawer");
+  if (!drawer) return;
+  const shouldOpen = forceOpen !== null ? Boolean(forceOpen) : drawer.classList.contains("hidden");
+  drawer.classList.toggle("hidden", !shouldOpen);
+  if (btn) btn.classList.toggle("active", shouldOpen);
+  if (shouldOpen) {
+    loadStorageStats();
+  }
+}
+
+async function handleExecuteStorageCleanup() {
+  const execBtn = document.getElementById("btn-execute-storage-cleanup");
+  const resultEl = document.getElementById("storage-cleanup-result");
+  const chkHardlinks = document.getElementById("chk-storage-hardlinks");
+  const chkTemp = document.getElementById("chk-storage-temp");
+  const chkOrphan = document.getElementById("chk-storage-orphan");
+  const chkUndo = document.getElementById("chk-storage-undo");
+
+  const origHtml = execBtn ? execBtn.innerHTML : "";
+  try {
+    if (execBtn) {
+      execBtn.disabled = true;
+      execBtn.innerHTML = `<span class="spinner" style="width:12px;height:12px;border-width:2px"></span> 최적화 진행 중...`;
+    }
+    if (resultEl) {
+      resultEl.classList.add("hidden");
+    }
+
+    const res = await fetch("/api/storage/cleanup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        deduplicateHardlinks: chkHardlinks ? chkHardlinks.checked : true,
+        cleanTempFiles: chkTemp ? chkTemp.checked : true,
+        cleanOrphanOutputs: chkOrphan ? chkOrphan.checked : true,
+        cleanUndoBackups: chkUndo ? chkUndo.checked : false,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "디스크 용량 최적화 실패");
+    }
+
+    if (resultEl) {
+      const reclaimedStr = formatBytesToMbOrGb(data.reclaimedBytes || 0);
+      resultEl.innerHTML = `✅ <strong>최적화 완료!</strong> 물리 디스크 용량 <strong>${reclaimedStr}</strong> 절감 (🔗 하드링크 통합 ${data.hardlinkedCount || 0}건 · 🗑️ 임시/불필요 파일 정리 ${data.deletedCount || 0}건)`;
+      resultEl.classList.remove("hidden");
+    }
+
+    await loadStorageStats();
+  } catch (err) {
+    alert(`❌ 디스크 용량 최적화 오류: ${err.message}`);
+  } finally {
+    if (execBtn) {
+      execBtn.innerHTML = origHtml || "⚡ 선택한 항목 즉시 최적화";
+      updateSelectedStorageReclaimUI();
+    }
   }
 }
 
@@ -1101,7 +1578,7 @@ function renderMergeQueueUI() {
 
   if (toggleBtn) {
     toggleBtn.textContent =
-      videoMergeQueue.length > 0 ? `🔗 영상 합치기 (${videoMergeQueue.length})` : "🔗 영상 합치기";
+      videoMergeQueue.length > 0 ? `🔗 합치기 (${videoMergeQueue.length})` : "🔗 합치기";
   }
 
   if (execBtn) {
@@ -1274,38 +1751,12 @@ async function selectScenario(slug, preferMode = null) {
       }
     } catch {}
 
-    // Render Status Badges in Player Header
-    if (playerStatusBadges) {
-      const badges = [];
-      if (details.browsePlan?.recordedByEyedropper) {
-        badges.push('<span class="status-tag status-tag-eye">💧 스포이드 실측</span>');
-      }
-      if (renderInfo.exists) {
-        badges.push('<span class="status-tag status-tag-rendered">✨ 최종 MP4 보유</span>');
-      } else if (details.hasVideo) {
-        badges.push('<span class="status-tag status-tag-raw">📹 원본 녹화본 보유</span>');
-      } else {
-        badges.push('<span class="status-tag status-tag-empty">녹화 전</span>');
-      }
-      const hasTts = Boolean(details.narration?.cues?.length || details.editPlan?.narration?.cues?.length);
-      if (hasTts) {
-        badges.push('<span class="status-tag status-tag-tts">🎙️ AI 나레이션 포함</span>');
-      }
-      if (
-        activeRenderTask &&
-        (activeRenderTask.status === "running" || activeRenderTask.status === "queued") &&
-        activeRenderTask.slug === slug
-      ) {
-        badges.push(
-          `<span class="status-tag status-tag-rendering" id="player-live-render-badge">⏳ 렌더링 ${
-            activeRenderTask.progress || 0
-          }% (${activeRenderTask.fps || 30}fps)</span>`
-        );
-      } else if (Array.isArray(renderQueueList) && renderQueueList.some((q) => q && q.slug === slug)) {
-        badges.push('<span class="status-tag status-tag-queued" id="player-live-render-badge">🕒 렌더링 대기 중</span>');
-      }
-      playerStatusBadges.innerHTML = badges.join("");
-    }
+    unappliedNarrationState.slug = slug;
+    unappliedNarrationState.dirty = false;
+    unappliedNarrationState.needsSlideBake = false;
+    unappliedNarrationState.reason = "";
+    unappliedNarrationState.dismissed = false;
+    unappliedNarrationState.renderInfo = renderInfo;
 
     updateRenderUI();
 
@@ -1333,7 +1784,7 @@ async function selectScenario(slug, preferMode = null) {
         btnDownloadVideo.href = renderInfo.downloadUrl;
         btnDownloadVideo.download = `${slug}-final.mp4`;
         const sizeMb = ((renderInfo.fileSizeBytes || 0) / (1024 * 1024)).toFixed(1);
-        btnDownloadVideo.innerHTML = `💾 최종 MP4 다운로드 <small>(${sizeMb}MB)</small>`;
+        btnDownloadVideo.innerHTML = `💾 다운로드 <small>(${sizeMb}MB)</small>`;
       } else {
         btnDownloadVideo.classList.add("hidden");
       }
@@ -1353,20 +1804,302 @@ async function selectScenario(slug, preferMode = null) {
   }
 }
 
+const unappliedNarrationState = {
+  slug: "",
+  dirty: false,
+  needsSlideBake: false,
+  reason: "",
+  dismissed: false,
+  renderInfo: null,
+};
+
+async function refreshScenarioRenderInfo(slug = selectedScenario) {
+  if (!slug) return null;
+  try {
+    const renderRes = await fetch(`/api/render/info/${slug}?t=${Date.now()}`, { cache: "no-store" });
+    if (renderRes.ok) {
+      const info = await renderRes.json();
+      if (slug === selectedScenario) {
+        unappliedNarrationState.renderInfo = info;
+      }
+      return info;
+    }
+  } catch {}
+  return null;
+}
+
+function markNarrationUnapplied(reason, options = {}) {
+  if (!selectedScenario) return;
+  unappliedNarrationState.slug = selectedScenario;
+  unappliedNarrationState.dirty = true;
+  if (options.needsSlideBake) {
+    unappliedNarrationState.needsSlideBake = true;
+  }
+  unappliedNarrationState.reason =
+    reason || "대본·오프닝 목차 또는 구간 홀드 변경 사항이 아직 실제 영상 파일에 재합성되지 않았습니다.";
+  unappliedNarrationState.dismissed = false;
+  updatePlayerStatusAndModeBadges(scenarioDetailsCache[selectedScenario], unappliedNarrationState.renderInfo);
+}
+
+async function clearNarrationUnapplied() {
+  unappliedNarrationState.dirty = false;
+  unappliedNarrationState.needsSlideBake = false;
+  unappliedNarrationState.reason = "";
+  unappliedNarrationState.dismissed = false;
+  const info = await refreshScenarioRenderInfo(selectedScenario);
+  updatePlayerStatusAndModeBadges(scenarioDetailsCache[selectedScenario], info);
+}
+
+async function handleApplyUnappliedNarration() {
+  if (!selectedScenario) return;
+  const slug = selectedScenario;
+  const applyBtn = document.getElementById("btn-apply-unapplied-narration");
+  const prevSec = videoPlayer && Number.isFinite(videoPlayer.currentTime) ? videoPlayer.currentTime : 0;
+  const needsSlideBake = Boolean(unappliedNarrationState.needsSlideBake);
+
+  if (applyBtn) {
+    applyBtn.disabled = true;
+    applyBtn.textContent = "⏳ 영상·음성·슬라이드 즉시 반영 중...";
+  }
+  stopRealtimeHoldAndAudio();
+  if (typeof releaseVideoFileLock === "function") {
+    await releaseVideoFileLock();
+  }
+
+  try {
+    const narration = collectNarrationFromUI({ sortByStartTime: true });
+    const res = await fetch(`/api/narration/${slug}/save`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        narration,
+        synthesize: true,
+        bakeSlide: needsSlideBake,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "반영 실패");
+
+    const details = scenarioDetailsCache[slug];
+    if (details) {
+      if (data.narration) details.narration = data.narration;
+      if (data.moments) details.moments = data.moments;
+      if (data.editPlan) details.editPlan = data.editPlan;
+      syncScenarioTimelineInMemory(details);
+    }
+
+    await clearNarrationUnapplied();
+    setVideoMode(currentVideoMode, details, unappliedNarrationState.renderInfo);
+    if (videoPlayer && prevSec > 0.5) {
+      videoPlayer.addEventListener(
+        "loadedmetadata",
+        () => {
+          videoPlayer.currentTime = Math.min(prevSec, Math.max(0, (videoPlayer.duration || prevSec) - 0.2));
+        },
+        { once: true }
+      );
+    }
+    renderNarrationStudio(details);
+    renderTimelineVisual(details);
+    renderMomentsStepList(details);
+    updateJsonViewer("narration");
+    fetchScenarios();
+  } catch (err) {
+    alert(`변경 사항 영상 반영 오류: ${err.message}`);
+  } finally {
+    if (applyBtn) {
+      applyBtn.disabled = false;
+      applyBtn.textContent = "⚡ 지금 영상에 즉시 반영 (TTS·슬라이드 재합성)";
+    }
+  }
+}
+
+function updatePlayerStatusAndModeBadges(details, renderInfo = null) {
+  if (!selectedScenario) return;
+  const slug = selectedScenario;
+  const d = details || scenarioDetailsCache[slug] || {};
+  const rInfo = renderInfo || unappliedNarrationState.renderInfo || { exists: Boolean(d.hasRenderedVideo) };
+  const narration = d.narration || d.editPlan?.narration || null;
+  const cues = Array.isArray(narration?.cues) ? narration.cues : [];
+  const hasTts = cues.length > 0;
+  const mergedSlugs = Array.isArray(narration?.mergedFromSlugs)
+    ? narration.mergedFromSlugs
+    : Array.isArray(d.browsePlan?.mergedFromSlugs)
+    ? d.browsePlan.mergedFromSlugs
+    : [];
+  const isMergedScenario = mergedSlugs.length > 0;
+  const hasUnsynthesized =
+    Boolean(rInfo.hasUnsynthesizedCues) ||
+    (hasTts && narration?.enabled !== false && cues.some((c) => !c.audioFile));
+  const isDirtyOrOutdated =
+    Boolean(unappliedNarrationState.dirty) ||
+    hasUnsynthesized ||
+    (Boolean(rInfo.isOutdated) && !unappliedNarrationState.dismissed);
+
+  // 1) Top Header Status Badges (#player-status-badges)
+  if (playerStatusBadges) {
+    const badges = [];
+    if (isMergedScenario) {
+      badges.push(
+        `<span class="status-tag status-tag-merged" title="병합 원본 챕터: ${escapeHtmlAttr(
+          mergedSlugs.join(" ➔ ")
+        )}">🔗 ${mergedSlugs.length}챕터 병합</span>`
+      );
+    } else if (d.browsePlan?.recordedByEyedropper) {
+      badges.push('<span class="status-tag status-tag-eye" title="스포이드 동작 감지로 캡처된 시나리오">💧 스포이드</span>');
+    }
+
+    if (rInfo.exists || d.hasRenderedVideo) {
+      if (isDirtyOrOutdated) {
+        badges.push(
+          `<span class="status-tag status-tag-warn" title="${escapeHtmlAttr(
+            unappliedNarrationState.reason || rInfo.outdatedReason || "대본·슬라이드 수정 사항 재합성 필요"
+          )}">⚠️ MP4 재합성 필요</span>`
+        );
+      } else {
+        badges.push(
+          '<span class="status-tag status-tag-rendered" title="최신 대본·슬라이드·줌·커서가 최종 MP4에 모두 반영되어 있습니다">✨ 최신 MP4</span>'
+        );
+      }
+    } else if (d.hasVideo) {
+      badges.push('<span class="status-tag status-tag-raw">📹 원본 녹화본</span>');
+    } else {
+      badges.push('<span class="status-tag status-tag-empty">녹화 전</span>');
+    }
+
+    if (hasTts) {
+      if (unappliedNarrationState.dirty || hasUnsynthesized) {
+        badges.push(
+          `<span class="status-tag status-tag-warn" title="수정된 대본 또는 미합성 음성이 있습니다">🎙️ 대본 수정됨(${cues.length})</span>`
+        );
+      } else {
+        badges.push(`<span class="status-tag status-tag-tts" title="AI 나레이션 대본 및 TTS 음성 (${cues.length}구간)">🎙️ 대본 ${cues.length}구간</span>`);
+      }
+    }
+
+    if (
+      activeRenderTask &&
+      (activeRenderTask.status === "running" || activeRenderTask.status === "queued") &&
+      activeRenderTask.slug === slug
+    ) {
+      badges.push(
+        `<span class="status-tag status-tag-rendering" id="player-live-render-badge">⏳ 렌더링 ${
+          activeRenderTask.progress || 0
+        }% (${activeRenderTask.fps || 30}fps)</span>`
+      );
+    } else if (Array.isArray(renderQueueList) && renderQueueList.some((q) => q && q.slug === slug)) {
+      badges.push('<span class="status-tag status-tag-queued" id="player-live-render-badge">🕒 렌더링 대기 중</span>');
+    }
+    playerStatusBadges.innerHTML = badges.join("");
+  }
+
+  // 2) Mode Switch Button Labels & Player Right Badge (#video-mode-badge)
+  if (btnModeRaw) {
+    btnModeRaw.textContent = isMergedScenario
+      ? "📹 병합 마스터 원본"
+      : hasTts && narration?.enabled !== false
+      ? "📹 원본 녹화본 (실시간 TTS·홀드)"
+      : "📹 원본 브라우저 녹화본";
+  }
+  if (btnModeRendered) {
+    btnModeRendered.textContent = isMergedScenario
+      ? "✨ 챕터 병합 최종본"
+      : rInfo.exists || d.hasRenderedVideo
+      ? "✨ 줌/커서 합성 최종본"
+      : "✨ 줌/커서 합성 최종본 (미생성)";
+  }
+
+  if (videoModeBadge) {
+    videoModeBadge.classList.remove("mode-badge-rendered", "mode-badge-sim", "mode-badge-merged", "mode-badge-warn");
+    if (currentVideoMode === "rendered") {
+      const hasRendered = rInfo ? rInfo.exists : d.hasRenderedVideo || false;
+      if (!hasRendered) {
+        videoModeBadge.textContent = "⚠️ 최종 렌더링 파일 없음 (렌더링 필요)";
+        videoModeBadge.classList.add("mode-badge-warn");
+      } else if (isDirtyOrOutdated) {
+        videoModeBadge.textContent = "⚠️ 최종본 재생 중 (미반영 대본·편집 있음)";
+        videoModeBadge.classList.add("mode-badge-warn");
+      } else if (isMergedScenario) {
+        videoModeBadge.textContent = `🔗 ${mergedSlugs.length}개 챕터 병합 최종본 재생 중`;
+        videoModeBadge.classList.add("mode-badge-merged");
+      } else {
+        videoModeBadge.textContent = "✨ 줌·커서·TTS 합성 최종본 재생 중";
+        videoModeBadge.classList.add("mode-badge-rendered");
+      }
+    } else {
+      if (!d.hasVideo) {
+        videoModeBadge.textContent = "녹화 비디오 없음";
+      } else if (isMergedScenario) {
+        videoModeBadge.textContent = `🔗 ${mergedSlugs.length}개 챕터 병합 마스터 재생 중`;
+        videoModeBadge.classList.add("mode-badge-merged");
+      } else if (hasTts && narration?.enabled !== false) {
+        videoModeBadge.textContent = "📹 원본 녹화본 + 🎙️실시간 TTS·홀드 시뮬레이션";
+        videoModeBadge.classList.add("mode-badge-sim");
+      } else {
+        videoModeBadge.textContent = "📹 원본 브라우저 녹화본 재생 중";
+      }
+    }
+  }
+
+  // 3) Unapplied Narration / Outdated MP4 Banner (#narration-unapplied-banner)
+  const bannerEl = document.getElementById("narration-unapplied-banner");
+  if (bannerEl) {
+    if (!isDirtyOrOutdated || unappliedNarrationState.dismissed) {
+      bannerEl.classList.add("hidden");
+      bannerEl.innerHTML = "";
+    } else {
+      const bannerReason =
+        unappliedNarrationState.reason ||
+        (hasUnsynthesized
+          ? "아직 음성(TTS)이 합성되지 않은 대본 구간이 있습니다."
+          : rInfo.outdatedReason || "대본·슬라이드 수정 사항이 아직 최종 영상에 반영되지 않았습니다.");
+      bannerEl.classList.remove("hidden");
+      bannerEl.innerHTML = `
+        <div class="unapplied-banner-left">
+          <span class="unapplied-banner-icon">⚠️</span>
+          <span class="unapplied-banner-text" id="narration-unapplied-text">${escapeHtmlAttr(bannerReason)}</span>
+          <span class="unapplied-banner-sub">원본·최종 영상 파일에 변경 사항을 즉시 동기화할 수 있습니다.</span>
+        </div>
+        <div class="unapplied-banner-actions">
+          <button type="button" class="btn btn-sm btn-primary" id="btn-apply-unapplied-narration" style="padding:4px 11px;font-size:11.5px;font-weight:700;">
+            ⚡ 지금 영상에 즉시 반영 (TTS·슬라이드 재합성)
+          </button>
+          <button type="button" class="btn btn-sm btn-outline" id="btn-dismiss-unapplied-banner" title="이 알림 닫기" style="padding:4px 8px;font-size:11px;">
+            ✕ 닫기
+          </button>
+        </div>
+      `;
+      const applyBtn = bannerEl.querySelector("#btn-apply-unapplied-narration");
+      if (applyBtn) {
+        applyBtn.addEventListener("click", handleApplyUnappliedNarration);
+      }
+      const dismissBtn = bannerEl.querySelector("#btn-dismiss-unapplied-banner");
+      if (dismissBtn) {
+        dismissBtn.addEventListener("click", () => {
+          unappliedNarrationState.dismissed = true;
+          updatePlayerStatusAndModeBadges(d, rInfo);
+        });
+      }
+    }
+  }
+}
+
 function setVideoMode(mode, details = null, renderInfo = null) {
   if (!selectedScenario) return;
   const slug = selectedScenario;
   const d = details || scenarioDetailsCache[slug] || {};
+  const rInfo = renderInfo || unappliedNarrationState.renderInfo || null;
 
   currentVideoMode = mode;
 
   if (btnModeRaw) btnModeRaw.classList.toggle("active", mode === "raw");
   if (btnModeRendered) btnModeRendered.classList.toggle("active", mode === "rendered");
 
+  updatePlayerStatusAndModeBadges(d, rInfo);
+
   if (mode === "rendered") {
-    const hasRendered = renderInfo ? renderInfo.exists : d.hasRenderedVideo || false;
+    const hasRendered = rInfo ? rInfo.exists : d.hasRenderedVideo || false;
     if (!hasRendered) {
-      if (videoModeBadge) videoModeBadge.textContent = "최종 렌더링 파일 없음 (렌더링 필요)";
       videoPlayer.style.display = "none";
       videoEmpty.style.display = "flex";
       videoEmpty.querySelector("p").textContent = "최종 렌더링(합성)된 MP4 비디오가 없습니다.";
@@ -1374,18 +2107,15 @@ function setVideoMode(mode, details = null, renderInfo = null) {
       return;
     }
 
-    if (videoModeBadge) videoModeBadge.textContent = "✨ 줌/커서 합성 최종본 재생 중";
     videoEmpty.style.display = "none";
     videoPlayer.style.display = "block";
     videoPlayer.src = `/api/rendered-video/${slug}?t=${Date.now()}`;
   } else {
     if (d.hasVideo) {
-      if (videoModeBadge) videoModeBadge.textContent = "📹 원본 브라우저 녹화본 재생 중";
       videoEmpty.style.display = "none";
       videoPlayer.style.display = "block";
       videoPlayer.src = `${d.videoUrl || `/api/video/${slug}`}?t=${Date.now()}`;
     } else {
-      if (videoModeBadge) videoModeBadge.textContent = "녹화 비디오 없음";
       videoEmpty.style.display = "flex";
       videoPlayer.style.display = "none";
       videoPlayer.src = "";
@@ -1863,6 +2593,7 @@ async function runAutoSynthesizeAndFitNow(targetRowIdx = null) {
           details.editPlan.narration = data.narration;
         }
         syncScenarioTimelineInMemory(details);
+        const isMerged = Array.isArray(data.narration?.mergedFromSlugs) && data.narration.mergedFromSlugs.length > 0;
         if (prevBakedSig && data.narration._bakedSlideSig && prevBakedSig !== data.narration._bakedSlideSig && currentVideoMode === "raw") {
           const prevSec = videoPlayer && Number.isFinite(videoPlayer.currentTime) ? videoPlayer.currentTime : 0;
           setVideoMode("raw", details);
@@ -1875,9 +2606,9 @@ async function runAutoSynthesizeAndFitNow(targetRowIdx = null) {
               { once: true }
             );
           }
-        } else if (data.renderedVideoUpdated && currentVideoMode === "rendered") {
+        } else if (data.renderedVideoUpdated && (currentVideoMode === "rendered" || isMerged)) {
           const prevSec = videoPlayer && Number.isFinite(videoPlayer.currentTime) ? videoPlayer.currentTime : 0;
-          setVideoMode("rendered", details);
+          setVideoMode(currentVideoMode, details);
           if (videoPlayer && prevSec > 0.5) {
             videoPlayer.addEventListener(
               "loadedmetadata",
@@ -1932,6 +2663,7 @@ async function runAutoSynthesizeAndFitNow(targetRowIdx = null) {
         } else {
           renderNarrationStudio(details);
         }
+        await clearNarrationUnapplied();
         renderTimelineVisual(details);
         renderMomentsStepList(details);
         updateJsonViewer("narration");
@@ -1958,6 +2690,18 @@ function scheduleAutoSynthesizeAndFit(targetRowIdx = null, delayMs = 850) {
 // 6.9 Direct Video Cut (Trim) Editor & Undo/Restore
 let cutPreviewStopRawSec = null;
 let timelineDragCutState = null;
+let isCutEditorOpen = false;
+
+function toggleCutEditorBar(forceOpen = null) {
+  const barEl = document.getElementById("video-cut-editor-bar");
+  const btnEl = document.getElementById("btn-toggle-cut-editor");
+  if (!barEl) return;
+  isCutEditorOpen = forceOpen !== null ? Boolean(forceOpen) : barEl.classList.contains("hidden");
+  barEl.classList.toggle("hidden", !isCutEditorOpen);
+  if (btnEl) {
+    btnEl.classList.toggle("active", isCutEditorOpen);
+  }
+}
 
 function updateCutSelectionUI() {
   const cutInInput = document.getElementById("cut-in-input");
@@ -1989,6 +2733,11 @@ function updateCutSelectionUI() {
     cutSelEl.classList.add("hidden");
     if (cutDurationBadge) cutDurationBadge.classList.add("hidden");
     return;
+  }
+
+  // 사용자가 타임라인에서 Shift+드래그 등으로 구간을 지정하면 잘라내기 바를 자동으로 펼침
+  if (!isCutEditorOpen) {
+    toggleCutEditorBar(true);
   }
 
   const cutDur = outSec - inSec;
@@ -2239,19 +2988,157 @@ async function handleRestoreVideoCut(mode = "undo") {
   }
 }
 
-// 7. Timeline Visual Bar & Step-by-Step Moment Cards
+// 7. Multi-Track Timeline Visual Bar, Zoom Controls & Bidirectional Script Jump
+function renderTimelineRulerTicks(totalMs) {
+  if (!timelineTrackRuler) return;
+  timelineTrackRuler.innerHTML = "";
+  const totalSec = Math.max(0, (totalMs || 0) / 1000);
+  if (totalSec <= 0.1) return;
+
+  const visibleSec = totalSec / Math.max(1, timelineZoomLevel || 1);
+  const candidateSteps = [0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300, 600];
+  const stepSec = candidateSteps.find((s) => visibleSec / s <= 14) || 300;
+  const majorMultiple = stepSec < 5 ? stepSec * 5 : stepSec * 2;
+
+  for (let t = 0; t <= totalSec + 0.001; t += stepSec) {
+    const roundedT = Number(t.toFixed(1));
+    const leftPct = Math.min(99.8, Math.max(0, (roundedT / totalSec) * 100));
+    const tick = document.createElement("div");
+    const isMajor = roundedT === 0 || Math.abs(roundedT % majorMultiple) < 0.05;
+    tick.className = `timeline-ruler-tick${isMajor ? " major" : ""}`;
+    tick.style.left = `${leftPct}%`;
+    tick.textContent =
+      roundedT >= 60 ? formatTimecode(roundedT).replace(/\.0$/, "") : `${roundedT}s`;
+    timelineTrackRuler.appendChild(tick);
+  }
+}
+
+function setTimelineZoom(nextZoom, anchorRatio = null, cursorOffsetX = null) {
+  const clamped = Math.min(20, Math.max(1, Number(nextZoom) || 1));
+  const rounded = Math.round(clamped * 10) / 10;
+  timelineZoomLevel = rounded;
+
+  if (timelineVisualBar) {
+    timelineVisualBar.style.width = `${timelineZoomLevel * 100}%`;
+    timelineVisualBar.classList.toggle("is-zoomed", timelineZoomLevel >= 2);
+  }
+  if (timelineZoomBadge) {
+    timelineZoomBadge.textContent = `${timelineZoomLevel % 1 === 0 ? timelineZoomLevel.toFixed(0) : timelineZoomLevel.toFixed(1)}x`;
+  }
+  if (timelineZoomPresetBtns && timelineZoomPresetBtns.length > 0) {
+    timelineZoomPresetBtns.forEach((btn) => {
+      const btnZoom = parseFloat(btn.getAttribute("data-zoom") || "1");
+      btn.classList.toggle("active", Math.abs(btnZoom - timelineZoomLevel) < 0.15);
+    });
+  }
+
+  if (lastTimelineTotalMs > 0) {
+    renderTimelineRulerTicks(lastTimelineTotalMs);
+  }
+
+  if (timelineScrollViewport && timelineVisualBar) {
+    if (timelineZoomLevel <= 1.01) {
+      timelineScrollViewport.scrollLeft = 0;
+    } else if (anchorRatio !== null && Number.isFinite(anchorRatio)) {
+      const targetStageX = anchorRatio * timelineScrollViewport.scrollWidth;
+      const offset = Number.isFinite(cursorOffsetX) ? cursorOffsetX : timelineScrollViewport.clientWidth / 2;
+      timelineScrollViewport.scrollLeft = Math.max(0, targetStageX - offset);
+    } else if (timelinePlayhead) {
+      const playheadPct = parseFloat(timelinePlayhead.style.left || "0") / 100;
+      const targetStageX = playheadPct * timelineScrollViewport.scrollWidth;
+      timelineScrollViewport.scrollLeft = Math.max(0, targetStageX - timelineScrollViewport.clientWidth / 2);
+    }
+  }
+}
+
+function scrollTimelineToCompMs(compMs, center = true) {
+  if (!timelineScrollViewport || !lastTimelineTotalMs || timelineZoomLevel <= 1.01) return;
+  const ratio = Math.min(1, Math.max(0, (compMs || 0) / lastTimelineTotalMs));
+  const targetX = ratio * timelineScrollViewport.scrollWidth;
+  const viewW = timelineScrollViewport.clientWidth || 1;
+  const curLeft = timelineScrollViewport.scrollLeft;
+
+  if (center) {
+    timelineScrollViewport.scrollTo({
+      left: Math.max(0, targetX - viewW / 2),
+      behavior: "smooth",
+    });
+  } else if (targetX < curLeft + 24 || targetX > curLeft + viewW - 36) {
+    timelineScrollViewport.scrollLeft = Math.max(0, targetX - viewW * 0.25);
+  }
+}
+
+function jumpFromTimelineToNarrationCue(cueIdx, cue, details) {
+  const narration = details?.narration || details?.editPlan?.narration || null;
+  const isMergedScenario =
+    (Array.isArray(narration?.mergedFromSlugs) && narration.mergedFromSlugs.length > 0) ||
+    (Array.isArray(details?.browsePlan?.mergedFromSlugs) && details.browsePlan.mergedFromSlugs.length > 0);
+  const compStartMs = Number(cue?.startMs || 0);
+  const rawStartMs = Number(cue?.videoStartMs ?? compStartMs);
+
+  // 1) Seek video player to the cue start time
+  if (videoPlayer && videoPlayer.duration) {
+    stopRealtimeHoldAndAudio();
+    const targetSec =
+      currentVideoMode === "rendered" || isMergedScenario ? compStartMs / 1000 : rawStartMs / 1000;
+    if (currentVideoMode === "raw" && !isMergedScenario) {
+      syncCompletedHoldRegionsForSeek(rawStartMs / 1000, Math.max(0, compStartMs - 150));
+    }
+    realtimeHoldState.isProgrammaticSeek = true;
+    videoPlayer.currentTime = Math.max(0, Math.min(targetSec, (videoPlayer.duration || targetSec) - 0.05));
+    updateVideoPlaybackSync();
+  }
+
+  // 2) Switch bottom Studio Sub-Tab to "🎙️ AI 나레이션 대본 & 음성 합성 (TTS)"
+  const narTabBtn = document.querySelector('.studio-subtab-btn[data-subtab="subtab-narration"]');
+  if (narTabBtn && !narTabBtn.classList.contains("active")) {
+    narTabBtn.click();
+  }
+
+  // 3) Highlight timeline block & scroll/flash/focus corresponding narration cue row
+  if (timelineTrackNarration) {
+    timelineTrackNarration.querySelectorAll(".narration-segment-block").forEach((b) => {
+      b.classList.toggle("active-timeline-cue", Number(b.dataset.cueIdx) === cueIdx);
+    });
+  }
+
+  const cueContainer = document.getElementById("narration-cues-container");
+  if (cueContainer) {
+    const targetRow = cueContainer.querySelector(`.narration-cue-row[data-orig-idx="${cueIdx}"]`);
+    if (targetRow) {
+      cueContainer.querySelectorAll(".narration-cue-row").forEach((r) => r.classList.toggle("active-cue", r === targetRow));
+      targetRow.scrollIntoView({ behavior: "smooth", block: "center" });
+      targetRow.classList.remove("cue-flash-highlight");
+      void targetRow.offsetWidth;
+      targetRow.classList.add("cue-flash-highlight");
+      const textInput = targetRow.querySelector(".cue-text-input");
+      if (textInput) {
+        try {
+          textInput.focus({ preventScroll: true });
+        } catch {
+          textInput.focus();
+        }
+      }
+    }
+  }
+}
+
 function renderTimelineVisual(details) {
   if (!timelineVisualBar) return;
-  timelineVisualBar.innerHTML = "";
+  if (timelineTrackRuler) timelineTrackRuler.innerHTML = "";
+  if (timelineTrackZoom) timelineTrackZoom.innerHTML = "";
+  if (timelineTrackMoments) timelineTrackMoments.innerHTML = "";
+  if (timelineTrackNarration) timelineTrackNarration.innerHTML = "";
   if (timelinePlayhead) timelinePlayhead.style.left = "0%";
 
   syncScenarioTimelineInMemory(details);
 
-  const editPlan = details.editPlan;
-  const moments = details.moments;
-  const narration = details.narration || editPlan?.narration || null;
+  const editPlan = details?.editPlan;
+  const moments = details?.moments;
+  const narration = details?.narration || editPlan?.narration || null;
 
   if (!editPlan || !editPlan.totalDurationFrames) {
+    lastTimelineTotalMs = 0;
     if (timelineStats) timelineStats.textContent = "녹화 후 타임라인 생성됨";
     return;
   }
@@ -2260,6 +3147,7 @@ function renderTimelineVisual(details) {
   const rawFrames = editPlan.rawDurationFrames || totalFrames;
   const fps = editPlan.fps || 60;
   const totalMs = (totalFrames / fps) * 1000;
+  lastTimelineTotalMs = totalMs;
   const deltaSec = (totalFrames - rawFrames) / fps;
 
   const segments = editPlan.segments || [];
@@ -2278,12 +3166,21 @@ function renderTimelineVisual(details) {
     timelineStats.textContent = `줌 ${segments.length}구간 · 동작 ${interactiveMoments.length}회 · 나레이션 ${cues.length}구간${stretchNote}`;
   }
 
-  // 1) Draw Zoom Segments (mapped onto unified composition timeline)
+  // Apply current zoom width and draw Lane 1: Time Ruler Ticks
+  timelineVisualBar.style.width = `${timelineZoomLevel * 100}%`;
+  timelineVisualBar.classList.toggle("is-zoomed", timelineZoomLevel >= 2);
+  renderTimelineRulerTicks(totalMs);
+
+  const zoomLaneTarget = timelineTrackZoom || timelineVisualBar;
+  const momentsLaneTarget = timelineTrackMoments || timelineVisualBar;
+  const narrationLaneTarget = timelineTrackNarration || timelineVisualBar;
+
+  // Lane 2-A) Draw Zoom Segments (mapped onto unified composition timeline)
   segments.forEach((seg) => {
     const compStartMs = videoTimeMsToCompTimeMs((seg.startFrame / fps) * 1000, editPlan);
     const compEndMs = videoTimeMsToCompTimeMs((seg.endFrame / fps) * 1000, editPlan);
     const leftPercent = Math.min(99.5, Math.max(0, (compStartMs / totalMs) * 100));
-    const widthPercent = Math.max(0.8, ((compEndMs - compStartMs) / totalMs) * 100);
+    const widthPercent = Math.max(0.6, ((compEndMs - compStartMs) / totalMs) * 100);
 
     const block = document.createElement("div");
     block.className = "segment-block";
@@ -2292,10 +3189,11 @@ function renderTimelineVisual(details) {
     block.title = `[줌 ${seg.zoom}x] ${seg.description || "확대 구간"} (${(compStartMs / 1000).toFixed(1)}s ~ ${(
       compEndMs / 1000
     ).toFixed(1)}s)`;
-    timelineVisualBar.appendChild(block);
+    block.innerHTML = `<span class="segment-block-label">🔍 ${seg.zoom}x</span>`;
+    zoomLaneTarget.appendChild(block);
   });
 
-  // 1.5) Draw Hold / Time-Stretch Regions on timeline
+  // Lane 2-B) Draw Hold / Time-Stretch Regions on Zoom/Hold lane
   timeRegions.forEach((reg) => {
     const cSpanF = (reg.compEndFrame || 0) - (reg.compStartFrame || 0);
     if (cSpanF < 6) return;
@@ -2303,7 +3201,7 @@ function renderTimelineVisual(details) {
       const startMs = (reg.compStartFrame / fps) * 1000;
       const endMs = (reg.compEndFrame / fps) * 1000;
       const leftPercent = Math.min(99.5, Math.max(0, (startMs / totalMs) * 100));
-      const widthPercent = Math.max(0.8, ((endMs - startMs) / totalMs) * 100);
+      const widthPercent = Math.max(0.5, ((endMs - startMs) / totalMs) * 100);
 
       const hBlock = document.createElement("div");
       hBlock.className = "hold-segment-block";
@@ -2314,19 +3212,66 @@ function renderTimelineVisual(details) {
         reg.speed < 0.25
           ? `⏸️ [구간 늘리기(홀드) +${durSec}s] 대본 #${reg.cueId || ""} 싱크 맞춤 구간 (${(startMs / 1000).toFixed(1)}s ~ ${(endMs / 1000).toFixed(1)}s)`
           : `⚡ [구간 단축 ${reg.speed.toFixed(2)}x] 대본 #${reg.cueId || ""} (${(startMs / 1000).toFixed(1)}s ~ ${(endMs / 1000).toFixed(1)}s)`;
-      timelineVisualBar.appendChild(hBlock);
+      zoomLaneTarget.appendChild(hBlock);
     }
   });
 
-  // 2) Draw Narration TTS Segments at bottom of timeline
+  // Lane 3) Draw Interactive Action / Click Moment Markers
+  const isMergedScenario =
+    (Array.isArray(narration?.mergedFromSlugs) && narration.mergedFromSlugs.length > 0) ||
+    (Array.isArray(details?.browsePlan?.mergedFromSlugs) && details.browsePlan.mergedFromSlugs.length > 0);
+  interactiveMoments.forEach((m, i) => {
+    const compMomentMs = videoTimeMsToCompTimeMs(m.timestamp || 0, editPlan);
+    const leftPercent = Math.min(99.6, Math.max(0.2, (compMomentMs / totalMs) * 100));
+    const marker = document.createElement("div");
+    marker.className = "moment-marker";
+    marker.dataset.momentIdx = String(i);
+    marker.dataset.compMs = String(Math.round(compMomentMs));
+    marker.style.left = `${leftPercent}%`;
+    marker.title = `[#${i + 1} ${(m.type || "click").toUpperCase()}] ${m.description || ""} (싱크 ${(
+      compMomentMs / 1000
+    ).toFixed(1)}s / 원본 ${((m.timestamp || 0) / 1000).toFixed(1)}s) — 클릭 시 해당 동작으로 이동`;
+
+    marker.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (videoPlayer && videoPlayer.duration) {
+        stopRealtimeHoldAndAudio();
+        const rawSec = (m.timestamp || 0) / 1000;
+        if (currentVideoMode === "raw" && !isMergedScenario) {
+          syncCompletedHoldRegionsForSeek(rawSec, compMomentMs);
+        }
+        realtimeHoldState.isProgrammaticSeek = true;
+        videoPlayer.currentTime =
+          currentVideoMode === "rendered" || isMergedScenario ? compMomentMs / 1000 : rawSec;
+        realtimeHoldState.isProgrammaticResume = true;
+        videoPlayer.play().catch(() => {
+          realtimeHoldState.isProgrammaticResume = false;
+        });
+      }
+      if (momentsStepList) {
+        const cards = momentsStepList.querySelectorAll(".moment-step-card");
+        const targetCard = cards[i];
+        if (targetCard) {
+          targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+    });
+
+    momentsLaneTarget.appendChild(marker);
+  });
+
+  // Lane 4) Draw Narration TTS Segments (click to jump directly to script row)
   cues.forEach((cue, idx) => {
     const startMs = cue.startMs || 0;
     const endMs = cue.endMs || startMs + 2000;
-    const leftPercent = Math.min(99, Math.max(0, (startMs / totalMs) * 100));
-    const widthPercent = Math.max(1.2, ((endMs - startMs) / totalMs) * 100);
+    const leftPercent = Math.min(99.2, Math.max(0, (startMs / totalMs) * 100));
+    const widthPercent = Math.max(0.6, ((endMs - startMs) / totalMs) * 100);
 
     const nBlock = document.createElement("div");
     nBlock.className = "narration-segment-block";
+    nBlock.dataset.cueIdx = String(idx);
+    nBlock.dataset.compStartMs = String(startMs);
+    nBlock.dataset.compEndMs = String(endMs);
     nBlock.style.left = `${leftPercent}%`;
     nBlock.style.width = `${Math.min(100 - leftPercent, widthPercent)}%`;
     const deltaLabel =
@@ -2335,39 +3280,18 @@ function renderTimelineVisual(details) {
         : (cue.effectiveDeltaMs || 0) <= -100
         ? ` [구간 ${((cue.effectiveDeltaMs || 0) / 1000).toFixed(1)}s 단축]`
         : "";
-    nBlock.title = `[나레이션 #${idx + 1}] "${cue.text}" (${(startMs / 1000).toFixed(1)}s ~ ${(endMs / 1000).toFixed(1)}s)${deltaLabel}`;
-    timelineVisualBar.appendChild(nBlock);
-  });
+    nBlock.title = `🎙️ [대본 #${idx + 1}] "${cue.text || ""}" (${(startMs / 1000).toFixed(1)}s ~ ${(
+      endMs / 1000
+    ).toFixed(1)}s)${deltaLabel}\n👉 클릭 시 해당 시점 이동 및 하단 대본 줄로 점프`;
+    const cleanText = String(cue.text || "").trim();
+    nBlock.innerHTML = `<span class="narration-block-label">#${idx + 1} ${escapeHtmlAttr(cleanText)}</span>`;
 
-  // 3) Draw Interactive Action / Click Moment Markers (mapped onto unified composition timeline)
-  interactiveMoments.forEach((m, i) => {
-    const compMomentMs = videoTimeMsToCompTimeMs(m.timestamp || 0, editPlan);
-    const leftPercent = Math.min(99.5, Math.max(0, (compMomentMs / totalMs) * 100));
-    const marker = document.createElement("div");
-    marker.className = "moment-marker";
-    marker.style.left = `${leftPercent}%`;
-    marker.title = `[#${i + 1} ${(m.type || "click").toUpperCase()}] ${m.description || ""} (싱크 ${(
-      compMomentMs / 1000
-    ).toFixed(1)}s / 원본 ${((m.timestamp || 0) / 1000).toFixed(1)}s)`;
-
-    marker.addEventListener("click", (e) => {
+    nBlock.addEventListener("click", (e) => {
       e.stopPropagation();
-      if (videoPlayer && videoPlayer.duration) {
-        stopRealtimeHoldAndAudio();
-        const rawSec = (m.timestamp || 0) / 1000;
-        if (currentVideoMode === "raw") {
-          syncCompletedHoldRegionsForSeek(rawSec, compMomentMs);
-        }
-        realtimeHoldState.isProgrammaticSeek = true;
-        videoPlayer.currentTime = currentVideoMode === "rendered" ? compMomentMs / 1000 : rawSec;
-        realtimeHoldState.isProgrammaticResume = true;
-        videoPlayer.play().catch(() => {
-          realtimeHoldState.isProgrammaticResume = false;
-        });
-      }
+      jumpFromTimelineToNarrationCue(idx, cue, details);
     });
 
-    timelineVisualBar.appendChild(marker);
+    narrationLaneTarget.appendChild(nBlock);
   });
 
   if (videoPlayer && (videoPlayer.currentTime > 0 || realtimeHoldState.active)) {
@@ -2383,6 +3307,10 @@ function renderMomentsStepList(details) {
   const interactiveMoments = rawMoments.filter((m) => m.type !== "wait");
   const editSegments = details?.editPlan?.segments || [];
   const fps = details?.editPlan?.fps || 60;
+  const narration = details?.narration || details?.editPlan?.narration;
+  const isMergedScenario =
+    (Array.isArray(narration?.mergedFromSlugs) && narration.mergedFromSlugs.length > 0) ||
+    (Array.isArray(details?.browsePlan?.mergedFromSlugs) && details.browsePlan.mergedFromSlugs.length > 0);
 
   if (interactiveMoments.length > 0) {
     if (subtabMomentsCount) subtabMomentsCount.textContent = `${interactiveMoments.length}단계`;
@@ -2420,11 +3348,12 @@ function renderMomentsStepList(details) {
         if (videoPlayer && videoPlayer.duration) {
           stopRealtimeHoldAndAudio();
           const targetRawSec = (m.timestamp || 0) / 1000;
-          if (currentVideoMode === "raw") {
+          if (currentVideoMode === "raw" && !isMergedScenario) {
             syncCompletedHoldRegionsForSeek(targetRawSec, compMs);
           }
           realtimeHoldState.isProgrammaticSeek = true;
-          videoPlayer.currentTime = currentVideoMode === "rendered" ? compMs / 1000 : targetRawSec;
+          videoPlayer.currentTime =
+            currentVideoMode === "rendered" || isMergedScenario ? compMs / 1000 : targetRawSec;
           realtimeHoldState.isProgrammaticResume = true;
           videoPlayer.play().catch(() => {
             realtimeHoldState.isProgrammaticResume = false;
@@ -2504,8 +3433,17 @@ function updateVideoPlaybackSync() {
 
   const badgeEl = document.getElementById("live-timewarp-badge");
   const subEl = document.getElementById("live-subtitle-overlay");
+  const isMergedScenario =
+    (Array.isArray(narration?.mergedFromSlugs) && narration.mergedFromSlugs.length > 0) ||
+    (Array.isArray(details?.browsePlan?.mergedFromSlugs) && details.browsePlan.mergedFromSlugs.length > 0);
 
-  if (currentVideoMode === "raw" && editPlan && Array.isArray(editPlan.timeRegions) && editPlan.timeRegions.length > 0) {
+  if (
+    currentVideoMode === "raw" &&
+    !isMergedScenario &&
+    editPlan &&
+    Array.isArray(editPlan.timeRegions) &&
+    editPlan.timeRegions.length > 0
+  ) {
     compTotalMs = ((editPlan.totalDurationFrames || fps * rawDurSec) / fps) * 1000;
     const regions = editPlan.timeRegions;
 
@@ -2616,9 +3554,6 @@ function updateVideoPlaybackSync() {
       tocOverlayEl.classList.add("hidden");
     }
 
-    const isMergedScenario =
-      Array.isArray(narration?.mergedFromSlugs) && narration.mergedFromSlugs.length > 0;
-
     if (subEl) {
       if (
         narration?.showSubtitles !== false &&
@@ -2694,15 +3629,29 @@ function updateVideoPlaybackSync() {
   if (timelinePlayhead && compTotalMs > 0) {
     const pct = Math.min(100, Math.max(0, (compCurMs / compTotalMs) * 100));
     timelinePlayhead.style.left = `${pct}%`;
+    if ((!videoPlayer.paused || realtimeHoldState.active) && timelineZoomLevel > 1.01) {
+      scrollTimelineToCompMs(compCurMs, false);
+    }
   }
 
-  // Highlight active moment card
+  // Highlight active moment marker on timeline & moment card in step list
+  if (timelineTrackMoments) {
+    timelineTrackMoments.querySelectorAll(".moment-marker[data-comp-ms]").forEach((mEl) => {
+      const mCompMs = parseFloat(mEl.dataset.compMs || "0");
+      mEl.classList.toggle("active-timeline-moment", Math.abs(compCurMs - mCompMs) <= 650);
+    });
+  }
+
   if (momentsStepList) {
     const cards = momentsStepList.querySelectorAll(".moment-step-card[data-timestamp-ms]");
     let activeCard = null;
+    const useCompTime = currentVideoMode === "rendered" || isMergedScenario;
+    const refMs = useCompTime ? compCurMs : rawCurSec * 1000;
     cards.forEach((c) => {
-      const tMs = parseFloat(c.dataset.timestampMs || "0");
-      const isNear = Math.abs(rawCurSec * 1000 - tMs) <= 900;
+      const tMs = useCompTime
+        ? parseFloat(c.dataset.compTimestampMs || c.dataset.timestampMs || "0")
+        : parseFloat(c.dataset.timestampMs || "0");
+      const isNear = Math.abs(refMs - tMs) <= 900;
       c.classList.toggle("active-moment", isNear);
       if (isNear) activeCard = c;
     });
@@ -2711,7 +3660,15 @@ function updateVideoPlaybackSync() {
     }
   }
 
-  // Highlight active narration cue row using synced composition time
+  // Highlight active narration block on timeline & active narration cue row in script editor
+  if (timelineTrackNarration) {
+    timelineTrackNarration.querySelectorAll(".narration-segment-block").forEach((bEl) => {
+      const bStart = parseFloat(bEl.dataset.compStartMs || "0");
+      const bEnd = parseFloat(bEl.dataset.compEndMs || String(bStart + 2500));
+      bEl.classList.toggle("active-timeline-cue", compCurMs >= bStart && compCurMs <= bEnd + 150);
+    });
+  }
+
   const cueRows = document.querySelectorAll("#narration-cues-container .narration-cue-row");
   cueRows.forEach((row) => {
     const startMs = parseFloat(row.dataset.compStartMs || "0");
@@ -2719,6 +3676,25 @@ function updateVideoPlaybackSync() {
     const isSpeaking = compCurMs >= startMs && compCurMs <= endMs + 150;
     row.classList.toggle("active-cue", isSpeaking);
   });
+
+  // Highlight active merged chapter tab based on current playback time
+  const chapterTabBtns = document.querySelectorAll("#narration-chapter-tabs-bar .narration-chapter-tab");
+  if (chapterTabBtns.length > 0) {
+    let matchedTab = null;
+    chapterTabBtns.forEach((tabBtn) => {
+      const chStartMs = parseFloat(tabBtn.dataset.compStartMs ?? tabBtn.dataset.startMs ?? "0");
+      const chNextStartMs = parseFloat(tabBtn.dataset.nextCompStartMs ?? "999999999");
+      if (compCurMs >= chStartMs - 150 && compCurMs < chNextStartMs - 150) {
+        matchedTab = tabBtn;
+      }
+    });
+    if (!matchedTab && compCurMs < 1000) {
+      matchedTab = chapterTabBtns[0];
+    }
+    if (matchedTab) {
+      chapterTabBtns.forEach((tabBtn) => tabBtn.classList.toggle("active", tabBtn === matchedTab));
+    }
+  }
 }
 
 // 8. JSON Viewer
@@ -2771,19 +3747,19 @@ function buildCueSyncBadgeHtml(cue) {
   if (extraHold > 0) {
     return `<span class="cue-sync-badge badge-manual-hold" title="대본 자동 홀드 ${(autoHold / 1000).toFixed(1)}s + 수동 늘리기 +${(
       extraHold / 1000
-    ).toFixed(1)}s — 뒤따르는 대본·카메라 줌·커서 싱크가 자동으로 함께 이동합니다">⏱️ 구간 +${(effDelta / 1000).toFixed(
+    ).toFixed(1)}s — 뒤따르는 대본·카메라 줌·커서 싱크가 자동으로 함께 이동합니다">⏱️ +${(effDelta / 1000).toFixed(
       1
-    )}s (수동 +${(extraHold / 1000).toFixed(1)}s)</span>`;
+    )}s</span>`;
   }
   if (effDelta <= -100) {
-    return `<span class="cue-sync-badge badge-shrink" title="수동 구간 줄이기 적용됨 (대본 음성 길이 이하로는 줄어들지 않아 음성이 절대 잘리지 않습니다)">⚡ 구간 ${(
+    return `<span class="cue-sync-badge badge-shrink" title="수동 구간 줄이기 적용됨 (대본 음성 길이 이하로는 줄어들지 않아 음성이 절대 잘리지 않습니다)">⚡ ${(
       effDelta / 1000
-    ).toFixed(1)}s 단축</span>`;
+    ).toFixed(1)}s</span>`;
   }
   if (autoHold >= 100) {
     return `<span class="cue-sync-badge badge-auto-hold" title="대본이 원본 동작 간격보다 길어 음성 속도를 빠르게 왜곡하지 않고 화면을 자동으로 +${(
       effDelta / 1000
-    ).toFixed(1)}s 홀드(연장)하여 싱크를 맞춥니다">⏳ 대본맞춤 +${(effDelta / 1000).toFixed(1)}s 자동연장</span>`;
+    ).toFixed(1)}s 홀드(연장)하여 싱크를 맞춥니다">⏳ +${(effDelta / 1000).toFixed(1)}s 연장</span>`;
   }
   return `<span class="cue-sync-badge badge-normal" title="원본 영상 길이 안에서 정상 속도로 대본이 재생됩니다">1.0x 정속</span>`;
 }
@@ -2987,12 +3963,16 @@ function getEffectiveIntroToc(narration) {
           const cleanD = stripVersionAndConversationalTextJS(
             it?.description || fallback.items[idx]?.description || ""
           );
+          const isShortTitleInDesc = !cleanT && cleanD && cleanD.length <= 36 && !/[.!?]$/.test(cleanD);
           return {
-            title:
-              !cleanT || /^단계\s*\d+$|^주요\s*단계\s*\d*$/.test(cleanT)
-                ? extractSmartStepTitleFromCueText(cleanD, idx)
-                : cleanT,
-            description: cleanD,
+            title: isShortTitleInDesc
+              ? cleanD
+              : !cleanT || /^단계\s*\d+$|^주요\s*단계\s*\d*$/.test(cleanT)
+              ? extractSmartStepTitleFromCueText(cleanD, idx)
+              : cleanT,
+            description: isShortTitleInDesc
+              ? `${cleanD}의 주요 기능과 사용 절차를 안내합니다.`
+              : cleanD,
           };
         })
       : fallback.items;
@@ -3124,6 +4104,300 @@ function renderLiveIntroTocOverlay(overlayEl, narration) {
   }
 }
 
+let isSiteBrandEditorExpanded = false;
+let isSiteBrandDrawerOpen = false;
+let isIntroTocDrawerOpen = false;
+
+function updateVoiceOptionsSummaryUI() {
+  const summaryEl = document.getElementById("voice-options-summary-text");
+  const voiceSelect = document.getElementById("narration-voice-select");
+  const rateSelect = document.getElementById("narration-rate-select");
+  if (!summaryEl) return;
+  const vVal = voiceSelect ? voiceSelect.value : "ko-KR-SunHiNeural";
+  const rVal = rateSelect ? rateSelect.value : "+5%";
+  const vName = vVal.includes("InJoon") ? "인준" : vVal.includes("Hyunsu") ? "현수" : "선희";
+  summaryEl.textContent = `${vName} · ${rVal}`;
+}
+
+function renderSiteBrandBar(details, narration) {
+  const barEl = document.getElementById("narration-site-brand-bar");
+  if (!barEl) return;
+
+  if (!details || !selectedScenario) {
+    barEl.classList.add("hidden");
+    barEl.innerHTML = "";
+    return;
+  }
+
+  const brand =
+    narration?.siteBrand ||
+    details?.siteBrand ||
+    narration?.introToc?.siteBrand || {
+      hostKey: details?.hostKey || "default_site",
+      originUrl: details?.browsePlan?.url || "",
+      siteName: details?.siteName || "그룹웨어",
+      manualBadge: narration?.introToc?.badge || "그룹웨어 사용 매뉴얼",
+      primaryColor: details?.primaryColor || "#0068FF",
+      logoUrl: details?.logoUrl || "",
+    };
+
+  const siteName = brand.siteName || "그룹웨어";
+  const manualBadge = brand.manualBadge || narration?.introToc?.badge || "그룹웨어 사용 매뉴얼";
+  const primaryColor = /^#[0-9a-fA-F]{6}$/.test(String(brand.primaryColor || "").trim())
+    ? String(brand.primaryColor).trim().toUpperCase()
+    : "#0068FF";
+  const hostKey = brand.hostKey || "default_site";
+  const baseDomain = details.baseDomain || hostKey;
+  const logoUrl = brand.logoUrl ? `${brand.logoUrl}?t=${Date.now()}` : "";
+
+  barEl.classList.toggle("hidden", !isSiteBrandDrawerOpen);
+  const brandToggleBtn = document.getElementById("btn-toggle-brand-drawer");
+  if (brandToggleBtn) {
+    brandToggleBtn.classList.toggle("active", isSiteBrandDrawerOpen);
+    brandToggleBtn.innerHTML = `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${escapeHtmlAttr(
+      primaryColor
+    )};"></span> 🎨 브랜드(${escapeHtmlAttr(siteName)}) ${isSiteBrandDrawerOpen ? "▴" : "▾"}`;
+  }
+
+  const presetColors = [
+    { hex: "#FF9600", label: "부천대 오렌지 (#FF9600)" },
+    { hex: "#218CF3", label: "유니슨 블루 (#218CF3)" },
+    { hex: "#0068FF", label: "그룹웨어 블루 (#0068FF)" },
+    { hex: "#0F7B0F", label: "에메랄드 그린 (#0F7B0F)" },
+    { hex: "#5C2D91", label: "엔터프라이즈 퍼플 (#5C2D91)" },
+    { hex: "#D83B01", label: "코랄 레드 (#D83B01)" },
+  ];
+
+  const presetsHtml = presetColors
+    .map(
+      (p) =>
+        `<button type="button" class="btn-brand-color-preset" data-color="${p.hex}" title="${escapeHtmlAttr(
+          p.label
+        )}" style="background:${p.hex};"></button>`
+    )
+    .join("");
+
+  barEl.innerHTML = `
+    <div class="site-brand-summary-row">
+      <div class="site-brand-summary-left">
+        <span class="site-brand-color-swatch" id="brand-summary-swatch" style="background:${escapeHtmlAttr(
+          primaryColor
+        )};" title="테마 대표 색상 (${escapeHtmlAttr(primaryColor)})"></span>
+        ${
+          logoUrl
+            ? `<img src="${escapeHtmlAttr(
+                logoUrl
+              )}" alt="Site Logo" class="site-brand-logo-thumb" onerror="this.style.display='none'" />`
+            : ""
+        }
+        <span class="site-brand-name-pill" id="brand-summary-name">${escapeHtmlAttr(siteName)}</span>
+        <span class="site-brand-badge-pill" id="brand-summary-badge">${escapeHtmlAttr(manualBadge)}</span>
+        <span class="site-brand-domain-pill" title="동일 상위 도메인(${escapeHtmlAttr(
+          baseDomain
+        )})을 공유하는 모든 서브도메인(예: gw / gwdev)과 시나리오에 브랜드 로고·테마 색상이 자동 상속됩니다">🌐 ${escapeHtmlAttr(
+    hostKey
+  )}${baseDomain && baseDomain !== hostKey ? ` (상위도메인 ${escapeHtmlAttr(baseDomain)} 자동상속)` : ""}</span>
+        <span class="site-brand-hex-pill" id="brand-summary-hex">${escapeHtmlAttr(primaryColor)}</span>
+      </div>
+      <div style="display:inline-flex;align-items:center;gap:6px;">
+        <button type="button" class="btn btn-sm btn-outline" id="btn-toggle-site-brand-editor" style="padding:3px 10px;font-size:11.5px;font-weight:700;">
+          🎨 사이트 브랜드(로고·색상·기관명) 설정 ${isSiteBrandEditorExpanded ? "▴" : "▾"}
+        </button>
+      </div>
+    </div>
+    <div class="site-brand-editor-panel${isSiteBrandEditorExpanded ? "" : " hidden"}" id="site-brand-editor-panel">
+      <div class="site-brand-fields-row">
+        <div class="site-brand-field-group">
+          <label class="site-brand-field-label" for="brand-site-name-input">기관/사이트명</label>
+          <input type="text" id="brand-site-name-input" value="${escapeHtmlAttr(
+            siteName
+          )}" placeholder="예: 부천대학교, 유니슨 그룹" style="width:165px;padding:5px 8px;font-size:12px;font-weight:700;" />
+        </div>
+        <div class="site-brand-field-group">
+          <label class="site-brand-field-label" for="brand-manual-badge-input">매뉴얼 배지</label>
+          <input type="text" id="brand-manual-badge-input" value="${escapeHtmlAttr(
+            manualBadge
+          )}" placeholder="예: 그룹웨어 사용 매뉴얼" style="width:190px;padding:5px 8px;font-size:12px;" />
+        </div>
+        <div class="site-brand-field-group">
+          <label class="site-brand-field-label" for="brand-primary-color-picker">테마 색상</label>
+          <input type="color" id="brand-primary-color-picker" value="${escapeHtmlAttr(
+            primaryColor
+          )}" style="width:30px;height:28px;padding:1px;border-radius:4px;border:1px solid var(--stroke);cursor:pointer;background:var(--card);" />
+          <input type="text" id="brand-primary-color-hex" value="${escapeHtmlAttr(
+            primaryColor
+          )}" maxlength="7" style="width:82px;padding:5px 7px;font-size:12px;font-family:var(--font-mono);text-transform:uppercase;" />
+          <div class="site-brand-color-presets" title="자주 쓰는 기관 테마 색상 빠른 선택">
+            ${presetsHtml}
+          </div>
+        </div>
+      </div>
+      <div class="site-brand-actions-row">
+        <label class="narration-check-pill" title="체크 시 같은 기관 상위 도메인(${escapeHtmlAttr(
+          baseDomain
+        )})을 사용하는 모든 시나리오와 서브도메인(gw / gwdev 등)에 동일 브랜드 설정을 일괄 적용합니다">
+          <input type="checkbox" id="brand-propagate-domain-toggle" checked />
+          <span>🔗 상위 도메인(${escapeHtmlAttr(baseDomain)})의 모든 시나리오·서브도메인에 공통 적용</span>
+        </label>
+        <div style="display:inline-flex;align-items:center;gap:6px;">
+          <button type="button" class="btn btn-sm btn-outline" id="btn-save-site-brand" style="padding:4px 10px;font-size:11.5px;font-weight:700;">
+            💾 브랜드 설정 저장
+          </button>
+          <button type="button" class="btn btn-sm btn-primary" id="btn-save-and-bake-site-brand" title="변경한 브랜드 색상·기관명·배지를 저장하고 오프닝 슬라이드 영상을 즉시 재합성합니다" style="padding:4px 11px;font-size:11.5px;font-weight:700;">
+            🎬 저장 후 오프닝 슬라이드 즉시 재합성
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const toggleBtn = barEl.querySelector("#btn-toggle-site-brand-editor");
+  const panelEl = barEl.querySelector("#site-brand-editor-panel");
+  if (toggleBtn && panelEl) {
+    toggleBtn.addEventListener("click", () => {
+      isSiteBrandEditorExpanded = !isSiteBrandEditorExpanded;
+      panelEl.classList.toggle("hidden", !isSiteBrandEditorExpanded);
+      toggleBtn.innerHTML = `🎨 사이트 브랜드(로고·색상·기관명) 설정 ${isSiteBrandEditorExpanded ? "▴" : "▾"}`;
+    });
+  }
+
+  const colorPicker = barEl.querySelector("#brand-primary-color-picker");
+  const colorHexInput = barEl.querySelector("#brand-primary-color-hex");
+  const summarySwatch = barEl.querySelector("#brand-summary-swatch");
+  const summaryHex = barEl.querySelector("#brand-summary-hex");
+
+  const applyColorInput = (hexVal) => {
+    const clean = String(hexVal || "").trim().toUpperCase();
+    if (/^#[0-9A-F]{6}$/.test(clean)) {
+      if (colorPicker) colorPicker.value = clean;
+      if (colorHexInput) colorHexInput.value = clean;
+      if (summarySwatch) summarySwatch.style.background = clean;
+      if (summaryHex) summaryHex.textContent = clean;
+    }
+  };
+
+  if (colorPicker) {
+    colorPicker.addEventListener("input", () => applyColorInput(colorPicker.value));
+  }
+  if (colorHexInput) {
+    colorHexInput.addEventListener("input", () => {
+      const val = colorHexInput.value.trim();
+      if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+        applyColorInput(val);
+      }
+    });
+  }
+  barEl.querySelectorAll(".btn-brand-color-preset").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const c = btn.getAttribute("data-color");
+      if (c) applyColorInput(c);
+    });
+  });
+
+  const handleSaveBrand = async (bakeSlide) => {
+    if (!selectedScenario) return;
+    const slug = selectedScenario;
+    const saveBtn = barEl.querySelector("#btn-save-site-brand");
+    const bakeBtn = barEl.querySelector("#btn-save-and-bake-site-brand");
+    const nextSiteName = (barEl.querySelector("#brand-site-name-input")?.value || "").trim() || siteName;
+    const nextManualBadge = (barEl.querySelector("#brand-manual-badge-input")?.value || "").trim() || manualBadge;
+    const nextPrimaryColor =
+      (barEl.querySelector("#brand-primary-color-hex")?.value || "").trim() ||
+      colorPicker?.value ||
+      primaryColor;
+    const propagateToBaseDomain = barEl.querySelector("#brand-propagate-domain-toggle")?.checked !== false;
+
+    if (saveBtn) saveBtn.disabled = true;
+    if (bakeBtn) {
+      bakeBtn.disabled = true;
+      if (bakeSlide) bakeBtn.textContent = "⏳ 브랜드 저장 & 슬라이드 재합성 중...";
+    }
+    if (bakeSlide) {
+      stopRealtimeHoldAndAudio();
+      if (typeof releaseVideoFileLock === "function") {
+        await releaseVideoFileLock();
+      }
+    }
+
+    try {
+      const res = await fetch(`/api/site-brands/${slug}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          siteName: nextSiteName,
+          manualBadge: nextManualBadge,
+          primaryColor: nextPrimaryColor,
+          propagateToBaseDomain,
+          bakeSlide: Boolean(bakeSlide),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "사이트 브랜드 설정 저장 실패");
+
+      if (propagateToBaseDomain) {
+        Object.keys(scenarioDetailsCache).forEach((cachedSlug) => {
+          if (cachedSlug !== slug) {
+            delete scenarioDetailsCache[cachedSlug];
+          }
+        });
+      }
+
+      const curDetails = scenarioDetailsCache[slug];
+      if (curDetails) {
+        if (data.brand) curDetails.siteBrand = data.brand;
+        if (data.baseDomain) curDetails.baseDomain = data.baseDomain;
+        if (data.narration) {
+          curDetails.narration = data.narration;
+        } else if (curDetails.narration && data.brand) {
+          curDetails.narration.siteBrand = data.brand;
+          if (curDetails.narration.introToc) {
+            curDetails.narration.introToc.badge = data.brand.manualBadge;
+          }
+        }
+        if (data.editPlan) curDetails.editPlan = data.editPlan;
+        if (data.moments) curDetails.moments = data.moments;
+        syncScenarioTimelineInMemory(curDetails);
+      }
+
+      const overlayEl = document.getElementById("live-intro-toc-overlay");
+      if (overlayEl) delete overlayEl.dataset.tocSig;
+
+      await fetchScenarios();
+      if (bakeSlide && curDetails) {
+        await clearNarrationUnapplied();
+        setVideoMode(curDetails.hasRenderedVideo && data.renderedVideoUpdated ? currentVideoMode : "raw", curDetails);
+      } else {
+        markNarrationUnapplied(
+          "사이트 브랜드(테마 색상·기관명·매뉴얼 배지)가 수정되었습니다. 오프닝 슬라이드 영상에 반영하려면 [지금 영상에 즉시 반영]을 눌러주세요.",
+          { needsSlideBake: true }
+        );
+      }
+      renderNarrationStudio(curDetails);
+      renderTimelineVisual(curDetails);
+      renderMomentsStepList(curDetails);
+      updateVideoProgressUI();
+      updateJsonViewer("narration");
+    } catch (err) {
+      alert(`사이트 브랜드 저장 오류: ${err.message}`);
+    } finally {
+      if (saveBtn) saveBtn.disabled = false;
+      if (bakeBtn) {
+        bakeBtn.disabled = false;
+        bakeBtn.textContent = "🎬 저장 후 오프닝 슬라이드 즉시 재합성";
+      }
+    }
+  };
+
+  const saveBtn = barEl.querySelector("#btn-save-site-brand");
+  if (saveBtn) {
+    saveBtn.addEventListener("click", () => handleSaveBrand(false));
+  }
+  const saveBakeBtn = barEl.querySelector("#btn-save-and-bake-site-brand");
+  if (saveBakeBtn) {
+    saveBakeBtn.addEventListener("click", () => handleSaveBrand(true));
+  }
+}
+
 function renderIntroTocEditor(details, narration) {
   const editorEl = document.getElementById("narration-intro-toc-editor");
   if (!editorEl) return;
@@ -3135,12 +4409,18 @@ function renderIntroTocEditor(details, narration) {
   }
 
   const showToc = narration.showIntroToc !== false && narration.introToc?.enabled !== false;
+  const tocDrawerBtn = document.getElementById("btn-toggle-intro-toc-drawer");
   if (!showToc) {
     editorEl.classList.add("hidden");
+    if (tocDrawerBtn) tocDrawerBtn.classList.remove("active");
     return;
   }
 
-  editorEl.classList.remove("hidden");
+  editorEl.classList.toggle("hidden", !isIntroTocDrawerOpen);
+  if (tocDrawerBtn) {
+    tocDrawerBtn.classList.toggle("active", isIntroTocDrawerOpen);
+    tocDrawerBtn.textContent = isIntroTocDrawerOpen ? "📑 오프닝 목차 ▴" : "📑 오프닝 목차 ▾";
+  }
   const toc = getEffectiveIntroToc(narration);
   narration.introToc = toc;
   const isBaked = Boolean(narration.introBakedIntoVideo);
@@ -3213,6 +4493,10 @@ function renderIntroTocEditor(details, narration) {
     }
     updateVideoProgressUI();
     updateJsonViewer("narration");
+    markNarrationUnapplied(
+      "오프닝 목차(Contents) 슬라이드 내용이 수정되었습니다. 영상 앞단에 반영하려면 [🎬 슬라이드 영상에 반영] 또는 [지금 영상에 즉시 반영]을 눌러주세요.",
+      { needsSlideBake: true }
+    );
     saveNarrationTimingQuick();
   };
 
@@ -3278,6 +4562,7 @@ function renderIntroTocEditor(details, narration) {
           syncScenarioTimelineInMemory(details);
         }
         window.__forcePreviewIntroToc = false;
+        await clearNarrationUnapplied();
         setVideoMode("raw", details);
         renderNarrationStudio(details);
         renderTimelineVisual(details);
@@ -3307,8 +4592,167 @@ function renderIntroTocEditor(details, narration) {
   }
 }
 
+function extractDynamicMergedChapters(details, narration) {
+  const mergedSlugs = Array.isArray(narration?.mergedFromSlugs) ? narration.mergedFromSlugs : [];
+  const cues = Array.isArray(narration?.cues) ? narration.cues : [];
+  if (mergedSlugs.length === 0 || cues.length === 0) return [];
+
+  const tocItems = Array.isArray(narration?.introToc?.items) ? narration.introToc.items : [];
+  const moments = Array.isArray(details?.moments?.moments)
+    ? details.moments.moments
+    : Array.isArray(details?.moments)
+    ? details.moments
+    : [];
+
+  const chapterStartCueIndices = [Math.min(2, cues.length - 1)];
+
+  for (let i = 2; i < cues.length; i++) {
+    const c = cues[i];
+    const txt = String(c.text || "").trim();
+    const isBridge =
+      Boolean(c._isAutoBridgeCue) ||
+      (/사용법에\s*대해\s*알아보겠습니다\.?$/.test(txt) && i + 1 < cues.length);
+    if (isBridge && i + 1 < cues.length && chapterStartCueIndices.length < mergedSlugs.length) {
+      chapterStartCueIndices.push(i + 1);
+    }
+  }
+
+  if (chapterStartCueIndices.length < mergedSlugs.length && moments.length > 0) {
+    for (let chIdx = chapterStartCueIndices.length; chIdx < mergedSlugs.length; chIdx++) {
+      const m = moments.find((mm) =>
+        String(mm.description || mm.action || "").includes(`[챕터 ${chIdx + 1}:`)
+      );
+      if (m) {
+        const mStartMs = Number(m.timestamp ?? m.timestampMs ?? 0);
+        const foundCueIdx = cues.findIndex(
+          (c, cIdx) =>
+            cIdx > chapterStartCueIndices[chapterStartCueIndices.length - 1] &&
+            (c.videoStartMs ?? c.startMs ?? 0) >= mStartMs - 1500
+        );
+        if (foundCueIdx !== -1) {
+          chapterStartCueIndices.push(foundCueIdx);
+        }
+      }
+    }
+  }
+
+  const chapters = [];
+  const firstChCueIdx = chapterStartCueIndices[0] || 0;
+  if (firstChCueIdx > 0) {
+    const masterEndCue = cues[firstChCueIdx - 1] || cues[0];
+    chapters.push({
+      chNum: 0,
+      slug: "__master_intro__",
+      shortTitle: "표지·통합목차",
+      fullTitle: "그룹웨어 사용 매뉴얼 표지 및 전체 통합 목차(Master Contents)",
+      startCueIdx: 0,
+      endCueIdx: firstChCueIdx - 1,
+      startMs: cues[0]?.startMs ?? 0,
+      videoStartMs: cues[0]?.videoStartMs ?? 0,
+      endMs: masterEndCue?.endMs ?? 29000,
+    });
+  }
+
+  mergedSlugs.forEach((slug, idx) => {
+    const startCueIdx =
+      chapterStartCueIndices[idx] !== undefined
+        ? chapterStartCueIndices[idx]
+        : Math.min(cues.length - 1, Math.floor(((idx + 1) * cues.length) / (mergedSlugs.length + 1)));
+    const nextStartCueIdx =
+      idx + 1 < mergedSlugs.length && chapterStartCueIndices[idx + 1] !== undefined
+        ? chapterStartCueIndices[idx + 1]
+        : cues.length;
+    const endCueIdx = Math.max(startCueIdx, nextStartCueIdx - 1);
+    const startCue = cues[startCueIdx] || cues[0];
+    const endCue = cues[endCueIdx] || startCue;
+
+    const tocItem = tocItems[idx] || {};
+    const rawTocTitle = stripVersionAndConversationalTextJS(tocItem.title || "");
+    const rawTocDesc = stripVersionAndConversationalTextJS(tocItem.description || "");
+    let fullTitle =
+      rawTocTitle && !/^(?:단계|주요\s*단계|챕터)\s*\d*$/.test(rawTocTitle)
+        ? rawTocTitle
+        : rawTocDesc && rawTocDesc.length <= 42
+        ? rawTocDesc
+        : "";
+
+    if (!fullTitle && startCue?.text) {
+      const mTitle = String(startCue.text)
+        .trim()
+        .match(/^(.+?)\s*(?:기능은|에서는|화면에서는|모듈은|메뉴는)/);
+      if (mTitle && mTitle[1] && mTitle[1].length <= 36) {
+        fullTitle = mTitle[1].trim();
+      }
+    }
+    if (!fullTitle) fullTitle = slug;
+
+    const shortTitle =
+      fullTitle
+        .replace(/^그룹웨어\s*/, "")
+        .replace(/\s*(?:사용법|매뉴얼|가이드|안내)$/, "")
+        .trim() || fullTitle;
+
+    chapters.push({
+      chNum: idx + 1,
+      slug,
+      shortTitle: shortTitle.length > 28 ? `${shortTitle.slice(0, 27)}…` : shortTitle,
+      fullTitle,
+      startCueIdx,
+      endCueIdx,
+      startMs: startCue?.startMs ?? 0,
+      videoStartMs: startCue?.videoStartMs ?? startCue?.startMs ?? 0,
+      endMs: endCue?.endMs ?? (startCue?.startMs ?? 0) + 5000,
+    });
+  });
+
+  return chapters;
+}
+
+async function handleRebuildMergedScenario(mergedSlugs) {
+  if (!selectedScenario || !Array.isArray(mergedSlugs) || mergedSlugs.length < 2) return;
+  const targetSlug = selectedScenario;
+  const confirmed = await showAppConfirm(
+    `원본 챕터 시나리오(${mergedSlugs.join(" → ")})의 최신 영상과 대본을 기반으로 '${targetSlug}' 병합 시나리오를 처음부터 다시 빌드하시겠습니까?\n\n(수정한 통합 목차 및 각 챕터의 최신 렌더링본이 결합됩니다.)`
+  );
+  if (!confirmed) return;
+
+  const btn = document.getElementById("btn-rebuild-merged-from-chapters");
+  const origTxt = btn ? btn.textContent : "";
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "⏳ 원본 챕터 병합 재빌드 중...";
+  }
+  stopRealtimeHoldAndAudio();
+  if (typeof releaseVideoFileLock === "function") {
+    await releaseVideoFileLock();
+  }
+  try {
+    const res = await fetch("/api/video-edit/merge", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        slugs: mergedSlugs,
+        outputSlug: targetSlug,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "병합 시나리오 재빌드 실패");
+    delete scenarioDetailsCache[targetSlug];
+    await fetchScenarios();
+    await selectScenario(targetSlug);
+  } catch (err) {
+    alert(`병합본 재빌드 오류: ${err.message}`);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = origTxt || "🔄 원본 챕터로 병합본 재빌드";
+    }
+  }
+}
+
 function renderNarrationStudio(details, focusIndex = null) {
   const container = document.getElementById("narration-cues-container");
+  const chapterTabsBar = document.getElementById("narration-chapter-tabs-bar");
   const tocEditorEl = document.getElementById("narration-intro-toc-editor");
   const statusBadge = document.getElementById("narration-status-badge");
   const styleSelect = document.getElementById("narration-style-select");
@@ -3324,10 +4768,16 @@ function renderNarrationStudio(details, focusIndex = null) {
   syncScenarioTimelineInMemory(details);
 
   const narration = details?.narration || details?.editPlan?.narration || null;
+  renderSiteBrandBar(details, narration);
+
   if (!narration || !Array.isArray(narration.cues) || narration.cues.length === 0) {
     if (tocEditorEl) {
       tocEditorEl.classList.add("hidden");
       tocEditorEl.innerHTML = "";
+    }
+    if (chapterTabsBar) {
+      chapterTabsBar.classList.add("hidden");
+      chapterTabsBar.innerHTML = "";
     }
     if (statusBadge) {
       statusBadge.textContent = "대본 없음";
@@ -3351,8 +4801,99 @@ function renderNarrationStudio(details, focusIndex = null) {
   if (tocToggle) {
     tocToggle.checked = narration.showIntroToc !== false && narration.introToc?.enabled !== false;
   }
+  updateVoiceOptionsSummaryUI();
 
   renderIntroTocEditor(details, narration);
+
+  const mergedChapters = extractDynamicMergedChapters(details, narration);
+  const chapterStartMap = new Map();
+  mergedChapters.forEach((ch) => {
+    if (ch.chNum >= 1) {
+      chapterStartMap.set(ch.startCueIdx, ch);
+    }
+  });
+
+  if (chapterTabsBar) {
+    if (mergedChapters.length > 0) {
+      chapterTabsBar.classList.remove("hidden");
+      const curPlayMs = videoPlayer && Number.isFinite(videoPlayer.currentTime) ? videoPlayer.currentTime * 1000 : 0;
+      const tabsHtml = mergedChapters
+        .map((ch, idx) => {
+          const nextCh = idx + 1 < mergedChapters.length ? mergedChapters[idx + 1] : null;
+          const nextCompStartMs = nextCh ? nextCh.startMs : 999999999;
+          const isInitiallyActive = curPlayMs >= ch.startMs - 150 && curPlayMs < nextCompStartMs - 150;
+          const startSec = ((ch.startMs || 0) / 1000).toFixed(1);
+          const cueRange = `#${ch.startCueIdx + 1}~#${ch.endCueIdx + 1}`;
+          const compactTitle = ch.shortTitle.length > 12 ? `${ch.shortTitle.slice(0, 11)}…` : ch.shortTitle;
+          if (ch.chNum === 0) {
+            return `
+              <button type="button" class="narration-chapter-tab${isInitiallyActive ? " active" : ""}" data-ch-num="0" data-start-cue="${ch.startCueIdx}" data-end-cue="${ch.endCueIdx}" data-comp-start-ms="${ch.startMs}" data-next-comp-start-ms="${nextCompStartMs}" data-start-ms="${ch.startMs}" data-video-start-ms="${ch.videoStartMs}" data-end-ms="${ch.endMs}" title="${escapeHtmlAttr(ch.fullTitle)} (${cueRange} · ${startSec}s~)">
+                <span class="ch-badge">🎬 오프닝</span>
+                <span class="ch-meta">${cueRange}</span>
+              </button>`;
+          }
+          return `
+            <button type="button" class="narration-chapter-tab${isInitiallyActive ? " active" : ""}" data-ch-num="${ch.chNum}" data-start-cue="${ch.startCueIdx}" data-end-cue="${ch.endCueIdx}" data-comp-start-ms="${ch.startMs}" data-next-comp-start-ms="${nextCompStartMs}" data-start-ms="${ch.startMs}" data-video-start-ms="${ch.videoStartMs}" data-end-ms="${ch.endMs}" title="Ch.${ch.chNum} [${escapeHtmlAttr(ch.slug)}] ${escapeHtmlAttr(ch.fullTitle)} (${cueRange} · ${startSec}s~)">
+              <span class="ch-badge">Ch.${ch.chNum}</span>
+              <span>${escapeHtmlAttr(compactTitle)}</span>
+              <span class="ch-meta">${cueRange}</span>
+            </button>`;
+        })
+        .join("");
+
+      chapterTabsBar.innerHTML = `
+        <div class="narration-chapter-tabs-list">
+          ${tabsHtml}
+          <button type="button" class="btn btn-sm btn-outline" id="btn-rebuild-merged-from-chapters" title="원본 챕터 시나리오들의 최신 영상·대본을 다시 불러와 병합 시나리오를 재빌드합니다" style="margin-left:auto;padding:2px 8px;font-size:10.5px;font-weight:700;height:24px;">🔄 병합본 재빌드</button>
+        </div>
+      `;
+
+      const isMergedScenario = Array.isArray(narration?.mergedFromSlugs) && narration.mergedFromSlugs.length > 0;
+      chapterTabsBar.querySelectorAll(".narration-chapter-tab").forEach((tabBtn) => {
+        tabBtn.addEventListener("click", () => {
+          chapterTabsBar.querySelectorAll(".narration-chapter-tab").forEach((b) => b.classList.remove("active"));
+          tabBtn.classList.add("active");
+
+          const startCueIdx = Number(tabBtn.dataset.startCue || 0);
+          const startMs = Number(tabBtn.dataset.compStartMs ?? tabBtn.dataset.startMs ?? 0);
+          const videoStartMs = Number(tabBtn.dataset.videoStartMs || startMs);
+
+          if (videoPlayer && videoPlayer.duration) {
+            stopRealtimeHoldAndAudio();
+            const targetSec =
+              currentVideoMode === "rendered" || isMergedScenario ? startMs / 1000 : videoStartMs / 1000;
+            realtimeHoldState.isProgrammaticSeek = true;
+            videoPlayer.currentTime = Math.max(0, Math.min(targetSec, (videoPlayer.duration || targetSec) - 0.1));
+            updateVideoProgressUI();
+            chapterTabsBar.querySelectorAll(".narration-chapter-tab").forEach((b) => b.classList.toggle("active", b === tabBtn));
+          }
+          scrollTimelineToCompMs(startMs, true);
+
+          const targetDivider = container.querySelector(`.narration-chapter-divider[data-start-cue="${startCueIdx}"]`);
+          const targetRow = container.querySelector(`.narration-cue-row[data-orig-idx="${startCueIdx}"]`);
+          const scrollEl = targetDivider || targetRow;
+          if (scrollEl) {
+            scrollEl.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+          if (targetRow) {
+            targetRow.classList.remove("cue-flash-highlight");
+            void targetRow.offsetWidth;
+            targetRow.classList.add("cue-flash-highlight");
+          }
+        });
+      });
+
+      const rebuildBtn = chapterTabsBar.querySelector("#btn-rebuild-merged-from-chapters");
+      if (rebuildBtn) {
+        rebuildBtn.addEventListener("click", () => {
+          handleRebuildMergedScenario(narration.mergedFromSlugs);
+        });
+      }
+    } else {
+      chapterTabsBar.classList.add("hidden");
+      chapterTabsBar.innerHTML = "";
+    }
+  }
 
   const styleLabels = {
     manual: "📘 정석 매뉴얼",
@@ -3364,18 +4905,58 @@ function renderNarrationStudio(details, focusIndex = null) {
   const totalHoldMs = narration.cues.reduce((acc, c) => acc + Math.max(0, Number(c.effectiveDeltaMs || 0)), 0);
 
   if (statusBadge) {
-    const holdText = totalHoldMs >= 200 ? ` · ⏱️싱크연장 +${(totalHoldMs / 1000).toFixed(1)}s` : "";
-    statusBadge.textContent = `${narration.cues.length}구간 · ${styleBadgeText}${holdText}`;
+    statusBadge.textContent = `${narration.cues.length}구간`;
     statusBadge.style.background = "var(--ok-soft)";
     statusBadge.style.color = "var(--ok)";
   }
 
   container.innerHTML = "";
+  const isMergedScenario = Array.isArray(narration?.mergedFromSlugs) && narration.mergedFromSlugs.length > 0;
+
   narration.cues.forEach((cue, idx) => {
+    const chapterStartInfo = chapterStartMap.get(idx);
+    if (chapterStartInfo) {
+      const divider = document.createElement("div");
+      divider.className = "narration-chapter-divider";
+      divider.dataset.startCue = String(idx);
+      const chStartSec = ((chapterStartInfo.startMs || 0) / 1000).toFixed(1);
+      const chEndSec = ((chapterStartInfo.endMs || 0) / 1000).toFixed(1);
+      divider.innerHTML = `
+        <div class="narration-chapter-divider-left">
+          <span class="narration-chapter-divider-tag">CHAPTER ${String(chapterStartInfo.chNum).padStart(2, "0")}</span>
+          <span class="narration-chapter-divider-title">${escapeHtmlAttr(chapterStartInfo.fullTitle)}</span>
+          <span class="narration-chapter-divider-meta">(${escapeHtmlAttr(chapterStartInfo.slug)})</span>
+        </div>
+        <div class="narration-chapter-divider-left">
+          <span class="narration-chapter-divider-meta">구간 #${chapterStartInfo.startCueIdx + 1} ~ #${chapterStartInfo.endCueIdx + 1} (${chStartSec}s ~ ${chEndSec}s)</span>
+          <button type="button" class="btn btn-sm btn-outline btn-jump-chapter-start" style="padding:2px 8px;font-size:11px;">▶ 챕터 시작점 이동</button>
+        </div>
+      `;
+      const jumpChBtn = divider.querySelector(".btn-jump-chapter-start");
+      if (jumpChBtn) {
+        jumpChBtn.addEventListener("click", () => {
+          const tabBtn = chapterTabsBar?.querySelector(
+            `.narration-chapter-tab[data-ch-num="${chapterStartInfo.chNum}"]`
+          );
+          if (tabBtn) tabBtn.click();
+        });
+      }
+      container.appendChild(divider);
+    }
+
+    const isBridgeCue = Boolean(
+      cue._isAutoBridgeCue ||
+        (idx >= 2 && /사용법에\s*대해\s*알아보겠습니다\.?$/.test(String(cue.text || "").trim()))
+    );
+    const isOpeningCue = isMergedScenario
+      ? Boolean(idx <= 1 || chapterStartMap.has(idx))
+      : Boolean(!isBridgeCue && (cue.isIntro || (idx === 0 && (cue.videoStartMs ?? cue.startMs ?? 0) <= 600)));
+
     const row = document.createElement("div");
     row.className = "narration-cue-row";
     row.dataset.origIdx = String(idx);
-    row.dataset.isIntro = cue.isIntro ? "true" : "false";
+    row.dataset.isIntro = isOpeningCue ? "true" : "false";
+    row.dataset.isAutoBridgeCue = isBridgeCue ? "true" : "false";
     row.dataset.extraHoldMs = String(cue.extraHoldMs || 0);
     row.dataset.compStartMs = String(cue.startMs || 0);
     row.dataset.compEndMs = String(cue.endMs || 0);
@@ -3385,41 +4966,45 @@ function renderNarrationStudio(details, focusIndex = null) {
     const compStartSec = ((cue.startMs || 0) / 1000).toFixed(1);
     const compEndSec = ((cue.endMs || 0) / 1000).toFixed(1);
     const audioFileName = cue.audioFile ? cue.audioFile.split("/").pop() : null;
-    const isOpeningCue = Boolean(cue.isIntro || (idx === 0 && (cue.videoStartMs ?? cue.startMs ?? 0) <= 600));
     const extraHoldMs = Number(cue.extraHoldMs || 0);
 
     row.innerHTML = `
       <span style="font-size: 0.78em; font-weight: 700; color: var(--accent); min-width: 24px; font-family: var(--font-mono);">#${idx + 1}</span>
       ${
-        isOpeningCue
+        isBridgeCue
+          ? `<span class="status-tag status-tag-rendered" title="다음 챕터 세부 목차 슬라이드로 전환하는 브릿지 안내 멘트" style="font-size: 0.7em; padding: 2px 6px;">🔗 전환</span>`
+          : isOpeningCue
           ? `<span class="status-tag status-tag-eye" title="영상 시작 시 어떤 매뉴얼인지 안내하는 오프닝 소개 구간" style="font-size: 0.7em; padding: 2px 6px;">🎬 오프닝</span>`
           : ""
       }
       <input type="number" step="0.1" min="0" class="cue-start-input" value="${anchorSec}" title="원본 녹화 영상 기준 동작 시점(초) — 변경 시 시간순으로 자동 정렬 및 전체 싱크가 재계산됩니다"
-        style="width: 60px; padding: 5px 5px; border-radius: 4px; font-size: 0.8em; text-align: center; font-family: var(--font-mono);" />
-      <span style="font-size: 0.76em; color: var(--accent); min-width: 78px; cursor: pointer; font-family: var(--font-mono); font-weight: 600; white-space: nowrap;" class="cue-jump-time" title="클릭하여 비디오 해당 구간으로 이동 (실제 동기화 재생 구간: ${compStartSec}s ~ ${compEndSec}s)">➔ ${compStartSec}~${compEndSec}s</span>
+        style="width: 54px; padding: 5px 4px; border-radius: 4px; font-size: 0.8em; text-align: center; font-family: var(--font-mono); flex-shrink: 0;" />
+      <span style="font-size: 0.75em; color: var(--accent); min-width: 72px; cursor: pointer; font-family: var(--font-mono); font-weight: 600; white-space: nowrap; flex-shrink: 0;" class="cue-jump-time" title="클릭하여 비디오 해당 구간으로 이동 (실제 동기화 재생 구간: ${compStartSec}s ~ ${compEndSec}s)">➔ ${compStartSec}~${compEndSec}s</span>
       <input type="text" class="cue-text-input" value="${(cue.text || "").replace(/"/g, "&quot;")}" placeholder="나레이션 대본 문장을 입력하세요 (길어져도 음성 속도가 빨라지지 않고 화면 구간이 자동 연장됩니다)"
-        style="flex: 1; min-width: 170px; padding: 6px 10px; border-radius: 4px; font-size: 0.88em;" />
-      <span class="cue-sync-badge-wrap">${buildCueSyncBadgeHtml(cue)}</span>
-      <div class="cue-stretch-controls" title="이 구간의 영상 길이를 실시간으로 늘리거나 줄입니다 (뒤따르는 모든 대본·카메라 줌·커서 싱크 자동 재정렬)">
-        <button type="button" class="btn-cue-stretch stretch-minus" data-stretch="-500" title="구간 0.5초 줄이기 (대본 음성 길이 이하로는 줄어들지 않음)">-0.5s</button>
-        <button type="button" class="btn-cue-stretch stretch-plus" data-stretch="500" title="구간 0.5초 늘리기 (화면 홀드 연장)">+0.5s</button>
-        <button type="button" class="btn-cue-stretch stretch-plus" data-stretch="1000" title="구간 1.0초 늘리기 (화면 홀드 연장)">+1.0s</button>
-        ${
-          extraHoldMs !== 0
-            ? `<button type="button" class="btn-cue-stretch stretch-reset" data-stretch="reset" title="수동 늘리기/줄이기 초기화 (0.0s)">초기화</button>`
-            : ""
-        }
-      </div>
-      <div style="display: inline-flex; align-items: center; gap: 4px;">
-        <button type="button" class="btn btn-sm btn-outline btn-insert-cue-before" title="이 구간 바로 위(이전 시점)에 새 대본 구간 끼워넣기" style="padding: 4px 6px; font-size: 0.72em;">+위</button>
-        <button type="button" class="btn btn-sm btn-outline btn-insert-cue-after" title="이 구간 바로 아래(다음 시점)에 새 대본 구간 끼워넣기" style="padding: 4px 6px; font-size: 0.72em;">+아래</button>
+        style="flex: 1 1 0%; min-width: 0; width: 100%; padding: 6px 10px; border-radius: 4px; font-size: 0.88em;" />
+      <span class="cue-sync-badge-wrap" style="flex-shrink: 0;">${buildCueSyncBadgeHtml(cue)}</span>
+      <div class="cue-row-primary-actions">
         ${
           audioFileName
-            ? `<button type="button" class="btn btn-sm btn-outline btn-play-cue" title="합성된 음성 미리듣기" style="padding: 4px 8px; font-size: 0.74em;">▶️ 듣기</button>`
+            ? `<button type="button" class="btn btn-sm btn-outline btn-play-cue" title="합성된 음성 미리듣기">▶</button>`
             : ""
         }
-        <button type="button" class="btn btn-sm btn-outline btn-delete-cue" title="구간 삭제" style="padding: 4px 7px; font-size: 0.76em; color: var(--fail);">✕</button>
+        <button type="button" class="btn btn-sm btn-outline btn-delete-cue" title="구간 삭제">✕</button>
+      </div>
+      <div class="cue-floating-toolbar" title="구간 홀드(늘리기/줄이기) 및 앞·뒤 행 추가">
+        <div class="cue-stretch-controls">
+          <button type="button" class="btn-cue-stretch stretch-minus" data-stretch="-500" title="구간 0.5초 줄이기 (대본 음성 길이 이하로는 줄어들지 않음)">-0.5s</button>
+          <button type="button" class="btn-cue-stretch stretch-plus" data-stretch="500" title="구간 0.5초 늘리기 (화면 홀드 연장)">+0.5s</button>
+          <button type="button" class="btn-cue-stretch stretch-plus" data-stretch="1000" title="구간 1.0초 늘리기 (화면 홀드 연장)">+1.0s</button>
+          ${
+            extraHoldMs !== 0
+              ? `<button type="button" class="btn-cue-stretch stretch-reset" data-stretch="reset" title="수동 늘리기/줄이기 초기화 (0.0s)">초기화</button>`
+              : ""
+          }
+        </div>
+        <span class="cue-floating-sep"></span>
+        <button type="button" class="btn-cue-float-action btn-insert-cue-before" title="이 구간 바로 위(이전 시점)에 새 대본 구간 끼워넣기">+위 추가</button>
+        <button type="button" class="btn-cue-float-action btn-insert-cue-after" title="이 구간 바로 아래(다음 시점)에 새 대본 구간 끼워넣기">+아래 추가</button>
       </div>
     `;
 
@@ -3433,6 +5018,7 @@ function renderNarrationStudio(details, focusIndex = null) {
         }
         renderNarrationStudio(scenarioDetailsCache[selectedScenario]);
         renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
+        markNarrationUnapplied("대본 시작 시점(초)이 변경되었습니다. 최종 영상 파일에 반영하려면 [지금 영상에 즉시 반영]을 눌러주세요.");
         saveNarrationTimingQuick();
       });
     }
@@ -3503,6 +5089,7 @@ function renderNarrationStudio(details, focusIndex = null) {
         renderNarrationStudio(scenarioDetailsCache[selectedScenario]);
         renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
         updateJsonViewer("narration");
+        markNarrationUnapplied("구간 홀드(늘리기/줄이기) 길이가 변경되었습니다. 최종 영상에 확정하려면 [지금 영상에 즉시 반영]을 눌러주세요.");
         saveNarrationTimingQuick();
       });
     });
@@ -3510,12 +5097,13 @@ function renderNarrationStudio(details, focusIndex = null) {
     const jumpEl = row.querySelector(".cue-jump-time");
     if (jumpEl) {
       jumpEl.addEventListener("click", () => {
+        const compStartMs = Number(row.dataset.compStartMs) || 0;
         if (videoPlayer && videoPlayer.duration) {
           stopRealtimeHoldAndAudio();
-          const compStartMs = Number(row.dataset.compStartMs) || 0;
           const rawStartSec = Number(row.querySelector(".cue-start-input").value) || 0;
-          const targetSec = currentVideoMode === "rendered" ? compStartMs / 1000 : rawStartSec;
-          if (currentVideoMode === "raw") {
+          const targetSec =
+            currentVideoMode === "rendered" || isMergedScenario ? compStartMs / 1000 : rawStartSec;
+          if (currentVideoMode === "raw" && !isMergedScenario) {
             syncCompletedHoldRegionsForSeek(rawStartSec, Math.max(0, compStartMs - 150));
           }
           realtimeHoldState.isProgrammaticSeek = true;
@@ -3525,6 +5113,7 @@ function renderNarrationStudio(details, focusIndex = null) {
             realtimeHoldState.isProgrammaticResume = false;
           });
         }
+        scrollTimelineToCompMs(compStartMs, true);
       });
     }
 
@@ -3566,6 +5155,7 @@ function renderNarrationStudio(details, focusIndex = null) {
         }
         renderNarrationStudio(scenarioDetailsCache[selectedScenario]);
         renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
+        markNarrationUnapplied("대본 구간이 삭제되었습니다. 영상 및 음성 싱크를 확정하려면 [지금 영상에 즉시 반영]을 눌러주세요.");
         saveNarrationTimingQuick();
       });
     }
@@ -3610,12 +5200,14 @@ function collectNarrationFromUI(options = {}) {
     const textUnchanged = prevCue.text === text;
     const estDurMs = textUnchanged && prevCue.audioDurationMs ? prevCue.audioDurationMs : Math.max(1800, text.length * 145);
     const extraHoldMs = Number(row.dataset.extraHoldMs ?? prevCue.extraHoldMs ?? 0);
+    const isAutoBridgeCue = row.dataset.isAutoBridgeCue === "true" || Boolean(prevCue._isAutoBridgeCue);
     rawCues.push({
       videoStartMs,
       startMs: videoStartMs,
       endMs: videoStartMs + estDurMs,
       text,
       isIntro: row.dataset.isIntro === "true" || prevCue.isIntro || false,
+      ...(isAutoBridgeCue ? { _isAutoBridgeCue: true } : {}),
       extraHoldMs,
       audioFile: textUnchanged ? prevCue.audioFile : undefined,
       audioDurationMs: textUnchanged ? prevCue.audioDurationMs : undefined,
@@ -3635,7 +5227,7 @@ function collectNarrationFromUI(options = {}) {
   const showIntroToc = tocToggle ? tocToggle.checked : existing.showIntroToc ?? true;
   const tocEditorEl = document.getElementById("narration-intro-toc-editor");
   let introToc = existing.introToc ? { ...existing.introToc, enabled: showIntroToc } : undefined;
-  if (tocEditorEl && !tocEditorEl.classList.contains("hidden") && tocEditorEl.querySelector("#toc-title-input")) {
+  if (tocEditorEl && showIntroToc && tocEditorEl.querySelector("#toc-title-input")) {
     const badgeVal = (tocEditorEl.querySelector("#toc-badge-input")?.value || "").trim();
     const titleVal = (tocEditorEl.querySelector("#toc-title-input")?.value || "").trim();
     const summaryVal = (tocEditorEl.querySelector("#toc-summary-input")?.value || "").trim();
@@ -3722,6 +5314,7 @@ async function handleGenerateNarration() {
       syncScenarioTimelineInMemory(scenarioDetailsCache[selectedScenario]);
     }
     window.__forcePreviewIntroToc = false;
+    await clearNarrationUnapplied();
     setVideoMode("raw", scenarioDetailsCache[selectedScenario]);
     renderNarrationStudio(scenarioDetailsCache[selectedScenario]);
     renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
@@ -3787,6 +5380,7 @@ function insertNarrationCueRelative(targetIdx, position) {
     scenarioDetailsCache[selectedScenario].narration = current;
     syncScenarioTimelineInMemory(scenarioDetailsCache[selectedScenario]);
   }
+  markNarrationUnapplied("새 대본 구간이 추가되었습니다. 문장 입력 후 [지금 영상에 즉시 반영] 또는 [💾 대본 저장 & 재합성]을 눌러주세요.");
   renderNarrationStudio(scenarioDetailsCache[selectedScenario], insertIndex);
   renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
 }
@@ -3817,6 +5411,9 @@ function handleAddNarrationIntro() {
     scenarioDetailsCache[selectedScenario].narration = current;
     syncScenarioTimelineInMemory(scenarioDetailsCache[selectedScenario]);
   }
+  markNarrationUnapplied("오프닝 대본 구간이 추가되었습니다. 음성(TTS) 및 슬라이드 합성을 위해 [지금 영상에 즉시 반영]을 눌러주세요.", {
+    needsSlideBake: true,
+  });
   renderNarrationStudio(scenarioDetailsCache[selectedScenario], 0);
   renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
 }
@@ -3861,6 +5458,7 @@ function handleAddNarrationCue() {
     scenarioDetailsCache[selectedScenario].narration = current;
     syncScenarioTimelineInMemory(scenarioDetailsCache[selectedScenario]);
   }
+  markNarrationUnapplied("새 대본 구간이 추가되었습니다. 문장 입력 후 [지금 영상에 즉시 반영] 또는 [💾 대본 저장 & 재합성]을 눌러주세요.");
   renderNarrationStudio(scenarioDetailsCache[selectedScenario], insertIndex);
   renderTimelineVisual(scenarioDetailsCache[selectedScenario]);
 }
@@ -3869,19 +5467,30 @@ async function handleSaveNarration() {
   if (!selectedScenario) return;
   const btn = document.getElementById("btn-save-narration");
   const narration = collectNarrationFromUI({ sortByStartTime: true });
+  const prevSec = videoPlayer && Number.isFinite(videoPlayer.currentTime) ? videoPlayer.currentTime : 0;
 
   if (btn) {
     btn.disabled = true;
     btn.textContent = "⏳ 정속 음성 재합성 & 싱크 계산 중...";
   }
+  stopRealtimeHoldAndAudio();
+  if (typeof releaseVideoFileLock === "function") {
+    await releaseVideoFileLock();
+  }
   try {
     const res = await fetch(`/api/narration/${selectedScenario}/save`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ narration, synthesize: true }),
+      body: JSON.stringify({
+        narration,
+        synthesize: true,
+        bakeSlide: Boolean(unappliedNarrationState.needsSlideBake),
+      }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "저장 실패");
+
+    await clearNarrationUnapplied();
 
     if (scenarioDetailsCache[selectedScenario]) {
       const prevSig = scenarioDetailsCache[selectedScenario].narration?._bakedSlideSig;
@@ -3897,10 +5506,10 @@ async function handleSaveNarration() {
       syncScenarioTimelineInMemory(scenarioDetailsCache[selectedScenario]);
       if (
         (data.narration?._bakedSlideSig && data.narration._bakedSlideSig !== prevSig) ||
-        data.renderedVideoUpdated
+        data.renderedVideoUpdated ||
+        videoPlayer?.dataset?.fileLockReleased === "1"
       ) {
-        const prevSec = videoPlayer && Number.isFinite(videoPlayer.currentTime) ? videoPlayer.currentTime : 0;
-        setVideoMode(currentVideoMode, scenarioDetailsCache[selectedScenario]);
+        setVideoMode(currentVideoMode, scenarioDetailsCache[selectedScenario], unappliedNarrationState.renderInfo);
         if (videoPlayer && prevSec > 0.5) {
           videoPlayer.addEventListener(
             "loadedmetadata",
@@ -4146,28 +5755,38 @@ function renderRecorderLiveEvents(status) {
   listEl.innerHTML = events
     .map((ev) => {
       const badgeColor =
-        ev.kind === "click"
+        ev.kind === "click" || ev.kind === "rightclick"
           ? "var(--run)"
-          : ev.kind === "type"
+          : ev.kind === "type" || ev.kind === "selectOption"
           ? "var(--accent)"
-          : ev.kind === "dragAndDrop"
+          : ev.kind === "dragAndDrop" || ev.kind === "upload"
           ? "var(--warn)"
           : "var(--ok)";
       const kindLabel =
         ev.kind === "click"
           ? "💧 클릭"
+          : ev.kind === "rightclick"
+          ? "🖱️ 우클릭"
+          : ev.kind === "hover"
+          ? "👆 호버"
           : ev.kind === "type"
           ? "⌨️ 입력"
+          : ev.kind === "selectOption"
+          ? "📋 선택"
+          : ev.kind === "upload"
+          ? "📎 첨부"
           : ev.kind === "dragAndDrop"
           ? "✊ 드래그"
           : "🖱️ 동작";
-      const textPart = ev.text ? ` <strong style="color:var(--accent);">'${ev.text}'</strong>` : "";
-      const iframePart = ev.iframe ? ` <span style="color:var(--text-muted);">[${ev.iframe}]</span>` : "";
+      const safeLabel = escapeHtmlAttr(ev.label || "");
+      const safeText = ev.text ? ` <strong style="color:var(--accent);">'${escapeHtmlAttr(ev.text)}'</strong>` : "";
+      const safeSel = escapeHtmlAttr(ev.selector || "");
+      const safeIframe = ev.iframe ? ` <span style="color:var(--text-muted);">[${escapeHtmlAttr(ev.iframe)}]</span>` : "";
       return `
         <div style="display:flex; align-items:center; gap:8px; padding:6px 10px; background:var(--card); border:1px solid var(--stroke); border-left:3px solid ${badgeColor}; border-radius:4px;">
-          <span style="color:${badgeColor}; font-weight:700; min-width:64px;">#${ev.seq} ${kindLabel}</span>
-          <span style="color:var(--text-main); font-weight:500;">${ev.label}${textPart}</span>
-          <span style="margin-left:auto; color:var(--text-muted); font-size:0.85em; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${(ev.selector || "").replace(/"/g, "&quot;")}">${ev.selector}${iframePart}</span>
+          <span style="color:${badgeColor}; font-weight:700; min-width:68px; white-space:nowrap;">#${ev.seq} ${kindLabel}</span>
+          <span style="color:var(--text-main); font-weight:500;">${safeLabel}${safeText}</span>
+          <span style="margin-left:auto; color:var(--text-muted); font-size:0.85em; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${safeSel}">${safeSel}${safeIframe}</span>
         </div>
       `;
     })
@@ -4512,6 +6131,7 @@ function extractHumanTargetLabel(act) {
     /:has-text\(['"]([^'"]+)['"]\)/,
     /\[title\*?=['"]([^'"]+)['"]\]/,
     /\[value=['"]([^'"]+)['"]\]/,
+    /\[placeholder\*?=['"]([^'"]+)['"]\]/,
   ];
   for (const re of patterns) {
     const m = sel.match(re);
@@ -4527,6 +6147,21 @@ function extractHumanTargetLabel(act) {
   const bMatch = desc.match(/\[([^\]]+)\]/);
   if (bMatch && bMatch[1] && bMatch[1].trim()) {
     return bMatch[1].trim();
+  }
+  const html = String(act.targetHtml || "");
+  if (html) {
+    const attrMatch = html.match(/(?:title|placeholder|alt|aria-label)=["']([^"']{1,40})["']/i);
+    if (attrMatch && attrMatch[1] && attrMatch[1].trim()) {
+      return attrMatch[1].trim();
+    }
+    const textOnly = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    if (textOnly && textOnly.length <= 36) {
+      return textOnly;
+    }
+  }
+  const idMatch = sel.match(/#([a-zA-Z0-9_-]{2,40})/);
+  if (idMatch && idMatch[1]) {
+    return `#${idMatch[1]}`;
   }
   return "";
 }
@@ -4582,18 +6217,32 @@ function applyHumanTargetLabelChange(act, newTargetRaw) {
 
 // Render Editable Action Cards (1-Line Human Storyboard View)
 function renderActionCards() {
+  const explanationBoxEl = document.getElementById("explanation-box");
   actionsList.innerHTML = "";
   if (!currentPlan || !currentPlan.actions || currentPlan.actions.length === 0) {
     if (planStatsPills) planStatsPills.innerHTML = "";
+    if (explanationBoxEl) {
+      explanationBoxEl.classList.remove("compact-explanation", "hidden");
+    }
     actionsList.innerHTML = `
       <div class="empty-state">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-        <p>생성된 액션이 없습니다.</p>
+        <p>생성되거나 불러온 액션 플랜이 없습니다.</p>
+        <span>상단 [💧 브라우저 띄워서 시범 보이기]로 시연하거나 [📂 기존 시나리오 빠른 불러오기]를 선택해보세요.</span>
         <button class="btn btn-sm btn-secondary" style="margin-top: 10px;" id="btn-empty-add-action">+ 첫 번째 액션 추가</button>
       </div>`;
     const btnEmptyAdd = document.getElementById("btn-empty-add-action");
     if (btnEmptyAdd) btnEmptyAdd.addEventListener("click", () => insertActionAt(0));
     return;
+  }
+
+  if (explanationBoxEl) {
+    if (currentSlug) {
+      explanationBoxEl.classList.remove("hidden");
+      explanationBoxEl.classList.add("compact-explanation");
+    } else {
+      explanationBoxEl.classList.add("hidden");
+    }
   }
 
   // Update Plan Breakdown Stats Pills
@@ -4709,14 +6358,19 @@ function renderActionCards() {
         ${inlineValueHtml}
 
         <div class="action-card-controls">
-          <button type="button" class="action-ctrl-btn action-move-up" title="위로 이동" ${idx === 0 ? "disabled" : ""}>▲</button>
-          <button type="button" class="action-ctrl-btn action-move-down" title="아래로 이동" ${idx === totalActions - 1 ? "disabled" : ""}>▼</button>
-          <button type="button" class="action-ctrl-btn action-ctrl-insert action-insert-btn" title="바로 아래에 새 단계 추가">+ 추가</button>
           ${act.type !== "wait" ? `<button type="button" class="action-ctrl-btn btn-toggle-raw-selector" title="고급: 내부 CSS 셀렉터 확인/수정">🔧</button>` : ""}
           <button type="button" class="action-delete-btn" title="이 단계 삭제">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
+      </div>
+
+      <div class="action-floating-toolbar">
+        <button type="button" class="btn-action-float action-move-up" title="위로 이동" ${idx === 0 ? "disabled" : ""}>▲ 위로</button>
+        <button type="button" class="btn-action-float action-move-down" title="아래로 이동" ${idx === totalActions - 1 ? "disabled" : ""}>▼ 아래로</button>
+        <span class="cue-floating-sep"></span>
+        <button type="button" class="btn-action-float action-dup-btn" title="이 단계 복제">📋 복제</button>
+        <button type="button" class="btn-action-float action-insert-btn" title="바로 아래에 새 단계 추가">+ 아래 추가</button>
       </div>
 
       ${act.type !== "wait" ? `
@@ -4798,6 +6452,7 @@ function renderActionCards() {
     // Control Button Listeners
     card.querySelector(".action-move-up").addEventListener("click", () => moveAction(idx, idx - 1));
     card.querySelector(".action-move-down").addEventListener("click", () => moveAction(idx, idx + 1));
+    card.querySelector(".action-dup-btn")?.addEventListener("click", () => duplicateAction(idx));
     card.querySelector(".action-insert-btn").addEventListener("click", () => insertActionAt(idx + 1));
     card.querySelector(".action-delete-btn").addEventListener("click", () => deleteAction(idx));
 
@@ -4878,17 +6533,30 @@ function syncCardsToPlan() {
   });
 }
 
+function resolveOrAutoGenerateSlug() {
+  let slug = (slugInput ? slugInput.value.trim() : "") || currentSlug;
+  if (!slug && currentPlan && Array.isArray(currentPlan.actions) && currentPlan.actions.length > 0) {
+    const now = new Date();
+    const pad2 = (n) => String(n).padStart(2, "0");
+    slug = `custom-plan-${pad2(now.getMonth() + 1)}${pad2(now.getDate())}-${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}`;
+    currentSlug = slug;
+    if (slugInput) slugInput.value = slug;
+    if (planSlugBadge) planSlugBadge.textContent = `📌 ${slug}`;
+  }
+  return slug;
+}
+
 // 11. Save Plan
 async function handleSavePlan(silent = false) {
   const isSilent = typeof silent === "boolean" ? silent : false;
   syncCardsToPlan();
-      const slug = slugInput.value.trim() || currentSlug;
-      if (!slug) {
-        if (!isSilent) alert("시나리오 식별자(Slug)를 입력해주세요.");
+      if (!currentPlan || !Array.isArray(currentPlan.actions) || currentPlan.actions.length === 0) {
+        if (!isSilent) alert("저장할 액션 플랜이 없습니다. 먼저 스포이드로 시범을 보이거나 액션을 추가해주세요.");
         return false;
       }
-      if (!currentPlan) {
-        if (!isSilent) alert("저장할 플랜이 없습니다.");
+      const slug = resolveOrAutoGenerateSlug();
+      if (!slug) {
+        if (!isSilent) alert("시나리오 식별자(Slug)를 입력해주세요.");
         return false;
       }
 
@@ -4926,9 +6594,10 @@ async function handleSavePlan(silent = false) {
 
 // 12. Run Pipeline (Record & Edit)
 async function handleRunPipeline() {
-      const slug = slugInput.value.trim() || currentSlug;
+      syncCardsToPlan();
+      const slug = resolveOrAutoGenerateSlug();
       if (!slug) {
-        alert("시나리오 식별자(Slug)를 입력해주세요.");
+        alert("녹화할 시나리오를 선택하거나 액션을 추가해주세요.");
         return;
       }
 
@@ -5090,10 +6759,10 @@ function updateRenderUI(forceRebuildCards = false) {
           btnPlayerRender.textContent = "🕒 렌더링 대기열 등록됨";
           btnPlayerRender.disabled = true;
         } else if (isRunning) {
-          btnPlayerRender.textContent = "🎞️ 최종 MP4 렌더링 (대기열 추가)";
+          btnPlayerRender.textContent = "🎞️ MP4 렌더링 (대기열)";
           btnPlayerRender.disabled = false;
         } else {
-          btnPlayerRender.textContent = "🎞️ 최종 MP4 렌더링";
+          btnPlayerRender.textContent = "🎞️ MP4 렌더링";
           btnPlayerRender.disabled = false;
         }
       }
@@ -5175,7 +6844,7 @@ function updateRenderUI(forceRebuildCards = false) {
           }
           if (btnDownloadRenderDock) {
             btnDownloadRenderDock.classList.remove("hidden");
-            btnDownloadRenderDock.href = `/api/rendered-video/${doneTask.slug}?download=1`;
+            btnDownloadRenderDock.href = `/api/download/${doneTask.slug}`;
             btnDownloadRenderDock.download = `${doneTask.slug}-final.mp4`;
           }
         } else {
@@ -5257,7 +6926,7 @@ function initSSE() {
                           btnDownloadVideo.href = rInfo.downloadUrl;
                           btnDownloadVideo.download = `${rTask.slug}-final.mp4`;
                           const sizeMb = ((rInfo.fileSizeBytes || 0) / (1024 * 1024)).toFixed(1);
-                          btnDownloadVideo.innerHTML = `💾 최종 MP4 다운로드 <small>(${sizeMb}MB)</small>`;
+                          btnDownloadVideo.innerHTML = `💾 다운로드 <small>(${sizeMb}MB)</small>`;
                         }
                       })
                       .catch(() => {});
@@ -5639,6 +7308,27 @@ function bindEvents() {
         });
       }
 
+      const btnClearPlan = document.getElementById("btn-clear-plan");
+      if (btnClearPlan) {
+        btnClearPlan.addEventListener("click", () => {
+          currentPlan = {
+            url: targetBaseUrlInput ? targetBaseUrlInput.value.trim() || "https://gwdev.bc.ac.kr/" : "https://gwdev.bc.ac.kr/",
+            viewport: { width: 1920, height: 1080 },
+            requiresLogin: true,
+            actions: [],
+          };
+          currentSlug = "";
+          if (slugInput) slugInput.value = "";
+          if (editorScenarioSelect) editorScenarioSelect.value = "";
+          if (planSlugBadge) planSlugBadge.textContent = "시나리오 미선택";
+          if (explanationText) {
+            explanationText.textContent =
+              "상단 [💧 브라우저 띄워서 시범 보이기]로 동작을 시연하거나, 드롭다운에서 기존 시나리오를 선택하면 단계별 액션 카드가 표시됩니다.";
+          }
+          renderActionCards();
+        });
+      }
+
       if (btnClearTerminal) {
         btnClearTerminal.addEventListener("click", () => {
           if (terminalOutput) terminalOutput.innerHTML = "";
@@ -5838,13 +7528,40 @@ function bindEvents() {
         });
       }
 
+      if (btnTimelineZoomIn) {
+        btnTimelineZoomIn.addEventListener("click", () => {
+          const next = timelineZoomLevel < 2 ? timelineZoomLevel + 0.5 : Math.round(timelineZoomLevel * 1.4 * 2) / 2;
+          setTimelineZoom(next);
+        });
+      }
+      if (btnTimelineZoomOut) {
+        btnTimelineZoomOut.addEventListener("click", () => {
+          const next = timelineZoomLevel <= 2 ? timelineZoomLevel - 0.5 : Math.round((timelineZoomLevel / 1.4) * 2) / 2;
+          setTimelineZoom(next);
+        });
+      }
+      if (timelineZoomPresetBtns && timelineZoomPresetBtns.length > 0) {
+        timelineZoomPresetBtns.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const z = parseFloat(btn.getAttribute("data-zoom") || "1");
+            setTimelineZoom(z);
+          });
+        });
+      }
+
       if (timelineBarWrapper && videoPlayer) {
+        const getStageRect = () => (timelineVisualBar || timelineBarWrapper).getBoundingClientRect();
+
         const clientXToRawSec = (clientX) => {
-          const rect = timelineBarWrapper.getBoundingClientRect();
-          const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+          const rect = getStageRect();
+          const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / Math.max(1, rect.width)));
           const details = scenarioDetailsCache[selectedScenario];
           const editPlan = details?.editPlan;
-          if (currentVideoMode === "raw" && editPlan?.totalDurationFrames) {
+          const narration = details?.narration || editPlan?.narration;
+          const isMergedScenario =
+            (Array.isArray(narration?.mergedFromSlugs) && narration.mergedFromSlugs.length > 0) ||
+            (Array.isArray(details?.browsePlan?.mergedFromSlugs) && details.browsePlan.mergedFromSlugs.length > 0);
+          if (currentVideoMode === "raw" && !isMergedScenario && editPlan?.totalDurationFrames) {
             const fps = Number(editPlan.fps || 60);
             const compTotalMs = (editPlan.totalDurationFrames / fps) * 1000;
             const targetCompMs = ratio * compTotalMs;
@@ -5854,7 +7571,24 @@ function bindEvents() {
           return ratio * (videoPlayer.duration || 0);
         };
 
+        const wheelTarget = timelineScrollViewport || timelineBarWrapper;
+        wheelTarget.addEventListener(
+          "wheel",
+          (e) => {
+            if (e.ctrlKey || e.metaKey) {
+              e.preventDefault();
+              const vpRect = wheelTarget.getBoundingClientRect();
+              const cursorOffsetX = Math.max(0, Math.min(vpRect.width, e.clientX - vpRect.left));
+              const anchorRatio = (wheelTarget.scrollLeft + cursorOffsetX) / Math.max(1, wheelTarget.scrollWidth);
+              const factor = e.deltaY < 0 ? 1.25 : 0.8;
+              setTimelineZoom(timelineZoomLevel * factor, anchorRatio, cursorOffsetX);
+            }
+          },
+          { passive: false }
+        );
+
         timelineBarWrapper.addEventListener("mousedown", (e) => {
+          if (e.target && e.target.closest && e.target.closest(".timeline-track-labels")) return;
           if (!e.shiftKey || !videoPlayer.duration) return;
           e.preventDefault();
           const startRawSec = clientXToRawSec(e.clientX);
@@ -5883,15 +7617,20 @@ function bindEvents() {
         });
 
         timelineBarWrapper.addEventListener("click", (e) => {
+          if (e.target && e.target.closest && e.target.closest(".timeline-track-labels")) return;
           if (!videoPlayer.duration) return;
           if (timelineDragCutState && timelineDragCutState.moved) return;
           const wasPlaying = !videoPlayer.paused || realtimeHoldState.active;
           stopRealtimeHoldAndAudio();
-          const rect = timelineBarWrapper.getBoundingClientRect();
-          const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+          const rect = getStageRect();
+          const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / Math.max(1, rect.width)));
           const details = scenarioDetailsCache[selectedScenario];
           const editPlan = details?.editPlan;
-          if (currentVideoMode === "raw" && editPlan?.totalDurationFrames) {
+          const narration = details?.narration || editPlan?.narration;
+          const isMergedScenario =
+            (Array.isArray(narration?.mergedFromSlugs) && narration.mergedFromSlugs.length > 0) ||
+            (Array.isArray(details?.browsePlan?.mergedFromSlugs) && details.browsePlan.mergedFromSlugs.length > 0);
+          if (currentVideoMode === "raw" && !isMergedScenario && editPlan?.totalDurationFrames) {
             const fps = Number(editPlan.fps || 60);
             const compTotalMs = (editPlan.totalDurationFrames / fps) * 1000;
             const targetCompMs = ratio * compTotalMs;
@@ -5991,6 +7730,9 @@ function bindEvents() {
             renderIntroTocEditor(scenarioDetailsCache[selectedScenario], updated);
             updateVideoProgressUI();
             updateJsonViewer("narration");
+            markNarrationUnapplied("음성·자막·목차 표시 설정이 변경되었습니다. 영상에 반영하려면 [지금 영상에 즉시 반영]을 눌러주세요.", {
+              needsSlideBake: chk === narrationTocToggle,
+            });
             saveNarrationTimingQuick();
           });
         }
@@ -6016,11 +7758,92 @@ function bindEvents() {
         btnSaveNarration.addEventListener("click", handleSaveNarration);
       }
 
+      // UI Diet Collapsible Toolbars & Drawers (Cut Editor / Voice Options / Intro TOC / Brand)
+      const btnToggleCutEditor = document.getElementById("btn-toggle-cut-editor");
+      if (btnToggleCutEditor) {
+        btnToggleCutEditor.addEventListener("click", () => toggleCutEditorBar());
+      }
+
+      const btnToggleVoiceOptions = document.getElementById("btn-toggle-voice-options");
+      const voiceOptionsDrawer = document.getElementById("narration-voice-options-drawer");
+      if (btnToggleVoiceOptions && voiceOptionsDrawer) {
+        btnToggleVoiceOptions.addEventListener("click", () => {
+          const isOpen = voiceOptionsDrawer.classList.contains("hidden");
+          voiceOptionsDrawer.classList.toggle("hidden", !isOpen);
+          btnToggleVoiceOptions.classList.toggle("active", isOpen);
+        });
+      }
+
+      for (const selId of ["narration-voice-select", "narration-rate-select", "narration-style-select", "narration-pitch-select"]) {
+        const selEl = document.getElementById(selId);
+        if (selEl) {
+          selEl.addEventListener("change", updateVoiceOptionsSummaryUI);
+        }
+      }
+      updateVoiceOptionsSummaryUI();
+
+      const btnToggleIntroTocDrawer = document.getElementById("btn-toggle-intro-toc-drawer");
+      if (btnToggleIntroTocDrawer) {
+        btnToggleIntroTocDrawer.addEventListener("click", () => {
+          const tocEl = document.getElementById("narration-intro-toc-editor");
+          if (!tocEl) return;
+          isIntroTocDrawerOpen = !isIntroTocDrawerOpen;
+          tocEl.classList.toggle("hidden", !isIntroTocDrawerOpen);
+          btnToggleIntroTocDrawer.classList.toggle("active", isIntroTocDrawerOpen);
+          btnToggleIntroTocDrawer.textContent = isIntroTocDrawerOpen
+            ? "📑 오프닝 목차 ▴"
+            : "📑 오프닝 목차 ▾";
+        });
+      }
+
+      const btnToggleBrandDrawer = document.getElementById("btn-toggle-brand-drawer");
+      if (btnToggleBrandDrawer) {
+        btnToggleBrandDrawer.addEventListener("click", () => {
+          const brandEl = document.getElementById("narration-site-brand-bar");
+          if (!brandEl) return;
+          isSiteBrandDrawerOpen = !isSiteBrandDrawerOpen;
+          if (isSiteBrandDrawerOpen) {
+            isSiteBrandEditorExpanded = true;
+          }
+          const details = scenarioDetailsCache[selectedScenario];
+          renderSiteBrandBar(details, details?.narration);
+        });
+      }
+
       // Rendered Video Chapter Merger Bindings
       const btnToggleMergeDrawer = document.getElementById("btn-toggle-merge-drawer");
       if (btnToggleMergeDrawer) {
         btnToggleMergeDrawer.addEventListener("click", () => toggleMergeDrawer());
       }
+
+      // Disk Storage Optimizer Bindings
+      const btnToggleStorageDrawer = document.getElementById("btn-toggle-storage-drawer");
+      if (btnToggleStorageDrawer) {
+        btnToggleStorageDrawer.addEventListener("click", () => toggleStorageDrawer());
+      }
+
+      const btnRefreshStorageStats = document.getElementById("btn-refresh-storage-stats");
+      if (btnRefreshStorageStats) {
+        btnRefreshStorageStats.addEventListener("click", () => loadStorageStats());
+      }
+
+      const btnExecuteStorageCleanup = document.getElementById("btn-execute-storage-cleanup");
+      if (btnExecuteStorageCleanup) {
+        btnExecuteStorageCleanup.addEventListener("click", handleExecuteStorageCleanup);
+      }
+
+      for (const chkId of [
+        "chk-storage-hardlinks",
+        "chk-storage-temp",
+        "chk-storage-orphan",
+        "chk-storage-undo",
+      ]) {
+        const chkEl = document.getElementById(chkId);
+        if (chkEl) {
+          chkEl.addEventListener("change", updateSelectedStorageReclaimUI);
+        }
+      }
+      loadStorageStats();
 
       const btnClearMergeQueue = document.getElementById("btn-clear-merge-queue");
       if (btnClearMergeQueue) {
@@ -6051,10 +7874,120 @@ function bindEvents() {
       }
 
       if (btnCollapseLibrary) {
-        btnCollapseLibrary.addEventListener("click", () => applyLibraryCollapsed(true));
+        btnCollapseLibrary.addEventListener("click", () => {
+          applyLibraryCollapsed(true);
+          requestAnimationFrame(autoFitStudioLeftWidth);
+        });
       }
       if (btnExpandLibrary) {
-        btnExpandLibrary.addEventListener("click", () => applyLibraryCollapsed(false));
+        btnExpandLibrary.addEventListener("click", () => {
+          applyLibraryCollapsed(false);
+          requestAnimationFrame(autoFitStudioLeftWidth);
+        });
+      }
+      document.querySelectorAll('[data-tab="tab-scenarios"]').forEach((tabBtn) => {
+        tabBtn.addEventListener("click", () => setTimeout(autoFitStudioLeftWidth, 40));
+      });
+
+      // Side-by-Side Wide Studio Layout Toggle & Draggable Splitter
+      const playerStudioSplitEl = document.getElementById("player-studio-split");
+      const btnToggleStudioLayout = document.getElementById("btn-toggle-studio-layout");
+      const studioSplitResizer = document.getElementById("studio-split-resizer");
+
+      const autoFitStudioLeftWidth = () => {
+        if (!playerStudioSplitEl || playerStudioSplitEl.classList.contains("layout-stacked")) return;
+        const customPct = parseFloat(localStorage.getItem("screen_demo_studio_left_custom_pct") || "NaN");
+        if (Number.isFinite(customPct) && customPct >= 36 && customPct <= 72) {
+          playerStudioSplitEl.style.setProperty("--studio-left-width", `${customPct.toFixed(1)}%`);
+          return;
+        }
+        const splitRect = playerStudioSplitEl.getBoundingClientRect();
+        if (splitRect.width <= 600 || splitRect.height <= 300) return;
+        const modeBarEl = document.getElementById("video-mode-container");
+        const timelineSectionEl = playerStudioSplitEl.querySelector(".timeline-visual-section");
+        const unappliedBannerEl = document.getElementById("narration-unapplied-banner");
+        const modeH = modeBarEl ? modeBarEl.getBoundingClientRect().height : 40;
+        const timelineH = timelineSectionEl ? timelineSectionEl.getBoundingClientRect().height : 185;
+        const bannerH =
+          unappliedBannerEl && !unappliedBannerEl.classList.contains("hidden")
+            ? unappliedBannerEl.getBoundingClientRect().height + 6
+            : 0;
+        const availVideoH = Math.max(200, splitRect.height - modeH - timelineH - bannerH - 4);
+        const idealLeftPx = availVideoH * (16 / 9) + 8;
+        const minRightPx = 485;
+        const maxAllowedLeftPx = Math.max(420, splitRect.width - minRightPx);
+        const targetLeftPx = Math.min(maxAllowedLeftPx, idealLeftPx);
+        const idealPct = Math.min(64, Math.max(42, (targetLeftPx / splitRect.width) * 100));
+        playerStudioSplitEl.style.setProperty("--studio-left-width", `${idealPct.toFixed(1)}%`);
+      };
+
+      const applyStudioLayoutMode = (mode) => {
+        if (!playerStudioSplitEl) return;
+        const isStacked = mode === "stacked";
+        playerStudioSplitEl.classList.toggle("layout-stacked", isStacked);
+        if (btnToggleStudioLayout) {
+          btnToggleStudioLayout.classList.toggle("active", !isStacked);
+          btnToggleStudioLayout.textContent = isStacked ? "⊟ 상하 뷰" : "◫ 와이드 뷰";
+        }
+        localStorage.setItem("screen_demo_studio_layout", isStacked ? "stacked" : "split");
+        if (!isStacked) {
+          requestAnimationFrame(autoFitStudioLeftWidth);
+        }
+      };
+
+      const savedLayoutMode = localStorage.getItem("screen_demo_studio_layout") || "split";
+      applyStudioLayoutMode(savedLayoutMode);
+      window.addEventListener("resize", () => requestAnimationFrame(autoFitStudioLeftWidth));
+      if (typeof ResizeObserver === "function" && playerStudioSplitEl) {
+        const ro = new ResizeObserver(() => requestAnimationFrame(autoFitStudioLeftWidth));
+        const tlSec = playerStudioSplitEl.querySelector(".timeline-visual-section");
+        if (tlSec) ro.observe(tlSec);
+        const bannerEl = document.getElementById("narration-unapplied-banner");
+        if (bannerEl) ro.observe(bannerEl);
+      }
+      setTimeout(autoFitStudioLeftWidth, 120);
+
+      if (btnToggleStudioLayout) {
+        btnToggleStudioLayout.addEventListener("click", () => {
+          const currentlyStacked = playerStudioSplitEl && playerStudioSplitEl.classList.contains("layout-stacked");
+          applyStudioLayoutMode(currentlyStacked ? "split" : "stacked");
+        });
+      }
+
+      if (studioSplitResizer && playerStudioSplitEl) {
+        let isDraggingSplit = false;
+
+        studioSplitResizer.addEventListener("mousedown", (e) => {
+          if (playerStudioSplitEl.classList.contains("layout-stacked")) return;
+          isDraggingSplit = true;
+          studioSplitResizer.classList.add("dragging");
+          document.body.style.cursor = "col-resize";
+          document.body.style.userSelect = "none";
+          e.preventDefault();
+        });
+
+        window.addEventListener("mousemove", (e) => {
+          if (!isDraggingSplit || !playerStudioSplitEl) return;
+          const rect = playerStudioSplitEl.getBoundingClientRect();
+          if (rect.width <= 400) return;
+          const relX = e.clientX - rect.left;
+          const pct = Math.min(72, Math.max(36, (relX / rect.width) * 100));
+          playerStudioSplitEl.style.setProperty("--studio-left-width", `${pct.toFixed(1)}%`);
+          localStorage.setItem("screen_demo_studio_left_custom_pct", pct.toFixed(1));
+        });
+
+        window.addEventListener("mouseup", () => {
+          if (!isDraggingSplit) return;
+          isDraggingSplit = false;
+          studioSplitResizer.classList.remove("dragging");
+          document.body.style.cursor = "";
+          document.body.style.userSelect = "";
+        });
+
+        studioSplitResizer.addEventListener("dblclick", () => {
+          localStorage.removeItem("screen_demo_studio_left_custom_pct");
+          autoFitStudioLeftWidth();
+        });
       }
 
       // Terminal Enter & Interactive Input Bindings

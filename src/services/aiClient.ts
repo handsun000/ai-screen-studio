@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { spawn, execSync } from "child_process";
+import { spawn, spawnSync, execSync } from "child_process";
 import { GoogleGenAI } from "@google/genai";
 import { getConfig, AiExecutionMode, AiCliProvider } from "./configManager";
 import { recordAiUsage } from "./aiUsageTracker";
@@ -31,6 +31,7 @@ export interface GenerateAiOptions {
   forceMode?: AiExecutionMode;
   cliProviderOverride?: AiCliProvider;
   cliModelOverride?: string;
+  disableCliFallback?: boolean;
   timeoutMs?: number;
 }
 
@@ -95,6 +96,188 @@ function findExecutablePath(candidates: string[], whichName: string): string {
 let cachedClis: AvailableCliInfo[] | null = null;
 let cachedClisAt = 0;
 
+const DEFAULT_AGY_MODELS: CliModelOption[] = [
+  { id: "gemini-3.8-flash-low", label: "Gemini 3.8 Flash (Low · 초고속 추천)" },
+  { id: "gemini-3.8-flash-medium", label: "Gemini 3.8 Flash (Medium · 균형)" },
+  { id: "gemini-3.8-flash-high", label: "Gemini 3.8 Flash (High · 정밀)" },
+  { id: "gemini-4-argon-low", label: "Gemini 4 Argon (Low · 고속)" },
+  { id: "gemini-4-argon-medium", label: "Gemini 4 Argon (Medium · 고성능)" },
+  { id: "gemini-4-argon-high", label: "Gemini 4 Argon (High · 최고성능)" },
+  { id: "claude-sonnet-5-5-low", label: "Claude Sonnet 5.5 (Low)" },
+  { id: "claude-sonnet-5-5-medium", label: "Claude Sonnet 5.5 (Medium)" },
+  { id: "claude-sonnet-5-5-high", label: "Claude Sonnet 5.5 (High)" },
+  { id: "claude-opus-5-5-low", label: "Claude Opus 5.5 (Low)" },
+  { id: "claude-opus-5-5-medium", label: "Claude Opus 5.5 (Medium)" },
+  { id: "claude-opus-5-5-high", label: "Claude Opus 5.5 (High)" },
+  { id: "gpt-oss-120b-medium", label: "GPT-OSS 120B (Medium)" },
+];
+
+function queryAgyModelsDynamic(agyPath: string): CliModelOption[] {
+  if (!agyPath) return DEFAULT_AGY_MODELS;
+  try {
+    const res = spawnSync(agyPath, ["models"], {
+      encoding: "utf-8",
+      timeout: 3500,
+      windowsHide: true,
+    });
+    const combined = `${res.stdout || ""}\n${res.stderr || ""}`;
+    const parsed: CliModelOption[] = [];
+    const seen = new Set<string>();
+    const labelOverrides = new Map(DEFAULT_AGY_MODELS.map((m) => [m.id, m.label]));
+
+    for (const rawLine of combined.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      const m = line.match(/^([a-z0-9._-]+)\t(.+)$/i);
+      if (m) {
+        const id = m[1].trim();
+        const rawLabel = m[2].trim();
+        if (id && !seen.has(id)) {
+          seen.add(id);
+          parsed.push({
+            id,
+            label: labelOverrides.get(id) || rawLabel,
+          });
+        }
+      }
+    }
+
+    if (parsed.length > 0) {
+      // Ensure gemini-3.8-flash-low is placed first as the recommended fast model
+      parsed.sort((a, b) => {
+        if (a.id === "gemini-3.8-flash-low") return -1;
+        if (b.id === "gemini-3.8-flash-low") return 1;
+        return 0;
+      });
+      return parsed;
+    }
+  } catch {
+    // fallback to DEFAULT_AGY_MODELS
+  }
+  return DEFAULT_AGY_MODELS;
+}
+
+const DEFAULT_OLLAMA_MODELS: CliModelOption[] = [
+  { id: "qwen3:8b", label: "Qwen 3 (8B · 로컬 추천)" },
+  { id: "gemma3:12b", label: "Gemma 3 (12B)" },
+  { id: "llama3.3:latest", label: "Llama 3.3 (Latest)" },
+  { id: "deepseek-r1:8b", label: "DeepSeek R1 (8B)" },
+];
+
+function queryOllamaModelsDynamic(ollamaPath: string): CliModelOption[] {
+  if (!ollamaPath) return DEFAULT_OLLAMA_MODELS;
+  try {
+    const res = spawnSync(ollamaPath, ["list"], {
+      encoding: "utf-8",
+      timeout: 2500,
+      windowsHide: true,
+    });
+    const out = String(res.stdout || "").trim();
+    if (!out) return DEFAULT_OLLAMA_MODELS;
+    const lines = out.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const models: CliModelOption[] = [];
+    const seen = new Set<string>();
+    for (let i = 0; i < lines.length; i++) {
+      if (i === 0 && /^NAME\s+ID/i.test(lines[i])) continue;
+      const cols = lines[i].split(/\s{2,}/);
+      const modelId = cols[0]?.trim();
+      const sizeStr = cols[2]?.trim();
+      if (modelId && !seen.has(modelId)) {
+        seen.add(modelId);
+        models.push({
+          id: modelId,
+          label: sizeStr ? `${modelId} (${sizeStr} · 로컬 설치됨)` : `${modelId} (로컬 설치됨)`,
+        });
+      }
+    }
+    if (models.length > 0) {
+      for (const fallback of DEFAULT_OLLAMA_MODELS) {
+        if (!seen.has(fallback.id)) {
+          models.push(fallback);
+        }
+      }
+      return models;
+    }
+  } catch {
+    // ignore
+  }
+  return DEFAULT_OLLAMA_MODELS;
+}
+
+const NAON_DEFAULT_MODEL_ID = "qwen3.8-27b";
+
+const DEFAULT_NAONCODE_MODELS: CliModelOption[] = [
+  { id: "qwen3.8-27b", label: "Qwen 3.8 27B (NAON AI Gateway · 기본 추천)" },
+  { id: "qwen3.8-27b-NAON", label: "Qwen 3.8 27B NAON (사내 전용 게이트웨이)" },
+  { id: "qwen3.6:35b-NAON", label: "Qwen 3.6 35B NAON (사내 전용 게이트웨이)" },
+  { id: "qwen3.8-flash-openrouter", label: "Qwen 3.8 Flash (OpenRouter · 고속)" },
+  { id: "qwen3-30b-a3b", label: "Qwen 3 30B-A3B (NAON AI Gateway)" },
+  { id: "gemma-3-27b-it", label: "Gemma 3 27B IT (NAON AI Gateway)" },
+  { id: "deepseek-v4", label: "DeepSeek V4 (NAON AI Gateway · 추론)" },
+  { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash (NAON AI Gateway)" },
+  { id: "gemini-2.5-pro", label: "Gemini 2.5 Pro (NAON AI Gateway)" },
+  { id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6 (NAON AI Gateway)" },
+  { id: "gpt-5", label: "GPT-5 (NAON AI Gateway)" },
+];
+
+function queryNaoncodeModelsDynamic(home: string): CliModelOption[] {
+  const models: CliModelOption[] = [];
+  const seen = new Set<string>();
+  const labelMap = new Map(DEFAULT_NAONCODE_MODELS.map((m) => [m.id, m.label]));
+
+  try {
+    const selectedModelPath = path.join(home, ".nmscode", "selected-model");
+    if (fs.existsSync(selectedModelPath)) {
+      const selected = fs.readFileSync(selectedModelPath, "utf-8").trim();
+      if (selected && !seen.has(selected)) {
+        seen.add(selected);
+        const baseLabel = labelMap.get(selected) || `${selected} (NAON AI Gateway)`;
+        models.push({
+          id: selected,
+          label: baseLabel.includes("현재 선택됨") ? baseLabel : `${baseLabel.replace(/\)$/, " · 현재 선택됨)")}`,
+        });
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  for (const fallback of DEFAULT_NAONCODE_MODELS) {
+    if (!seen.has(fallback.id)) {
+      seen.add(fallback.id);
+      models.push(fallback);
+    }
+  }
+
+  return models;
+}
+
+function resolveNaoncodeEntryPath(appData: string, localAppData: string): string {
+  const directCandidates = [
+    path.join(appData, "npm", "node_modules", "naoncode", "dist", "index.js"),
+    path.join(localAppData, "npm", "node_modules", "naoncode", "dist", "index.js"),
+  ];
+  for (const c of directCandidates) {
+    if (c && fs.existsSync(c)) {
+      return c;
+    }
+  }
+  const foundBin = findExecutablePath(
+    [
+      path.join(appData, "npm", "naoncode.cmd"),
+      path.join(localAppData, "npm", "naoncode.cmd"),
+    ],
+    "naoncode"
+  );
+  if (foundBin) {
+    const adjacentEntry = path.join(path.dirname(foundBin), "node_modules", "naoncode", "dist", "index.js");
+    if (fs.existsSync(adjacentEntry)) {
+      return adjacentEntry;
+    }
+    return foundBin;
+  }
+  return "";
+}
+
 export function detectAvailableClis(forceRefresh = false): AvailableCliInfo[] {
   const now = Date.now();
   if (!forceRefresh && cachedClis && now - cachedClisAt < 30_000) {
@@ -113,10 +296,13 @@ export function detectAvailableClis(forceRefresh = false): AvailableCliInfo[] {
     "agy"
   );
 
+  const naoncodePath = resolveNaoncodeEntryPath(appData, localAppData);
+
   const claudePath = findExecutablePath(
     [
       path.join(home, ".local", "bin", "claude.exe"),
       path.join(appData, "npm", "claude.cmd"),
+      path.join(localAppData, "Programs", "claude", "claude.exe"),
     ],
     "claude"
   );
@@ -129,21 +315,48 @@ export function detectAvailableClis(forceRefresh = false): AvailableCliInfo[] {
     "gemini"
   );
 
-  cachedClis = [
+  const codexPath = findExecutablePath(
+    [
+      path.join(appData, "npm", "codex.cmd"),
+      path.join(localAppData, "npm", "codex.cmd"),
+      path.join(home, ".local", "bin", "codex.exe"),
+    ],
+    "codex"
+  );
+
+  const ollamaPath = findExecutablePath(
+    [
+      path.join(localAppData, "Programs", "Ollama", "ollama.exe"),
+      "C:\\Program Files\\Ollama\\ollama.exe",
+    ],
+    "ollama"
+  );
+
+  const copilotPath = findExecutablePath(
+    [
+      path.join(appData, "npm", "copilot.cmd"),
+      path.join(localAppData, "Programs", "GitHub Copilot CLI", "copilot.exe"),
+      path.join(home, ".local", "bin", "copilot.exe"),
+    ],
+    "copilot"
+  );
+
+  const rawList: AvailableCliInfo[] = [
     {
       id: "agy",
       name: "Antigravity CLI (agy)",
       installed: Boolean(agyPath),
       binaryPath: agyPath,
-      models: [
-        { id: "gemini-3.8-flash-low", label: "Gemini 3.8 Flash (Low · 초고속 추천)" },
-        { id: "gemini-3.8-flash-medium", label: "Gemini 3.8 Flash (Medium · 균형)" },
-        { id: "gemini-3.8-flash-high", label: "Gemini 3.8 Flash (High · 정밀)" },
-        { id: "gemini-4-argon-low", label: "Gemini 4 Argon (Low · 고속)" },
-        { id: "gemini-4-argon-medium", label: "Gemini 4 Argon (Medium · 고성능)" },
-        { id: "claude-sonnet-5-5-medium", label: "Claude Sonnet 5.5 (Medium)" },
-      ],
-      note: "Google Antigravity 로그인 세션 사용 (API 키 불필요 · 요금 ₩0)",
+      models: queryAgyModelsDynamic(agyPath),
+      note: "Google Antigravity 로그인 세션 (API 키 불필요 · 요금 ₩0 · 13종 모델 실시간 조회)",
+    },
+    {
+      id: "naoncode",
+      name: "NAON CODE CLI (naoncode)",
+      installed: Boolean(naoncodePath),
+      binaryPath: naoncodePath,
+      models: queryNaoncodeModelsDynamic(home),
+      note: "나온소프트 사내 NAON AI Gateway 로그인 세션 (API 키 불필요 · 요금 ₩0 · ACP JSON-RPC 스트림)",
     },
     {
       id: "claude",
@@ -152,11 +365,14 @@ export function detectAvailableClis(forceRefresh = false): AvailableCliInfo[] {
       binaryPath: claudePath,
       models: [
         { id: "default", label: "Claude 기본 모델 (Default)" },
-        { id: "sonnet", label: "Claude Sonnet (표준)" },
+        { id: "sonnet", label: "Claude Sonnet (표준 · 추천)" },
         { id: "haiku", label: "Claude Haiku (초고속)" },
         { id: "opus", label: "Claude Opus (최고성능)" },
+        { id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6" },
+        { id: "claude-opus-4-6", label: "Claude Opus 4.6" },
+        { id: "claude-haiku-4-5", label: "Claude Haiku 4.5" },
       ],
-      note: "Claude Code 로그인 구독 세션 사용 (API 키 불필요 · 요금 ₩0)",
+      note: "Claude Code 구독 로그인 세션 사용 (API 키 불필요 · 요금 ₩0)",
     },
     {
       id: "gemini",
@@ -164,11 +380,53 @@ export function detectAvailableClis(forceRefresh = false): AvailableCliInfo[] {
       installed: Boolean(geminiPath),
       binaryPath: geminiPath,
       models: [
-        { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
-        { id: "gemini-2.5-pro", label: "Gemini 2.5 Pro" },
+        { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash (고속 추천)" },
+        { id: "gemini-2.5-pro", label: "Gemini 2.5 Pro (고성능)" },
+        { id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite (초경량)" },
+        { id: "gemini-3-flash-preview", label: "Gemini 3 Flash Preview" },
+        { id: "gemini-3-pro-preview", label: "Gemini 3 Pro Preview" },
       ],
-      note: "Google Workspace 엔터프라이즈 계정 전용 (개인 계정은 Antigravity CLI 사용)",
+      note: "Google Gemini CLI 로그인 세션 사용",
     },
+    {
+      id: "codex",
+      name: "OpenAI Codex CLI (codex)",
+      installed: Boolean(codexPath),
+      binaryPath: codexPath,
+      models: [
+        { id: "gpt-5-codex", label: "GPT-5 Codex (표준 추천)" },
+        { id: "gpt-5", label: "GPT-5 (고성능)" },
+        { id: "o4-mini", label: "o4-mini (초고속 추론)" },
+        { id: "o3", label: "o3 (심층 추론)" },
+      ],
+      note: "ChatGPT Plus/Pro/Team 로그인 세션 사용 (@openai/codex)",
+    },
+    {
+      id: "ollama",
+      name: "Ollama Local LLM (ollama)",
+      installed: Boolean(ollamaPath),
+      binaryPath: ollamaPath,
+      models: queryOllamaModelsDynamic(ollamaPath),
+      note: "완전 오프라인 로컬 GPU/CPU LLM 실행 (API 요금 ₩0 · ollama list 연동)",
+    },
+    {
+      id: "copilot",
+      name: "GitHub Copilot CLI (copilot)",
+      installed: Boolean(copilotPath),
+      binaryPath: copilotPath,
+      models: [
+        { id: "claude-sonnet-4.5", label: "Claude Sonnet 4.5 (Copilot)" },
+        { id: "gpt-5", label: "GPT-5 (Copilot)" },
+        { id: "gemini-2.5-pro", label: "Gemini 2.5 Pro (Copilot)" },
+      ],
+      note: "GitHub Copilot 구독 로그인 세션 사용 (@github/copilot)",
+    },
+  ];
+
+  // Sort installed CLIs first while preserving relative order
+  cachedClis = [
+    ...rawList.filter((c) => c.installed),
+    ...rawList.filter((c) => !c.installed),
   ];
   cachedClisAt = now;
   return cachedClis;
@@ -541,6 +799,467 @@ async function spawnGeminiCli(
   });
 }
 
+async function spawnCodexCli(
+  binaryPath: string,
+  model: string,
+  fullPrompt: string,
+  timeoutMs: number
+): Promise<{ text: string; usage?: any }> {
+  const args: string[] = ["exec", "--skip-git-repo-check"];
+  if (model && model !== "default") {
+    args.push("-m", model);
+  }
+  args.push("-");
+
+  const isCmd = binaryPath.toLowerCase().endsWith(".cmd") || binaryPath.toLowerCase().endsWith(".bat");
+
+  return new Promise((resolve, reject) => {
+    const child = spawn(binaryPath, args, {
+      cwd: os.tmpdir(),
+      windowsHide: true,
+      shell: isCmd,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+
+    let stdoutBuf = "";
+    let stderrBuf = "";
+    let finished = false;
+
+    const timer = setTimeout(() => {
+      if (finished) return;
+      finished = true;
+      try {
+        child.kill();
+      } catch {}
+      reject(new Error(`Codex CLI 응답 시간 초과 (${Math.round(timeoutMs / 1000)}s)`));
+    }, timeoutMs);
+
+    child.stdout.on("data", (chunk) => {
+      stdoutBuf += chunk.toString("utf-8");
+    });
+
+    child.stderr.on("data", (chunk) => {
+      stderrBuf += chunk.toString("utf-8");
+    });
+
+    child.on("error", (err) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      reject(err);
+    });
+
+    child.on("close", (code) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+
+      const rawOut = stdoutBuf.trim();
+      if (code === 0 && rawOut) {
+        resolve({ text: rawOut });
+        return;
+      }
+
+      reject(
+        new Error(
+          `Codex CLI 실행 실패 (exit ${code}): ${stderrBuf.trim() || rawOut.slice(0, 300) || "응답 없음"}`
+        )
+      );
+    });
+
+    try {
+      child.stdin.write(fullPrompt, "utf-8");
+      child.stdin.end();
+    } catch (writeErr) {
+      if (!finished) {
+        finished = true;
+        clearTimeout(timer);
+        reject(writeErr);
+      }
+    }
+  });
+}
+
+async function spawnOllamaCli(
+  binaryPath: string,
+  model: string,
+  fullPrompt: string,
+  timeoutMs: number
+): Promise<{ text: string; usage?: any }> {
+  const effectiveModel = model && model !== "default" ? model : "qwen3:8b";
+  const args = ["run", effectiveModel];
+
+  return new Promise((resolve, reject) => {
+    const child = spawn(binaryPath, args, {
+      cwd: os.tmpdir(),
+      windowsHide: true,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+
+    let stdoutBuf = "";
+    let stderrBuf = "";
+    let finished = false;
+
+    const timer = setTimeout(() => {
+      if (finished) return;
+      finished = true;
+      try {
+        child.kill();
+      } catch {}
+      reject(new Error(`Ollama CLI 응답 시간 초과 (${Math.round(timeoutMs / 1000)}s)`));
+    }, timeoutMs);
+
+    child.stdout.on("data", (chunk) => {
+      stdoutBuf += chunk.toString("utf-8");
+    });
+
+    child.stderr.on("data", (chunk) => {
+      stderrBuf += chunk.toString("utf-8");
+    });
+
+    child.on("error", (err) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      reject(err);
+    });
+
+    child.on("close", (code) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+
+      // Strip terminal ANSI escape sequences if present
+      const cleanOut = stdoutBuf.replace(/\x1B\[[0-9;?]*[a-zA-Z]/g, "").trim();
+      if (code === 0 && cleanOut) {
+        resolve({ text: cleanOut });
+        return;
+      }
+
+      reject(
+        new Error(
+          `Ollama CLI 실행 실패 (exit ${code}): ${stderrBuf.trim() || cleanOut.slice(0, 300) || "응답 없음"}`
+        )
+      );
+    });
+
+    try {
+      child.stdin.write(fullPrompt, "utf-8");
+      child.stdin.end();
+    } catch (writeErr) {
+      if (!finished) {
+        finished = true;
+        clearTimeout(timer);
+        reject(writeErr);
+      }
+    }
+  });
+}
+
+async function spawnCopilotCli(
+  binaryPath: string,
+  model: string,
+  fullPrompt: string,
+  timeoutMs: number
+): Promise<{ text: string; usage?: any }> {
+  const args: string[] = [];
+  if (model && model !== "default") {
+    args.push("--model", model);
+  }
+  args.push("-p", fullPrompt);
+
+  const isCmd = binaryPath.toLowerCase().endsWith(".cmd") || binaryPath.toLowerCase().endsWith(".bat");
+
+  return new Promise((resolve, reject) => {
+    const child = spawn(binaryPath, args, {
+      cwd: os.tmpdir(),
+      windowsHide: true,
+      shell: isCmd,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let stdoutBuf = "";
+    let stderrBuf = "";
+    let finished = false;
+
+    const timer = setTimeout(() => {
+      if (finished) return;
+      finished = true;
+      try {
+        child.kill();
+      } catch {}
+      reject(new Error(`Copilot CLI 응답 시간 초과 (${Math.round(timeoutMs / 1000)}s)`));
+    }, timeoutMs);
+
+    child.stdout.on("data", (chunk) => {
+      stdoutBuf += chunk.toString("utf-8");
+    });
+
+    child.stderr.on("data", (chunk) => {
+      stderrBuf += chunk.toString("utf-8");
+    });
+
+    child.on("error", (err) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      reject(err);
+    });
+
+    child.on("close", (code) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+
+      const rawOut = stdoutBuf.trim();
+      if (code === 0 && rawOut) {
+        resolve({ text: rawOut });
+        return;
+      }
+
+      reject(
+        new Error(
+          `Copilot CLI 실행 실패 (exit ${code}): ${stderrBuf.trim() || rawOut.slice(0, 300) || "응답 없음"}`
+        )
+      );
+    });
+  });
+}
+
+async function spawnNaoncodeCli(
+  binaryPath: string,
+  model: string,
+  fullPrompt: string,
+  timeoutMs: number
+): Promise<{ text: string; usage?: any }> {
+  const trimmedModel = String(model || "").trim();
+  const effectiveModel =
+    trimmedModel &&
+    trimmedModel !== "default" &&
+    !trimmedModel.startsWith("gemini-3.8-") &&
+    !trimmedModel.startsWith("gemini-4-")
+      ? trimmedModel
+      : NAON_DEFAULT_MODEL_ID;
+
+  let entryJs = binaryPath;
+  if (!entryJs.toLowerCase().endsWith(".js")) {
+    const candidateJs = path.join(path.dirname(binaryPath), "node_modules", "naoncode", "dist", "index.js");
+    if (fs.existsSync(candidateJs)) {
+      entryJs = candidateJs;
+    }
+  }
+
+  const isJsEntry = entryJs.toLowerCase().endsWith(".js");
+  const cmd = isJsEntry ? process.execPath : binaryPath;
+  const acpFlags = [
+    "acp",
+    "--model",
+    effectiveModel,
+    "--tools",
+    "readonly",
+    "--mode",
+    "plan",
+    "--no-skills",
+    "--no-project-md",
+    "--effort",
+    "low",
+  ];
+  const args = isJsEntry ? [entryJs, ...acpFlags] : acpFlags;
+  const isCmdShim = !isJsEntry && (binaryPath.toLowerCase().endsWith(".cmd") || binaryPath.toLowerCase().endsWith(".bat"));
+
+  return new Promise((resolve, reject) => {
+    const child = spawn(cmd, args, {
+      cwd: os.tmpdir(),
+      windowsHide: true,
+      shell: isCmdShim,
+      stdio: ["pipe", "pipe", "pipe"],
+      env: {
+        ...process.env,
+        NMS_MCP_ENABLED: "0",
+      },
+    });
+
+    let stdoutLineBuf = "";
+    let stdoutAll = "";
+    let stderrBuf = "";
+    let finished = false;
+    let responseText = "";
+    let usedTokens = 0;
+    let sentSessionNew = false;
+    let sentPrompt = false;
+    let errorDetail = "";
+
+    const finishWithSuccess = () => {
+      if (finished) return true;
+      const cleanedText = responseText.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+      if (!cleanedText) return false;
+      finished = true;
+      clearTimeout(timer);
+      try {
+        child.stdin.end();
+      } catch {}
+      try {
+        child.kill();
+      } catch {}
+      let usage: any = undefined;
+      if (usedTokens > 0) {
+        const estOut = Math.max(1, Math.round(cleanedText.length / 3));
+        const estIn = Math.max(1, usedTokens - estOut);
+        usage = {
+          promptTokenCount: estIn,
+          candidatesTokenCount: estOut,
+          totalTokenCount: usedTokens,
+        };
+      }
+      resolve({ text: cleanedText, usage });
+      return true;
+    };
+
+    const timer = setTimeout(() => {
+      if (finished) return;
+      if (finishWithSuccess()) return;
+      finished = true;
+      try {
+        child.kill();
+      } catch {}
+      reject(new Error(`NAON CODE CLI (naoncode) 응답 시간 초과 (${Math.round(timeoutMs / 1000)}s)`));
+    }, timeoutMs);
+
+    const handleAcpJsonLine = (rawLine: string) => {
+      const line = rawLine.trim();
+      if (!line.startsWith("{")) return;
+      try {
+        const msg = JSON.parse(line);
+        if (msg.id === 1 && !sentSessionNew) {
+          sentSessionNew = true;
+          const newReq =
+            JSON.stringify({
+              jsonrpc: "2.0",
+              id: 2,
+              method: "session/new",
+              params: { cwd: os.tmpdir(), mcpServers: [] },
+            }) + "\n";
+          child.stdin.write(newReq, "utf-8");
+        } else if (msg.id === 2 && !sentPrompt) {
+          if (msg.error) {
+            errorDetail = msg.error.message || JSON.stringify(msg.error);
+            if (!finished) {
+              finished = true;
+              clearTimeout(timer);
+              try {
+                child.kill();
+              } catch {}
+              reject(new Error(`NAON CODE CLI 세션 생성 실패: ${errorDetail}`));
+            }
+            return;
+          }
+          const sessionId = msg.result?.sessionId;
+          if (sessionId) {
+            sentPrompt = true;
+            const promptReq =
+              JSON.stringify({
+                jsonrpc: "2.0",
+                id: 3,
+                method: "session/prompt",
+                params: {
+                  sessionId,
+                  prompt: [{ type: "text", text: fullPrompt }],
+                },
+              }) + "\n";
+            child.stdin.write(promptReq, "utf-8");
+          }
+        } else if (msg.method === "session/update") {
+          const u = msg.params?.update;
+          if (u?.sessionUpdate === "agent_message_chunk" && typeof u?.content?.text === "string") {
+            responseText += u.content.text;
+          } else if (u?.sessionUpdate === "usage_update" && typeof u?.used === "number") {
+            usedTokens = u.used;
+          }
+        } else if (msg.id === 3) {
+          if (msg.error) {
+            errorDetail = msg.error.message || JSON.stringify(msg.error);
+          }
+          if (!finishWithSuccess() && !finished) {
+            finished = true;
+            clearTimeout(timer);
+            try {
+              child.kill();
+            } catch {}
+            reject(
+              new Error(
+                `NAON CODE CLI (naoncode) 오류: ${
+                  errorDetail || stderrBuf.trim() || "응답이 비어있습니다."
+                }`
+              )
+            );
+          }
+        }
+      } catch {
+        // ignore non-json line
+      }
+    };
+
+    child.stdout.on("data", (chunk) => {
+      const str = chunk.toString("utf-8");
+      stdoutAll += str;
+      stdoutLineBuf += str;
+      const lines = stdoutLineBuf.split(/\r?\n/);
+      stdoutLineBuf = lines.pop() ?? "";
+      for (const l of lines) {
+        if (finished) break;
+        handleAcpJsonLine(l);
+      }
+    });
+
+    child.stderr.on("data", (chunk) => {
+      stderrBuf += chunk.toString("utf-8");
+    });
+
+    child.on("error", (err) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      reject(err);
+    });
+
+    child.on("close", (code) => {
+      if (finished) return;
+      if (stdoutLineBuf.trim()) {
+        handleAcpJsonLine(stdoutLineBuf);
+        stdoutLineBuf = "";
+      }
+      if (finishWithSuccess()) return;
+      finished = true;
+      clearTimeout(timer);
+
+      reject(
+        new Error(
+          `NAON CODE CLI (naoncode) 오류 (exit ${code}): ${
+            errorDetail || stderrBuf.trim() || stdoutAll.trim().slice(0, 300) || "응답이 비어있습니다."
+          }`
+        )
+      );
+    });
+
+    try {
+      const initReq =
+        JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "initialize",
+          params: { protocolVersion: 1, clientCapabilities: {} },
+        }) + "\n";
+      child.stdin.write(initReq, "utf-8");
+    } catch (writeErr) {
+      if (!finished) {
+        finished = true;
+        clearTimeout(timer);
+        reject(writeErr);
+      }
+    }
+  });
+}
+
 export async function runCliPrompt(options: GenerateAiOptions): Promise<GenerateAiResult> {
   const config = getConfig();
   const available = detectAvailableClis();
@@ -550,19 +1269,28 @@ export async function runCliPrompt(options: GenerateAiOptions): Promise<Generate
 
   // Build ordered list of installed providers starting with user's preferred provider
   const providerOrder: AvailableCliInfo[] = [];
-  const primaryInfo = available.find((c) => c.id === preferredProvider && c.installed);
-  if (primaryInfo) {
-    providerOrder.push(primaryInfo);
-  }
-  for (const c of available) {
-    if (c.installed && !providerOrder.some((p) => p.id === c.id)) {
-      providerOrder.push(c);
+  const primaryEntry = available.find((c) => c.id === preferredProvider);
+  if (options.disableCliFallback) {
+    if (!primaryEntry || !primaryEntry.installed) {
+      throw new Error(
+        `선택한 로컬 CLI 도구(${primaryEntry?.name || preferredProvider})가 PC에 설치되어 있지 않습니다.`
+      );
+    }
+    providerOrder.push(primaryEntry);
+  } else {
+    if (primaryEntry && primaryEntry.installed) {
+      providerOrder.push(primaryEntry);
+    }
+    for (const c of available) {
+      if (c.installed && !providerOrder.some((p) => p.id === c.id)) {
+        providerOrder.push(c);
+      }
     }
   }
 
   if (providerOrder.length === 0) {
     throw new Error(
-      "설치된 로컬 AI CLI 도구(Antigravity CLI 'agy' 또는 Claude CLI 'claude')를 찾을 수 없습니다. 대시보드에서 API 모드로 전환하거나 CLI를 설치해주세요."
+      "설치된 로컬 AI CLI 도구(Antigravity, NAON CODE, Claude, Gemini, Codex, Ollama, Copilot)를 찾을 수 없습니다. 대시보드에서 API 모드로 전환하거나 CLI를 설치해주세요."
     );
   }
 
@@ -570,10 +1298,19 @@ export async function runCliPrompt(options: GenerateAiOptions): Promise<Generate
   let lastError: any = null;
 
   for (const cliInfo of providerOrder) {
-    const modelForCli =
+    const rawModelForCli =
       cliInfo.id === preferredProvider
         ? preferredModel
         : cliInfo.models[0]?.id || "default";
+    const modelForCli =
+      cliInfo.id === "naoncode"
+        ? !rawModelForCli ||
+          rawModelForCli === "default" ||
+          rawModelForCli.startsWith("gemini-3.8-") ||
+          rawModelForCli.startsWith("gemini-4-")
+          ? NAON_DEFAULT_MODEL_ID
+          : rawModelForCli
+        : rawModelForCli;
 
     try {
       console.log(
@@ -582,8 +1319,16 @@ export async function runCliPrompt(options: GenerateAiOptions): Promise<Generate
       let res: { text: string; usage?: any };
       if (cliInfo.id === "agy") {
         res = await spawnAgyCli(cliInfo.binaryPath, modelForCli, fullPrompt, timeoutMs);
+      } else if (cliInfo.id === "naoncode") {
+        res = await spawnNaoncodeCli(cliInfo.binaryPath, modelForCli, fullPrompt, timeoutMs);
       } else if (cliInfo.id === "claude") {
         res = await spawnClaudeCli(cliInfo.binaryPath, modelForCli, fullPrompt, timeoutMs);
+      } else if (cliInfo.id === "codex") {
+        res = await spawnCodexCli(cliInfo.binaryPath, modelForCli, fullPrompt, timeoutMs);
+      } else if (cliInfo.id === "ollama") {
+        res = await spawnOllamaCli(cliInfo.binaryPath, modelForCli, fullPrompt, timeoutMs);
+      } else if (cliInfo.id === "copilot") {
+        res = await spawnCopilotCli(cliInfo.binaryPath, modelForCli, fullPrompt, timeoutMs);
       } else {
         res = await spawnGeminiCli(cliInfo.binaryPath, modelForCli, fullPrompt, timeoutMs);
       }

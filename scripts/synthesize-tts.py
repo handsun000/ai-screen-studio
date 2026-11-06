@@ -15,6 +15,7 @@ Usage:
 
 import asyncio
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -52,25 +53,47 @@ def get_audio_duration_ms(mp3_path: Path) -> int:
     return 2000
 
 
-def copy_file_safe_windows(src: Path, dst: Path):
-    try:
-        shutil.copy2(src, dst)
+def copy_file_safe_windows(src: Path, dst: Path, prefer_hardlink: bool = False):
+    if not src.exists():
         return
+    try:
+        if dst.exists() and os.path.samefile(src, dst):
+            return
     except OSError:
+        pass
+
+    old_dst = dst.with_suffix(dst.suffix + ".old")
+    if dst.exists():
         try:
-            old_dst = dst.with_suffix(dst.suffix + ".old")
+            dst.unlink()
+        except OSError:
+            try:
+                if old_dst.exists():
+                    old_dst.unlink()
+                dst.rename(old_dst)
+            except OSError:
+                pass
+
+    if prefer_hardlink:
+        try:
+            os.link(src, dst)
             if old_dst.exists():
                 try:
                     old_dst.unlink()
                 except OSError:
                     pass
-            if dst.exists():
-                dst.rename(old_dst)
-            shutil.copy2(src, dst)
-            try:
-                old_dst.unlink()
-            except OSError:
-                pass
+            return
+        except OSError:
+            pass
+
+    try:
+        shutil.copy2(src, dst)
+    except OSError:
+        pass
+
+    if old_dst.exists():
+        try:
+            old_dst.unlink()
         except OSError:
             pass
 
@@ -79,7 +102,7 @@ async def synthesize_single_cue(text: str, voice: str, rate: str, pitch: str, ou
     tmp_path = out_path.with_suffix(".tmp.mp3")
     communicate = edge_tts.Communicate(text=text, voice=voice, rate=rate, pitch=pitch)
     await communicate.save(str(tmp_path))
-    copy_file_safe_windows(tmp_path, out_path)
+    copy_file_safe_windows(tmp_path, out_path, prefer_hardlink=False)
     try:
         tmp_path.unlink()
     except OSError:
@@ -349,7 +372,7 @@ async def process_narration(
         rel_public = f"narration/{slug}/{mp3_path.name}"
         pub_target = public_audio_dir / mp3_path.name
         if was_synthesized or not pub_target.exists():
-            copy_file_safe_windows(mp3_path, pub_target)
+            copy_file_safe_windows(mp3_path, pub_target, prefer_hardlink=True)
         cue["audioFile"] = rel_public
 
     # Determine raw video duration from moments.json or edit-plan.json

@@ -7,8 +7,8 @@
   "segments": [
     {
       "momentId": 2,
-      "startFrame": 1390,
-      "endFrame": 1757,
+      "startFrame": 2872,
+      "endFrame": 3239,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -21,8 +21,8 @@
     },
     {
       "momentId": 8,
-      "startFrame": 1947,
-      "endFrame": 2004,
+      "startFrame": 3429,
+      "endFrame": 3486,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -35,8 +35,8 @@
     },
     {
       "momentId": 10,
-      "startFrame": 2094,
-      "endFrame": 2364,
+      "startFrame": 3576,
+      "endFrame": 3846,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -49,8 +49,8 @@
     },
     {
       "momentId": 14,
-      "startFrame": 2455,
-      "endFrame": 3037,
+      "startFrame": 3937,
+      "endFrame": 4519,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -63,8 +63,8 @@
     },
     {
       "momentId": 22,
-      "startFrame": 3458,
-      "endFrame": 3515,
+      "startFrame": 4940,
+      "endFrame": 4997,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -77,8 +77,8 @@
     },
     {
       "momentId": 24,
-      "startFrame": 4023,
-      "endFrame": 5193,
+      "startFrame": 5505,
+      "endFrame": 6675,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -91,8 +91,8 @@
     },
     {
       "momentId": 38,
-      "startFrame": 5286,
-      "endFrame": 5619,
+      "startFrame": 6768,
+      "endFrame": 7101,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -105,8 +105,8 @@
     },
     {
       "momentId": 42,
-      "startFrame": 5845,
-      "endFrame": 5902,
+      "startFrame": 7327,
+      "endFrame": 7384,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -119,8 +119,8 @@
     },
     {
       "momentId": 44,
-      "startFrame": 5997,
-      "endFrame": 6054,
+      "startFrame": 7479,
+      "endFrame": 7536,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -133,8 +133,8 @@
     },
     {
       "momentId": 46,
-      "startFrame": 6201,
-      "endFrame": 6561,
+      "startFrame": 7683,
+      "endFrame": 8043,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -147,8 +147,8 @@
     },
     {
       "momentId": 52,
-      "startFrame": 6681,
-      "endFrame": 6768,
+      "startFrame": 8163,
+      "endFrame": 8250,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -161,8 +161,8 @@
     },
     {
       "momentId": 1,
-      "startFrame": 7919,
-      "endFrame": 7976,
+      "startFrame": 9401,
+      "endFrame": 9458,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -175,8 +175,8 @@
     },
     {
       "momentId": 3,
-      "startFrame": 8327,
-      "endFrame": 8747,
+      "startFrame": 9809,
+      "endFrame": 10229,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -189,8 +189,8 @@
     },
     {
       "momentId": 7,
-      "startFrame": 8969,
-      "endFrame": 10552,
+      "startFrame": 10451,
+      "endFrame": 12034,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -203,8 +203,8 @@
     },
     {
       "momentId": 26,
-      "startFrame": 10709,
-      "endFrame": 11033,
+      "startFrame": 12191,
+      "endFrame": 12515,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -217,8 +217,8 @@
     },
     {
       "momentId": 32,
-      "startFrame": 11168,
-      "endFrame": 11225,
+      "startFrame": 12650,
+      "endFrame": 12707,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -231,8 +231,8 @@
     },
     {
       "momentId": 34,
-      "startFrame": 11373,
-      "endFrame": 11876,
+      "startFrame": 12855,
+      "endFrame": 13358,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -245,8 +245,8 @@
     },
     {
       "momentId": 42,
-      "startFrame": 11967,
-      "endFrame": 12319,
+      "startFrame": 13449,
+      "endFrame": 13801,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -259,8 +259,8 @@
     },
     {
       "momentId": 47,
-      "startFrame": 12528,
-      "endFrame": 12817,
+      "startFrame": 14010,
+      "endFrame": 14299,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -273,8 +273,8 @@
     },
     {
       "momentId": 51,
-      "startFrame": 13038,
-      "endFrame": 13382,
+      "startFrame": 14520,
+      "endFrame": 14864,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -287,8 +287,8 @@
     },
     {
       "momentId": 54,
-      "startFrame": 13409,
-      "endFrame": 13518,
+      "startFrame": 14891,
+      "endFrame": 15000,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -301,8 +301,8 @@
     },
     {
       "momentId": 58,
-      "startFrame": 13814,
-      "endFrame": 14191,
+      "startFrame": 15296,
+      "endFrame": 15673,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -315,8 +315,8 @@
     },
     {
       "momentId": 64,
-      "startFrame": 14462,
-      "endFrame": 15130,
+      "startFrame": 15944,
+      "endFrame": 16612,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -329,8 +329,8 @@
     },
     {
       "momentId": 74,
-      "startFrame": 15213,
-      "endFrame": 15270,
+      "startFrame": 16695,
+      "endFrame": 16752,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -343,8 +343,8 @@
     },
     {
       "momentId": 76,
-      "startFrame": 15365,
-      "endFrame": 15422,
+      "startFrame": 16847,
+      "endFrame": 16904,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -357,8 +357,8 @@
     },
     {
       "momentId": 78,
-      "startFrame": 15511,
-      "endFrame": 15780,
+      "startFrame": 16993,
+      "endFrame": 17262,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -371,8 +371,8 @@
     },
     {
       "momentId": 82,
-      "startFrame": 15890,
-      "endFrame": 15977,
+      "startFrame": 17372,
+      "endFrame": 17459,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -385,8 +385,8 @@
     },
     {
       "momentId": 1,
-      "startFrame": 16959,
-      "endFrame": 17016,
+      "startFrame": 18441,
+      "endFrame": 18498,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -399,8 +399,8 @@
     },
     {
       "momentId": 3,
-      "startFrame": 17103,
-      "endFrame": 18098,
+      "startFrame": 18585,
+      "endFrame": 19580,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -413,8 +413,8 @@
     },
     {
       "momentId": 15,
-      "startFrame": 18190,
-      "endFrame": 18247,
+      "startFrame": 19672,
+      "endFrame": 19729,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -427,8 +427,8 @@
     },
     {
       "momentId": 17,
-      "startFrame": 18339,
-      "endFrame": 18735,
+      "startFrame": 19821,
+      "endFrame": 20217,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -441,8 +441,8 @@
     },
     {
       "momentId": 23,
-      "startFrame": 18848,
-      "endFrame": 19351,
+      "startFrame": 20330,
+      "endFrame": 20833,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -455,8 +455,8 @@
     },
     {
       "momentId": 31,
-      "startFrame": 19443,
-      "endFrame": 19500,
+      "startFrame": 20925,
+      "endFrame": 20982,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -469,8 +469,8 @@
     },
     {
       "momentId": 33,
-      "startFrame": 19880,
-      "endFrame": 21755,
+      "startFrame": 21362,
+      "endFrame": 23237,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -483,8 +483,8 @@
     },
     {
       "momentId": 59,
-      "startFrame": 21878,
-      "endFrame": 23234,
+      "startFrame": 23360,
+      "endFrame": 24716,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -497,8 +497,8 @@
     },
     {
       "momentId": 74,
-      "startFrame": 23261,
-      "endFrame": 23368,
+      "startFrame": 24743,
+      "endFrame": 24850,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -511,8 +511,8 @@
     },
     {
       "momentId": 77,
-      "startFrame": 23515,
-      "endFrame": 23572,
+      "startFrame": 24997,
+      "endFrame": 25054,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -525,8 +525,8 @@
     },
     {
       "momentId": 79,
-      "startFrame": 23668,
-      "endFrame": 23878,
+      "startFrame": 25150,
+      "endFrame": 25360,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -539,8 +539,8 @@
     },
     {
       "momentId": 83,
-      "startFrame": 23975,
-      "endFrame": 24176,
+      "startFrame": 25457,
+      "endFrame": 25658,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -553,8 +553,8 @@
     },
     {
       "momentId": 87,
-      "startFrame": 24317,
-      "endFrame": 24632,
+      "startFrame": 25799,
+      "endFrame": 26114,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -567,8 +567,8 @@
     },
     {
       "momentId": 91,
-      "startFrame": 24722,
-      "endFrame": 25902,
+      "startFrame": 26204,
+      "endFrame": 27384,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -581,8 +581,8 @@
     },
     {
       "momentId": 105,
-      "startFrame": 25985,
-      "endFrame": 26042,
+      "startFrame": 27467,
+      "endFrame": 27524,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -595,8 +595,8 @@
     },
     {
       "momentId": 107,
-      "startFrame": 26179,
-      "endFrame": 26236,
+      "startFrame": 27661,
+      "endFrame": 27718,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -609,8 +609,8 @@
     },
     {
       "momentId": 109,
-      "startFrame": 26364,
-      "endFrame": 26421,
+      "startFrame": 27846,
+      "endFrame": 27903,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -623,8 +623,8 @@
     },
     {
       "momentId": 111,
-      "startFrame": 26508,
-      "endFrame": 26686,
+      "startFrame": 27990,
+      "endFrame": 28168,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -637,8 +637,8 @@
     },
     {
       "momentId": 115,
-      "startFrame": 26841,
-      "endFrame": 26898,
+      "startFrame": 28323,
+      "endFrame": 28380,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -651,8 +651,8 @@
     },
     {
       "momentId": 117,
-      "startFrame": 27275,
-      "endFrame": 27332,
+      "startFrame": 28757,
+      "endFrame": 28814,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -665,8 +665,8 @@
     },
     {
       "momentId": 119,
-      "startFrame": 27423,
-      "endFrame": 27480,
+      "startFrame": 28905,
+      "endFrame": 28962,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -679,8 +679,8 @@
     },
     {
       "momentId": 121,
-      "startFrame": 27576,
-      "endFrame": 27868,
+      "startFrame": 29058,
+      "endFrame": 29350,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -693,8 +693,8 @@
     },
     {
       "momentId": 125,
-      "startFrame": 27964,
-      "endFrame": 28209,
+      "startFrame": 29446,
+      "endFrame": 29691,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -707,8 +707,8 @@
     },
     {
       "momentId": 129,
-      "startFrame": 28339,
-      "endFrame": 28396,
+      "startFrame": 29821,
+      "endFrame": 29878,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -721,8 +721,8 @@
     },
     {
       "momentId": 131,
-      "startFrame": 28481,
-      "endFrame": 30355,
+      "startFrame": 29963,
+      "endFrame": 31837,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -735,8 +735,8 @@
     },
     {
       "momentId": 153,
-      "startFrame": 30483,
-      "endFrame": 30570,
+      "startFrame": 31965,
+      "endFrame": 32052,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -749,8 +749,8 @@
     },
     {
       "momentId": 2,
-      "startFrame": 31794,
-      "endFrame": 31997,
+      "startFrame": 33276,
+      "endFrame": 33479,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -763,8 +763,8 @@
     },
     {
       "momentId": 6,
-      "startFrame": 32124,
-      "endFrame": 32330,
+      "startFrame": 33606,
+      "endFrame": 33812,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -777,8 +777,8 @@
     },
     {
       "momentId": 10,
-      "startFrame": 32423,
-      "endFrame": 32480,
+      "startFrame": 33905,
+      "endFrame": 33962,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -791,8 +791,8 @@
     },
     {
       "momentId": 12,
-      "startFrame": 32573,
-      "endFrame": 33523,
+      "startFrame": 34055,
+      "endFrame": 35005,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -805,8 +805,8 @@
     },
     {
       "momentId": 26,
-      "startFrame": 33609,
-      "endFrame": 34182,
+      "startFrame": 35091,
+      "endFrame": 35664,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -819,8 +819,8 @@
     },
     {
       "momentId": 34,
-      "startFrame": 34278,
-      "endFrame": 34335,
+      "startFrame": 35760,
+      "endFrame": 35817,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -833,8 +833,8 @@
     },
     {
       "momentId": 36,
-      "startFrame": 34428,
-      "endFrame": 34637,
+      "startFrame": 35910,
+      "endFrame": 36119,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -847,8 +847,8 @@
     },
     {
       "momentId": 40,
-      "startFrame": 34729,
-      "endFrame": 35562,
+      "startFrame": 36211,
+      "endFrame": 37044,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -861,8 +861,8 @@
     },
     {
       "momentId": 52,
-      "startFrame": 35692,
-      "endFrame": 35749,
+      "startFrame": 37174,
+      "endFrame": 37231,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -875,8 +875,8 @@
     },
     {
       "momentId": 54,
-      "startFrame": 35876,
-      "endFrame": 35933,
+      "startFrame": 37358,
+      "endFrame": 37415,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -889,8 +889,8 @@
     },
     {
       "momentId": 56,
-      "startFrame": 36022,
-      "endFrame": 36079,
+      "startFrame": 37504,
+      "endFrame": 37561,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -903,8 +903,8 @@
     },
     {
       "momentId": 58,
-      "startFrame": 36175,
-      "endFrame": 36232,
+      "startFrame": 37657,
+      "endFrame": 37714,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -917,8 +917,8 @@
     },
     {
       "momentId": 60,
-      "startFrame": 36375,
-      "endFrame": 36432,
+      "startFrame": 37857,
+      "endFrame": 37914,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -931,8 +931,8 @@
     },
     {
       "momentId": 62,
-      "startFrame": 36519,
-      "endFrame": 36829,
+      "startFrame": 38001,
+      "endFrame": 38311,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -945,8 +945,8 @@
     },
     {
       "momentId": 68,
-      "startFrame": 36901,
-      "endFrame": 36958,
+      "startFrame": 38383,
+      "endFrame": 38440,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -959,8 +959,8 @@
     },
     {
       "momentId": 70,
-      "startFrame": 37054,
-      "endFrame": 37382,
+      "startFrame": 38536,
+      "endFrame": 38864,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -973,8 +973,8 @@
     },
     {
       "momentId": 76,
-      "startFrame": 37451,
-      "endFrame": 37508,
+      "startFrame": 38933,
+      "endFrame": 38990,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -987,8 +987,8 @@
     },
     {
       "momentId": 78,
-      "startFrame": 37605,
-      "endFrame": 38453,
+      "startFrame": 39087,
+      "endFrame": 39935,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1001,8 +1001,8 @@
     },
     {
       "momentId": 90,
-      "startFrame": 38547,
-      "endFrame": 38604,
+      "startFrame": 40029,
+      "endFrame": 40086,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1015,8 +1015,8 @@
     },
     {
       "momentId": 92,
-      "startFrame": 38733,
-      "endFrame": 39622,
+      "startFrame": 40215,
+      "endFrame": 41104,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1029,8 +1029,8 @@
     },
     {
       "momentId": 102,
-      "startFrame": 39728,
-      "endFrame": 39969,
+      "startFrame": 41210,
+      "endFrame": 41451,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1043,8 +1043,8 @@
     },
     {
       "momentId": 106,
-      "startFrame": 40072,
-      "endFrame": 40259,
+      "startFrame": 41554,
+      "endFrame": 41741,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1057,8 +1057,8 @@
     },
     {
       "momentId": 110,
-      "startFrame": 40333,
-      "endFrame": 40633,
+      "startFrame": 41815,
+      "endFrame": 42115,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1071,8 +1071,8 @@
     },
     {
       "momentId": 116,
-      "startFrame": 40715,
-      "endFrame": 41762,
+      "startFrame": 42197,
+      "endFrame": 43244,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1085,8 +1085,8 @@
     },
     {
       "momentId": 130,
-      "startFrame": 41882,
-      "endFrame": 43155,
+      "startFrame": 43364,
+      "endFrame": 44637,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1099,8 +1099,8 @@
     },
     {
       "momentId": 146,
-      "startFrame": 43246,
-      "endFrame": 43303,
+      "startFrame": 44728,
+      "endFrame": 44785,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1113,8 +1113,8 @@
     },
     {
       "momentId": 148,
-      "startFrame": 43411,
-      "endFrame": 43468,
+      "startFrame": 44893,
+      "endFrame": 44950,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1127,8 +1127,8 @@
     },
     {
       "momentId": 150,
-      "startFrame": 43592,
-      "endFrame": 43665,
+      "startFrame": 45074,
+      "endFrame": 45147,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1141,8 +1141,8 @@
     },
     {
       "momentId": 152,
-      "startFrame": 43921,
-      "endFrame": 44580,
+      "startFrame": 45403,
+      "endFrame": 46062,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1155,8 +1155,8 @@
     },
     {
       "momentId": 162,
-      "startFrame": 44673,
-      "endFrame": 44730,
+      "startFrame": 46155,
+      "endFrame": 46212,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1169,8 +1169,8 @@
     },
     {
       "momentId": 164,
-      "startFrame": 44859,
-      "endFrame": 45318,
+      "startFrame": 46341,
+      "endFrame": 46800,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1183,8 +1183,8 @@
     },
     {
       "momentId": 172,
-      "startFrame": 45389,
-      "endFrame": 45918,
+      "startFrame": 46871,
+      "endFrame": 47400,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1197,8 +1197,8 @@
     },
     {
       "momentId": 180,
-      "startFrame": 46061,
-      "endFrame": 46300,
+      "startFrame": 47543,
+      "endFrame": 47782,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1211,8 +1211,8 @@
     },
     {
       "momentId": 184,
-      "startFrame": 46389,
-      "endFrame": 47072,
+      "startFrame": 47871,
+      "endFrame": 48554,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1225,8 +1225,8 @@
     },
     {
       "momentId": 194,
-      "startFrame": 47347,
-      "endFrame": 47404,
+      "startFrame": 48829,
+      "endFrame": 48886,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1239,8 +1239,8 @@
     },
     {
       "momentId": 196,
-      "startFrame": 47536,
-      "endFrame": 47593,
+      "startFrame": 49018,
+      "endFrame": 49075,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1253,8 +1253,8 @@
     },
     {
       "momentId": 202,
-      "startFrame": 48398,
-      "endFrame": 49404,
+      "startFrame": 49880,
+      "endFrame": 50886,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1267,8 +1267,8 @@
     },
     {
       "momentId": 216,
-      "startFrame": 49497,
-      "endFrame": 49703,
+      "startFrame": 50979,
+      "endFrame": 51185,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1281,8 +1281,8 @@
     },
     {
       "momentId": 220,
-      "startFrame": 49834,
-      "endFrame": 50349,
+      "startFrame": 51316,
+      "endFrame": 51831,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1295,8 +1295,8 @@
     },
     {
       "momentId": 226,
-      "startFrame": 50438,
-      "endFrame": 50645,
+      "startFrame": 51920,
+      "endFrame": 52127,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1309,8 +1309,8 @@
     },
     {
       "momentId": 230,
-      "startFrame": 50741,
-      "endFrame": 51407,
+      "startFrame": 52223,
+      "endFrame": 52889,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1323,8 +1323,8 @@
     },
     {
       "momentId": 240,
-      "startFrame": 51534,
-      "endFrame": 51740,
+      "startFrame": 53016,
+      "endFrame": 53222,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1337,8 +1337,8 @@
     },
     {
       "momentId": 244,
-      "startFrame": 51834,
-      "endFrame": 52415,
+      "startFrame": 53316,
+      "endFrame": 53897,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1351,8 +1351,8 @@
     },
     {
       "momentId": 252,
-      "startFrame": 52506,
-      "endFrame": 52877,
+      "startFrame": 53988,
+      "endFrame": 54359,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1365,8 +1365,8 @@
     },
     {
       "momentId": 258,
-      "startFrame": 53004,
-      "endFrame": 53358,
+      "startFrame": 54486,
+      "endFrame": 54840,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1379,8 +1379,8 @@
     },
     {
       "momentId": 264,
-      "startFrame": 53450,
-      "endFrame": 53537,
+      "startFrame": 54932,
+      "endFrame": 55019,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1393,8 +1393,8 @@
     },
     {
       "momentId": 1,
-      "startFrame": 54740,
-      "endFrame": 54797,
+      "startFrame": 56222,
+      "endFrame": 56279,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1407,8 +1407,8 @@
     },
     {
       "momentId": 3,
-      "startFrame": 54918,
-      "endFrame": 54975,
+      "startFrame": 56400,
+      "endFrame": 56457,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1421,8 +1421,8 @@
     },
     {
       "momentId": 4,
-      "startFrame": 55355,
-      "endFrame": 56384,
+      "startFrame": 56837,
+      "endFrame": 57866,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1435,8 +1435,8 @@
     },
     {
       "momentId": 18,
-      "startFrame": 56502,
-      "endFrame": 57088,
+      "startFrame": 57984,
+      "endFrame": 58570,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1449,8 +1449,8 @@
     },
     {
       "momentId": 26,
-      "startFrame": 57221,
-      "endFrame": 57986,
+      "startFrame": 58703,
+      "endFrame": 59468,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1463,8 +1463,8 @@
     },
     {
       "momentId": 36,
-      "startFrame": 58143,
-      "endFrame": 58741,
+      "startFrame": 59625,
+      "endFrame": 60223,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1477,8 +1477,8 @@
     },
     {
       "momentId": 44,
-      "startFrame": 58857,
-      "endFrame": 59892,
+      "startFrame": 60339,
+      "endFrame": 61374,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1491,8 +1491,8 @@
     },
     {
       "momentId": 56,
-      "startFrame": 59971,
-      "endFrame": 61622,
+      "startFrame": 61453,
+      "endFrame": 63104,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1505,8 +1505,8 @@
     },
     {
       "momentId": 79,
-      "startFrame": 61649,
-      "endFrame": 61759,
+      "startFrame": 63131,
+      "endFrame": 63241,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1519,8 +1519,8 @@
     },
     {
       "momentId": 82,
-      "startFrame": 61925,
-      "endFrame": 61982,
+      "startFrame": 63407,
+      "endFrame": 63464,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1533,8 +1533,8 @@
     },
     {
       "momentId": 84,
-      "startFrame": 62096,
-      "endFrame": 62356,
+      "startFrame": 63578,
+      "endFrame": 63838,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1547,8 +1547,8 @@
     },
     {
       "momentId": 88,
-      "startFrame": 62468,
-      "endFrame": 62525,
+      "startFrame": 63950,
+      "endFrame": 64007,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1561,8 +1561,8 @@
     },
     {
       "momentId": 90,
-      "startFrame": 62783,
-      "endFrame": 63225,
+      "startFrame": 64265,
+      "endFrame": 64707,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1575,8 +1575,8 @@
     },
     {
       "momentId": 96,
-      "startFrame": 63342,
-      "endFrame": 63399,
+      "startFrame": 64824,
+      "endFrame": 64881,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1589,8 +1589,8 @@
     },
     {
       "momentId": 98,
-      "startFrame": 63548,
-      "endFrame": 64420,
+      "startFrame": 65030,
+      "endFrame": 65902,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1603,8 +1603,8 @@
     },
     {
       "momentId": 112,
-      "startFrame": 64537,
-      "endFrame": 64895,
+      "startFrame": 66019,
+      "endFrame": 66377,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1617,8 +1617,8 @@
     },
     {
       "momentId": 116,
-      "startFrame": 65412,
-      "endFrame": 65469,
+      "startFrame": 66894,
+      "endFrame": 66951,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1631,8 +1631,8 @@
     },
     {
       "momentId": 118,
-      "startFrame": 65606,
-      "endFrame": 65663,
+      "startFrame": 67088,
+      "endFrame": 67145,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1645,8 +1645,8 @@
     },
     {
       "momentId": 120,
-      "startFrame": 65772,
-      "endFrame": 65829,
+      "startFrame": 67254,
+      "endFrame": 67311,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1659,8 +1659,8 @@
     },
     {
       "momentId": 122,
-      "startFrame": 66085,
-      "endFrame": 66518,
+      "startFrame": 67567,
+      "endFrame": 68000,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1673,8 +1673,8 @@
     },
     {
       "momentId": 128,
-      "startFrame": 66642,
-      "endFrame": 66699,
+      "startFrame": 68124,
+      "endFrame": 68181,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1687,8 +1687,8 @@
     },
     {
       "momentId": 130,
-      "startFrame": 66859,
-      "endFrame": 67433,
+      "startFrame": 68341,
+      "endFrame": 68915,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1701,8 +1701,8 @@
     },
     {
       "momentId": 140,
-      "startFrame": 67511,
-      "endFrame": 67568,
+      "startFrame": 68993,
+      "endFrame": 69050,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1715,8 +1715,8 @@
     },
     {
       "momentId": 142,
-      "startFrame": 67705,
-      "endFrame": 67938,
+      "startFrame": 69187,
+      "endFrame": 69420,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1729,8 +1729,8 @@
     },
     {
       "momentId": 146,
-      "startFrame": 68227,
-      "endFrame": 68284,
+      "startFrame": 69709,
+      "endFrame": 69766,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1743,8 +1743,8 @@
     },
     {
       "momentId": 148,
-      "startFrame": 68389,
-      "endFrame": 68446,
+      "startFrame": 69871,
+      "endFrame": 69928,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1757,8 +1757,8 @@
     },
     {
       "momentId": 152,
-      "startFrame": 68852,
-      "endFrame": 68909,
+      "startFrame": 70334,
+      "endFrame": 70391,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1771,8 +1771,8 @@
     },
     {
       "momentId": 154,
-      "startFrame": 69060,
-      "endFrame": 69247,
+      "startFrame": 70542,
+      "endFrame": 70729,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1785,8 +1785,8 @@
     },
     {
       "momentId": 158,
-      "startFrame": 69413,
-      "endFrame": 69942,
+      "startFrame": 70895,
+      "endFrame": 71424,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1799,8 +1799,8 @@
     },
     {
       "momentId": 164,
-      "startFrame": 70056,
-      "endFrame": 70463,
+      "startFrame": 71538,
+      "endFrame": 71945,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1813,8 +1813,8 @@
     },
     {
       "momentId": 170,
-      "startFrame": 70614,
-      "endFrame": 70671,
+      "startFrame": 72096,
+      "endFrame": 72153,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1827,8 +1827,8 @@
     },
     {
       "momentId": 172,
-      "startFrame": 70807,
-      "endFrame": 70864,
+      "startFrame": 72289,
+      "endFrame": 72346,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1841,8 +1841,8 @@
     },
     {
       "momentId": 174,
-      "startFrame": 70977,
-      "endFrame": 71451,
+      "startFrame": 72459,
+      "endFrame": 72933,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1855,8 +1855,8 @@
     },
     {
       "momentId": 181,
-      "startFrame": 71849,
-      "endFrame": 71906,
+      "startFrame": 73331,
+      "endFrame": 73388,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1869,8 +1869,8 @@
     },
     {
       "momentId": 183,
-      "startFrame": 72168,
-      "endFrame": 72225,
+      "startFrame": 73650,
+      "endFrame": 73707,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1883,8 +1883,8 @@
     },
     {
       "momentId": 185,
-      "startFrame": 72345,
-      "endFrame": 73363,
+      "startFrame": 73827,
+      "endFrame": 74845,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1897,8 +1897,8 @@
     },
     {
       "momentId": 199,
-      "startFrame": 73485,
-      "endFrame": 73572,
+      "startFrame": 74967,
+      "endFrame": 75054,
       "speed": 1,
       "zoom": 1.18,
       "zoomTarget": {
@@ -1928,28 +1928,28 @@
     "introToc": {
       "enabled": true,
       "badge": "그룹웨어 사용 매뉴얼",
-      "title": "그룹웨어 사용 매뉴얼",
-      "summary": "그룹웨어 주요 기능 사용 매뉴얼의 주요 메뉴 구성과 활용 방법을 안내합니다.",
+      "title": "부천대학교 주요 시나리오 목차",
+      "summary": "총 5개 주요 시나리오(그룹웨어 접속 및 기본 화면 · 웹 메신저 대화 및 마이리스트 관리 · 문서함 조회와 문서 등록 및 버전 관리 · 태스크보드 업무 관리 및 협업 · 프로젝트 생성 및 일감·진척도 관리)의 핵심 개념과 상세 사용 방법을 순서대로 안내합니다.",
       "items": [
         {
-          "title": "",
-          "description": "그룹웨어 접속 및 기본 화면 안내"
+          "title": "그룹웨어 접속 및 기본 화면 안내",
+          "description": "그룹웨어 접속 방법과 주요 업무 메뉴 구성을 안내합니다."
         },
         {
-          "title": "",
-          "description": "웹 메신저 대화 및 마이리스트 관리 안내"
+          "title": "웹 메신저 대화 및 마이리스트 관리 안내",
+          "description": "실시간 소통을 지원하는 웹 메신저와 즐겨찾기 그룹 관리 기능을 안내합니다."
         },
         {
-          "title": "",
-          "description": "문서함 조회와 문서 등록 및 버전 관리"
+          "title": "문서함 조회와 문서 등록 및 버전 관리",
+          "description": "사내 업무 문서를 체계적으로 분류하고 관리하는 방법을 안내합니다."
         },
         {
-          "title": "",
-          "description": "태스크보드 업무 관리 및 협업 가이드"
+          "title": "태스크보드 업무 관리 및 협업 가이드",
+          "description": "할 일과 진행 단계를 보드로 관리하는 협업 도구를 안내합니다."
         },
         {
-          "title": "",
-          "description": "프로젝트 생성 및 일감·진척도 관리 가이드"
+          "title": "프로젝트 생성 및 일감·진척도 관리 가이드",
+          "description": "협업 프로젝트 개설부터 일감 배정 및 일정 관리 방법을 안내합니다."
         }
       ],
       "siteBrand": {
@@ -1981,7 +1981,6 @@
     },
     "introBakedIntoVideo": true,
     "bakedIntroDurationMs": 29800,
-    "_bakedSlideSig": "{\"layoutVersion\":\"contents-only-v2\",\"badge\":\"그룹웨어 사용 매뉴얼\",\"title\":\"부천대학교 주요 시나리오 목차\",\"summary\":\"총 5개 주요 시나리오(그룹웨어 접속 및 · 웹 메신저 대화 및 마이리스트 관리 안내 · 문서함 조회와 문서 등록 및 버전 관리 · 태스크보드 업무 관리 및 협업 가이드 · 프로젝트 생성 및 일감·진척도 관리 가이드)의 핵심 개념과 상세 사용 방법을 순서대로 안내합니다.\",\"items\":[{\"title\":\"그룹웨어 접속 및 기본 화면 안내\",\"description\":\"그룹웨어 접속 방법과 주요 업무 메뉴 구성을 안내합니다.\"},{\"title\":\"웹 메신저 대화 및 마이리스트 관리 안내\",\"description\":\"실시간 소통을 지원하는 웹 메신저와 즐겨찾기 그룹 관리 기능을 안내합니다.\"},{\"title\":\"문서함 조회와 문서 등록 및 버전 관리\",\"description\":\"사내 업무 문서를 체계적으로 분류하고 관리하는 방법을 안내합니다.\"},{\"title\":\"태스크보드 업무 관리 및 협업 가이드\",\"description\":\"할 일과 진행 단계를 보드로 관리하는 협업 도구를 안내합니다.\"}],\"hostKey\":\"gwdev.bc.ac.kr\",\"primaryColor\":\"#814804\",\"cue0Text\":\"부천대학교 그룹웨어 사용 매뉴얼 영상을 시작합니다.\",\"cue0Sig\":\"ko-KR-SunHiNeural|+5%|+0Hz|부천대학교 그룹웨어 사용 매뉴얼 영상을 시작합니다.\",\"introDurationMs\":4896}",
     "mergedFromSlugs": [
       "login",
       "msg",
@@ -1989,7 +1988,7 @@
       "taskboard",
       "project"
     ],
-    "updatedAt": "2026-11-03T08:52:47.423Z",
+    "updatedAt": "2026-11-06T09:04:17.624Z",
     "cues": [
       {
         "videoStartMs": 200,
@@ -2012,20 +2011,20 @@
       {
         "videoStartMs": 6900,
         "startMs": 6900,
-        "endMs": 28788,
-        "text": "이번 매뉴얼은 그룹웨어 접속 및, 웹 메신저 대화 및 마이리스트 관리 안내, 문서함 조회와 문서 등록 및 버전 관리, 태스크보드 업무 관리 및 협업 가이드, 프로젝트 생성 및 일감·진척도 관리 가이드 등 총 5개 시나리오로 구성되어 있습니다. 각 시나리오의 세부 목차와 실습 영상을 순서대로 살펴보겠습니다.",
+        "endMs": 28692,
+        "text": "이번 매뉴얼은 그룹웨어 접속, 웹 메신저 대화 및 마이리스트 관리 안내, 문서함 조회와 문서 등록 및 버전 관리, 태스크보드 업무 관리 및 협업 가이드, 프로젝트 생성 및 일감·진척도 관리 가이드 등 총 5개 시나리오로 구성되어 있습니다. 각 시나리오의 세부 목차와 실습 영상을 순서대로 살펴보겠습니다.",
         "isIntro": true,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-02.mp3",
-        "audioDurationMs": 21888,
-        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|이번 매뉴얼은 그룹웨어 접속 및, 웹 메신저 대화 및 마이리스트 관리 안내, 문서함 조회와 문서 등록 및 버전 관리, 태스크보드 업무 관리 및 협업 가이드, 프로젝트 생성 및 일감·진척도 관리 가이드 등 총 5개 시나리오로 구성되어 있습니다. 각 시나리오의 세부 목차와 실습 영상을 순서대로 살펴보겠습니다.",
+        "audioDurationMs": 21792,
+        "_ttsSig": "ko-KR-SunHiNeural|+5%|+0Hz|이번 매뉴얼은 그룹웨어 접속, 웹 메신저 대화 및 마이리스트 관리 안내, 문서함 조회와 문서 등록 및 버전 관리, 태스크보드 업무 관리 및 협업 가이드, 프로젝트 생성 및 일감·진척도 관리 가이드 등 총 5개 시나리오로 구성되어 있습니다. 각 시나리오의 세부 목차와 실습 영상을 순서대로 살펴보겠습니다.",
         "id": 2,
         "videoEndMs": 29800,
         "autoHoldMs": 0,
         "effectiveDeltaMs": 0,
         "playbackRate": 1,
         "compStartMs": 6900,
-        "compEndMs": 28788
+        "compEndMs": 28692
       },
       {
         "videoStartMs": 29800,
@@ -2212,7 +2211,7 @@
         "startMs": 142200,
         "endMs": 145560,
         "text": "메신저 사용법에 대해 알아보겠습니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-13.mp3",
         "audioDurationMs": 3360,
@@ -2223,7 +2222,8 @@
         "effectiveDeltaMs": 3140,
         "playbackRate": 1,
         "compStartMs": 142200,
-        "compEndMs": 145560
+        "compEndMs": 145560,
+        "_isAutoBridgeCue": true
       },
       {
         "videoStartMs": 142500,
@@ -2446,7 +2446,7 @@
         "startMs": 250333,
         "endMs": 256957,
         "text": "업무 문서를 상대방에게 직접 공유하기 위해 첨부할 파일을 선택하고 전송할 수 있습니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-26.mp3",
         "audioDurationMs": 6624,
@@ -2464,7 +2464,7 @@
         "startMs": 258133,
         "endMs": 263341,
         "text": "이모티콘 목록을 열어 상황에 맞는 항목을 선택하여 전송할 수 있습니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-27.mp3",
         "audioDurationMs": 5208,
@@ -2482,7 +2482,7 @@
         "startMs": 268833,
         "endMs": 273225,
         "text": "대화 탭에서 참여 중인 채팅방 목록을 확인할 수 있습니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-28.mp3",
         "audioDurationMs": 4392,
@@ -2500,7 +2500,7 @@
         "startMs": 276633,
         "endMs": 283545,
         "text": "등록된 즐겨찾기 그룹을 정리하기 위해 마이리스트 관리 창을 열고 대상 폴더를 선택합니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-29.mp3",
         "audioDurationMs": 6912,
@@ -2518,7 +2518,7 @@
         "startMs": 284033,
         "endMs": 290777,
         "text": "더 이상 사용하지 않는 마이리스트 폴더를 삭제하여 즐겨찾기 목록을 최신 상태로 정리합니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-30.mp3",
         "audioDurationMs": 6744,
@@ -2536,7 +2536,7 @@
         "startMs": 294333,
         "endMs": 297909,
         "text": "문서관리에 사용법에 대해 알아보겠습니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-31.mp3",
         "audioDurationMs": 3576,
@@ -2547,7 +2547,8 @@
         "effectiveDeltaMs": 2956,
         "playbackRate": 1,
         "compStartMs": 294333,
-        "compEndMs": 297909
+        "compEndMs": 297909,
+        "_isAutoBridgeCue": true
       },
       {
         "videoStartMs": 291800,
@@ -2914,7 +2915,7 @@
         "startMs": 485583,
         "endMs": 494319,
         "text": "상세 화면에서 버전보기 버튼을 눌러 개정 이력을 펼치고, 반출사유 버튼을 클릭해 문서가 변경된 사유를 확인합니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-52.mp3",
         "audioDurationMs": 8736,
@@ -2932,7 +2933,7 @@
         "startMs": 494500,
         "endMs": 500908,
         "text": "더 이상 보관할 필요가 없는 문서는 상단 삭제 버튼을 클릭하여 목록에서 제거합니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-53.mp3",
         "audioDurationMs": 6408,
@@ -2950,7 +2951,7 @@
         "startMs": 503300,
         "endMs": 509108,
         "text": "문서함으로 이동한 뒤, 검색어를 입력해 원하는 문서를 빠르게 조회합니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-54.mp3",
         "audioDurationMs": 5808,
@@ -2968,7 +2969,7 @@
         "startMs": 511000,
         "endMs": 518776,
         "text": "검색 기간 범위를 확인하고, 검색어 일치 방식과 정렬 기준을 조정하기 위해 검색 필터 옵션을 엽니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-55.mp3",
         "audioDurationMs": 7776,
@@ -2986,7 +2987,7 @@
         "startMs": 518950,
         "endMs": 527518,
         "text": "입력한 모든 단어가 포함된 문서만 추려내는 모두포함 조건을 선택한 뒤 다시 검색을 실행하여 결과를 좁힙니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-56.mp3",
         "audioDurationMs": 8568,
@@ -3004,7 +3005,7 @@
         "startMs": 527750,
         "endMs": 535790,
         "text": "검색어와 제목이 완전히 동일한 자료만 찾는 정확히 일치 조건을 선택하고 전체 파일명을 입력해 검색합니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-57.mp3",
         "audioDurationMs": 8040,
@@ -3022,7 +3023,7 @@
         "startMs": 535967,
         "endMs": 539471,
         "text": "태스크보드 사용법에 대해 알아보겠습니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-58.mp3",
         "audioDurationMs": 3504,
@@ -3033,7 +3034,8 @@
         "effectiveDeltaMs": 0,
         "playbackRate": 1,
         "compStartMs": 535967,
-        "compEndMs": 539471
+        "compEndMs": 539471,
+        "_isAutoBridgeCue": true
       },
       {
         "videoStartMs": 537400,
@@ -3562,7 +3564,7 @@
         "startMs": 861400,
         "endMs": 868384,
         "text": "상위 할 일 카드를 열어 이동된 업무가 댓글 목록에 정상적으로 병합되었는지 확인할 수 있습니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-88.mp3",
         "audioDurationMs": 6984,
@@ -3580,7 +3582,7 @@
         "startMs": 868567,
         "endMs": 875695,
         "text": "상단 보드 메뉴에서 삭제된 할 일 내역을 확인하거나 복구할 수 있는 삭제함 화면을 조회할 수 있습니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-89.mp3",
         "audioDurationMs": 7128,
@@ -3598,7 +3600,7 @@
         "startMs": 876067,
         "endMs": 883771,
         "text": "처리가 끝난 할 일 카드는 상세 메뉴의 보관 기능을 실행하여 보드 화면에서 숨기고 별도로 갈무리합니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-90.mp3",
         "audioDurationMs": 7704,
@@ -3616,7 +3618,7 @@
         "startMs": 886767,
         "endMs": 895215,
         "text": "보드 메뉴의 보관함에서 보관된 할 일 목록을 확인하고 복원 기능을 통해 원래 보드 화면으로 다시 되돌릴 수 있습니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-91.mp3",
         "audioDurationMs": 8448,
@@ -3634,7 +3636,7 @@
         "startMs": 902967,
         "endMs": 911007,
         "text": "프로젝트가 마감되었거나 임의 수정을 방지해야 할 때는 보드 메뉴에서 잠금 기능을 설정해 변경을 제한합니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-92.mp3",
         "audioDurationMs": 8040,
@@ -3652,7 +3654,7 @@
         "startMs": 911267,
         "endMs": 918515,
         "text": "잠금 처리된 보드에서는 할 일 편집과 상태 변경 메뉴가 비활성화되어 안전하게 보존됩니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-93.mp3",
         "audioDurationMs": 7248,
@@ -3670,7 +3672,7 @@
         "startMs": 918967,
         "endMs": 926239,
         "text": "본인이 담당자로 배정된 전체 업무만 모아 보여주는 나의 할 일 메뉴로 이동해 개인 과업을 점검합니다.",
-        "isIntro": true,
+        "isIntro": false,
         "extraHoldMs": 0,
         "audioFile": "narration/first/cue-94.mp3",
         "audioDurationMs": 7272,
@@ -3699,7 +3701,8 @@
         "effectiveDeltaMs": 3520,
         "playbackRate": 1,
         "compStartMs": 926417,
-        "compEndMs": 930257
+        "compEndMs": 930257,
+        "_isAutoBridgeCue": true
       },
       {
         "videoStartMs": 920200,
@@ -4365,16 +4368,24 @@
     },
     {
       "videoStartFrame": 8526,
-      "videoEndFrame": 8527,
+      "videoEndFrame": 8528,
       "compStartFrame": 8532,
-      "compEndFrame": 8721,
-      "speed": 0.00529,
+      "compEndFrame": 8534,
+      "speed": 1,
       "cueId": 13
     },
     {
-      "videoStartFrame": 8527,
+      "videoStartFrame": 8528,
+      "videoEndFrame": 8533,
+      "compStartFrame": 8534,
+      "compEndFrame": 8727,
+      "speed": 0.02591,
+      "cueId": 13
+    },
+    {
+      "videoStartFrame": 8533,
       "videoEndFrame": 8550,
-      "compStartFrame": 8721,
+      "compStartFrame": 8727,
       "compEndFrame": 8744,
       "speed": 1,
       "cueId": 13
@@ -4549,16 +4560,24 @@
     },
     {
       "videoStartFrame": 17460,
-      "videoEndFrame": 17461,
+      "videoEndFrame": 17476,
       "compStartFrame": 17660,
-      "compEndFrame": 17838,
-      "speed": 0.00562,
+      "compEndFrame": 17676,
+      "speed": 1,
       "cueId": 31
     },
     {
-      "videoStartFrame": 17461,
+      "videoStartFrame": 17476,
+      "videoEndFrame": 17481,
+      "compStartFrame": 17676,
+      "compEndFrame": 17858,
+      "speed": 0.02747,
+      "cueId": 31
+    },
+    {
+      "videoStartFrame": 17481,
       "videoEndFrame": 17508,
-      "compStartFrame": 17838,
+      "compStartFrame": 17858,
       "compEndFrame": 17885,
       "speed": 1,
       "cueId": 31
@@ -4765,16 +4784,24 @@
     },
     {
       "videoStartFrame": 30276,
-      "videoEndFrame": 30277,
+      "videoEndFrame": 30718,
       "compStartFrame": 30660,
-      "compEndFrame": 30664,
-      "speed": 0.25,
+      "compEndFrame": 31102,
+      "speed": 1,
       "cueId": 55
     },
     {
-      "videoStartFrame": 30277,
+      "videoStartFrame": 30718,
+      "videoEndFrame": 30723,
+      "compStartFrame": 31102,
+      "compEndFrame": 31110,
+      "speed": 0.625,
+      "cueId": 55
+    },
+    {
+      "videoStartFrame": 30723,
       "videoEndFrame": 30750,
-      "compStartFrame": 30664,
+      "compStartFrame": 31110,
       "compEndFrame": 31137,
       "speed": 1,
       "cueId": 55
@@ -4789,16 +4816,24 @@
     },
     {
       "videoStartFrame": 31278,
-      "videoEndFrame": 31279,
+      "videoEndFrame": 31732,
       "compStartFrame": 31665,
-      "compEndFrame": 31673,
-      "speed": 0.125,
+      "compEndFrame": 32119,
+      "speed": 1,
       "cueId": 57
     },
     {
-      "videoStartFrame": 31279,
+      "videoStartFrame": 31732,
+      "videoEndFrame": 31737,
+      "compStartFrame": 32119,
+      "compEndFrame": 32131,
+      "speed": 0.41667,
+      "cueId": 57
+    },
+    {
+      "videoStartFrame": 31737,
       "videoEndFrame": 31764,
-      "compStartFrame": 31673,
+      "compStartFrame": 32131,
       "compEndFrame": 32158,
       "speed": 1,
       "cueId": 57
@@ -5045,16 +5080,24 @@
     },
     {
       "videoStartFrame": 51288,
-      "videoEndFrame": 51289,
+      "videoEndFrame": 51682,
       "compStartFrame": 51684,
-      "compEndFrame": 51689,
-      "speed": 0.2,
+      "compEndFrame": 52078,
+      "speed": 1,
       "cueId": 88
     },
     {
-      "videoStartFrame": 51289,
+      "videoStartFrame": 51682,
+      "videoEndFrame": 51687,
+      "compStartFrame": 52078,
+      "compEndFrame": 52087,
+      "speed": 0.55556,
+      "cueId": 88
+    },
+    {
+      "videoStartFrame": 51687,
       "videoEndFrame": 51714,
-      "compStartFrame": 51689,
+      "compStartFrame": 52087,
       "compEndFrame": 52114,
       "speed": 1,
       "cueId": 88
@@ -5101,16 +5144,24 @@
     },
     {
       "videoStartFrame": 54738,
-      "videoEndFrame": 54739,
+      "videoEndFrame": 55150,
       "compStartFrame": 55138,
-      "compEndFrame": 55142,
-      "speed": 0.25,
+      "compEndFrame": 55550,
+      "speed": 1,
       "cueId": 94
     },
     {
-      "videoStartFrame": 54739,
+      "videoStartFrame": 55150,
+      "videoEndFrame": 55155,
+      "compStartFrame": 55550,
+      "compEndFrame": 55558,
+      "speed": 0.625,
+      "cueId": 94
+    },
+    {
+      "videoStartFrame": 55155,
       "videoEndFrame": 55182,
-      "compStartFrame": 55142,
+      "compStartFrame": 55558,
       "compEndFrame": 55585,
       "speed": 1,
       "cueId": 94

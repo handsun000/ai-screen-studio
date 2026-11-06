@@ -41,6 +41,9 @@ export interface RenderInfo {
   lastModified?: string;
   videoUrl?: string;
   downloadUrl?: string;
+  isOutdated?: boolean;
+  outdatedReason?: string;
+  hasUnsynthesizedCues?: boolean;
 }
 
 function linkOrCopyFileSync(srcPath: string, destPath: string): void {
@@ -195,9 +198,44 @@ class RenderRunner extends EventEmitter {
     const recordingPath = path.join(rootDir, "data", slug, "recording.mp4");
     const narrationPath = path.join(rootDir, "data", slug, "narration.json");
 
+    let hasUnsynthesizedCues = false;
+    let narMtimeMs = 0;
+    if (fs.existsSync(narrationPath)) {
+      try {
+        const narStat = fs.statSync(narrationPath);
+        narMtimeMs = narStat.mtimeMs;
+        const nar = JSON.parse(fs.readFileSync(narrationPath, "utf-8"));
+        if (nar && nar.enabled !== false && Array.isArray(nar.cues) && nar.cues.length > 0) {
+          hasUnsynthesizedCues = nar.cues.some((c: any) => !c.audioFile);
+        }
+      } catch {}
+    }
+
     if (fs.existsSync(outputPath)) {
       try {
         const stat = fs.statSync(outputPath);
+        const outMtimeMs = stat.mtimeMs;
+        let isOutdated = false;
+        let outdatedReason: string | undefined;
+
+        if (hasUnsynthesizedCues) {
+          isOutdated = true;
+          outdatedReason = "아직 음성(TTS)이 합성되지 않은 새 대본 구간이 있습니다.";
+        } else if (fs.existsSync(recordingPath)) {
+          try {
+            const recStat = fs.statSync(recordingPath);
+            if (recStat.mtimeMs > outMtimeMs + 3500) {
+              isOutdated = true;
+              outdatedReason = "원본 녹화 영상(컷 편집·오프닝 슬라이드)이 최종 MP4 생성 이후 변경되었습니다.";
+            }
+          } catch {}
+        }
+
+        if (!isOutdated && narMtimeMs > outMtimeMs + 3500) {
+          isOutdated = true;
+          outdatedReason = "나레이션 대본·목차 또는 브랜드 설정이 최종 MP4 생성 이후 변경되었습니다.";
+        }
+
         return {
           exists: true,
           slug,
@@ -206,6 +244,9 @@ class RenderRunner extends EventEmitter {
           lastModified: stat.mtime.toISOString(),
           videoUrl: `/api/rendered-video/${slug}`,
           downloadUrl: `/api/download/${slug}`,
+          isOutdated,
+          outdatedReason,
+          hasUnsynthesizedCues,
         };
       } catch {}
     }
@@ -213,6 +254,7 @@ class RenderRunner extends EventEmitter {
     return {
       exists: false,
       slug,
+      hasUnsynthesizedCues,
     };
   }
 
@@ -329,6 +371,18 @@ class RenderRunner extends EventEmitter {
           outDir: bundleDir,
           publicDir: path.join(rootDir, "public"),
         });
+
+        // 번들러가 public/videos 및 public/recording.mp4를 복사해 캐시 용량을 낭비하지 않도록 즉시 제거 (렌더링 시 renders/<taskId>에 하드링크로 스테이징됨)
+        for (const redundantPath of [
+          path.join(bundleDir, "public", "videos"),
+          path.join(bundleDir, "public", "recording.mp4"),
+        ]) {
+          if (fs.existsSync(redundantPath)) {
+            try {
+              fs.rmSync(redundantPath, { recursive: true, force: true });
+            } catch {}
+          }
+        }
 
         fs.writeFileSync(
           metaPath,

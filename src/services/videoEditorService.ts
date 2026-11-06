@@ -12,6 +12,7 @@ import {
   fastApplyNarrationToRenderedMp4,
   renderSlideHtmlToPng,
 } from "./slideVideoComposer";
+import { linkOrCopyFileSafe, replaceFileSafeWithNewInode } from "./storageOptimizerService";
 import type { IntroTocConfig, IntroTocItem } from "../types";
 
 const ROOT_DIR = path.resolve(__dirname, "..", "..");
@@ -106,6 +107,9 @@ function backupFilesBeforeEdit(sDir: string) {
       const base = path.basename(f, ext);
       const dst = path.join(sDir, `${base}.orig${ext}`);
       if (fs.existsSync(src)) {
+        try {
+          if (fs.existsSync(dst)) fs.unlinkSync(dst);
+        } catch {}
         fs.copyFileSync(src, dst);
       }
     }
@@ -118,6 +122,9 @@ function backupFilesBeforeEdit(sDir: string) {
     const base = path.basename(f, ext);
     const dst = path.join(sDir, `${base}.undo${ext}`);
     if (fs.existsSync(src)) {
+      try {
+        if (fs.existsSync(dst)) fs.unlinkSync(dst);
+      } catch {}
       fs.copyFileSync(src, dst);
     } else if (fs.existsSync(dst)) {
       try {
@@ -131,41 +138,17 @@ function syncPublicRecordingCopy(slug: string, mp4Path: string) {
   try {
     const pubVideosDir = path.join(PUBLIC_DIR, "videos");
     fs.mkdirSync(pubVideosDir, { recursive: true });
-    fs.copyFileSync(mp4Path, path.join(pubVideosDir, `${slug}.mp4`));
+    linkOrCopyFileSafe(mp4Path, path.join(pubVideosDir, `${slug}.mp4`));
   } catch {}
 }
 
 /**
  * Safely replaces targetPath with tmpPath on Windows without failing with EPERM/EBUSY
- * when the browser <video> element or an HTTP Range stream holds a read handle on targetPath.
+ * when the browser <video> element or an HTTP Range stream holds a read handle on targetPath,
+ * while detaching any existing hardlink inode first.
  */
 function replaceFileSafeWindows(tmpPath: string, targetPath: string) {
-  let lastErr: any = null;
-  for (let attempt = 0; attempt < 5; attempt++) {
-    try {
-      fs.copyFileSync(tmpPath, targetPath);
-      try {
-        fs.unlinkSync(tmpPath);
-      } catch {}
-      return;
-    } catch (err: any) {
-      lastErr = err;
-      try {
-        fs.renameSync(tmpPath, targetPath);
-        return;
-      } catch (renErr: any) {
-        lastErr = renErr;
-      }
-      // Brief synchronous wait (~60ms) before retry so any closing stream handle is released
-      const waitUntil = Date.now() + 60;
-      while (Date.now() < waitUntil) {
-        // spin wait
-      }
-    }
-  }
-  if (lastErr) {
-    throw lastErr;
-  }
+  replaceFileSafeWithNewInode(tmpPath, targetPath);
 }
 
 export function cutVideoSegment(slug: string, rawStartSec: number, rawEndSec: number): VideoCutResult {
@@ -314,8 +297,8 @@ export function cutVideoSegment(slug: string, rawStartSec: number, rawEndSec: nu
   const staleRenderedOnCut = path.join(ROOT_DIR, "output", `${slug}.mp4`);
   if (isMergedOnCut) {
     try {
-      fs.copyFileSync(mp4Path, staleRenderedOnCut);
-      fs.copyFileSync(mp4Path, path.join(sDir, "merged.orig.mp4"));
+      linkOrCopyFileSafe(mp4Path, staleRenderedOnCut);
+      linkOrCopyFileSafe(mp4Path, path.join(sDir, "merged.orig.mp4"));
     } catch {}
   } else {
     for (const stalePath of [
@@ -484,11 +467,13 @@ export function restoreVideoBackup(slug: string, mode: "undo" | "orig"): VideoCu
     const backupFile = path.join(sDir, `${base}${suffix}${ext}`);
     const targetFile = path.join(sDir, f);
     if (fs.existsSync(backupFile)) {
-      fs.copyFileSync(backupFile, targetFile);
       if (mode === "undo") {
+        replaceFileSafeWithNewInode(backupFile, targetFile);
+      } else {
         try {
-          fs.unlinkSync(backupFile);
+          if (fs.existsSync(targetFile)) fs.unlinkSync(targetFile);
         } catch {}
+        fs.copyFileSync(backupFile, targetFile);
       }
     }
   }
@@ -523,8 +508,8 @@ export function restoreVideoBackup(slug: string, mode: "undo" | "orig"): VideoCu
   const staleRenderedOnRestore = path.join(ROOT_DIR, "output", `${slug}.mp4`);
   if (isMergedOnRestore) {
     try {
-      fs.copyFileSync(mp4Path, staleRenderedOnRestore);
-      fs.copyFileSync(mp4Path, path.join(sDir, "merged.orig.mp4"));
+      linkOrCopyFileSafe(mp4Path, staleRenderedOnRestore);
+      linkOrCopyFileSafe(mp4Path, path.join(sDir, "merged.orig.mp4"));
     } catch {}
   } else {
     for (const stalePath of [
@@ -1069,12 +1054,12 @@ export async function mergeRenderedVideos(options: {
   const usedFastCopy = false;
   replaceFileSafeWindows(tmpOutPath, outMp4Path);
 
-  // Copy merged MP4 to data/<targetSlug>/recording.mp4 and merged.orig.mp4 so raw/rendered player modes and post-merge cue additions work
+  // Hardlink merged MP4 to data/<targetSlug>/recording.mp4 and merged.orig.mp4 so raw/rendered player modes and post-merge cue additions work with 0 duplicate disk usage
   const mergedRecordingPath = path.join(mergedDataDir, "recording.mp4");
   const mergedOrigPath = path.join(mergedDataDir, "merged.orig.mp4");
   try {
-    fs.copyFileSync(outMp4Path, mergedRecordingPath);
-    fs.copyFileSync(outMp4Path, mergedOrigPath);
+    linkOrCopyFileSafe(outMp4Path, mergedRecordingPath);
+    linkOrCopyFileSafe(outMp4Path, mergedOrigPath);
     syncPublicRecordingCopy(targetSlug, mergedRecordingPath);
   } catch {}
 
@@ -1227,8 +1212,14 @@ export async function mergeRenderedVideos(options: {
           const newFileName = `ch${chapterIdx + 1}_${String(cIdx + 1).padStart(2, "0")}_${baseName}`;
           if (fs.existsSync(srcAudio)) {
             try {
-              fs.copyFileSync(srcAudio, path.join(mergedAudioDir, newFileName));
-              fs.copyFileSync(srcAudio, path.join(publicNarrationDir, newFileName));
+              const dstMergedAudio = path.join(mergedAudioDir, newFileName);
+              try {
+                if (fs.existsSync(dstMergedAudio)) fs.unlinkSync(dstMergedAudio);
+              } catch {}
+              // 챕터 시나리오와 병합 시나리오 간에는 독립 복사본을 두어 원본 챕터 대본 수정 시 병합본이 변조되지 않도록 보호하고,
+              // 병합 시나리오 내부(data/<targetSlug>/audio <-> public/narration/<targetSlug>)만 하드링크로 연결합니다.
+              fs.copyFileSync(srcAudio, dstMergedAudio);
+              linkOrCopyFileSafe(dstMergedAudio, path.join(publicNarrationDir, newFileName));
               newAudioFile = `narration/${targetSlug}/${newFileName}`;
             } catch {}
           }

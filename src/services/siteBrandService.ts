@@ -30,6 +30,154 @@ export function getHostKeyFromUrl(rawUrl?: string): string {
   }
 }
 
+export function getBaseDomainFromHostKey(rawUrlOrHost?: string): string {
+  const raw = String(rawUrlOrHost || "").trim();
+  if (!raw) return "";
+
+  let host = raw;
+  try {
+    const parsed = new URL(raw.startsWith("http") ? raw : `https://${raw}`);
+    host = parsed.hostname || raw;
+  } catch {
+    host = raw
+      .replace(/^https?:\/\//i, "")
+      .split("/")[0]
+      .split(":")[0]
+      .replace(/_\d+$/, "");
+  }
+
+  const cleanHost = host
+    .replace(/_\d+$/, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9.-]/g, "");
+  if (!cleanHost) return "";
+
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(cleanHost) || cleanHost === "localhost") {
+    return cleanHost;
+  }
+
+  const parts = cleanHost.split(".").filter(Boolean);
+  if (parts.length <= 2) {
+    return cleanHost;
+  }
+
+  const lastTwo = `${parts[parts.length - 2]}.${parts[parts.length - 1]}`;
+  const multiLevelTlds = new Set([
+    "ac.kr",
+    "co.kr",
+    "go.kr",
+    "or.kr",
+    "ne.kr",
+    "re.kr",
+    "pe.kr",
+    "hs.kr",
+    "ms.kr",
+    "es.kr",
+    "sc.kr",
+    "kg.kr",
+    "co.jp",
+    "ac.jp",
+    "ne.jp",
+    "or.jp",
+    "co.uk",
+    "org.uk",
+    "ac.uk",
+    "com.au",
+    "edu.au",
+    "com.cn",
+    "edu.cn",
+  ]);
+
+  return multiLevelTlds.has(lastTwo) && parts.length >= 3
+    ? `${parts[parts.length - 3]}.${lastTwo}`
+    : lastTwo;
+}
+
+export function deriveSecondaryAndAccentColors(primaryHex: string): {
+  secondaryColor: string;
+  accentColor: string;
+} {
+  const clean = normalizeHexColor(primaryHex, "#0068FF");
+  const r = parseInt(clean.slice(1, 3), 16) || 0;
+  const g = parseInt(clean.slice(3, 5), 16) || 104;
+  const b = parseInt(clean.slice(5, 7), 16) || 255;
+
+  const toHex = (v: number) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0");
+  const secondaryColor = `#${toHex(r * 0.84)}${toHex(g * 0.76)}${toHex(b * 0.76)}`.toUpperCase();
+  const accentColor = `#${toHex(Math.min(255, r * 1.06 + 18))}${toHex(
+    Math.min(255, g * 1.12 + 24)
+  )}${toHex(Math.min(255, b * 1.15 + 28))}`.toUpperCase();
+
+  return { secondaryColor, accentColor };
+}
+
+export function findBestSiblingBrandForBaseDomain(hostKey: string): {
+  siblingHostKey: string;
+  profile: SiteBrandProfile;
+  logoPath?: string;
+  heroPath?: string;
+} | null {
+  const baseDomain = getBaseDomainFromHostKey(hostKey);
+  if (!baseDomain || !fs.existsSync(BRANDS_ROOT)) return null;
+
+  let best: {
+    score: number;
+    siblingHostKey: string;
+    profile: SiteBrandProfile;
+    logoPath?: string;
+    heroPath?: string;
+  } | null = null;
+
+  try {
+    const entries = fs.readdirSync(BRANDS_ROOT, { withFileTypes: true });
+    for (const ent of entries) {
+      if (!ent.isDirectory() || ent.name.startsWith(".") || ent.name.startsWith("_")) continue;
+      const candHostKey = ent.name;
+      const candDomain = getBaseDomainFromHostKey(candHostKey);
+      if (candDomain !== baseDomain) continue;
+
+      const brandJsonPath = path.join(BRANDS_ROOT, candHostKey, "brand.json");
+      if (!fs.existsSync(brandJsonPath)) continue;
+
+      try {
+        const profile: SiteBrandProfile = JSON.parse(fs.readFileSync(brandJsonPath, "utf-8"));
+        const candLogo = path.join(BRANDS_ROOT, candHostKey, "logo.png");
+        const candHero = path.join(BRANDS_ROOT, candHostKey, "hero.png");
+        const hasLogo = fs.existsSync(candLogo) && fs.statSync(candLogo).size > 100;
+        const hasHero = fs.existsSync(candHero) && fs.statSync(candHero).size > 500;
+        const hasRealSiteName = Boolean(profile.siteName && profile.siteName !== "그룹웨어");
+        const isDullFallback = profile.primaryColor === "#814804";
+
+        let score = 0;
+        if (hasLogo) score += 100;
+        if (hasRealSiteName) score += 50;
+        if (profile.primaryColor && !isDullFallback && profile.primaryColor !== "#0068FF") score += 30;
+        if (hasHero) score += 15;
+        if (candHostKey !== hostKey) score += 5;
+
+        if (!best || score > best.score) {
+          best = {
+            score,
+            siblingHostKey: candHostKey,
+            profile,
+            logoPath: hasLogo ? candLogo : undefined,
+            heroPath: hasHero ? candHero : undefined,
+          };
+        }
+      } catch {}
+    }
+  } catch {}
+
+  return best
+    ? {
+        siblingHostKey: best.siblingHostKey,
+        profile: best.profile,
+        logoPath: best.logoPath,
+        heroPath: best.heroPath,
+      }
+    : null;
+}
+
 function normalizeHexColor(input: string | undefined, fallback: string): string {
   const clean = String(input || "").trim();
   if (/^#[0-9a-fA-F]{6}$/.test(clean)) {
@@ -88,15 +236,83 @@ export function syncBrandAssetsToPublicAndDashboard(hostKey: string): {
 
 export function getCachedSiteBrand(rawUrl?: string): SiteBrandProfile | null {
   const hostKey = getHostKeyFromUrl(rawUrl);
-  const brandJsonPath = path.join(BRANDS_ROOT, hostKey, "brand.json");
+  const brandDir = path.join(BRANDS_ROOT, hostKey);
+  const brandJsonPath = path.join(brandDir, "brand.json");
+  const logoPath = path.join(brandDir, "logo.png");
+  const heroPath = path.join(brandDir, "hero.png");
+
+  const sibling = findBestSiblingBrandForBaseDomain(hostKey);
+
   if (!fs.existsSync(brandJsonPath)) {
+    if (sibling) {
+      fs.mkdirSync(brandDir, { recursive: true });
+      if (sibling.logoPath && !fs.existsSync(logoPath)) {
+        try {
+          fs.copyFileSync(sibling.logoPath, logoPath);
+        } catch {}
+      }
+      if (sibling.heroPath && !fs.existsSync(heroPath)) {
+        try {
+          fs.copyFileSync(sibling.heroPath, heroPath);
+        } catch {}
+      }
+      const synced = syncBrandAssetsToPublicAndDashboard(hostKey);
+      const inherited: SiteBrandProfile = {
+        ...sibling.profile,
+        hostKey,
+        originUrl: rawUrl || sibling.profile.originUrl,
+        logoUrl: synced.logoUrl || sibling.profile.logoUrl,
+        heroThumbUrl: synced.heroThumbUrl || sibling.profile.heroThumbUrl,
+      };
+      try {
+        fs.writeFileSync(brandJsonPath, JSON.stringify(inherited, null, 2), "utf-8");
+      } catch {}
+      return inherited;
+    }
     return null;
   }
+
   try {
     const profile: SiteBrandProfile = JSON.parse(fs.readFileSync(brandJsonPath, "utf-8"));
+    let updatedBySibling = false;
+
+    if (sibling && sibling.siblingHostKey !== hostKey) {
+      if (sibling.logoPath && (!fs.existsSync(logoPath) || fs.statSync(logoPath).size <= 100)) {
+        try {
+          fs.copyFileSync(sibling.logoPath, logoPath);
+          updatedBySibling = true;
+        } catch {}
+      }
+      if (
+        (!profile.siteName || profile.siteName === "그룹웨어") &&
+        sibling.profile.siteName &&
+        sibling.profile.siteName !== "그룹웨어"
+      ) {
+        profile.siteName = sibling.profile.siteName;
+        updatedBySibling = true;
+      }
+      if (
+        (profile.primaryColor === "#814804" || !profile.primaryColor) &&
+        sibling.profile.primaryColor &&
+        sibling.profile.primaryColor !== "#814804"
+      ) {
+        profile.primaryColor = sibling.profile.primaryColor;
+        profile.secondaryColor = sibling.profile.secondaryColor;
+        profile.accentColor = sibling.profile.accentColor;
+        updatedBySibling = true;
+      }
+    }
+
     const synced = syncBrandAssetsToPublicAndDashboard(hostKey);
     if (synced.logoUrl) profile.logoUrl = synced.logoUrl;
     if (synced.heroThumbUrl) profile.heroThumbUrl = synced.heroThumbUrl;
+
+    if (updatedBySibling) {
+      try {
+        fs.writeFileSync(brandJsonPath, JSON.stringify(profile, null, 2), "utf-8");
+      } catch {}
+    }
+
     return profile;
   } catch {
     return null;
@@ -454,30 +670,311 @@ async function extractVisualBrandFromHeroPng(
  * 최초 1회 생성 시 실제 사이트 화면(hero.png) 픽셀에서 정확한 상단 테마 컬러와 로고(logo.png)를 추출하고,
  * AI(aiClient)를 통해 사이트명·매뉴얼 타이틀을 보강하여 마스터로 영구 캐싱합니다.
  */
-export async function ensureSiteBrandForScenario(
-  slug: string,
-  options?: { forceRefresh?: boolean }
-): Promise<SiteBrandProfile> {
+export function resolveOriginUrlForScenario(slug: string): string {
   const sDir = path.join(DATA_DIR, slug);
   const bpPath = path.join(sDir, "browse-plan.json");
   const mmPath = path.join(sDir, "moments.json");
+  const narPath = path.join(sDir, "narration.json");
 
-  let bp: BrowsePlan | null = null;
-  let mm: MomentsFile | null = null;
+  let bp: any = null;
+  let mm: any = null;
+  let nar: any = null;
   try {
     if (fs.existsSync(bpPath)) bp = JSON.parse(fs.readFileSync(bpPath, "utf-8"));
   } catch {}
   try {
     if (fs.existsSync(mmPath)) mm = JSON.parse(fs.readFileSync(mmPath, "utf-8"));
   } catch {}
+  try {
+    if (fs.existsSync(narPath)) nar = JSON.parse(fs.readFileSync(narPath, "utf-8"));
+  } catch {}
 
-  const originUrl =
+  const inlineBrandUrl =
+    nar?.siteBrand?.originUrl ||
+    nar?.siteBrand?.hostKey ||
+    nar?.introToc?.siteBrand?.originUrl ||
+    nar?.introToc?.siteBrand?.hostKey ||
+    "";
+  if (inlineBrandUrl) return inlineBrandUrl;
+
+  const mergedFromSlugs: string[] = Array.isArray(nar?.mergedFromSlugs)
+    ? nar.mergedFromSlugs
+    : Array.isArray(bp?.mergedFromSlugs)
+    ? bp.mergedFromSlugs
+    : [];
+
+  if (mergedFromSlugs.length > 0) {
+    for (const chSlug of mergedFromSlugs) {
+      const chNarPath = path.join(DATA_DIR, chSlug, "narration.json");
+      const chBpPath = path.join(DATA_DIR, chSlug, "browse-plan.json");
+      if (fs.existsSync(chNarPath)) {
+        try {
+          const chNar = JSON.parse(fs.readFileSync(chNarPath, "utf-8"));
+          const chUrl = chNar?.siteBrand?.originUrl || chNar?.siteBrand?.hostKey;
+          if (chUrl) return chUrl;
+        } catch {}
+      }
+      if (fs.existsSync(chBpPath)) {
+        try {
+          const chBp = JSON.parse(fs.readFileSync(chBpPath, "utf-8"));
+          const chFirstNav = chBp?.actions?.find((a: any) => a?.url && /^https?:\/\//i.test(String(a.url)))?.url;
+          const chUrl = chFirstNav || chBp?.baseUrl || chBp?.url;
+          if (chUrl) return chUrl;
+        } catch {}
+      }
+    }
+  }
+
+  const firstNavUrl = bp?.actions?.find((a: any) => a?.url && /^https?:\/\//i.test(String(a.url)))?.url;
+  return (
+    firstNavUrl ||
+    bp?.baseUrl ||
     bp?.url ||
-    (bp as any)?.baseUrl ||
+    mm?.metadata?.baseUrl ||
     mm?.metadata?.url ||
+    mm?.url ||
     getConfig().targetBaseUrl ||
-    "http://localhost";
+    "http://localhost"
+  );
+}
 
+export function resolveSiteBrandForScenario(slug: string): SiteBrandProfile {
+  const originUrl = resolveOriginUrlForScenario(slug);
+  const cached = getCachedSiteBrand(originUrl);
+  if (cached) {
+    const narPath = path.join(DATA_DIR, slug, "narration.json");
+    if (fs.existsSync(narPath)) {
+      try {
+        const nar = JSON.parse(fs.readFileSync(narPath, "utf-8"));
+        if (!nar.siteBrand || !nar.siteBrand.logoUrl || nar.siteBrand.siteName === "그룹웨어") {
+          nar.siteBrand = cached;
+          fs.writeFileSync(narPath, JSON.stringify(nar, null, 2), "utf-8");
+        }
+      } catch {}
+    }
+    return cached;
+  }
+
+  const hostKey = getHostKeyFromUrl(originUrl);
+  const baseDomain = getBaseDomainFromHostKey(hostKey);
+  return {
+    hostKey,
+    originUrl,
+    siteName: baseDomain || hostKey || "그룹웨어",
+    manualBadge: "그룹웨어 사용 매뉴얼",
+    tagline: "",
+    primaryColor: "#0068FF",
+    secondaryColor: "#0047B3",
+    accentColor: "#0BB4FA",
+    createdAt: new Date().toISOString(),
+  };
+}
+
+export function updateSiteBrandForScenario(
+  slug: string,
+  updates: {
+    siteName?: string;
+    manualBadge?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    accentColor?: string;
+    propagateToBaseDomain?: boolean;
+  }
+): SiteBrandProfile {
+  const current = resolveSiteBrandForScenario(slug);
+  const hostKey = current.hostKey || getHostKeyFromUrl(current.originUrl);
+  const baseDomain = getBaseDomainFromHostKey(hostKey || current.originUrl);
+  const propagate = updates.propagateToBaseDomain !== false;
+
+  const nextSiteName =
+    updates.siteName !== undefined
+      ? stripVersionInfo(updates.siteName) || current.siteName || "그룹웨어"
+      : current.siteName || "그룹웨어";
+  const nextManualBadge =
+    updates.manualBadge !== undefined
+      ? stripVersionInfo(updates.manualBadge) || current.manualBadge || "그룹웨어 사용 매뉴얼"
+      : current.manualBadge || "그룹웨어 사용 매뉴얼";
+
+  const nextPrimary = normalizeHexColor(updates.primaryColor, current.primaryColor || "#0068FF");
+  const primaryChanged = nextPrimary.toUpperCase() !== (current.primaryColor || "").toUpperCase();
+  const derived = deriveSecondaryAndAccentColors(nextPrimary);
+  const nextSecondary = updates.secondaryColor
+    ? normalizeHexColor(updates.secondaryColor, derived.secondaryColor)
+    : primaryChanged
+    ? derived.secondaryColor
+    : current.secondaryColor || derived.secondaryColor;
+  const nextAccent = updates.accentColor
+    ? normalizeHexColor(updates.accentColor, derived.accentColor)
+    : primaryChanged
+    ? derived.accentColor
+    : current.accentColor || derived.accentColor;
+
+  const targetHostKeys = new Set<string>([hostKey]);
+  if (propagate && baseDomain && fs.existsSync(BRANDS_ROOT)) {
+    try {
+      for (const ent of fs.readdirSync(BRANDS_ROOT, { withFileTypes: true })) {
+        if (!ent.isDirectory() || ent.name.startsWith(".") || ent.name.startsWith("_")) continue;
+        if (getBaseDomainFromHostKey(ent.name) === baseDomain) {
+          targetHostKeys.add(ent.name);
+        }
+      }
+    } catch {}
+  }
+
+  let updatedPrimaryProfile: SiteBrandProfile = {
+    ...current,
+    hostKey,
+    siteName: nextSiteName,
+    manualBadge: nextManualBadge,
+    primaryColor: nextPrimary,
+    secondaryColor: nextSecondary,
+    accentColor: nextAccent,
+  };
+
+  for (const hk of targetHostKeys) {
+    const bDir = path.join(BRANDS_ROOT, hk);
+    fs.mkdirSync(bDir, { recursive: true });
+    const bJsonPath = path.join(bDir, "brand.json");
+    let existingHk: Partial<SiteBrandProfile> = {};
+    if (fs.existsSync(bJsonPath)) {
+      try {
+        existingHk = JSON.parse(fs.readFileSync(bJsonPath, "utf-8"));
+      } catch {}
+    }
+    const synced = syncBrandAssetsToPublicAndDashboard(hk);
+    const hkProfile: SiteBrandProfile = {
+      hostKey: hk,
+      originUrl: existingHk.originUrl || current.originUrl,
+      siteName: nextSiteName,
+      manualBadge: nextManualBadge,
+      tagline: existingHk.tagline || "",
+      primaryColor: nextPrimary,
+      secondaryColor: nextSecondary,
+      accentColor: nextAccent,
+      logoUrl: synced.logoUrl || existingHk.logoUrl || current.logoUrl,
+      heroThumbUrl: synced.heroThumbUrl || existingHk.heroThumbUrl || current.heroThumbUrl,
+      createdAt: existingHk.createdAt || current.createdAt || new Date().toISOString(),
+    };
+    try {
+      fs.writeFileSync(bJsonPath, JSON.stringify(hkProfile, null, 2), "utf-8");
+    } catch {}
+    if (hk === hostKey) {
+      updatedPrimaryProfile = hkProfile;
+    }
+  }
+
+  // Update narration.json across matching scenarios
+  if (fs.existsSync(DATA_DIR)) {
+    try {
+      for (const ent of fs.readdirSync(DATA_DIR, { withFileTypes: true })) {
+        if (!ent.isDirectory() || ent.name.startsWith(".") || ent.name.startsWith("_")) continue;
+        const sSlug = ent.name;
+        const isTargetSlug = sSlug === slug;
+        const sOriginUrl = resolveOriginUrlForScenario(sSlug);
+        const sHostKey = getHostKeyFromUrl(sOriginUrl);
+        const sDomain = getBaseDomainFromHostKey(sHostKey || sOriginUrl);
+        const matches = isTargetSlug || (propagate && baseDomain ? sDomain === baseDomain : sHostKey === hostKey);
+        if (!matches) continue;
+
+        const narPath = path.join(DATA_DIR, sSlug, "narration.json");
+        if (fs.existsSync(narPath)) {
+          try {
+            const rawNar = fs.readFileSync(narPath, "utf-8");
+            const nar = JSON.parse(rawNar);
+            nar.siteBrand = {
+              ...(nar.siteBrand || updatedPrimaryProfile),
+              siteName: nextSiteName,
+              manualBadge: nextManualBadge,
+              primaryColor: nextPrimary,
+              secondaryColor: nextSecondary,
+              accentColor: nextAccent,
+              logoUrl: updatedPrimaryProfile.logoUrl || nar.siteBrand?.logoUrl,
+              heroThumbUrl: updatedPrimaryProfile.heroThumbUrl || nar.siteBrand?.heroThumbUrl,
+            };
+            if (nar.introToc && typeof nar.introToc === "object" && updates.manualBadge !== undefined) {
+              nar.introToc.badge = nextManualBadge;
+            }
+            const nextNarStr = JSON.stringify(nar, null, 2);
+            if (nextNarStr !== rawNar) {
+              fs.writeFileSync(narPath, nextNarStr, "utf-8");
+            }
+          } catch {}
+        }
+
+        const epPath = path.join(DATA_DIR, sSlug, "edit-plan.json");
+        if (fs.existsSync(epPath)) {
+          try {
+            const rawEp = fs.readFileSync(epPath, "utf-8");
+            const ep = JSON.parse(rawEp);
+            if (ep.narration && typeof ep.narration === "object") {
+              ep.narration.siteBrand = {
+                ...(ep.narration.siteBrand || updatedPrimaryProfile),
+                siteName: nextSiteName,
+                manualBadge: nextManualBadge,
+                primaryColor: nextPrimary,
+                secondaryColor: nextSecondary,
+                accentColor: nextAccent,
+                logoUrl: updatedPrimaryProfile.logoUrl || ep.narration.siteBrand?.logoUrl,
+                heroThumbUrl: updatedPrimaryProfile.heroThumbUrl || ep.narration.siteBrand?.heroThumbUrl,
+              };
+              if (ep.narration.introToc && typeof ep.narration.introToc === "object" && updates.manualBadge !== undefined) {
+                ep.narration.introToc.badge = nextManualBadge;
+              }
+              const nextEpStr = JSON.stringify(ep, null, 2);
+              if (nextEpStr !== rawEp) {
+                fs.writeFileSync(epPath, nextEpStr, "utf-8");
+              }
+            }
+          } catch {}
+        }
+      }
+    } catch {}
+  }
+
+  return updatedPrimaryProfile;
+}
+
+export function listAllSiteBrands(): Array<SiteBrandProfile & { baseDomain: string }> {
+  const result: Array<SiteBrandProfile & { baseDomain: string }> = [];
+  if (!fs.existsSync(BRANDS_ROOT)) return result;
+  try {
+    for (const ent of fs.readdirSync(BRANDS_ROOT, { withFileTypes: true })) {
+      if (!ent.isDirectory() || ent.name.startsWith(".") || ent.name.startsWith("_")) continue;
+      const bPath = path.join(BRANDS_ROOT, ent.name, "brand.json");
+      if (!fs.existsSync(bPath)) continue;
+      try {
+        const profile: SiteBrandProfile = JSON.parse(fs.readFileSync(bPath, "utf-8"));
+        const synced = syncBrandAssetsToPublicAndDashboard(ent.name);
+        if (synced.logoUrl) profile.logoUrl = synced.logoUrl;
+        if (synced.heroThumbUrl) profile.heroThumbUrl = synced.heroThumbUrl;
+        result.push({
+          ...profile,
+          baseDomain: getBaseDomainFromHostKey(profile.hostKey || ent.name || profile.originUrl),
+        });
+      } catch {}
+    }
+  } catch {}
+  return result;
+}
+
+/**
+ * 시나리오의 대상 사이트 URL을 기준으로 마스터 브랜드 프로필(SiteBrandProfile)을 보장합니다.
+ * 최초 1회 생성 시 실제 사이트 화면(hero.png) 픽셀에서 정확한 상단 테마 컬러와 로고(logo.png)를 추출하고,
+ * AI(aiClient)를 통해 사이트명·매뉴얼 타이틀을 보강하여 마스터로 영구 캐싱합니다.
+ */
+export async function ensureSiteBrandForScenario(
+  slug: string,
+  options?: { forceRefresh?: boolean }
+): Promise<SiteBrandProfile> {
+  const sDir = path.join(DATA_DIR, slug);
+  const bpPath = path.join(sDir, "browse-plan.json");
+
+  let bp: BrowsePlan | null = null;
+  try {
+    if (fs.existsSync(bpPath)) bp = JSON.parse(fs.readFileSync(bpPath, "utf-8"));
+  } catch {}
+
+  const originUrl = resolveOriginUrlForScenario(slug);
   const hostKey = getHostKeyFromUrl(originUrl);
   const brandDir = path.join(BRANDS_ROOT, hostKey);
   fs.mkdirSync(brandDir, { recursive: true });
@@ -490,21 +987,27 @@ export async function ensureSiteBrandForScenario(
   // 비디오에서 실제 사이트 화면 썸네일(hero.png) 보장
   extractHeroFrameFromVideoIfNeeded(slug, heroPath);
 
-  if (!options?.forceRefresh && fs.existsSync(brandJsonPath)) {
-    try {
-      const existing: SiteBrandProfile = JSON.parse(fs.readFileSync(brandJsonPath, "utf-8"));
+  if (!options?.forceRefresh) {
+    const cachedOrInherited = getCachedSiteBrand(originUrl);
+    if (cachedOrInherited) {
       if (!fs.existsSync(logoPath) && fs.existsSync(heroPath)) {
         await extractVisualBrandFromHeroPng(heroPath, logoPath);
+        const synced = syncBrandAssetsToPublicAndDashboard(hostKey);
+        if (synced.logoUrl) cachedOrInherited.logoUrl = synced.logoUrl;
+        if (synced.heroThumbUrl) cachedOrInherited.heroThumbUrl = synced.heroThumbUrl;
       }
-      const synced = syncBrandAssetsToPublicAndDashboard(hostKey);
-      existing.logoUrl = synced.logoUrl;
-      existing.heroThumbUrl = synced.heroThumbUrl;
-      return existing;
-    } catch {}
+      return cachedOrInherited;
+    }
   }
 
   // 실제 사이트 화면(hero.png)에서 정확한 픽셀 테마 색상 및 투명 배경 로고(logo.png) 추출
   const visualExtracted = await extractVisualBrandFromHeroPng(heroPath, logoPath);
+  const sibling = findBestSiblingBrandForBaseDomain(hostKey);
+  if (sibling && (!fs.existsSync(logoPath) || fs.statSync(logoPath).size <= 100) && sibling.logoPath) {
+    try {
+      fs.copyFileSync(sibling.logoPath, logoPath);
+    } catch {}
+  }
 
   let domMeta: any = null;
   if (fs.existsSync(domMetaPath)) {
@@ -518,12 +1021,29 @@ export async function ensureSiteBrandForScenario(
     .map((a) => a.description)
     .filter(Boolean);
 
-  let siteName = stripVersionInfo(domMeta?.logoAlt || domMeta?.logoText || domMeta?.title || "그룹웨어");
+  let siteName = stripVersionInfo(
+    sibling?.profile?.siteName && sibling.profile.siteName !== "그룹웨어"
+      ? sibling.profile.siteName
+      : domMeta?.logoAlt || domMeta?.logoText || domMeta?.title || "그룹웨어"
+  );
   if (siteName.length > 22) siteName = siteName.slice(0, 22).trim();
-  let manualBadge = "그룹웨어 사용 매뉴얼";
-  let primaryColor = visualExtracted.primaryColor || domMeta?.sampledColors?.[0] || "#0068FF";
-  let secondaryColor = visualExtracted.secondaryColor || domMeta?.sampledColors?.[1] || "#0047B3";
-  let accentColor = visualExtracted.accentColor || "#0BB4FA";
+  let manualBadge = sibling?.profile?.manualBadge || "그룹웨어 사용 매뉴얼";
+  const hasGoodVisualColor =
+    visualExtracted.primaryColor && visualExtracted.primaryColor !== "#814804";
+  let primaryColor =
+    (hasGoodVisualColor ? visualExtracted.primaryColor : undefined) ||
+    sibling?.profile?.primaryColor ||
+    domMeta?.sampledColors?.[0] ||
+    "#0068FF";
+  let secondaryColor =
+    (hasGoodVisualColor ? visualExtracted.secondaryColor : undefined) ||
+    sibling?.profile?.secondaryColor ||
+    domMeta?.sampledColors?.[1] ||
+    "#0047B3";
+  let accentColor =
+    (hasGoodVisualColor ? visualExtracted.accentColor : undefined) ||
+    sibling?.profile?.accentColor ||
+    "#0BB4FA";
 
   // AI(API 모드 / CLI 모드 통합)를 통해 대상 사이트 명칭 및 매뉴얼 타이틀 정제
   try {

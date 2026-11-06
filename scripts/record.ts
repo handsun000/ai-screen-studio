@@ -4948,6 +4948,9 @@ async function main() {
   if (srcFile && fs.existsSync(srcFile)) {
     for (let attempt = 1; attempt <= 5; attempt++) {
       try {
+        try {
+          if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
+        } catch {}
         // Transcode raw VFR WebM directly to CFR 30fps H.264 MP4 for frame-accurate Remotion seeking
         try {
           execSync(
@@ -5006,6 +5009,9 @@ async function main() {
                 { stdio: "pipe" }
               );
               if (fs.existsSync(tempCompositePath) && fs.statSync(tempCompositePath).size > 1000) {
+                try {
+                  if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
+                } catch {}
                 fs.copyFileSync(tempCompositePath, destPath);
                 try { fs.unlinkSync(tempCompositePath); } catch {}
               }
@@ -5090,8 +5096,12 @@ async function main() {
   fs.writeFileSync(momentsPath, JSON.stringify(momentsFile, null, 2));
   try {
     fs.copyFileSync(momentsPath, path.join(dataDir, "moments.body.json"));
+    const bodyMp4Path = path.join(dataDir, "recording.body.mp4");
     if (fs.existsSync(destPath)) {
-      fs.copyFileSync(destPath, path.join(dataDir, "recording.body.mp4"));
+      try {
+        if (fs.existsSync(bodyMp4Path)) fs.unlinkSync(bodyMp4Path);
+      } catch {}
+      fs.copyFileSync(destPath, bodyMp4Path);
     }
     // 새 녹화가 완료되면 과거 렌더링본(output/<slug>.mp4) 및 이전 컷 편집 백업을 정리하여 구버전 노출 방지
     const staleRenderedMp4 = path.resolve(__dirname, "..", "output", `${slug}.mp4`);

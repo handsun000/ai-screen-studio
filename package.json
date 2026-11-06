@@ -12,6 +12,8 @@
     "render": "remotion render ScreenDemo",
     "record": "tsx scripts/record.ts",
     "verify-sync": "tsx scripts/verify-sync.ts",
+    "doctor": "tsx scripts/doctor.ts",
+    "doctor:fix": "tsx scripts/doctor.ts --fix",
     "session": "python scripts/session.py"
   },
   "dependencies": {
