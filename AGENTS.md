@@ -138,3 +138,4 @@ npm run doctor:fix
   9. **[5번] 플레이어 상태 배지 명확화 및 미반영 대본 알림 배너 (`#narration-unapplied-banner`)** 완료.
   10. **[6번] 디스크 용량 최적화 (`storageOptimizerService.ts`, NTFS 하드링크 중복 제거 및 원클릭 정리 드로어 `#storage-optimizer-drawer`)** 완료 (약 1.07GB 물리 용량 즉시 절감).
   11. **[7번] 통합 헬스체크 (`npm run doctor` / `npm run doctor:fix`, `scripts/doctor.ts`)** 구축 완료.
+  12. **[8번] 단독 실행 인스톨러(.exe) 배포 패키징 (`electron-builder.yml`, `scripts/bundle-resources.ts`, `scripts/bundled-env.cjs`)** 완료 (포터블 Python 3.11/edge-tts + FFmpeg + Playwright Chromium 듀얼 내장, 호스트 Node.js 미설치 환경 완비).

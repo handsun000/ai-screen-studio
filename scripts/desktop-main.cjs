@@ -3,8 +3,18 @@ const path = require("path");
 const fs = require("fs");
 const http = require("http");
 const { spawn, execSync } = require("child_process");
+const { setupBundledEnvironment } = require("./bundled-env.cjs");
 
 const ROOT_DIR = path.resolve(__dirname, "..");
+setupBundledEnvironment(ROOT_DIR);
+
+const envPath = path.join(ROOT_DIR, ".env");
+const exampleEnvPath = path.join(ROOT_DIR, ".env.example");
+if (!fs.existsSync(envPath) && fs.existsSync(exampleEnvPath)) {
+  try {
+    fs.copyFileSync(exampleEnvPath, envPath);
+  } catch {}
+}
 const ICON_PATH = path.join(ROOT_DIR, "assets", "icon.ico");
 const PRELOAD_PATH = path.join(__dirname, "desktop-preload.cjs");
 const PORT = process.env.DASHBOARD_PORT || 3333;
@@ -96,15 +106,33 @@ async function ensureBackendServer() {
   console.log(`[Desktop] Starting dashboard server on port ${PORT}...`);
   const tsxCli = path.join(ROOT_DIR, "node_modules", "tsx", "dist", "cli.mjs");
   const serverScript = path.join(ROOT_DIR, "scripts", "dashboard-server.ts");
-  const defaultNode = "C:\\Program Files\\nodejs\\node.exe";
-  const nodeBin = fs.existsSync(defaultNode) ? defaultNode : "node";
 
-  serverProcess = spawn(nodeBin, [tsxCli, "watch", serverScript], {
+  let nodeBin = "node";
+  let spawnArgs = [tsxCli, "watch", serverScript];
+  const spawnEnv = {
+    ...process.env,
+    DESKTOP_APP: "1",
+  };
+
+  if (app.isPackaged) {
+    // In packaged Electron app, use Electron executable itself as Node runner (no host Node needed)
+    nodeBin = process.execPath;
+    spawnEnv.ELECTRON_RUN_AS_NODE = "1";
+    // Check if compiled cjs server exists, otherwise run tsx cli bundled in app
+    const bundledCjs = path.join(__dirname, "dashboard-server.cjs");
+    if (fs.existsSync(bundledCjs)) {
+      spawnArgs = [bundledCjs];
+    } else {
+      spawnArgs = [tsxCli, serverScript];
+    }
+  } else {
+    const defaultNode = "C:\\Program Files\\nodejs\\node.exe";
+    nodeBin = fs.existsSync(defaultNode) ? defaultNode : "node";
+  }
+
+  serverProcess = spawn(nodeBin, spawnArgs, {
     cwd: ROOT_DIR,
-    env: {
-      ...process.env,
-      DESKTOP_APP: "1",
-    },
+    env: spawnEnv,
     stdio: "ignore",
     windowsHide: true,
   });

@@ -1,0 +1,49 @@
+appId: com.screendemo.studio
+productName: Screen Demo Studio
+copyright: Copyright © 2026 Screen Demo Studio
+
+directories:
+  output: dist
+  buildResources: assets
+
+asar: false
+
+files:
+  - "assets/**"
+  - "dashboard/**"
+  - "scripts/**"
+  - "src/**"
+  - "public/**"
+  - "remotion.config.ts"
+  - "tsconfig.json"
+  - "package.json"
+  - ".env.example"
+  - "!dist/**"
+  - "!renders/**"
+  - "!data/**"
+  - "!resources/**"
+  - "!**/*.map"
+  - "!node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}"
+  - "!node_modules/*/{test,__tests__,tests,powered-test,example,examples}"
+
+extraResources:
+  - from: "resources/bin"
+    to: "bin"
+    filter:
+      - "**/*"
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: "assets/icon.ico"
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: "Screen Demo Studio"
+  uninstallDisplayName: "Screen Demo Studio"

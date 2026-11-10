@@ -61,9 +61,15 @@ import { detectAvailableClis, generateAiContent, getGeminiApiKeys } from "../src
 
 dotenv.config({ override: true });
 
+const ROOT_DIR = path.resolve(__dirname, "..");
+// Injects bundled portable dependencies (Python, FFmpeg, Playwright Chromium) into PATH
+try {
+  const { setupBundledEnvironment } = require("./bundled-env.cjs");
+  setupBundledEnvironment(ROOT_DIR);
+} catch {}
+
 const app = express();
 const PORT = process.env.DASHBOARD_PORT || 3333;
-const ROOT_DIR = path.resolve(__dirname, "..");
 const DATA_DIR = path.join(ROOT_DIR, "data");
 
 app.use(cors());

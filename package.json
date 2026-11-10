@@ -14,7 +14,9 @@
     "verify-sync": "tsx scripts/verify-sync.ts",
     "doctor": "tsx scripts/doctor.ts",
     "doctor:fix": "tsx scripts/doctor.ts --fix",
-    "session": "python scripts/session.py"
+    "session": "python scripts/session.py",
+    "bundle:resources": "tsx scripts/bundle-resources.ts",
+    "build:exe": "tsx scripts/bundle-resources.ts && electron-builder --win"
   },
   "dependencies": {
     "@google/genai": "^2.24.0",
@@ -24,15 +26,16 @@
     "cors": "^2.8.6",
     "dotenv": "^18.0.4",
     "express": "^5.2.1",
+    "playwright": "^1.50.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "remotion": "4.0.242"
+    "remotion": "4.0.242",
+    "tsx": "^4.19.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",
     "electron": "^45.0.0",
-    "playwright": "^1.50.0",
-    "tsx": "^4.19.0",
+    "electron-builder": "^26.18.0",
     "typescript": "^5.5.0"
   }
 }

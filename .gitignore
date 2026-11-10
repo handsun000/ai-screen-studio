@@ -27,6 +27,7 @@ out/
 output/
 build/
 .remotion/
+resources/bin/
 
 # Video & Large Media Files
 *.mp4

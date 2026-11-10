@@ -1,5 +1,6 @@
 import { spawn, spawnSync, type ChildProcessWithoutNullStreams } from "child_process";
 import * as path from "path";
+import * as fs from "fs";
 import { EventEmitter } from "events";
 import { generateNarrationScript } from "./narrationService";
 
@@ -49,12 +50,36 @@ class RecordRunner extends EventEmitter {
     const rootDir = path.resolve(__dirname, "..", "..");
     this.log(`🚀 [시작] '${slug}' 자동 녹화 및 후가공 파이프라인 시작 (tsx ${args.join(" ")})`);
 
-    const command = `npx tsx ${args.join(" ")}`;
-    const child = spawn(command, {
-      cwd: rootDir,
-      shell: true,
-      env: { ...process.env, FORCE_COLOR: "1" },
-    });
+    const tsxCli = path.join(rootDir, "node_modules", "tsx", "dist", "cli.mjs");
+    const scriptPath = path.join(rootDir, "scripts", "record.ts");
+
+    let child: ChildProcessWithoutNullStreams;
+    const runnerEnv = {
+      ...process.env,
+      ELECTRON_RUN_AS_NODE: "1",
+      FORCE_COLOR: "1",
+    };
+
+    if (fs.existsSync(tsxCli) && fs.existsSync(scriptPath)) {
+      const runnerBin = process.execPath;
+      const runArgs = [tsxCli, scriptPath, slug];
+      if (isHeaded) runArgs.push("--headed");
+      else runArgs.push("--headless");
+      if (options.login) runArgs.push("--login");
+
+      child = spawn(runnerBin, runArgs, {
+        cwd: rootDir,
+        shell: false,
+        env: runnerEnv,
+      });
+    } else {
+      const command = `npx tsx ${args.join(" ")}`;
+      child = spawn(command, {
+        cwd: rootDir,
+        shell: true,
+        env: runnerEnv,
+      });
+    }
 
     this.childProcess = child;
 
