@@ -1320,7 +1320,7 @@ export async function mergeRenderedVideos(options: {
   const actualTotalFrames = Math.max(60, Math.round(actualTotalDurSec * fps));
 
   const mergedBrowsePlan = {
-    baseUrl: firstBaseUrl || "https://gwdev.bc.ac.kr",
+    baseUrl: firstBaseUrl || "",
     viewport: { width: 1920, height: 1080 },
     recordedByEyedropper: true,
     mergedFromSlugs: rawSlugs,

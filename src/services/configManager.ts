@@ -8,6 +8,7 @@ const ENV_FILE_PATH = path.resolve(__dirname, "..", "..", ".env");
 
 export type AiExecutionMode = "api" | "cli";
 export type AiCliProvider = "agy" | "naoncode" | "claude" | "gemini" | "codex" | "ollama" | "copilot";
+export type AiApiProvider = "gemini" | "openai" | "anthropic" | "custom";
 
 export interface StudioConfig {
   targetProjectPath: string;
@@ -16,6 +17,16 @@ export interface StudioConfig {
   aiMode: AiExecutionMode;
   aiCliProvider: AiCliProvider;
   aiCliModel: string;
+  // Multi-AI API settings
+  aiApiProvider: AiApiProvider;
+  geminiApiKey: string;
+  openaiApiKey: string;
+  openaiModel: string;
+  anthropicApiKey: string;
+  anthropicModel: string;
+  customApiKey: string;
+  customBaseUrl: string;
+  customModel: string;
 }
 
 export const DEFAULT_GROUPWARE_PROJECTS = [
@@ -44,15 +55,32 @@ function normalizeAiCliProvider(raw?: string): AiCliProvider {
   return "agy";
 }
 
+function normalizeAiApiProvider(raw?: string): AiApiProvider {
+  const v = String(raw || "").trim().toLowerCase();
+  if (v === "openai") return "openai";
+  if (v === "anthropic" || v === "claude") return "anthropic";
+  if (v === "custom" || v === "deepseek") return "custom";
+  return "gemini";
+}
+
 // In-memory runtime config, initialized from .env or defaults
 const discoveredGw = getDiscoveredGroupwareProjects();
 let currentConfig: StudioConfig = {
   targetProjectPath: process.env.TARGET_PROJECT_PATH || (discoveredGw.length > 0 ? discoveredGw[0] : ""),
-  targetBaseUrl: process.env.TARGET_BASE_URL || "https://gwdev.unison.co.kr",
-  geminiModel: process.env.GEMINI_MODEL || "gemini-3.8-flash",
+  targetBaseUrl: (process.env.TARGET_BASE_URL || "").trim(),
+  geminiModel: process.env.GEMINI_MODEL || "gemini-2.5-flash",
   aiMode: normalizeAiMode(process.env.AI_MODE),
   aiCliProvider: normalizeAiCliProvider(process.env.AI_CLI_PROVIDER),
   aiCliModel: (process.env.AI_CLI_MODEL || "gemini-3.8-flash-low").trim(),
+  aiApiProvider: normalizeAiApiProvider(process.env.AI_API_PROVIDER),
+  geminiApiKey: (process.env.GEMINI_API_KEY || "").trim(),
+  openaiApiKey: (process.env.OPENAI_API_KEY || "").trim(),
+  openaiModel: (process.env.OPENAI_MODEL || "gpt-4o-mini").trim(),
+  anthropicApiKey: (process.env.ANTHROPIC_API_KEY || "").trim(),
+  anthropicModel: (process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022").trim(),
+  customApiKey: (process.env.CUSTOM_API_KEY || "").trim(),
+  customBaseUrl: (process.env.CUSTOM_BASE_URL || "https://api.deepseek.com/v1").trim(),
+  customModel: (process.env.CUSTOM_MODEL || "deepseek-chat").trim(),
 };
 
 export interface ProjectAnalysis {
@@ -64,8 +92,41 @@ export interface ProjectAnalysis {
   sourceSummary: string;
 }
 
+export function maskSecretKey(key?: string): string {
+  const s = String(key || "").trim();
+  if (!s) return "";
+  if (s.length <= 8) return "••••••••";
+  return `${s.slice(0, 4)}••••${s.slice(-4)}`;
+}
+
+export interface SafeStudioConfig extends Omit<StudioConfig, "geminiApiKey" | "openaiApiKey" | "anthropicApiKey" | "customApiKey"> {
+  geminiApiKeyPreview: string;
+  hasGeminiKey: boolean;
+  openaiApiKeyPreview: string;
+  hasOpenaiKey: boolean;
+  anthropicApiKeyPreview: string;
+  hasAnthropicKey: boolean;
+  customApiKeyPreview: string;
+  hasCustomKey: boolean;
+}
+
 export function getConfig(): StudioConfig {
   return { ...currentConfig };
+}
+
+export function getSafeConfig(): SafeStudioConfig {
+  const c = getConfig();
+  return {
+    ...c,
+    geminiApiKeyPreview: maskSecretKey(c.geminiApiKey),
+    hasGeminiKey: Boolean(c.geminiApiKey),
+    openaiApiKeyPreview: maskSecretKey(c.openaiApiKey),
+    hasOpenaiKey: Boolean(c.openaiApiKey),
+    anthropicApiKeyPreview: maskSecretKey(c.anthropicApiKey),
+    hasAnthropicKey: Boolean(c.anthropicApiKey),
+    customApiKeyPreview: maskSecretKey(c.customApiKey),
+    hasCustomKey: Boolean(c.customApiKey),
+  };
 }
 
 export function updateConfig(newConfig: Partial<StudioConfig>): StudioConfig {
@@ -79,8 +140,9 @@ export function updateConfig(newConfig: Partial<StudioConfig>): StudioConfig {
     }
     currentConfig.targetBaseUrl = raw;
   }
-  if (newConfig.geminiModel !== undefined) {
+  if (newConfig.geminiModel !== undefined && newConfig.geminiModel.trim()) {
     currentConfig.geminiModel = newConfig.geminiModel.trim();
+    process.env.GEMINI_MODEL = currentConfig.geminiModel;
   }
   if (newConfig.aiMode !== undefined) {
     currentConfig.aiMode = normalizeAiMode(newConfig.aiMode);
@@ -93,6 +155,42 @@ export function updateConfig(newConfig: Partial<StudioConfig>): StudioConfig {
   if (newConfig.aiCliModel !== undefined && newConfig.aiCliModel.trim()) {
     currentConfig.aiCliModel = newConfig.aiCliModel.trim();
     process.env.AI_CLI_MODEL = currentConfig.aiCliModel;
+  }
+  if (newConfig.aiApiProvider !== undefined) {
+    currentConfig.aiApiProvider = normalizeAiApiProvider(newConfig.aiApiProvider);
+    process.env.AI_API_PROVIDER = currentConfig.aiApiProvider;
+  }
+  if (newConfig.geminiApiKey !== undefined) {
+    currentConfig.geminiApiKey = newConfig.geminiApiKey.trim();
+    process.env.GEMINI_API_KEY = currentConfig.geminiApiKey;
+  }
+  if (newConfig.openaiApiKey !== undefined) {
+    currentConfig.openaiApiKey = newConfig.openaiApiKey.trim();
+    process.env.OPENAI_API_KEY = currentConfig.openaiApiKey;
+  }
+  if (newConfig.openaiModel !== undefined && newConfig.openaiModel.trim()) {
+    currentConfig.openaiModel = newConfig.openaiModel.trim();
+    process.env.OPENAI_MODEL = currentConfig.openaiModel;
+  }
+  if (newConfig.anthropicApiKey !== undefined) {
+    currentConfig.anthropicApiKey = newConfig.anthropicApiKey.trim();
+    process.env.ANTHROPIC_API_KEY = currentConfig.anthropicApiKey;
+  }
+  if (newConfig.anthropicModel !== undefined && newConfig.anthropicModel.trim()) {
+    currentConfig.anthropicModel = newConfig.anthropicModel.trim();
+    process.env.ANTHROPIC_MODEL = currentConfig.anthropicModel;
+  }
+  if (newConfig.customApiKey !== undefined) {
+    currentConfig.customApiKey = newConfig.customApiKey.trim();
+    process.env.CUSTOM_API_KEY = currentConfig.customApiKey;
+  }
+  if (newConfig.customBaseUrl !== undefined && newConfig.customBaseUrl.trim()) {
+    currentConfig.customBaseUrl = newConfig.customBaseUrl.trim();
+    process.env.CUSTOM_BASE_URL = currentConfig.customBaseUrl;
+  }
+  if (newConfig.customModel !== undefined && newConfig.customModel.trim()) {
+    currentConfig.customModel = newConfig.customModel.trim();
+    process.env.CUSTOM_MODEL = currentConfig.customModel;
   }
 
   // Update .env file to persist changes
@@ -109,6 +207,15 @@ export function updateConfig(newConfig: Partial<StudioConfig>): StudioConfig {
       AI_MODE: currentConfig.aiMode,
       AI_CLI_PROVIDER: currentConfig.aiCliProvider,
       AI_CLI_MODEL: currentConfig.aiCliModel,
+      AI_API_PROVIDER: currentConfig.aiApiProvider,
+      GEMINI_API_KEY: currentConfig.geminiApiKey,
+      OPENAI_API_KEY: currentConfig.openaiApiKey,
+      OPENAI_MODEL: currentConfig.openaiModel,
+      ANTHROPIC_API_KEY: currentConfig.anthropicApiKey,
+      ANTHROPIC_MODEL: currentConfig.anthropicModel,
+      CUSTOM_API_KEY: currentConfig.customApiKey,
+      CUSTOM_BASE_URL: currentConfig.customBaseUrl,
+      CUSTOM_MODEL: currentConfig.customModel,
     };
 
     for (const [key, val] of Object.entries(updates)) {

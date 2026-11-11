@@ -3,7 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import { spawn, spawnSync, execSync } from "child_process";
 import { GoogleGenAI } from "@google/genai";
-import { getConfig, AiExecutionMode, AiCliProvider } from "./configManager";
+import { getConfig, AiExecutionMode, AiCliProvider, AiApiProvider } from "./configManager";
 import { recordAiUsage } from "./aiUsageTracker";
 
 export interface CliModelOption {
@@ -33,6 +33,8 @@ export interface GenerateAiOptions {
   cliModelOverride?: string;
   disableCliFallback?: boolean;
   timeoutMs?: number;
+  apiProviderOverride?: AiApiProvider;
+  apiModelOverride?: string;
 }
 
 export interface GenerateAiResult {
@@ -1366,18 +1368,18 @@ export async function runCliPrompt(options: GenerateAiOptions): Promise<Generate
   throw lastError || new Error("모든 AI CLI 호출이 실패했습니다.");
 }
 
-export async function runApiPrompt(options: GenerateAiOptions): Promise<GenerateAiResult> {
+export async function runGeminiApiPrompt(options: GenerateAiOptions): Promise<GenerateAiResult> {
   const apiKeys = getGeminiApiKeys();
   if (apiKeys.length === 0) {
     throw new Error(
-      "GEMINI_API_KEY가 .env 파일에 설정되지 않았습니다. API 키를 설정하거나 대시보드 상단에서 '💻 CLI 모드'로 전환해주세요."
+      "Gemini API Key가 설정되지 않았습니다. 대시보드 상단 AI 모달에서 API 키를 입력하거나 '💻 CLI 모드'로 전환해주세요."
     );
   }
 
   const config = getConfig();
-  const primaryModel = normalizeApiModelId(config.geminiModel);
+  const primaryModel = normalizeApiModelId(options.apiModelOverride || config.geminiModel);
   const candidateModels = Array.from(
-    new Set([primaryModel, "gemini-3.1-flash-lite-preview", "gemini-2.5-flash", "gemini-2.0-flash"])
+    new Set([primaryModel, "gemini-2.5-flash", "gemini-3.1-flash-lite-preview", "gemini-2.0-flash"])
   );
 
   const contentsParts: any[] = [];
@@ -1450,6 +1452,233 @@ export async function runApiPrompt(options: GenerateAiOptions): Promise<Generate
   }
 
   throw lastError || new Error("Gemini API 호출에 실패했습니다.");
+}
+
+export async function runOpenAiApiPrompt(options: GenerateAiOptions, isCustom = false): Promise<GenerateAiResult> {
+  const config = getConfig();
+  const apiKey = isCustom
+    ? (config.customApiKey || process.env.CUSTOM_API_KEY || "no-key")
+    : (config.openaiApiKey || process.env.OPENAI_API_KEY || "");
+  const baseUrl = isCustom
+    ? (config.customBaseUrl || process.env.CUSTOM_BASE_URL || "https://api.deepseek.com/v1")
+    : "https://api.openai.com/v1";
+  const model =
+    options.apiModelOverride ||
+    (isCustom ? (config.customModel || "deepseek-chat") : (config.openaiModel || "gpt-4o-mini"));
+
+  if (!isCustom && !apiKey) {
+    throw new Error("OpenAI API Key가 설정되지 않았습니다. 대시보드 상단 AI 모달에서 API 키를 입력해주세요.");
+  }
+
+  const messages: any[] = [];
+  if (options.systemInstruction) {
+    messages.push({ role: "system", content: options.systemInstruction });
+  }
+
+  if (Array.isArray(options.imagesBase64) && options.imagesBase64.length > 0) {
+    const userContent: any[] = [];
+    for (const img of options.imagesBase64) {
+      if (img && img.data) {
+        const mime = img.mimeType || "image/jpeg";
+        userContent.push({
+          type: "image_url",
+          image_url: { url: `data:${mime};base64,${img.data}` },
+        });
+      }
+    }
+    userContent.push({ type: "text", text: options.prompt });
+    messages.push({ role: "user", content: userContent });
+  } else {
+    messages.push({ role: "user", content: options.prompt });
+  }
+
+  const reqBody: any = {
+    model,
+    messages,
+    temperature: options.temperature ?? 0.2,
+  };
+  if (options.jsonMode) {
+    reqBody.response_format = { type: "json_object" };
+  }
+
+  const endpoint = `${baseUrl.replace(/\/+$/, "")}/chat/completions`;
+  const controller = new AbortController();
+  const timeoutMs = options.timeoutMs || 45000;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(reqBody),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      let errMsg = `HTTP ${res.status}`;
+      try {
+        const errJson = JSON.parse(errText);
+        errMsg = errJson.error?.message || errJson.message || errText;
+      } catch {
+        errMsg = errText || errMsg;
+      }
+      throw new Error(`[${isCustom ? "Custom/DeepSeek" : "OpenAI"}] API 오류: ${errMsg}`);
+    }
+
+    const data: any = await res.json();
+    const rawText = String(data.choices?.[0]?.message?.content || "").trim();
+    const finalText = options.jsonMode ? cleanJsonResponse(rawText) : rawText;
+    if (!finalText) {
+      throw new Error(`[${isCustom ? "Custom" : "OpenAI"}] 응답이 비어있습니다.`);
+    }
+
+    const usage = data.usage || {};
+    recordAiUsage({
+      feature: options.feature,
+      model,
+      mode: "api",
+      usageMetadata: {
+        promptTokenCount: usage.prompt_tokens || 0,
+        candidatesTokenCount: usage.completion_tokens || 0,
+        totalTokenCount: usage.total_tokens || 0,
+      },
+      slug: options.slug,
+      fallbackPromptChars: (options.systemInstruction?.length || 0) + options.prompt.length,
+      fallbackOutputChars: finalText.length,
+    });
+
+    return {
+      text: finalText,
+      modelUsed: model,
+      mode: "api",
+      usageMetadata: usage,
+    };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+export async function runAnthropicApiPrompt(options: GenerateAiOptions): Promise<GenerateAiResult> {
+  const config = getConfig();
+  const apiKey = config.anthropicApiKey || process.env.ANTHROPIC_API_KEY || "";
+  const model = options.apiModelOverride || config.anthropicModel || "claude-3-5-sonnet-20241022";
+
+  if (!apiKey) {
+    throw new Error("Anthropic Claude API Key가 설정되지 않았습니다. 대시보드 상단 AI 모달에서 API 키를 입력해주세요.");
+  }
+
+  const userContent: any[] = [];
+  if (Array.isArray(options.imagesBase64) && options.imagesBase64.length > 0) {
+    for (const img of options.imagesBase64) {
+      if (img && img.data) {
+        userContent.push({
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: img.mimeType || "image/jpeg",
+            data: img.data,
+          },
+        });
+      }
+    }
+  }
+  userContent.push({ type: "text", text: options.prompt });
+
+  let systemPrompt = options.systemInstruction || "";
+  if (options.jsonMode && !systemPrompt.includes("JSON")) {
+    systemPrompt += "\nYou must respond strictly with a valid JSON object only. No markdown formatting, no code fences.";
+  }
+
+  const reqBody: any = {
+    model,
+    max_tokens: 4096,
+    temperature: options.temperature ?? 0.2,
+    messages: [{ role: "user", content: userContent }],
+  };
+  if (systemPrompt) {
+    reqBody.system = systemPrompt;
+  }
+
+  const endpoint = "https://api.anthropic.com/v1/messages";
+  const controller = new AbortController();
+  const timeoutMs = options.timeoutMs || 45000;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify(reqBody),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      let errMsg = `HTTP ${res.status}`;
+      try {
+        const errJson = JSON.parse(errText);
+        errMsg = errJson.error?.message || errJson.message || errText;
+      } catch {
+        errMsg = errText || errMsg;
+      }
+      throw new Error(`[Claude API] 오류: ${errMsg}`);
+    }
+
+    const data: any = await res.json();
+    const rawText = String(data.content?.[0]?.text || "").trim();
+    const finalText = options.jsonMode ? cleanJsonResponse(rawText) : rawText;
+    if (!finalText) {
+      throw new Error("[Claude API] 응답이 비어있습니다.");
+    }
+
+    const usage = data.usage || {};
+    recordAiUsage({
+      feature: options.feature,
+      model,
+      mode: "api",
+      usageMetadata: {
+        promptTokenCount: usage.input_tokens || 0,
+        candidatesTokenCount: usage.output_tokens || 0,
+        totalTokenCount: (usage.input_tokens || 0) + (usage.output_tokens || 0),
+      },
+      slug: options.slug,
+      fallbackPromptChars: (options.systemInstruction?.length || 0) + options.prompt.length,
+      fallbackOutputChars: finalText.length,
+    });
+
+    return {
+      text: finalText,
+      modelUsed: model,
+      mode: "api",
+      usageMetadata: usage,
+    };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+export async function runApiPrompt(options: GenerateAiOptions): Promise<GenerateAiResult> {
+  const config = getConfig();
+  const provider = options.apiProviderOverride || config.aiApiProvider || "gemini";
+
+  if (provider === "openai") {
+    return runOpenAiApiPrompt(options, false);
+  }
+  if (provider === "anthropic") {
+    return runAnthropicApiPrompt(options);
+  }
+  if (provider === "custom") {
+    return runOpenAiApiPrompt(options, true);
+  }
+  return runGeminiApiPrompt(options);
 }
 
 export async function generateAiContent(options: GenerateAiOptions): Promise<GenerateAiResult> {

@@ -18,7 +18,7 @@ import {
 } from "../src/services/scenarioManager";
 import { recordRunner } from "../src/services/recordRunner";
 import { renderRunner } from "../src/services/renderRunner";
-import { getConfig, updateConfig, analyzeProject } from "../src/services/configManager";
+import { getConfig, getSafeConfig, updateConfig, analyzeProject } from "../src/services/configManager";
 import { UNIVERSAL_TUTORIAL_TEMPLATES } from "../src/services/tutorialTemplates";
 
 import {
@@ -98,17 +98,29 @@ app.get("/api/status", (_req: Request, res: Response) => {
     }
   }
 
+  const safeConfig = getSafeConfig();
   res.json({
-    geminiApiKeySet: !!apiKey,
-    geminiApiKeyPreview: apiKey ? apiKey.substring(0, 8) + "..." : "미설정",
-    geminiModel: config.geminiModel,
-    aiMode: config.aiMode,
-    aiCliProvider: config.aiCliProvider,
-    aiCliModel: config.aiCliModel,
+    geminiApiKeySet: safeConfig.hasGeminiKey,
+    geminiApiKeyPreview: safeConfig.geminiApiKeyPreview,
+    geminiModel: safeConfig.geminiModel,
+    openaiApiKeySet: safeConfig.hasOpenaiKey,
+    openaiApiKeyPreview: safeConfig.openaiApiKeyPreview,
+    openaiModel: safeConfig.openaiModel,
+    anthropicApiKeySet: safeConfig.hasAnthropicKey,
+    anthropicApiKeyPreview: safeConfig.anthropicApiKeyPreview,
+    anthropicModel: safeConfig.anthropicModel,
+    customApiKeySet: safeConfig.hasCustomKey,
+    customApiKeyPreview: safeConfig.customApiKeyPreview,
+    customBaseUrl: safeConfig.customBaseUrl,
+    customModel: safeConfig.customModel,
+    aiApiProvider: safeConfig.aiApiProvider,
+    aiMode: safeConfig.aiMode,
+    aiCliProvider: safeConfig.aiCliProvider,
+    aiCliModel: safeConfig.aiCliModel,
     availableClis: detectAvailableClis(),
-    targetProjectPath: config.targetProjectPath,
+    targetProjectPath: safeConfig.targetProjectPath,
     targetProjectExists: analysis.exists,
-    targetBaseUrl: config.targetBaseUrl,
+    targetBaseUrl: safeConfig.targetBaseUrl,
     hasAuthSession: hasAuth,
     authSessionPath: existingAuth,
     activeSlug: getActiveSlug(),
@@ -119,18 +131,63 @@ app.get("/api/status", (_req: Request, res: Response) => {
 
 // 1-B. AI Token Usage, Cost & Execution Mode APIs
 app.get("/api/ai-usage", (_req: Request, res: Response) => {
-  const config = getConfig();
-  const apiKey = getGeminiApiKeys()[0] || "";
+  const safeConfig = getSafeConfig();
   res.json({
     ...getAiUsageSummary(),
-    aiMode: config.aiMode,
-    aiCliProvider: config.aiCliProvider,
-    aiCliModel: config.aiCliModel,
-    geminiModel: config.geminiModel,
-    geminiApiKeySet: !!apiKey,
-    geminiApiKeyPreview: apiKey ? apiKey.substring(0, 8) + "..." : "미설정",
+    aiMode: safeConfig.aiMode,
+    aiCliProvider: safeConfig.aiCliProvider,
+    aiCliModel: safeConfig.aiCliModel,
+    aiApiProvider: safeConfig.aiApiProvider || "gemini",
+    geminiModel: safeConfig.geminiModel,
+    geminiApiKeySet: safeConfig.hasGeminiKey,
+    geminiApiKeyPreview: safeConfig.geminiApiKeyPreview,
+    openaiModel: safeConfig.openaiModel,
+    openaiApiKeySet: safeConfig.hasOpenaiKey,
+    openaiApiKeyPreview: safeConfig.openaiApiKeyPreview,
+    anthropicModel: safeConfig.anthropicModel,
+    anthropicApiKeySet: safeConfig.hasAnthropicKey,
+    anthropicApiKeyPreview: safeConfig.anthropicApiKeyPreview,
+    customApiKeySet: safeConfig.hasCustomKey,
+    customApiKeyPreview: safeConfig.customApiKeyPreview,
+    customBaseUrl: safeConfig.customBaseUrl,
+    customModel: safeConfig.customModel,
     availableClis: detectAvailableClis(),
   });
+});
+
+app.post("/api/ai-api-config", (req: Request, res: Response) => {
+  try {
+    const {
+      aiApiProvider,
+      geminiApiKey,
+      geminiModel,
+      openaiApiKey,
+      openaiModel,
+      anthropicApiKey,
+      anthropicModel,
+      customApiKey,
+      customBaseUrl,
+      customModel,
+    } = req.body || {};
+
+    const updates: any = {};
+    if (aiApiProvider) updates.aiApiProvider = aiApiProvider;
+    if (geminiApiKey !== undefined) updates.geminiApiKey = geminiApiKey;
+    if (geminiModel !== undefined) updates.geminiModel = geminiModel;
+    if (openaiApiKey !== undefined) updates.openaiApiKey = openaiApiKey;
+    if (openaiModel !== undefined) updates.openaiModel = openaiModel;
+    if (anthropicApiKey !== undefined) updates.anthropicApiKey = anthropicApiKey;
+    if (anthropicModel !== undefined) updates.anthropicModel = anthropicModel;
+    if (customApiKey !== undefined) updates.customApiKey = customApiKey;
+    if (customBaseUrl !== undefined) updates.customBaseUrl = customBaseUrl;
+    if (customModel !== undefined) updates.customModel = customModel;
+
+    updateConfig(updates);
+    const safeConfig = getSafeConfig();
+    res.json({ success: true, config: safeConfig });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 app.post("/api/ai-usage/reset", (_req: Request, res: Response) => {
@@ -139,21 +196,22 @@ app.post("/api/ai-usage/reset", (_req: Request, res: Response) => {
 
 app.post("/api/ai-mode", (req: Request, res: Response) => {
   try {
-    const { aiMode, aiCliProvider, aiCliModel, geminiModel } = req.body || {};
+    const { aiMode, aiCliProvider, aiCliModel, geminiModel, aiApiProvider } = req.body || {};
     const updated = updateConfig({
       aiMode,
       aiCliProvider,
       aiCliModel,
       geminiModel,
+      aiApiProvider,
     });
     console.log(
       `[Dashboard AI Mode] 실행 모드 변경: ${updated.aiMode.toUpperCase()} (${
-        updated.aiMode === "cli" ? `${updated.aiCliProvider}/${updated.aiCliModel}` : updated.geminiModel
+        updated.aiMode === "cli" ? `${updated.aiCliProvider}/${updated.aiCliModel}` : `${updated.aiApiProvider || "gemini"}`
       })`
     );
     res.json({
       success: true,
-      config: updated,
+      config: getSafeConfig(),
       availableClis: detectAvailableClis(),
     });
   } catch (err: any) {
@@ -163,7 +221,29 @@ app.post("/api/ai-mode", (req: Request, res: Response) => {
 
 app.post("/api/ai-mode/test", async (req: Request, res: Response) => {
   try {
-    const { aiMode, aiCliProvider, aiCliModel } = req.body || {};
+    const {
+      aiMode,
+      aiCliProvider,
+      aiCliModel,
+      aiApiProvider,
+      aiApiKey,
+      aiApiModel,
+      aiCustomBaseUrl,
+    } = req.body || {};
+
+    if (aiApiKey && typeof aiApiKey === "string" && aiApiKey.trim()) {
+      const cleanKey = aiApiKey.trim();
+      const prov = aiApiProvider || "gemini";
+      if (prov === "openai") process.env.OPENAI_API_KEY = cleanKey;
+      else if (prov === "anthropic") process.env.ANTHROPIC_API_KEY = cleanKey;
+      else if (prov === "custom") {
+        process.env.CUSTOM_API_KEY = cleanKey;
+        if (aiCustomBaseUrl) process.env.CUSTOM_BASE_URL = aiCustomBaseUrl.trim();
+      } else {
+        process.env.GEMINI_API_KEY = cleanKey;
+      }
+    }
+
     const startMs = Date.now();
     const result = await generateAiContent({
       feature: "AI 연결 테스트",
@@ -173,6 +253,8 @@ app.post("/api/ai-mode/test", async (req: Request, res: Response) => {
       forceMode: aiMode,
       cliProviderOverride: aiCliProvider,
       cliModelOverride: aiCliModel,
+      apiProviderOverride: aiApiProvider,
+      apiModelOverride: aiApiModel,
       disableCliFallback: true,
       timeoutMs: 30_000,
     });
@@ -195,7 +277,11 @@ app.post("/api/ai-mode/test", async (req: Request, res: Response) => {
 app.get("/api/auth/status", async (req: Request, res: Response) => {
   try {
     const config = getConfig();
-    const url = (req.query.url as string) || config.targetBaseUrl || "https://gwdev.unison.co.kr";
+    const url = (req.query.url as string) || config.targetBaseUrl || "";
+    if (!url) {
+      res.json({ authenticated: false, message: "접속 URL이 지정되지 않았습니다." });
+      return;
+    }
     const slug = (req.query.slug as string) || undefined;
     const authPath = findExistingAuthSession(slug);
 
@@ -261,17 +347,18 @@ app.post("/api/auth/complete", (_req: Request, res: Response) => {
 
 // Dynamic Config Management APIs
 app.get("/api/config", (_req: Request, res: Response) => {
-  const config = getConfig();
-  const analysis = analyzeProject(config.targetProjectPath);
-  res.json({ config, analysis });
+  const safeConfig = getSafeConfig();
+  const analysis = analyzeProject(safeConfig.targetProjectPath);
+  res.json({ config: safeConfig, analysis });
 });
 
 app.post("/api/config", (req: Request, res: Response) => {
   try {
     const updated = updateConfig(req.body);
+    const safeConfig = getSafeConfig();
     const analysis = analyzeProject(updated.targetProjectPath);
-    console.log(`[Dashboard Config] 타겟 설정 변경: ${updated.targetProjectPath || '(Live URL 모드)'} (${updated.targetBaseUrl})`);
-    res.json({ success: true, config: updated, analysis });
+    console.log(`[Dashboard Config] 타겟 설정 변경: ${updated.targetProjectPath || '(Live URL 모드)'} (${updated.targetBaseUrl || 'URL 미설정'})`);
+    res.json({ success: true, config: safeConfig, analysis });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

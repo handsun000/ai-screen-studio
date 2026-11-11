@@ -426,11 +426,61 @@ let latestAiStatusData = {
   aiMode: "api",
   aiCliProvider: "agy",
   aiCliModel: "gemini-3.8-flash-low",
-  geminiModel: "gemini-3.8-flash",
+  aiApiProvider: "gemini",
+  geminiModel: "gemini-2.5-flash",
   geminiApiKeySet: false,
   geminiApiKeyPreview: "미설정",
+  openaiModel: "gpt-4o-mini",
+  openaiApiKeySet: false,
+  openaiApiKeyPreview: "미설정",
+  anthropicModel: "claude-3-5-sonnet-20241022",
+  anthropicApiKeySet: false,
+  anthropicApiKeyPreview: "미설정",
+  customModel: "deepseek-chat",
+  customApiKeySet: false,
+  customApiKeyPreview: "미설정",
+  customBaseUrl: "https://api.deepseek.com/v1",
   availableClis: [],
 };
+
+function getActiveApiProviderInfo(data = latestAiStatusData) {
+  const prov = data.aiApiProvider || "gemini";
+  if (prov === "openai") {
+    return {
+      provider: "openai",
+      label: "OpenAI",
+      model: data.openaiModel || "gpt-4o-mini",
+      hasKey: Boolean(data.openaiApiKeySet),
+      keyPreview: data.openaiApiKeyPreview || "미설정",
+    };
+  }
+  if (prov === "anthropic") {
+    return {
+      provider: "anthropic",
+      label: "Claude",
+      model: data.anthropicModel || "claude-3-5-sonnet-20241022",
+      hasKey: Boolean(data.anthropicApiKeySet),
+      keyPreview: data.anthropicApiKeyPreview || "미설정",
+    };
+  }
+  if (prov === "custom") {
+    return {
+      provider: "custom",
+      label: "Custom",
+      model: data.customModel || "deepseek-chat",
+      hasKey: Boolean(data.customApiKeySet),
+      keyPreview: data.customApiKeyPreview || "미설정",
+      baseUrl: data.customBaseUrl || "https://api.deepseek.com/v1",
+    };
+  }
+  return {
+    provider: "gemini",
+    label: "Gemini",
+    model: data.geminiModel || "gemini-2.5-flash",
+    hasKey: Boolean(data.geminiApiKeySet),
+    keyPreview: data.geminiApiKeyPreview || "미설정",
+  };
+}
 
 function syncAiModeUI(data) {
   if (data) {
@@ -454,12 +504,15 @@ function syncAiModeUI(data) {
     const cliModel = latestAiStatusData.aiCliModel || "gemini-3.8-flash-low";
     pillAi.innerHTML = `<span class="status-dot" style="background:var(--ok)"></span><span>CLI · ${provider} (${cliModel})</span>`;
     pillAi.title = `현재 💻 로컬 CLI 모드 활성 (${provider}/${cliModel} · API 요금 ₩0) — 클릭하여 모델 변경 및 사용량 보기`;
-  } else if (latestAiStatusData.geminiApiKeySet) {
-    pillAi.innerHTML = `<span class="status-dot"></span><span>API · ${latestAiStatusData.geminiModel || "gemini-3.8-flash"}</span>`;
-    pillAi.title = `현재 🔌 API 모드 활성 (API Key: ${latestAiStatusData.geminiApiKeyPreview}) — 클릭하여 CLI/API 모드 설정 및 사용량 보기`;
   } else {
-    pillAi.innerHTML = `<span class="status-dot" style="background:var(--fail)"></span><span>API · Key 미설정 (CLI 전환 가능)</span>`;
-    pillAi.title = "GEMINI_API_KEY가 설정되지 않았습니다. 옆의 [💻 CLI] 버튼을 누르거나 클릭하여 모드를 변경하세요.";
+    const activeApi = getActiveApiProviderInfo(latestAiStatusData);
+    if (activeApi.hasKey) {
+      pillAi.innerHTML = `<span class="status-dot"></span><span>API · ${activeApi.label} (${activeApi.model})</span>`;
+      pillAi.title = `현재 🔌 API 모드 활성 (${activeApi.label} · Key: ${activeApi.keyPreview}) — 클릭하여 API Key 설정 및 사용량 보기`;
+    } else {
+      pillAi.innerHTML = `<span class="status-dot" style="background:var(--fail)"></span><span>API · ${activeApi.label} Key 미설정 (클릭)</span>`;
+      pillAi.title = `${activeApi.label} API Key가 설정되지 않았습니다. 클릭하여 API Key를 직접 입력하거나 [💻 CLI] 모드로 전환하세요.`;
+    }
   }
 }
 
@@ -475,10 +528,7 @@ async function switchAiExecutionModeQuick(nextMode, extra = {}) {
     if (!res.ok) throw new Error(data.error || "AI 모드 변경 실패");
     if (data.config) {
       syncAiModeUI({
-        aiMode: data.config.aiMode,
-        aiCliProvider: data.config.aiCliProvider,
-        aiCliModel: data.config.aiCliModel,
-        geminiModel: data.config.geminiModel,
+        ...data.config,
         availableClis: data.availableClis || latestAiStatusData.availableClis,
       });
     }
@@ -529,12 +579,73 @@ async function openAiUsageModal() {
     const total = usage.total || { calls: 0, promptTokens: 0, outputTokens: 0, totalTokens: 0, costUsd: 0, costKrw: 0 };
     const history = Array.isArray(usage.recentHistory) ? usage.recentHistory : [];
 
+    latestAiStatusData = {
+      ...latestAiStatusData,
+      ...usage,
+    };
+    syncAiModeUI();
+
     const currentMode = usage.aiMode || latestAiStatusData.aiMode || "api";
-    const currentCliProvider = usage.aiCliProvider || latestAiStatusData.aiCliProvider || "agy";
-    const currentCliModel = usage.aiCliModel || latestAiStatusData.aiCliModel || "gemini-3.8-flash-low";
+    let selectedApiProvider = usage.aiApiProvider || latestAiStatusData.aiApiProvider || "gemini";
+    let currentCliProvider = usage.aiCliProvider || latestAiStatusData.aiCliProvider || "agy";
+    let currentCliModel = usage.aiCliModel || latestAiStatusData.aiCliModel || "gemini-3.8-flash-low";
     const rawClis = Array.isArray(usage.availableClis)
       ? usage.availableClis
       : latestAiStatusData.availableClis || [];
+
+    const apiProviderConfigs = {
+      gemini: {
+        id: "gemini",
+        label: "Google Gemini",
+        desc: "Gemini 2.5 Flash / Pro (멀티모달 고속 지원)",
+        defaultModel: "gemini-2.5-flash",
+        model: usage.geminiModel || "gemini-2.5-flash",
+        hasKey: Boolean(usage.geminiApiKeySet),
+        keyPreview: usage.geminiApiKeyPreview || "미설정",
+        keyPlaceholder: "Google AI Studio API Key (AIza...) 입력",
+        keyHint: "Google AI Studio(aistudio.google.com)에서 발급받은 API 키를 입력하세요.",
+        showBaseUrl: false,
+      },
+      openai: {
+        id: "openai",
+        label: "OpenAI",
+        desc: "GPT-4o / GPT-4.1 / o3-mini (OpenAI REST API)",
+        defaultModel: "gpt-4o-mini",
+        model: usage.openaiModel || "gpt-4o-mini",
+        hasKey: Boolean(usage.openaiApiKeySet),
+        keyPreview: usage.openaiApiKeyPreview || "미설정",
+        keyPlaceholder: "OpenAI API Key (sk-...) 입력",
+        keyHint: "OpenAI 플랫폼(platform.openai.com)에서 발급받은 API 키를 입력하세요.",
+        showBaseUrl: false,
+      },
+      anthropic: {
+        id: "anthropic",
+        label: "Anthropic Claude",
+        desc: "Claude 3.5 Sonnet / 3.7 (Anthropic Messages API)",
+        defaultModel: "claude-3-5-sonnet-20241022",
+        model: usage.anthropicModel || "claude-3-5-sonnet-20241022",
+        hasKey: Boolean(usage.anthropicApiKeySet),
+        keyPreview: usage.anthropicApiKeyPreview || "미설정",
+        keyPlaceholder: "Anthropic API Key (sk-ant-...) 입력",
+        keyHint: "Anthropic 콘솔(console.anthropic.com)에서 발급받은 API 키를 입력하세요.",
+        showBaseUrl: false,
+      },
+      custom: {
+        id: "custom",
+        label: "OpenAI 호환 API (DeepSeek / 사내 LLM)",
+        desc: "DeepSeek, vLLM, Ollama Web 등 호환 엔드포인트",
+        defaultModel: "deepseek-chat",
+        model: usage.customModel || "deepseek-chat",
+        baseUrl: usage.customBaseUrl || "https://api.deepseek.com/v1",
+        hasKey: Boolean(usage.customApiKeySet),
+        keyPreview: usage.customApiKeyPreview || "미설정",
+        keyPlaceholder: "API Key (DeepSeek 등) 입력",
+        keyHint: "DeepSeek 또는 사내/로컬 LLM Base URL 및 API 키를 입력하세요.",
+        showBaseUrl: true,
+      },
+    };
+
+    let activeApiCfg = apiProviderConfigs[selectedApiProvider] || apiProviderConfigs.gemini;
 
     const fullCliCatalog = [
       {
@@ -730,13 +841,13 @@ async function openAiUsageModal() {
           <div class="ai-mode-card-grid" style="margin-bottom:10px;">
             <div class="ai-mode-option-card ${currentMode === "api" ? "selected-api" : ""}" id="card-select-api-mode" style="padding:10px 13px;">
               <div class="ai-mode-card-header-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:nowrap;white-space:nowrap;margin-bottom:4px;">
-                <span style="font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">🔌 API 모드 (Gemini SDK)</span>
-                <span class="status-tag" style="flex-shrink:0;white-space:nowrap;background:${usage.geminiApiKeySet ? "var(--accent-soft)" : "var(--fail-soft)"};color:${usage.geminiApiKeySet ? "var(--accent)" : "var(--fail)"};">
-                  ${usage.geminiApiKeySet ? `Key: ${usage.geminiApiKeyPreview}` : "Key 미설정"}
+                <span style="font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="card-api-title">🔌 API 모드 (${activeApiCfg.label})</span>
+                <span class="status-tag" id="card-api-status-tag" style="flex-shrink:0;white-space:nowrap;background:${activeApiCfg.hasKey ? "var(--accent-soft)" : "var(--fail-soft)"};color:${activeApiCfg.hasKey ? "var(--accent)" : "var(--fail)"};">
+                  ${activeApiCfg.hasKey ? `Key: ${activeApiCfg.keyPreview}` : "Key 미설정"}
                 </span>
               </div>
-              <div style="font-size:11.5px;color:var(--text-2);line-height:1.4;">
-                <code>.env</code>에 설정된 <code>GEMINI_API_KEY</code>로 직접 호출합니다. 응답 속도가 가장 빠르며 멀티모달 화면 이미지 분석을 지원합니다.
+              <div style="font-size:11.5px;color:var(--text-2);line-height:1.4;" id="card-api-desc">
+                <strong>Gemini</strong> · <strong>OpenAI</strong> · <strong>Claude</strong> · <strong>DeepSeek</strong> 등 API Key를 입력하여 직접 호출합니다. 설치 없이 즉시 사용할 수 있습니다.
               </div>
             </div>
 
@@ -751,7 +862,45 @@ async function openAiUsageModal() {
             </div>
           </div>
 
-          <div id="modal-cli-settings-box" style="background:var(--layer);border:1px solid var(--stroke);border-radius:var(--r-card);padding:9px 12px;margin-bottom:10px;">
+          <!-- API Settings Box -->
+          <div id="modal-api-settings-box" style="background:var(--layer);border:1px solid var(--stroke);border-radius:var(--r-card);padding:10px 14px;margin-bottom:10px;display:${currentMode === "api" ? "block" : "none"};">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+              <span style="font-size:12px;font-weight:600;color:var(--text-2);min-width:76px;flex-shrink:0;">🔌 AI 공급자:</span>
+              <select id="modal-api-provider-select" class="narration-select" style="flex:1 1 200px;min-width:0;">
+                <option value="gemini" ${selectedApiProvider === "gemini" ? "selected" : ""}>Google Gemini (Gemini 2.5 Flash / Pro)</option>
+                <option value="openai" ${selectedApiProvider === "openai" ? "selected" : ""}>OpenAI (GPT-4o / GPT-4.1 / o3-mini)</option>
+                <option value="anthropic" ${selectedApiProvider === "anthropic" ? "selected" : ""}>Anthropic Claude (Claude 3.5 Sonnet / 3.7)</option>
+                <option value="custom" ${selectedApiProvider === "custom" ? "selected" : ""}>OpenAI 호환 API (DeepSeek / vLLM / 사내 LLM)</option>
+              </select>
+              <span style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;flex-shrink:0;">모델:</span>
+              <input id="modal-api-model-input" class="narration-select" style="flex:1.2 1 180px;min-width:0;padding:4px 8px;font-family:var(--font-mono);font-size:11.5px;" value="${activeApiCfg.model}" placeholder="${activeApiCfg.defaultModel}">
+            </div>
+
+            <div id="modal-api-custom-row" style="display:${activeApiCfg.showBaseUrl ? "flex" : "none"};align-items:center;gap:8px;margin-bottom:8px;">
+              <span style="font-size:12px;font-weight:600;color:var(--text-2);min-width:76px;flex-shrink:0;">🌐 Base URL:</span>
+              <input id="modal-api-base-url-input" class="narration-select" style="flex:1;min-width:0;padding:4px 8px;font-family:var(--font-mono);font-size:11.5px;" value="${apiProviderConfigs.custom.baseUrl || ""}" placeholder="https://api.deepseek.com/v1">
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;">
+              <span style="font-size:12px;font-weight:600;color:var(--text-2);min-width:76px;flex-shrink:0;">🔑 API Key:</span>
+              <div style="position:relative;flex:1;min-width:0;display:flex;align-items:center;">
+                <input id="modal-api-key-input" type="password" class="narration-select" style="width:100%;padding:4px 30px 4px 8px;font-family:var(--font-mono);font-size:11.5px;" placeholder="${activeApiCfg.hasKey ? `저장됨 (${activeApiCfg.keyPreview}) — 변경 시 새 키 입력` : activeApiCfg.keyPlaceholder}">
+                <button type="button" id="btn-toggle-api-key-vis" title="키 표시/숨김" style="position:absolute;right:6px;background:none;border:none;cursor:pointer;padding:2px;font-size:12px;color:var(--text-3);">👁️</button>
+              </div>
+              <button type="button" class="btn btn-sm btn-primary" id="btn-save-api-key" style="white-space:nowrap;flex-shrink:0;">
+                💾 키 저장
+              </button>
+              <button type="button" class="btn btn-sm btn-outline" id="btn-test-api-mode" style="white-space:nowrap;flex-shrink:0;">
+                ⚡ 연결 테스트
+              </button>
+            </div>
+            <div id="modal-api-test-result" style="font-size:11.5px;color:var(--text-3);margin-top:6px;font-family:var(--font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              ※ API Key를 입력 후 [💾 키 저장]을 누르면 즉시 연결되며, 프로그램 재시작 시에도 유지됩니다.
+            </div>
+          </div>
+
+          <!-- CLI Settings Box -->
+          <div id="modal-cli-settings-box" style="background:var(--layer);border:1px solid var(--stroke);border-radius:var(--r-card);padding:10px 14px;margin-bottom:10px;display:${currentMode === "cli" ? "block" : "none"};">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;">
               <span style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;flex-shrink:0;">💻 로컬 CLI 도구:</span>
               <select id="modal-cli-provider-select" class="narration-select" style="flex:1 1 210px;min-width:0;">
@@ -761,12 +910,12 @@ async function openAiUsageModal() {
               <select id="modal-cli-model-select" class="narration-select" style="flex:1.15 1 240px;min-width:0;">
                 ${getModelsHtmlForProvider(currentCliProvider, currentCliModel)}
               </select>
-              <button type="button" class="btn btn-sm btn-outline" id="btn-test-ai-mode" style="white-space:nowrap;flex-shrink:0;">
+              <button type="button" class="btn btn-sm btn-outline" id="btn-test-cli-mode" style="white-space:nowrap;flex-shrink:0;">
                 ⚡ 연결 테스트
               </button>
             </div>
-            <div id="modal-ai-test-result" style="font-size:11.5px;color:var(--text-3);margin-top:5px;font-family:var(--font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-              ※ 상단 헤더 우측의 <strong>[🔌 API | 💻 CLI]</strong> 스위치로도 언제든 1클릭 전환할 수 있습니다.
+            <div id="modal-cli-test-result" style="font-size:11.5px;color:var(--text-3);margin-top:6px;font-family:var(--font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              ※ PC에 설치 및 로그인된 CLI 도구를 호출하여 API 요금(₩0) 없이 무료로 사용합니다.
             </div>
           </div>
 
@@ -825,7 +974,7 @@ async function openAiUsageModal() {
             </table>
           </div>
           <div style="margin-top:6px;font-size:11px;color:var(--text-3);display:flex;justify-content:space-between;white-space:nowrap;gap:8px;">
-            <span>※ API 모드: Google AI Studio 공식 단가($1 = ₩${usage.exchangeRateKrw || 1400}) 기준 추정치</span>
+            <span>※ API 모드: Google/OpenAI/Anthropic 공식 단가($1 = ₩${usage.exchangeRateKrw || 1400}) 기준 추정치</span>
             <span>💻 CLI 모드 호출은 구독 세션을 사용하므로 API 요금이 ₩0원입니다.</span>
           </div>
         </div>
@@ -841,72 +990,240 @@ async function openAiUsageModal() {
     let selectedModeInModal = currentMode;
     const apiCard = overlay.querySelector("#card-select-api-mode");
     const cliCard = overlay.querySelector("#card-select-cli-mode");
-    const providerSelect = overlay.querySelector("#modal-cli-provider-select");
-    const modelSelect = overlay.querySelector("#modal-cli-model-select");
-    const testBtn = overlay.querySelector("#btn-test-ai-mode");
-    const testResultEl = overlay.querySelector("#modal-ai-test-result");
+    const apiSettingsBox = overlay.querySelector("#modal-api-settings-box");
+    const cliSettingsBox = overlay.querySelector("#modal-cli-settings-box");
+
+    const apiProviderSelect = overlay.querySelector("#modal-api-provider-select");
+    const apiModelInput = overlay.querySelector("#modal-api-model-input");
+    const apiCustomRow = overlay.querySelector("#modal-api-custom-row");
+    const apiBaseUrlInput = overlay.querySelector("#modal-api-base-url-input");
+    const apiKeyInput = overlay.querySelector("#modal-api-key-input");
+    const apiKeyToggleBtn = overlay.querySelector("#btn-toggle-api-key-vis");
+    const saveApiKeyBtn = overlay.querySelector("#btn-save-api-key");
+    const testApiBtn = overlay.querySelector("#btn-test-api-mode");
+    const apiTestResultEl = overlay.querySelector("#modal-api-test-result");
+
+    const cliProviderSelect = overlay.querySelector("#modal-cli-provider-select");
+    const cliModelSelect = overlay.querySelector("#modal-cli-model-select");
+    const testCliBtn = overlay.querySelector("#btn-test-cli-mode");
+    const cliTestResultEl = overlay.querySelector("#modal-cli-test-result");
+
+    const refreshApiCardAndInputs = (provId) => {
+      const cfg = apiProviderConfigs[provId] || apiProviderConfigs.gemini;
+      const cardTitle = overlay.querySelector("#card-api-title");
+      const cardStatus = overlay.querySelector("#card-api-status-tag");
+      if (cardTitle) cardTitle.textContent = `🔌 API 모드 (${cfg.label})`;
+      if (cardStatus) {
+        cardStatus.textContent = cfg.hasKey ? `Key: ${cfg.keyPreview}` : "Key 미설정";
+        cardStatus.style.background = cfg.hasKey ? "var(--accent-soft)" : "var(--fail-soft)";
+        cardStatus.style.color = cfg.hasKey ? "var(--accent)" : "var(--fail)";
+      }
+      if (apiModelInput) {
+        apiModelInput.value = cfg.model || cfg.defaultModel;
+        apiModelInput.placeholder = cfg.defaultModel;
+      }
+      if (apiCustomRow) {
+        apiCustomRow.style.display = cfg.showBaseUrl ? "flex" : "none";
+      }
+      if (apiKeyInput) {
+        apiKeyInput.value = "";
+        apiKeyInput.placeholder = cfg.hasKey
+          ? `저장됨 (${cfg.keyPreview}) — 변경 시 새 키 입력`
+          : cfg.keyPlaceholder;
+      }
+    };
 
     const applyModalModeSelection = async (nextMode) => {
       selectedModeInModal = nextMode;
       apiCard?.classList.toggle("selected-api", nextMode === "api");
       cliCard?.classList.toggle("selected-cli", nextMode === "cli");
+      if (apiSettingsBox) apiSettingsBox.style.display = nextMode === "api" ? "block" : "none";
+      if (cliSettingsBox) cliSettingsBox.style.display = nextMode === "cli" ? "block" : "none";
+
       await switchAiExecutionModeQuick(nextMode, {
-        aiCliProvider: providerSelect?.value || "agy",
-        aiCliModel: modelSelect?.value || "gemini-3.8-flash-low",
+        aiApiProvider: selectedApiProvider,
+        aiCliProvider: cliProviderSelect?.value || "agy",
+        aiCliModel: cliModelSelect?.value || "gemini-3.8-flash-low",
       });
-      if (testResultEl) {
-        testResultEl.style.color = "var(--ok)";
-        testResultEl.textContent =
-          nextMode === "cli"
-            ? `✅ 로컬 CLI 모드(${providerSelect?.value}/${modelSelect?.value})로 즉시 전환되었습니다.`
-            : `✅ Google Gemini API 모드로 즉시 전환되었습니다.`;
+      if (nextMode === "api" && apiTestResultEl) {
+        const curCfg = apiProviderConfigs[selectedApiProvider] || apiProviderConfigs.gemini;
+        apiTestResultEl.style.color = "var(--ok)";
+        apiTestResultEl.textContent = `✅ [${curCfg.label}] API 모드로 전환되었습니다.`;
+      } else if (nextMode === "cli" && cliTestResultEl) {
+        cliTestResultEl.style.color = "var(--ok)";
+        cliTestResultEl.textContent = `✅ 로컬 CLI 모드(${cliProviderSelect?.value}/${cliModelSelect?.value})로 전환되었습니다.`;
       }
     };
 
     apiCard?.addEventListener("click", () => applyModalModeSelection("api"));
     cliCard?.addEventListener("click", () => applyModalModeSelection("cli"));
 
-    providerSelect?.addEventListener("change", async () => {
-      const nextProvider = providerSelect.value;
-      if (modelSelect) {
-        modelSelect.innerHTML = getModelsHtmlForProvider(nextProvider, "");
-      }
-      await applyModalModeSelection("cli");
+    apiProviderSelect?.addEventListener("change", async () => {
+      selectedApiProvider = apiProviderSelect.value;
+      refreshApiCardAndInputs(selectedApiProvider);
+      await applyModalModeSelection("api");
     });
 
-    modelSelect?.addEventListener("change", async () => {
-      await applyModalModeSelection("cli");
+    apiKeyToggleBtn?.addEventListener("click", () => {
+      if (!apiKeyInput) return;
+      const isPwd = apiKeyInput.type === "password";
+      apiKeyInput.type = isPwd ? "text" : "password";
+      apiKeyToggleBtn.textContent = isPwd ? "🙈" : "👁️";
     });
 
-    testBtn?.addEventListener("click", async () => {
-      if (!testResultEl) return;
-      testBtn.disabled = true;
-      testBtn.textContent = "⏳ 테스트 중...";
-      testResultEl.style.color = "var(--accent)";
-      testResultEl.textContent = `⏳ ${selectedModeInModal.toUpperCase()} 모드로 테스트 요청을 전송하고 있습니다...`;
+    saveApiKeyBtn?.addEventListener("click", async () => {
+      if (!apiTestResultEl) return;
+      saveApiKeyBtn.disabled = true;
+      saveApiKeyBtn.textContent = "⏳ 저장 중...";
       try {
+        const enteredKey = (apiKeyInput?.value || "").trim();
+        const enteredModel = (apiModelInput?.value || "").trim();
+        const enteredBaseUrl = (apiBaseUrlInput?.value || "").trim();
+
+        const payload = {
+          aiApiProvider: selectedApiProvider,
+        };
+        if (enteredKey) {
+          if (selectedApiProvider === "openai") payload.openaiApiKey = enteredKey;
+          else if (selectedApiProvider === "anthropic") payload.anthropicApiKey = enteredKey;
+          else if (selectedApiProvider === "custom") payload.customApiKey = enteredKey;
+          else payload.geminiApiKey = enteredKey;
+        }
+        if (enteredModel) {
+          if (selectedApiProvider === "openai") payload.openaiModel = enteredModel;
+          else if (selectedApiProvider === "anthropic") payload.anthropicModel = enteredModel;
+          else if (selectedApiProvider === "custom") payload.customModel = enteredModel;
+          else payload.geminiModel = enteredModel;
+        }
+        if (selectedApiProvider === "custom" && enteredBaseUrl) {
+          payload.customBaseUrl = enteredBaseUrl;
+        }
+
+        const resSave = await fetch("/api/ai-api-config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const dataSave = await resSave.json();
+        if (!resSave.ok || !dataSave.success) {
+          throw new Error(dataSave.error || "저장 실패");
+        }
+
+        const sc = dataSave.config;
+        if (sc) {
+          apiProviderConfigs.gemini.hasKey = sc.hasGeminiKey;
+          apiProviderConfigs.gemini.keyPreview = sc.geminiApiKeyPreview;
+          apiProviderConfigs.gemini.model = sc.geminiModel;
+
+          apiProviderConfigs.openai.hasKey = sc.hasOpenaiKey;
+          apiProviderConfigs.openai.keyPreview = sc.openaiApiKeyPreview;
+          apiProviderConfigs.openai.model = sc.openaiModel;
+
+          apiProviderConfigs.anthropic.hasKey = sc.hasAnthropicKey;
+          apiProviderConfigs.anthropic.keyPreview = sc.anthropicApiKeyPreview;
+          apiProviderConfigs.anthropic.model = sc.anthropicModel;
+
+          apiProviderConfigs.custom.hasKey = sc.hasCustomKey;
+          apiProviderConfigs.custom.keyPreview = sc.customApiKeyPreview;
+          apiProviderConfigs.custom.model = sc.customModel;
+          apiProviderConfigs.custom.baseUrl = sc.customBaseUrl;
+
+          latestAiStatusData = { ...latestAiStatusData, ...sc };
+          syncAiModeUI();
+        }
+
+        refreshApiCardAndInputs(selectedApiProvider);
+        apiTestResultEl.style.color = "var(--ok)";
+        apiTestResultEl.textContent = `✅ [${apiProviderConfigs[selectedApiProvider].label}] API 설정이 성공적으로 저장되었습니다.`;
+      } catch (err) {
+        apiTestResultEl.style.color = "var(--fail)";
+        apiTestResultEl.textContent = `❌ 설정 저장 실패: ${err.message}`;
+      } finally {
+        saveApiKeyBtn.disabled = false;
+        saveApiKeyBtn.textContent = "💾 키 저장";
+      }
+    });
+
+    testApiBtn?.addEventListener("click", async () => {
+      if (!apiTestResultEl) return;
+      testApiBtn.disabled = true;
+      testApiBtn.textContent = "⏳ 테스트 중...";
+      const curCfg = apiProviderConfigs[selectedApiProvider] || apiProviderConfigs.gemini;
+      apiTestResultEl.style.color = "var(--accent)";
+      apiTestResultEl.textContent = `⏳ [${curCfg.label}] 연결 테스트 요청을 전송하고 있습니다...`;
+      try {
+        const enteredKey = (apiKeyInput?.value || "").trim();
+        const enteredModel = (apiModelInput?.value || "").trim();
+        const enteredBaseUrl = (apiBaseUrlInput?.value || "").trim();
+
         const resTest = await fetch("/api/ai-mode/test", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            aiMode: selectedModeInModal,
-            aiCliProvider: providerSelect?.value,
-            aiCliModel: modelSelect?.value,
+            aiMode: "api",
+            aiApiProvider: selectedApiProvider,
+            aiApiKey: enteredKey || undefined,
+            aiApiModel: enteredModel || undefined,
+            aiCustomBaseUrl: selectedApiProvider === "custom" ? enteredBaseUrl || undefined : undefined,
           }),
         });
         const dataTest = await resTest.json();
         if (!resTest.ok || !dataTest.success) {
           throw new Error(dataTest.error || "연결 실패");
         }
-        testResultEl.style.color = "var(--ok)";
-        testResultEl.textContent = `✅ 연결 성공! (${(dataTest.elapsedMs / 1000).toFixed(1)}s) — 모델: ${dataTest.modelUsed} · 응답: ${dataTest.responseText}`;
-        fetchStatus();
+        apiTestResultEl.style.color = "var(--ok)";
+        apiTestResultEl.textContent = `✅ [${curCfg.label}] 연결 성공! (${(dataTest.elapsedMs / 1000).toFixed(1)}s) — 모델: ${dataTest.modelUsed} · 응답: ${dataTest.responseText}`;
+        await fetchStatus();
       } catch (errTest) {
-        testResultEl.style.color = "var(--fail)";
-        testResultEl.textContent = `❌ 연결 실패: ${errTest.message}`;
+        apiTestResultEl.style.color = "var(--fail)";
+        apiTestResultEl.textContent = `❌ [${curCfg.label}] 연결 실패: ${errTest.message}`;
       } finally {
-        testBtn.disabled = false;
-        testBtn.textContent = "⚡ 연결 테스트";
+        testApiBtn.disabled = false;
+        testApiBtn.textContent = "⚡ 연결 테스트";
+      }
+    });
+
+    cliProviderSelect?.addEventListener("change", async () => {
+      const nextProvider = cliProviderSelect.value;
+      if (cliModelSelect) {
+        cliModelSelect.innerHTML = getModelsHtmlForProvider(nextProvider, "");
+      }
+      await applyModalModeSelection("cli");
+    });
+
+    cliModelSelect?.addEventListener("change", async () => {
+      await applyModalModeSelection("cli");
+    });
+
+    testCliBtn?.addEventListener("click", async () => {
+      if (!cliTestResultEl) return;
+      testCliBtn.disabled = true;
+      testCliBtn.textContent = "⏳ 테스트 중...";
+      cliTestResultEl.style.color = "var(--accent)";
+      cliTestResultEl.textContent = `⏳ CLI(${cliProviderSelect?.value}) 연결 테스트 요청을 전송하고 있습니다...`;
+      try {
+        const resTest = await fetch("/api/ai-mode/test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            aiMode: "cli",
+            aiCliProvider: cliProviderSelect?.value,
+            aiCliModel: cliModelSelect?.value,
+          }),
+        });
+        const dataTest = await resTest.json();
+        if (!resTest.ok || !dataTest.success) {
+          throw new Error(dataTest.error || "연결 실패");
+        }
+        cliTestResultEl.style.color = "var(--ok)";
+        cliTestResultEl.textContent = `✅ CLI 연결 성공! (${(dataTest.elapsedMs / 1000).toFixed(1)}s) — 모델: ${dataTest.modelUsed} · 응답: ${dataTest.responseText}`;
+        await fetchStatus();
+      } catch (errTest) {
+        cliTestResultEl.style.color = "var(--fail)";
+        cliTestResultEl.textContent = `❌ CLI 연결 실패: ${errTest.message}`;
+      } finally {
+        testCliBtn.disabled = false;
+        testCliBtn.textContent = "⚡ 연결 테스트";
       }
     });
 
@@ -5998,7 +6315,7 @@ const SMART_PRESET_BLOCKS = {
 function insertBlockPreset(presetKey) {
   const actionsToAdd = SMART_PRESET_BLOCKS[presetKey];
   if (!actionsToAdd) return;
-  const targetUrl = targetBaseUrlInput.value.trim() || "https://gwdev.bc.ac.kr/";
+  const targetUrl = targetBaseUrlInput ? targetBaseUrlInput.value.trim() : "";
   if (!currentPlan) {
     currentPlan = {
       url: targetUrl,
@@ -6035,7 +6352,7 @@ function createDefaultAction(type = "click", description = "새 액션") {
 }
 
 function insertActionAt(targetIndex, actionData = null) {
-  const targetUrl = targetBaseUrlInput.value.trim() || "https://gwdev.bc.ac.kr/";
+  const targetUrl = targetBaseUrlInput ? targetBaseUrlInput.value.trim() : "";
   if (!currentPlan) {
     currentPlan = {
       url: targetUrl,
@@ -7312,7 +7629,7 @@ function bindEvents() {
       if (btnClearPlan) {
         btnClearPlan.addEventListener("click", () => {
           currentPlan = {
-            url: targetBaseUrlInput ? targetBaseUrlInput.value.trim() || "https://gwdev.bc.ac.kr/" : "https://gwdev.bc.ac.kr/",
+            url: targetBaseUrlInput ? targetBaseUrlInput.value.trim() : "",
             viewport: { width: 1920, height: 1080 },
             requiresLogin: true,
             actions: [],
