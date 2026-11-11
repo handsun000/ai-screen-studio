@@ -178,7 +178,20 @@ async function bundleBrowser() {
 
   const selectedChromium = chromiumDirs[0];
   const versionSuffix = selectedChromium.replace("chromium-", "");
-  const targetDirs = [selectedChromium, `chromium_headless_shell-${versionSuffix}`];
+
+  // Find latest ffmpeg and winldd folders in ms-playwright for Playwright's recordVideo engine
+  const ffmpegDirs = entries.filter((e) => e.startsWith("ffmpeg-")).sort().reverse();
+  const selectedFfmpeg = ffmpegDirs[0] || "ffmpeg-1011";
+
+  const winlddDirs = entries.filter((e) => e.startsWith("winldd-")).sort().reverse();
+  const selectedWinldd = winlddDirs[0] || "winldd-1007";
+
+  const targetDirs = [
+    selectedChromium,
+    `chromium_headless_shell-${versionSuffix}`,
+    selectedFfmpeg,
+    selectedWinldd,
+  ];
 
   for (const dirName of targetDirs) {
     const srcPath = path.join(hostPlaywrightDir, dirName);

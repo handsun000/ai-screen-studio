@@ -11,6 +11,8 @@ import { listAllSiteBrands } from "../src/services/siteBrandService";
 import { getStorageStats, optimizeStorage } from "../src/services/storageOptimizerService";
 
 const ROOT_DIR = path.resolve(__dirname, "..");
+const { setupBundledEnvironment } = require("./bundled-env.cjs");
+setupBundledEnvironment(ROOT_DIR);
 const DATA_DIR = path.join(ROOT_DIR, "data");
 
 interface CheckItem {
@@ -97,6 +99,22 @@ async function runDoctor() {
     }
   } catch (err: any) {
     addResult("1. 런타임/미디어", "Playwright Chromium", "FAIL", err.message);
+  }
+
+  // Playwright internal video recording engine check (recordVideo requires ffmpeg-* in browser path)
+  const browserDir = process.env.PLAYWRIGHT_BROWSERS_PATH || path.join(ROOT_DIR, "resources", "bin", "browser");
+  const hostFfmpegDirs = fs.existsSync(browserDir)
+    ? fs.readdirSync(browserDir).filter((e) => e.startsWith("ffmpeg-"))
+    : [];
+  if (hostFfmpegDirs.length > 0) {
+    addResult("1. 런타임/미디어", "Playwright 녹화엔진", "PASS", `${hostFfmpegDirs[0]} 정상 내장`);
+  } else {
+    addResult(
+      "1. 런타임/미디어",
+      "Playwright 녹화엔진",
+      "FAIL",
+      "녹화용 ffmpeg 바이너리 누락 (npx playwright install ffmpeg 필요)"
+    );
   }
 
   // ---------------------------------------------------------------------------

@@ -1,7 +1,11 @@
 
+import * as path from "path";
+// Injects bundled portable dependencies (Python, FFmpeg, Playwright Chromium) into PATH
+const { setupBundledEnvironment } = require("./bundled-env.cjs");
+setupBundledEnvironment(path.resolve(__dirname, ".."));
+
 import { chromium, type Browser, type Page, type BrowserContext, type Locator } from "playwright";
 import * as fs from "fs";
-import * as path from "path";
 import * as readline from "readline";
 import { execSync } from "child_process";
 import { getVideoMetadata } from "@remotion/renderer";

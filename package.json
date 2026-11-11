@@ -16,7 +16,8 @@
     "doctor:fix": "tsx scripts/doctor.ts --fix",
     "session": "python scripts/session.py",
     "bundle:resources": "tsx scripts/bundle-resources.ts",
-    "build:exe": "tsx scripts/bundle-resources.ts && electron-builder --win"
+    "verify:package": "tsx scripts/verify-packaged-pipeline.ts",
+    "build:exe": "tsx scripts/bundle-resources.ts && tsx scripts/verify-packaged-pipeline.ts && electron-builder --win"
   },
   "dependencies": {
     "@google/genai": "^2.24.0",
