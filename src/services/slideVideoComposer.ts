@@ -1596,6 +1596,7 @@ async function fastApplyMergedScenarioNarration(
 
   // 브릿지 큐(_isAutoBridgeCue) 및 챕터별 오프닝(isIntro) 플래그 정규화 + 음성 겹침 자동 보정
   const cuesList = Array.isArray(narration.cues) ? narration.cues : [];
+  const isSingleMode = (narration as any).mergeMode === "single";
   for (let i = 0; i < cuesList.length; i++) {
     const c = cuesList[i];
     const cleanTxt = String(c.text || "").trim();
@@ -1603,7 +1604,7 @@ async function fastApplyMergedScenarioNarration(
     const prevIsBridge =
       i >= 3 ? isAutoBridgeLine(String(cuesList[i - 1]?.text || "").trim(), cuesList[i - 1]) : false;
 
-    const expectedIsIntro = i === 0 || i === 1 || i === 2 || prevIsBridge;
+    const expectedIsIntro = isSingleMode ? i === 0 : (i === 0 || i === 1 || i === 2 || prevIsBridge);
     if (Boolean(c.isIntro) !== expectedIsIntro) {
       c.isIntro = expectedIsIntro;
       needsResave = true;
@@ -1651,7 +1652,7 @@ async function fastApplyMergedScenarioNarration(
         idx,
         isBridge,
         textChanged,
-        shouldSplice: idx >= 2 && (isBridge || voiceOrTextChanged || hasExtraHold),
+        shouldSplice: (isSingleMode ? idx >= 1 : idx >= 2) && (isBridge || voiceOrTextChanged || hasExtraHold),
       };
     })
     .filter((item) => item.shouldSplice);
@@ -1862,7 +1863,10 @@ async function fastApplyMergedScenarioNarration(
 
     const tsSegments: string[] = [];
     let segCounter = 0;
-    const bakedIntroTargetSec = Math.max(8.0, Number(narration.bakedIntroDurationMs || 29600) / 1000);
+    const bakedIntroTargetSec = Math.max(
+      isSingleMode ? 3.5 : 8.0,
+      Number(narration.bakedIntroDurationMs || (isSingleMode ? 5000 : 29600)) / 1000
+    );
     let introEndKf = bakedIntroTargetSec;
     let bestKfDiff = 999;
     for (const kf of keyframes) {
@@ -1873,7 +1877,50 @@ async function fastApplyMergedScenarioNarration(
       }
     }
 
-    if (finalCues.length >= 2 && narration.introToc) {
+    if (isSingleMode && finalCues.length >= 1 && narration.introToc) {
+      const cue0 = finalCues[0];
+      const singleText = String(
+        cue0?.text || `${siteBrand.siteName} 동영상 매뉴얼을 시작합니다.`
+      ).trim();
+      const singleMp3 = cue0?.audioFile
+        ? path.join(sDir, "audio", path.basename(cue0.audioFile))
+        : path.join(sDir, "audio", "cue-01.mp3");
+
+      const singleAudioSec =
+        Number(cue0?.audioDurationMs || 0) > 0
+          ? Number(cue0.audioDurationMs) / 1000
+          : singleMp3 && fs.existsSync(singleMp3)
+          ? probeVideoMetaQuick(singleMp3).durationSec || 4.2
+          : 4.0;
+      const singleDurSec = Math.max(
+        4.0,
+        Number((cue0?.videoEndMs ? cue0.videoEndMs / 1000 : singleAudioSec + 0.6).toFixed(3))
+      );
+
+      const singleSlidePngPath = path.join(sDir, "single-intro-slide.png");
+      const singleHtml = buildSlideHtmlDocument({
+        toc: narration.introToc,
+        siteBrand,
+        width: W,
+        height: H,
+        mode: "detail",
+        subtitleText: singleText,
+      });
+      await renderSlideHtmlToPng(singleHtml, singleSlidePngPath, W, H);
+
+      const singleTsPath = path.join(ROOT_DIR, "output", `${slug}_mseg_${segCounter++}.ts`);
+      tempFiles.push(singleTsPath);
+      encodeStaticSlideToTs({
+        pngPath: singleSlidePngPath,
+        durSec: singleDurSec,
+        mp3Path: fs.existsSync(singleMp3) ? singleMp3 : undefined,
+        tsOutPath: singleTsPath,
+      });
+
+      if (fs.existsSync(singleTsPath)) {
+        tsSegments.push(singleTsPath);
+      }
+    } else if (finalCues.length >= 2 && narration.introToc) {
       const cue0 = finalCues[0];
       const cue1 = finalCues[1];
       const coverText = String(
@@ -2013,7 +2060,7 @@ async function fastApplyMergedScenarioNarration(
       items: CustomCueItem[];
     }
 
-    const minBodyStartSec = tsSegments.length >= 2 ? introEndKf : 0;
+    const minBodyStartSec = tsSegments.length >= (isSingleMode ? 1 : 2) ? introEndKf : 0;
     const windows: SpliceWindow[] = [];
     for (const item of cueItems) {
       let kfStart = minBodyStartSec;

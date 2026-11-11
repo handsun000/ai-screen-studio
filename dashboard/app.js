@@ -1946,11 +1946,16 @@ async function handleExecuteVideoMerge() {
   const slugInputEl = document.getElementById("merge-output-slug-input");
   const execBtn = document.getElementById("btn-execute-video-merge");
   const outputSlug = slugInputEl ? slugInputEl.value.trim() : "";
+  const mergeModeRadio = document.querySelector('input[name="merge-mode-radio"]:checked');
+  const mergeMode = mergeModeRadio ? mergeModeRadio.value : "single";
 
   const origBtnHtml = execBtn ? execBtn.innerHTML : "";
   if (execBtn) {
     execBtn.disabled = true;
-    execBtn.innerHTML = "⏳ 전체 통합 목차 슬라이드·음성 생성 및 영상 병합 중...";
+    execBtn.innerHTML =
+      mergeMode === "single"
+        ? "⏳ 단일 통합 슬라이드·음성 생성 및 영상 병합 중..."
+        : "⏳ 전체 통합 대목차 슬라이드·음성 생성 및 영상 병합 중...";
   }
 
   try {
@@ -1960,6 +1965,7 @@ async function handleExecuteVideoMerge() {
       body: JSON.stringify({
         slugs: videoMergeQueue,
         outputSlug: outputSlug || undefined,
+        mergeMode,
       }),
     });
     const data = await res.json();

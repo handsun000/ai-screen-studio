@@ -277,6 +277,18 @@
                 <div class="merge-queue-empty">선택된 영상이 없습니다. 아래 카드에서 [🔗 합치기+]를 눌러 추가하세요.</div>
               </div>
               <div class="merge-drawer-controls">
+                <div class="merge-mode-selector" style="display:flex;gap:12px;margin-bottom:8px;padding:6px 10px;background:var(--layer);border:1px solid var(--stroke);border-radius:var(--r-card);">
+                  <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text);">
+                    <input type="radio" name="merge-mode-radio" value="single" checked style="accent-color:var(--accent);" />
+                    <span>✨ 단일 영상으로 완성 (추천)</span>
+                    <span style="font-size:11px;font-weight:400;color:var(--text-3);">(내부 슬라이드 제거 · 앞단 통합 슬라이드 1장)</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-2);">
+                    <input type="radio" name="merge-mode-radio" value="chapters" style="accent-color:var(--accent);" />
+                    <span>📚 챕터별 종합본으로 묶기</span>
+                    <span style="font-size:11px;font-weight:400;color:var(--text-3);">(각 챕터 슬라이드 유지 · 대목차 생성)</span>
+                  </label>
+                </div>
                 <input type="text" id="merge-output-slug-input" class="merge-slug-input" placeholder="합친 영상 ID (예: full-manual, 비워두면 자동 생성)" title="병합 후 생성될 시나리오/파일 ID" />
                 <div class="merge-drawer-btn-row">
                   <button type="button" class="btn btn-sm btn-outline" id="btn-clear-merge-queue">초기화</button>

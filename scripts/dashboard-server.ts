@@ -1114,8 +1114,8 @@ app.post("/api/video-edit/:slug/restore", (req: Request, res: Response) => {
 // 13. Rendered Videos Lossless Chapter Merge (Concat) API
 app.post("/api/video-edit/merge", async (req: Request, res: Response) => {
   try {
-    const { slugs, outputSlug } = req.body || {};
-    const result = await mergeRenderedVideos({ slugs, outputSlug });
+    const { slugs, outputSlug, mergeMode } = req.body || {};
+    const result = await mergeRenderedVideos({ slugs, outputSlug, mergeMode });
     res.json(result);
   } catch (err: any) {
     console.error("[Video Merge Error]", err);

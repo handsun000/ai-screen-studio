@@ -139,3 +139,4 @@ npm run doctor:fix
   10. **[6번] 디스크 용량 최적화 (`storageOptimizerService.ts`, NTFS 하드링크 중복 제거 및 원클릭 정리 드로어 `#storage-optimizer-drawer`)** 완료 (약 1.07GB 물리 용량 즉시 절감).
   11. **[7번] 통합 헬스체크 (`npm run doctor` / `npm run doctor:fix`, `scripts/doctor.ts`)** 구축 완료.
   12. **[8번] 단독 실행 인스톨러(.exe) 배포 패키징 (`electron-builder.yml`, `scripts/bundle-resources.ts`, `scripts/bundled-env.cjs`)** 완료 (포터블 Python 3.11/edge-tts + FFmpeg + Playwright Chromium 듀얼 내장, 호스트 Node.js 미설치 환경 완비).
+  13. **[스마트 영상 병합 & 슬라이드 분기 옵션]**: `✨ 단일 영상으로 완성 (추천)`(내부 중간 슬라이드 완전 제거 · 앞단 1장 통합 슬라이드+음성 합성) 및 `📚 챕터별 종합본으로 묶기`(표지/대목차 + 각 챕터 슬라이드 유지) 선택 UI(`merge-mode-radio`), 엔진 분기(`mergeAsSingleVideo`), 자가 치유/재합성(`fastApplyMergedScenarioNarration`) 연동 완료.
